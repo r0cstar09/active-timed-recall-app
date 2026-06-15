@@ -117,6 +117,25 @@ function hydrateSession(s: Session): Session {
   return { ...s, items: (s.items ?? []).map(hydrateItem) };
 }
 
+/**
+ * Some list endpoints return a bare JSON array, others wrap it in an object
+ * like `{ cards: [...] }` / `{ items: [...] }` / `{ data: [...] }`. Normalize
+ * both shapes into an array so the UI never crashes on `.map`.
+ */
+function toArray<T>(res: unknown, keys: string[]): T[] {
+  if (Array.isArray(res)) return res as T[];
+  if (res && typeof res === "object") {
+    for (const k of keys) {
+      const v = (res as Record<string, unknown>)[k];
+      if (Array.isArray(v)) return v as T[];
+    }
+    for (const v of Object.values(res as Record<string, unknown>)) {
+      if (Array.isArray(v)) return v as T[];
+    }
+  }
+  return [];
+}
+
 export const api = {
   // ── Sessions / grading (real contract) ───────────────────────────────────
   async createSession(): Promise<Session> {
@@ -171,11 +190,13 @@ export const api = {
   },
 
   // ── Library (real) ───────────────────────────────────────────────────────
-  listSources(): Promise<Source[]> {
-    return request<Source[]>("/api/sources");
+  async listSources(): Promise<Source[]> {
+    const res = await request<unknown>("/api/sources");
+    return toArray<Source>(res, ["sources", "items", "data", "results"]);
   },
   async listCards(): Promise<Card[]> {
-    const cards = await request<Card[]>("/api/cards");
+    const res = await request<unknown>("/api/cards");
+    const cards = toArray<Card>(res, ["cards", "items", "data", "results"]);
     return cards.map((c) => ({ ...c, audio_url: resolveUrl(c.audio_url) }));
   },
 
