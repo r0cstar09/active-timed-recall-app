@@ -18,7 +18,8 @@ const PREFERRED_TYPES = [
   "audio/mp4", // Safari / iOS
   "audio/webm;codecs=opus", // Chrome / Firefox
   "audio/webm",
-  "audio/ogg;codecs=opus",
+  "video/mp4", // some Safari builds only report this for AAC capture
+  "audio/wav",
 ];
 
 export function isRecordingSupported(): boolean {
@@ -45,6 +46,7 @@ function extensionFor(mimeType: string): string {
   if (mimeType.includes("mp4")) return "m4a";
   if (mimeType.includes("webm")) return "webm";
   if (mimeType.includes("ogg")) return "ogg";
+  if (mimeType.includes("wav")) return "wav";
   return "audio";
 }
 

@@ -1,26 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../lib/api";
-import type { IngestJob } from "../lib/types";
+import type { SourceRaw } from "../lib/types";
+import { isStatusFailed, isStatusReady } from "../lib/types";
 
 const YT_RE =
   /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/|embed\/)|youtu\.be\/)[\w-]{6,}/i;
 
-function statusLabel(status: IngestJob["status"]): string {
-  switch (status) {
-    case "queued":
-      return "Queued…";
-    case "processing":
-      return "Extracting sentences & slicing audio…";
-    case "done":
-      return "Done";
-    case "error":
-      return "Failed";
-  }
+function bothDone(s: SourceRaw): boolean {
+  return isStatusReady(s.transcript_status) && isStatusReady(s.audio_status);
+}
+function anyFailed(s: SourceRaw): boolean {
+  return isStatusFailed(s.transcript_status) || isStatusFailed(s.audio_status);
 }
 
 export default function IngestForm() {
   const [urlValue, setUrlValue] = useState("");
-  const [job, setJob] = useState<IngestJob | null>(null);
+  const [source, setSource] = useState<SourceRaw | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -49,17 +44,17 @@ export default function IngestForm() {
     setBusy(true);
     stopPolling();
     try {
-      const started = await api.startIngest(trimmed);
-      setJob(started);
-      if (started.status === "done" || started.status === "error") {
+      const created = await api.createSource(trimmed);
+      setSource(created);
+      if (bothDone(created) || anyFailed(created)) {
         setBusy(false);
         return;
       }
       pollRef.current = setInterval(async () => {
         try {
-          const next = await api.getIngest(started.jobId);
-          setJob(next);
-          if (next.status === "done" || next.status === "error") {
+          const next = await api.getSource(created.id);
+          setSource(next);
+          if (bothDone(next) || anyFailed(next)) {
             stopPolling();
             setBusy(false);
           }
@@ -68,7 +63,7 @@ export default function IngestForm() {
           setBusy(false);
           setError(err instanceof ApiError ? err.message : String(err));
         }
-      }, 2000);
+      }, 2500);
     } catch (err) {
       setBusy(false);
       setError(err instanceof ApiError ? err.message : String(err));
@@ -77,14 +72,14 @@ export default function IngestForm() {
 
   function reset() {
     stopPolling();
-    setJob(null);
+    setSource(null);
     setUrlValue("");
     setError(null);
     setBusy(false);
   }
 
-  const progressPct =
-    job?.progress != null ? Math.round(job.progress * 100) : null;
+  const done = source && bothDone(source);
+  const failed = source && anyFailed(source);
 
   return (
     <div className="stack">
@@ -115,67 +110,45 @@ export default function IngestForm() {
 
       {error && <div className="alert alert-error">{error}</div>}
 
-      {job && (
+      {source && (
         <div className="card stack">
           <div className="row between">
-            <strong>{statusLabel(job.status)}</strong>
+            <strong className="truncate" style={{ maxWidth: "70%" }}>
+              {source.title ?? source.source_url}
+            </strong>
             <span
               className={
-                job.status === "done"
-                  ? "pill pill-good"
-                  : job.status === "error"
-                    ? "pill pill-bad"
-                    : "pill pill-warn"
+                done ? "pill pill-good" : failed ? "pill pill-bad" : "pill pill-warn"
               }
             >
-              {job.status}
+              {done ? "ready" : failed ? "failed" : "processing"}
             </span>
           </div>
 
-          {progressPct != null && job.status === "processing" && (
-            <div
-              style={{
-                height: 8,
-                borderRadius: 999,
-                background: "var(--bg-elev-2)",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  height: "100%",
-                  width: `${progressPct}%`,
-                  background: "var(--accent-grad)",
-                  transition: "width 0.3s ease",
-                }}
-              />
+          <div className="row wrap" style={{ gap: 8 }}>
+            <span className="pill">transcript: {source.transcript_status ?? "—"}</span>
+            <span className="pill">audio: {source.audio_status ?? "—"}</span>
+          </div>
+
+          {!done && !failed && (
+            <div className="row">
+              <div className="spinner spinner-sm" aria-hidden="true" />
+              <span className="small faint">
+                Extracting sentences & slicing audio…
+              </span>
             </div>
           )}
 
-          {job.status === "done" && (
-            <>
-              <div>
-                <div style={{ fontWeight: 600 }}>{job.title ?? "Video added"}</div>
-                {job.sentenceCount != null && (
-                  <div className="small faint">
-                    {job.sentenceCount} sentences extracted
-                  </div>
-                )}
-              </div>
-              <div className="btn-row">
-                <a className="btn btn-primary" href="/session">
-                  Start session
-                </a>
-                <a className="btn" href="/library">
-                  View library
-                </a>
-              </div>
-            </>
+          {done && (
+            <div className="btn-row">
+              <a className="btn btn-primary" href="/session">Start session</a>
+              <a className="btn" href="/library">View library</a>
+            </div>
           )}
 
-          {job.status === "error" && (
+          {failed && (
             <div className="small" style={{ color: "var(--bad)" }}>
-              {job.error ?? "Ingestion failed. Try a different video."}
+              Ingestion failed. Try a different video.
             </div>
           )}
 

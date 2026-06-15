@@ -16,6 +16,17 @@ const STORAGE_KEY = "atr.apiBaseUrl";
 
 const ENV_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? "").trim();
 
+/**
+ * Recall countdown length (seconds) per item. SessionItems don't carry a
+ * per-item limit, so this is the global timed-recall window. Override with
+ * PUBLIC_RECALL_SECONDS at build time if needed.
+ */
+const ENV_RECALL_SECONDS = Number(import.meta.env.PUBLIC_RECALL_SECONDS ?? "");
+export const RECALL_SECONDS =
+  Number.isFinite(ENV_RECALL_SECONDS) && ENV_RECALL_SECONDS > 0
+    ? ENV_RECALL_SECONDS
+    : 8;
+
 function stripTrailingSlash(url: string): string {
   return url.replace(/\/+$/, "");
 }

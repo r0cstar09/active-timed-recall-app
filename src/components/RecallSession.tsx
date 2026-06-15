@@ -1,64 +1,74 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, ApiError, pollAttempt } from "../lib/api";
-import type { Attempt, Card, ReviewRating } from "../lib/types";
+import { api, ApiError, pollJob } from "../lib/api";
+import { RECALL_SECONDS } from "../lib/config";
+import type { Session, SessionItem } from "../lib/types";
 import { Recorder, isRecordingSupported } from "../lib/recorder";
 import {
   clearSession,
   loadSession,
   remainingMs,
   remainingSeconds,
+  saveLastGraded,
   saveSession,
   type PersistedSession,
   type Phase,
 } from "../lib/timer";
 import AudioPlayer from "./AudioPlayer";
 
-type Status = "idle" | "active" | "done" | "error";
+type Status = "idle" | "active" | "error";
 
-const RATINGS: { rating: ReviewRating; label: string; cls: string }[] = [
-  { rating: "again", label: "Again", cls: "pill-bad" },
-  { rating: "hard", label: "Hard", cls: "pill-warn" },
-  { rating: "good", label: "Good", cls: "" },
-  { rating: "easy", label: "Easy", cls: "pill-good" },
-];
+const isoFromMs = (ms: number) => new Date(ms).toISOString();
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+function promptText(item: SessionItem): string {
+  if (item.prompt_type === "cloze") return item.cloze_prompt || item.prompt;
+  return item.prompt;
+}
 
 export default function RecallSession() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [resumable, setResumable] = useState<PersistedSession | null>(null);
 
-  const [cards, setCards] = useState<Card[]>([]);
+  const [items, setItems] = useState<SessionItem[]>([]);
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("recall");
   const [deadline, setDeadline] = useState<number | null>(null);
   const [durationMs, setDurationMs] = useState<number | null>(null);
-  const [attempt, setAttempt] = useState<Attempt | null>(null);
-  const [, setTick] = useState(0); // forces countdown re-render
+  const [graded, setGraded] = useState<Session | null>(null);
+  const [, setTick] = useState(0);
 
-  const sessionIdRef = useRef<string>("");
+  const sessionIdRef = useRef<number>(0);
+  const promptShownAtRef = useRef<number>(0);
+  const uploadedRef = useRef<number[]>([]);
   const recorderRef = useRef<Recorder | null>(null);
+  const recordingsRef = useRef<Map<number, string>>(new Map());
   const submitRef = useRef<() => void>(() => {});
   const supported = isRecordingSupported();
 
-  const card = cards[index];
+  const item = items[index];
 
   // ── persistence ─────────────────────────────────────────────────────────
   const persist = useCallback(
     (over: Partial<PersistedSession> = {}) => {
-      const snapshot: PersistedSession = {
+      saveSession({
         sessionId: sessionIdRef.current,
-        cards,
+        items,
         index,
         phase,
         deadline,
         durationMs,
-        attemptId: attempt?.attemptId ?? null,
-        startedAt: Date.now(),
+        promptShownAt: promptShownAtRef.current
+          ? isoFromMs(promptShownAtRef.current)
+          : null,
+        uploadedItemIds: uploadedRef.current,
+        jobId: null,
+        graded,
+        savedAt: Date.now(),
         ...over,
-      };
-      saveSession(snapshot);
+      });
     },
-    [cards, index, phase, deadline, durationMs, attempt],
+    [items, index, phase, deadline, durationMs, graded],
   );
 
   useEffect(() => {
@@ -88,38 +98,42 @@ export default function RecallSession() {
     }
   });
 
-  // ── release the mic when leaving the screen ──────────────────────────────
+  // ── cleanup: release mic + revoke local recording URLs ───────────────────
   useEffect(() => {
-    return () => recorderRef.current?.dispose();
+    const urls = recordingsRef.current;
+    return () => {
+      recorderRef.current?.dispose();
+      urls.forEach((u) => URL.revokeObjectURL(u));
+    };
   }, []);
 
-  function beginCard(i: number, list: Card[], preserveDeadline: number | null) {
-    const c = list[i];
-    if (!c) return;
-    const dur = Math.max(1, c.recallSeconds) * 1000;
+  function beginItem(i: number, list: SessionItem[], preserveDeadline: number | null) {
+    const dur = Math.max(1, RECALL_SECONDS) * 1000;
     let dl = preserveDeadline;
-    // If resuming and the saved countdown still has meaningful time, keep it so
-    // the timer is not corrupted; otherwise start a fresh window for this card.
     if (dl == null || remainingMs(dl) < 1000) dl = Date.now() + dur;
+    promptShownAtRef.current = dl - dur;
     setIndex(i);
     setPhase("recall");
     setDurationMs(dur);
     setDeadline(dl);
-    setAttempt(null);
+    setError(null);
     try {
       recorderRef.current?.start();
     } catch {
-      /* recorder may restart on next gesture */
+      /* will retry on next gesture */
     }
     saveSession({
       sessionId: sessionIdRef.current,
-      cards: list,
+      items: list,
       index: i,
       phase: "recall",
       deadline: dl,
       durationMs: dur,
-      attemptId: null,
-      startedAt: Date.now(),
+      promptShownAt: isoFromMs(promptShownAtRef.current),
+      uploadedItemIds: uploadedRef.current,
+      jobId: null,
+      graded: null,
+      savedAt: Date.now(),
     });
   }
 
@@ -146,16 +160,19 @@ export default function RecallSession() {
     }
     if (!(await armRecorder())) return;
     try {
-      const payload = await api.startSession(20);
-      if (!payload.cards.length) {
+      const session = await api.createSession();
+      if (!session.items?.length) {
         clearSession();
-        setStatus("done");
+        setGraded({ session_id: session.session_id, items: [] });
+        setPhase("summary");
+        setStatus("active");
         return;
       }
-      sessionIdRef.current = payload.sessionId;
-      setCards(payload.cards);
+      sessionIdRef.current = session.session_id;
+      uploadedRef.current = [];
+      setItems(session.items);
       setStatus("active");
-      beginCard(0, payload.cards, null);
+      beginItem(0, session.items, null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
       setStatus("error");
@@ -166,104 +183,128 @@ export default function RecallSession() {
     const saved = resumable;
     if (!saved) return;
     setError(null);
-    if (!(await armRecorder())) return;
     sessionIdRef.current = saved.sessionId;
-    setCards(saved.cards);
+    uploadedRef.current = saved.uploadedItemIds ?? [];
+    setItems(saved.items);
     setIndex(saved.index);
-    setStatus("active");
 
-    if (saved.phase === "feedback" && saved.attemptId) {
-      setPhase("feedback");
-      setDeadline(null);
-      try {
-        setAttempt(await api.getAttempt(saved.attemptId));
-      } catch {
-        /* fall back to a fresh recall of this card */
-        beginCard(saved.index, saved.cards, null);
-      }
+    if (saved.phase === "summary" && saved.graded) {
+      setGraded(saved.graded);
+      setPhase("summary");
+      setStatus("active");
       return;
     }
-    // recall / recording / submitting → resume recall, preserving remaining time
-    beginCard(saved.index, saved.cards, saved.deadline);
+    if (saved.phase === "grading" && saved.jobId != null) {
+      setPhase("grading");
+      setStatus("active");
+      runGrading(saved.sessionId, saved.jobId);
+      return;
+    }
+    // recall / uploading → need the mic again; resume preserving the countdown
+    if (!(await armRecorder())) {
+      setStatus("idle");
+      return;
+    }
+    setStatus("active");
+    beginItem(saved.index, saved.items, saved.deadline);
   }
 
   const submit = useCallback(async () => {
-    if (phase !== "recall") return;
-    setPhase("submitting");
-    persist({ phase: "submitting" });
-    let result: { blob: Blob; filename: string } | null = null;
+    if (phase !== "recall" || !item) return;
+    const answeredAtMs = Date.now();
+    const timedOut = deadline != null && remainingMs(deadline) <= 0;
+    const responseSeconds = round1((answeredAtMs - promptShownAtRef.current) / 1000);
+
+    setPhase("uploading");
+    persist({ phase: "uploading" });
+
+    let rec: { blob: Blob; mimeType: string; filename: string } | null = null;
     try {
-      result = await recorderRef.current!.stop();
+      rec = await recorderRef.current!.stop();
     } catch {
       /* no recording captured */
     }
 
-    if (!result || result.blob.size === 0) {
-      setError("No audio was captured. Try recording again.");
-      setPhase("recall");
-      const dl = Date.now() + (durationMs ?? 5000);
-      setDeadline(dl);
-      try {
-        recorderRef.current?.start();
-      } catch {
-        /* ignore */
-      }
+    if (!rec || rec.blob.size === 0) {
+      setError("No audio was captured. Recording again.");
+      beginItem(index, items, null);
       return;
     }
 
-    const elapsedMs =
-      durationMs != null && deadline != null
-        ? durationMs - remainingMs(deadline)
-        : undefined;
+    // keep a local URL so the learner can replay their own recording (the
+    // backend contract doesn't return user-audio URLs).
+    const prev = recordingsRef.current.get(item.sprint_item_id);
+    if (prev) URL.revokeObjectURL(prev);
+    recordingsRef.current.set(item.sprint_item_id, URL.createObjectURL(rec.blob));
 
     try {
-      const created = await api.submitAttempt(card.id, result.blob, {
-        sessionId: sessionIdRef.current,
-        elapsedMs,
-        filename: result.filename,
+      await api.uploadRecording(sessionIdRef.current, item.sprint_item_id, rec.blob, {
+        mimeType: rec.mimeType,
+        promptShownAt: isoFromMs(promptShownAtRef.current),
+        answeredAt: isoFromMs(answeredAtMs),
+        responseSeconds,
+        timedOut,
+        filename: rec.filename,
       });
-      setAttempt(created);
-      setPhase("feedback");
-      persist({ phase: "feedback", attemptId: created.attemptId });
-
-      if (created.status === "grading") {
-        const graded = await pollAttempt(created.attemptId, {
-          onUpdate: setAttempt,
-        });
-        setAttempt(graded);
+      if (!uploadedRef.current.includes(item.sprint_item_id)) {
+        uploadedRef.current.push(item.sprint_item_id);
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : String(err));
-      setPhase("feedback");
+      setError(
+        `${err instanceof ApiError ? err.message : String(err)} — tap to retry.`,
+      );
+      return; // stays in "uploading" with a Retry button
+    }
+
+    if (index + 1 < items.length) {
+      beginItem(index + 1, items, null);
+    } else {
+      startGrading();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, card, durationMs, deadline, persist]);
+  }, [phase, item, deadline, index, items, persist]);
 
-  // keep the auto-submit ref pointed at the latest closure
   useEffect(() => {
     submitRef.current = submit;
   }, [submit]);
 
-  async function rate(rating: ReviewRating) {
-    if (card) {
-      try {
-        await api.submitReview(card.id, rating);
-      } catch {
-        /* non-fatal: scheduling can be retried; keep the session moving */
-      }
+  async function startGrading() {
+    setPhase("grading");
+    setError(null);
+    persist({ phase: "grading" });
+    try {
+      const { job_id } = await api.gradeSession(sessionIdRef.current);
+      saveSession({
+        sessionId: sessionIdRef.current,
+        items,
+        index,
+        phase: "grading",
+        deadline: null,
+        durationMs: null,
+        promptShownAt: null,
+        uploadedItemIds: uploadedRef.current,
+        jobId: job_id,
+        graded: null,
+        savedAt: Date.now(),
+      });
+      runGrading(sessionIdRef.current, job_id);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
     }
-    next();
   }
 
-  function next() {
-    const ni = index + 1;
-    if (ni >= cards.length) {
+  async function runGrading(sessionId: number, jobId: string | number) {
+    setPhase("grading");
+    try {
+      await pollJob(jobId);
+      const gradedSession = await api.getSession(sessionId);
+      setGraded(gradedSession);
+      saveLastGraded(gradedSession);
       clearSession();
-      recorderRef.current?.dispose();
-      setStatus("done");
-      return;
+      setPhase("summary");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
     }
-    beginCard(ni, cards, null);
   }
 
   function quit() {
@@ -272,7 +313,7 @@ export default function RecallSession() {
     window.location.href = "/";
   }
 
-  // ── render ────────────────────────────────────────────────────────────────
+  // ── render: IDLE ──────────────────────────────────────────────────────────
   if (status === "idle") {
     return (
       <div className="stack">
@@ -285,15 +326,14 @@ export default function RecallSession() {
         {resumable ? (
           <div className="card stack center">
             <p className="muted">
-              Resume your session at card {resumable.index + 1} of{" "}
-              {resumable.cards.length}?
+              {resumable.phase === "summary"
+                ? "View your last session results?"
+                : resumable.phase === "grading"
+                  ? "Resume grading your session?"
+                  : `Resume at item ${resumable.index + 1} of ${resumable.items.length}?`}
             </p>
-            <button
-              className="btn btn-primary btn-lg btn-block"
-              onClick={resume}
-              disabled={!supported}
-            >
-              Resume (enable mic)
+            <button className="btn btn-primary btn-lg btn-block" onClick={resume}>
+              Resume
             </button>
             <button
               className="btn btn-ghost btn-block"
@@ -308,8 +348,8 @@ export default function RecallSession() {
         ) : (
           <div className="card stack center">
             <p className="muted">
-              Tap begin and allow microphone access. You’ll recall each Spanish
-              sentence aloud before the timer ends.
+              Tap begin and allow microphone access. Recall each prompt aloud
+              before the timer ends. The backend grades your spoken answers.
             </p>
             <button
               className="btn btn-primary btn-lg btn-block"
@@ -328,29 +368,70 @@ export default function RecallSession() {
     return (
       <div className="stack">
         <div className="alert alert-error">{error}</div>
-        <button className="btn btn-primary btn-block" onClick={() => setStatus("idle")}>
+        <button
+          className="btn btn-primary btn-block"
+          onClick={() => {
+            setError(null);
+            setStatus("idle");
+          }}
+        >
           Back
         </button>
       </div>
     );
   }
 
-  if (status === "done") {
+  // ── render: SUMMARY ───────────────────────────────────────────────────────
+  if (phase === "summary") {
+    return <Summary graded={graded} recordings={recordingsRef.current} />;
+  }
+
+  // ── render: GRADING ───────────────────────────────────────────────────────
+  if (phase === "grading") {
     return (
-      <div className="card stack center">
-        <h2>Session complete</h2>
-        <p className="muted">Nice work. Review any misses below.</p>
-        <a className="btn btn-primary btn-block" href="/review">
-          Review corrections
-        </a>
-        <a className="btn btn-ghost btn-block" href="/">
-          Home
-        </a>
+      <div className="card stack center" style={{ padding: 36 }}>
+        <div className="spinner" aria-hidden="true" />
+        <p className="muted">Grading your answers…</p>
+        {error && (
+          <>
+            <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
+            <button
+              className="btn btn-block"
+              onClick={() => runGrading(sessionIdRef.current, loadSession()?.jobId ?? 0)}
+            >
+              Retry grading
+            </button>
+          </>
+        )}
       </div>
     );
   }
 
-  // active
+  // ── render: UPLOADING (with retry on failure) ─────────────────────────────
+  if (phase === "uploading") {
+    return (
+      <div className="card stack center" style={{ padding: 36 }}>
+        {error ? (
+          <>
+            <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
+            <button
+              className="btn btn-primary btn-block"
+              onClick={() => submitRef.current()}
+            >
+              Retry upload
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="spinner" aria-hidden="true" />
+            <p className="muted">Uploading…</p>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // ── render: RECALL (prompt · countdown · recording state · submit) ─────────
   const secs = remainingSeconds(deadline);
   const totalSecs = durationMs ? Math.round(durationMs / 1000) : 1;
   const pct = deadline
@@ -362,7 +443,7 @@ export default function RecallSession() {
     <div className="stack">
       <div className="row between small faint">
         <span>
-          Card {index + 1} / {cards.length}
+          Item {index + 1} / {items.length}
         </span>
         <button
           className="btn btn-ghost"
@@ -373,148 +454,185 @@ export default function RecallSession() {
         </button>
       </div>
 
-      {/* ── RECALL: prompt · countdown · recording state · submit ─────────── */}
-      {phase === "recall" && (
-        <div className="card stack center" style={{ paddingTop: 28, paddingBottom: 28 }}>
+      <div className="card stack center" style={{ paddingTop: 28, paddingBottom: 28 }}>
+        <div
+          style={{
+            fontSize: "3.4rem",
+            fontWeight: 800,
+            lineHeight: 1,
+            color: danger ? "var(--bad)" : undefined,
+            background: danger ? "none" : "var(--accent-grad)",
+            WebkitBackgroundClip: danger ? undefined : "text",
+            backgroundClip: danger ? undefined : "text",
+            WebkitTextFillColor: danger ? "var(--bad)" : "transparent",
+          }}
+        >
+          {secs}
+        </div>
+        <div
+          style={{
+            height: 6,
+            width: "100%",
+            borderRadius: 999,
+            background: "var(--bg-elev-2)",
+            overflow: "hidden",
+          }}
+        >
           <div
-            className="num"
             style={{
-              fontSize: "3.4rem",
-              fontWeight: 800,
-              color: danger ? "var(--bad)" : undefined,
-              background: danger ? "none" : "var(--accent-grad)",
-              WebkitBackgroundClip: danger ? undefined : "text",
-              backgroundClip: danger ? undefined : "text",
-              WebkitTextFillColor: danger ? "var(--bad)" : "transparent",
+              height: "100%",
+              width: `${pct}%`,
+              background: danger ? "var(--bad)" : "var(--accent-grad)",
             }}
-            aria-live="off"
-          >
-            {secs}
-          </div>
-          <div
+          />
+        </div>
+
+        <p className="small faint" style={{ margin: "8px 0 0" }}>
+          {item?.prompt_type === "audio_shadow"
+            ? "Listen & repeat aloud"
+            : item?.prompt_type === "cloze"
+              ? "Complete it aloud"
+              : "Recall this aloud"}
+        </p>
+        <h2 style={{ margin: "2px 0 0" }}>{item ? promptText(item) : ""}</h2>
+        {item?.context_clue && (
+          <p className="small faint" style={{ margin: 0 }}>{item.context_clue}</p>
+        )}
+
+        {item?.prompt_type === "audio_shadow" && (
+          <AudioPlayer src={item.source_audio_url} />
+        )}
+
+        <div className="row" style={{ gap: 8, marginTop: 6 }}>
+          <span
+            aria-hidden="true"
             style={{
-              height: 6,
-              width: "100%",
+              width: 10,
+              height: 10,
               borderRadius: 999,
-              background: "var(--bg-elev-2)",
-              overflow: "hidden",
+              background: "var(--bad)",
+              animation: "pulse 1.2s infinite",
             }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${pct}%`,
-                background: danger ? "var(--bad)" : "var(--accent-grad)",
-              }}
-            />
-          </div>
-
-          <p className="small faint" style={{ margin: "6px 0 0" }}>
-            Recall this aloud
-          </p>
-          <h2 style={{ margin: "2px 0 0" }}>{card?.promptText}</h2>
-
-          <div className="row" style={{ gap: 8, marginTop: 6 }}>
-            <span
-              aria-hidden="true"
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 999,
-                background: "var(--bad)",
-                boxShadow: "0 0 0 0 rgba(248,113,113,0.6)",
-                animation: "pulse 1.2s infinite",
-              }}
-            />
-            <span className="small" style={{ color: "var(--bad)", fontWeight: 700 }}>
-              Recording · {totalSecs - secs}s
-            </span>
-          </div>
-
-          <button
-            className="btn btn-primary btn-lg btn-block"
-            style={{ marginTop: 10 }}
-            onClick={() => submitRef.current()}
-          >
-            Submit answer
-          </button>
-          {error && <div className="alert alert-error" style={{ margin: "8px 0 0" }}>{error}</div>}
+          />
+          <span className="small" style={{ color: "var(--bad)", fontWeight: 700 }}>
+            Recording · {totalSecs - secs}s
+          </span>
         </div>
-      )}
 
-      {/* ── SUBMITTING / GRADING ──────────────────────────────────────────── */}
-      {phase === "submitting" && (
-        <div className="card stack center" style={{ padding: 36 }}>
-          <div className="spinner" aria-hidden="true" />
-          <p className="muted">Uploading & grading…</p>
-        </div>
-      )}
+        <button
+          className="btn btn-primary btn-lg btn-block"
+          style={{ marginTop: 10 }}
+          onClick={() => submitRef.current()}
+        >
+          {index + 1 < items.length ? "Submit & next" : "Submit & grade"}
+        </button>
+        {error && <div className="alert alert-error" style={{ margin: "8px 0 0" }}>{error}</div>}
+      </div>
+    </div>
+  );
+}
 
-      {/* ── FEEDBACK / CORRECTION ─────────────────────────────────────────── */}
-      {phase === "feedback" && (
-        <div className="card stack">
-          {attempt?.status === "grading" && (
-            <div className="row">
-              <div className="spinner spinner-sm" aria-hidden="true" />
-              <span className="muted">Grading…</span>
-            </div>
-          )}
+// ── Summary view ────────────────────────────────────────────────────────────
+function Summary({
+  graded,
+  recordings,
+}: {
+  graded: Session | null;
+  recordings: Map<number, string>;
+}) {
+  const summary = graded?.summary;
+  const items = graded?.items ?? [];
 
-          {attempt?.result && (
-            <span
-              className={`pill ${attempt.result === "pass" ? "pill-good" : "pill-bad"}`}
-            >
-              {attempt.result === "pass" ? "Pass" : "Needs work"}
-            </span>
-          )}
+  if (!items.length) {
+    return (
+      <div className="card stack center">
+        <h2>Nothing due</h2>
+        <p className="muted">No items were scheduled for this session.</p>
+        <a className="btn btn-primary btn-block" href="/">Home</a>
+      </div>
+    );
+  }
 
-          <div>
-            <div className="small faint">Answer</div>
-            <h2 style={{ margin: 0 }}>{card?.targetText}</h2>
-          </div>
-
-          {attempt?.userTranscript != null && (
-            <div>
-              <div className="small faint">You said</div>
-              <div style={{ color: "var(--text-dim)" }}>
-                {attempt.userTranscript || <em className="faint">(no transcript)</em>}
+  return (
+    <div className="stack">
+      <div className="card stack center">
+        <h2 style={{ margin: 0 }}>Session graded</h2>
+        {summary && (
+          <>
+            <div className="stat-grid" style={{ width: "100%" }}>
+              <div className="stat">
+                <div className="num">{Math.round(summary.score)}</div>
+                <div className="lbl">Score</div>
+              </div>
+              <div className="stat">
+                <div className="num">{summary.passed}</div>
+                <div className="lbl">Passed</div>
+              </div>
+              <div className="stat">
+                <div className="num">{summary.failed}</div>
+                <div className="lbl">Failed</div>
               </div>
             </div>
-          )}
+            <div className="small faint">
+              {summary.partial} partial · {summary.overtime_count} overtime ·{" "}
+              {summary.total} total
+            </div>
+          </>
+        )}
+      </div>
 
-          {attempt?.correction && (
-            <div className="alert" style={{ margin: 0 }}>{attempt.correction}</div>
-          )}
+      {items.map((it) => {
+        const userUrl = recordings.get(it.sprint_item_id);
+        const cls =
+          it.result === "pass"
+            ? "pill-good"
+            : it.result === "partial"
+              ? "pill-warn"
+              : "pill-bad";
+        return (
+          <div className="card stack" key={it.sprint_item_id}>
+            <div className="row between">
+              <span className={`pill ${cls}`}>
+                {it.result ?? "pending"}
+                {it.score != null ? ` · ${Math.round(it.score)}` : ""}
+              </span>
+              <span className="small faint">
+                {it.fsrs_rating ? `FSRS ${it.fsrs_rating}` : ""}
+                {it.timed_out ? " · ⏱ overtime" : ""}
+              </span>
+            </div>
 
-          {attempt?.error && (
-            <div className="alert alert-error" style={{ margin: 0 }}>{attempt.error}</div>
-          )}
-          {error && <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>}
+            <div>
+              <div className="small faint">Answer</div>
+              <div style={{ fontWeight: 600 }}>{it.spanish}</div>
+              <div className="small faint">{it.english}</div>
+            </div>
 
-          {card && <AudioPlayer src={card.nativeAudioUrl} label="Native audio" />}
-          {attempt?.userAudioUrl && (
-            <AudioPlayer src={attempt.userAudioUrl} label="Your recording" />
-          )}
+            {it.user_transcript_segment != null && (
+              <div>
+                <div className="small faint">You said</div>
+                <div style={{ color: "var(--text-dim)" }}>
+                  {it.user_transcript_segment || (
+                    <em className="faint">(no transcript)</em>
+                  )}
+                </div>
+              </div>
+            )}
 
-          <div className="small faint" style={{ marginTop: 4 }}>
-            How well did you recall it?
+            {it.feedback && (
+              <div className="alert" style={{ margin: 0 }}>{it.feedback}</div>
+            )}
+
+            <AudioPlayer src={it.source_audio_url} label="Native audio" />
+            {userUrl && <AudioPlayer src={userUrl} label="Your recording" />}
           </div>
-          <div className="btn-row">
-            {RATINGS.map((r) => (
-              <button
-                key={r.rating}
-                className={`btn ${r.cls === "pill-good" ? "btn-primary" : ""}`}
-                onClick={() => rate(r.rating)}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-          <button className="btn btn-ghost btn-block" onClick={next}>
-            Skip →
-          </button>
-        </div>
-      )}
+        );
+      })}
+
+      <div className="btn-row">
+        <a className="btn btn-primary" href="/review">Review misses</a>
+        <a className="btn" href="/">Home</a>
+      </div>
     </div>
   );
 }

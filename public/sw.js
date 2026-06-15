@@ -8,8 +8,11 @@
  * playback working in iPhone Safari (acceptance test #11) while still allowing
  * the app to be "installed" to the home screen.
  *
- * If you ever add offline caching, do it deliberately and EXCLUDE audio/media
- * and the /api/* routes from any fetch interception.
+ * If you ever add offline caching, do it deliberately and EXCLUDE all of:
+ *   - /api/*           (dynamic backend calls)
+ *   - /api/audio/*     (native source audio — served with HTTP Range requests)
+ *   - any request with a `Range` header (never cache partial/range responses)
+ * Caching ranged media responses is exactly what breaks Safari audio playback.
  */
 
 self.addEventListener("install", () => {

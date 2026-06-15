@@ -1,46 +1,51 @@
 /**
  * Centralized, typed API client for the FastAPI learning engine.
  *
+ * Access is gated by Tailscale at the network layer — there is NO public auth,
+ * so no auth headers are ever sent. In production the API base URL is the EMPTY
+ * STRING (same origin): the frontend and FastAPI are served from the same
+ * Tailscale host, so all calls and `/api/audio/...` media URLs are same-origin.
+ *
  * ─────────────────────────────────────────────────────────────────────────
- * ASSUMED BACKEND CONTRACT (single source of truth — remap here if it differs)
+ * SESSION / GRADING FLOW (real backend contract)
  * ─────────────────────────────────────────────────────────────────────────
- *  Ingestion
- *    POST   /api/ingest                 { youtubeUrl }            -> IngestJob
- *    GET    /api/ingest/:jobId                                    -> IngestJob
+ *   1. POST   /api/sessions                                   -> Session
+ *   2. (show items one at a time, record spoken answer)
+ *   3. POST   /api/sessions/:sid/items/:itemId/recording      (multipart)
+ *   4. (repeat for every item)
+ *   5. POST   /api/sessions/:sid/grade                        -> { job_id }
+ *   6. GET    /api/jobs/:jobId                                -> Job (poll)
+ *   7. GET    /api/sessions/:sid       (when job complete)    -> graded Session
  *
- *  Library
- *    GET    /api/videos                                           -> Video[]
- *    DELETE /api/videos/:videoId                                  -> 204
- *    GET    /api/videos/:videoId/cards                            -> Card[]
+ * Grading is done ASYNC by the backend (transcription + scoring + FSRS). The
+ * client never self-grades.
  *
- *  Sessions / scheduling
- *    GET    /api/stats                                            -> Stats
- *    POST   /api/session/start          { limit? }                -> SessionPayload
+ * ─────────────────────────────────────────────────────────────────────────
+ * LIBRARY / STATS / HEALTH (real contract)
+ * ─────────────────────────────────────────────────────────────────────────
+ *   GET    /health                                            -> 200
+ *   GET    /api/stats                                         -> 200 (opaque)
+ *   GET    /api/sources                                       -> Source[]
+ *   GET    /api/cards                                         -> Card[]
  *
- *  Recall attempts (acoustic)
- *    POST   /api/cards/:cardId/attempt  multipart(audio,sessionId,elapsedMs)
- *                                                                 -> Attempt (grading)
- *    GET    /api/attempts/:attemptId                              -> Attempt
- *    POST   /api/cards/:cardId/review   { rating }                -> 204
- *
- *  Corrections review
- *    GET    /api/corrections                                      -> CorrectionCard[]
- *
- * Every backend call in the app goes through this module. UI code never builds
- * URLs or touches fetch directly.
+ * INGESTION (assumed — no confirmed contract; remap here if it differs)
+ *   POST   /api/sources               { source_url }          -> SourceRaw
+ *   GET    /api/sources/:id                                   -> SourceRaw
  */
 
 import { getApiBaseUrl, resolveUrl } from "./config";
 import type {
-  Attempt,
   Card,
-  CorrectionCard,
-  IngestJob,
-  ReviewRating,
-  SessionPayload,
-  Stats,
-  Video,
+  GradeResponse,
+  Job,
+  RecordingMeta,
+  RecordingResponse,
+  Session,
+  SessionItem,
+  Source,
+  SourceRaw,
 } from "./types";
+import { isJobComplete, isJobFailed } from "./types";
 
 export class ApiError extends Error {
   status: number;
@@ -64,10 +69,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     res = await fetch(url(path), {
       ...init,
-      headers: {
-        Accept: "application/json",
-        ...(init?.headers ?? {}),
-      },
+      headers: { Accept: "application/json", ...(init?.headers ?? {}) },
     });
   } catch (err) {
     throw new ApiError(
@@ -104,120 +106,111 @@ async function requestJson<T>(path: string, method: string, body: unknown): Prom
   });
 }
 
-/** Normalize any audio URLs in a card to absolute URLs against the API base. */
-function hydrateCard(card: Card): Card {
-  return { ...card, nativeAudioUrl: resolveUrl(card.nativeAudioUrl) };
+/**
+ * Resolve an item's source audio URL against the API base. In production the
+ * base is "" so `/api/audio/source/...` stays same-origin and untouched.
+ */
+function hydrateItem(item: SessionItem): SessionItem {
+  return { ...item, source_audio_url: resolveUrl(item.source_audio_url) };
 }
-
-function hydrateAttempt(a: Attempt): Attempt {
-  return {
-    ...a,
-    userAudioUrl: a.userAudioUrl ? resolveUrl(a.userAudioUrl) : a.userAudioUrl,
-    nativeAudioUrl: a.nativeAudioUrl ? resolveUrl(a.nativeAudioUrl) : a.nativeAudioUrl,
-  };
+function hydrateSession(s: Session): Session {
+  return { ...s, items: (s.items ?? []).map(hydrateItem) };
 }
 
 export const api = {
-  // ── Ingestion ──────────────────────────────────────────────────────────
-  startIngest(youtubeUrl: string): Promise<IngestJob> {
-    return requestJson<IngestJob>("/api/ingest", "POST", { youtubeUrl });
-  },
-  getIngest(jobId: string): Promise<IngestJob> {
-    return request<IngestJob>(`/api/ingest/${encodeURIComponent(jobId)}`);
+  // ── Sessions / grading (real contract) ───────────────────────────────────
+  async createSession(): Promise<Session> {
+    return hydrateSession(await requestJson<Session>("/api/sessions", "POST", {}));
   },
 
-  // ── Library ────────────────────────────────────────────────────────────
-  listVideos(): Promise<Video[]> {
-    return request<Video[]>("/api/videos");
-  },
-  deleteVideo(videoId: string): Promise<void> {
-    return request<void>(`/api/videos/${encodeURIComponent(videoId)}`, {
-      method: "DELETE",
-    });
-  },
-  async listCards(videoId: string): Promise<Card[]> {
-    const cards = await request<Card[]>(
-      `/api/videos/${encodeURIComponent(videoId)}/cards`,
+  async getSession(sessionId: number | string): Promise<Session> {
+    return hydrateSession(
+      await request<Session>(`/api/sessions/${encodeURIComponent(String(sessionId))}`),
     );
-    return cards.map(hydrateCard);
   },
 
-  // ── Sessions / scheduling ────────────────────────────────────────────────
-  getStats(): Promise<Stats> {
-    return request<Stats>("/api/stats");
-  },
-  async startSession(limit = 20): Promise<SessionPayload> {
-    const payload = await requestJson<SessionPayload>("/api/session/start", "POST", {
-      limit,
-    });
-    return { ...payload, cards: payload.cards.map(hydrateCard) };
-  },
-
-  // ── Recall attempts ──────────────────────────────────────────────────────
-  async submitAttempt(
-    cardId: string,
+  uploadRecording(
+    sessionId: number | string,
+    sprintItemId: number | string,
     audio: Blob,
-    meta: { sessionId?: string; elapsedMs?: number; filename?: string },
-  ): Promise<Attempt> {
+    meta: RecordingMeta,
+  ): Promise<RecordingResponse> {
     const form = new FormData();
-    form.append("audio", audio, meta.filename ?? "recall.webm");
-    if (meta.sessionId) form.append("sessionId", meta.sessionId);
-    if (typeof meta.elapsedMs === "number") {
-      form.append("elapsedMs", String(meta.elapsedMs));
-    }
-    const attempt = await request<Attempt>(
-      `/api/cards/${encodeURIComponent(cardId)}/attempt`,
+    form.append("audio", audio, meta.filename);
+    form.append("mime_type", meta.mimeType);
+    form.append("prompt_shown_at", meta.promptShownAt);
+    form.append("answered_at", meta.answeredAt);
+    form.append("response_seconds", String(meta.responseSeconds));
+    form.append("timed_out", String(meta.timedOut));
+    return request<RecordingResponse>(
+      `/api/sessions/${encodeURIComponent(String(sessionId))}/items/${encodeURIComponent(
+        String(sprintItemId),
+      )}/recording`,
       { method: "POST", body: form },
     );
-    return hydrateAttempt(attempt);
   },
-  async getAttempt(attemptId: string): Promise<Attempt> {
-    return hydrateAttempt(
-      await request<Attempt>(`/api/attempts/${encodeURIComponent(attemptId)}`),
-    );
-  },
-  submitReview(cardId: string, rating: ReviewRating): Promise<void> {
-    return requestJson<void>(
-      `/api/cards/${encodeURIComponent(cardId)}/review`,
+
+  gradeSession(sessionId: number | string): Promise<GradeResponse> {
+    return requestJson<GradeResponse>(
+      `/api/sessions/${encodeURIComponent(String(sessionId))}/grade`,
       "POST",
-      { rating },
+      {},
     );
   },
 
-  // ── Corrections review ────────────────────────────────────────────────────
-  async listCorrections(): Promise<CorrectionCard[]> {
-    const items = await request<CorrectionCard[]>("/api/corrections");
-    return items.map((c) => ({
-      ...c,
-      nativeAudioUrl: resolveUrl(c.nativeAudioUrl),
-      userAudioUrl: c.userAudioUrl ? resolveUrl(c.userAudioUrl) : c.userAudioUrl,
-    }));
+  getJob(jobId: number | string): Promise<Job> {
+    return request<Job>(`/api/jobs/${encodeURIComponent(String(jobId))}`);
+  },
+
+  // ── Health / stats (real) ────────────────────────────────────────────────
+  health(): Promise<unknown> {
+    return request<unknown>("/health");
+  },
+  getStats(): Promise<unknown> {
+    return request<unknown>("/api/stats");
+  },
+
+  // ── Library (real) ───────────────────────────────────────────────────────
+  listSources(): Promise<Source[]> {
+    return request<Source[]>("/api/sources");
+  },
+  async listCards(): Promise<Card[]> {
+    const cards = await request<Card[]>("/api/cards");
+    return cards.map((c) => ({ ...c, audio_url: resolveUrl(c.audio_url) }));
+  },
+
+  // ── Ingestion (assumed) ──────────────────────────────────────────────────
+  createSource(sourceUrl: string): Promise<SourceRaw> {
+    return requestJson<SourceRaw>("/api/sources", "POST", { source_url: sourceUrl });
+  },
+  getSource(id: number | string): Promise<SourceRaw> {
+    return request<SourceRaw>(`/api/sources/${encodeURIComponent(String(id))}`);
   },
 };
 
-/**
- * Poll an attempt until it leaves the "grading" state (or times out).
- * Used by the session screen for grading-status polling.
- */
-export async function pollAttempt(
-  attemptId: string,
+/** Poll a grading job until it completes or fails (or times out). */
+export async function pollJob(
+  jobId: number | string,
   opts: {
     intervalMs?: number;
     timeoutMs?: number;
-    onUpdate?: (a: Attempt) => void;
+    onUpdate?: (j: Job) => void;
     signal?: AbortSignal;
   } = {},
-): Promise<Attempt> {
+): Promise<Job> {
   const intervalMs = opts.intervalMs ?? 1500;
-  const timeoutMs = opts.timeoutMs ?? 120_000;
+  const timeoutMs = opts.timeoutMs ?? 180_000;
   const start = Date.now();
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
     if (opts.signal?.aborted) throw new DOMException("Aborted", "AbortError");
-    const attempt = await api.getAttempt(attemptId);
-    opts.onUpdate?.(attempt);
-    if (attempt.status !== "grading") return attempt;
+    const job = await api.getJob(jobId);
+    opts.onUpdate?.(job);
+    if (isJobFailed(job)) {
+      throw new ApiError(job.error_message || "Grading failed.", 0);
+    }
+    if (isJobComplete(job)) return job;
     if (Date.now() - start > timeoutMs) {
       throw new ApiError("Grading timed out.", 0);
     }

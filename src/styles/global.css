@@ -378,6 +378,34 @@ label.field > span {
   border: 0;
 }
 
+/* Segmented control ─────────────────────────────────────────────────────── */
+.seg {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.seg-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.seg-btn.active {
+  background: var(--bg-elev-2);
+  color: var(--text);
+}
+
 /* Spinner + recording pulse ────────────────────────────────────────────── */
 .spinner {
   width: 34px;

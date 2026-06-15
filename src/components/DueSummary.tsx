@@ -1,10 +1,34 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api";
-import type { Stats } from "../lib/types";
+import type { Card, DashboardStats } from "../lib/types";
 import { loadSession } from "../lib/timer";
 
+/** Derive dashboard counts client-side from the cards + sources endpoints. */
+function computeStats(cards: Card[], sourceCount: number): DashboardStats {
+  const now = Date.now();
+  let due = 0;
+  let learning = 0;
+  let review = 0;
+  let nw = 0;
+  for (const c of cards) {
+    if (c.state === "new") nw++;
+    else if (c.state === "learning" || c.state === "relearning") learning++;
+    else if (c.state === "review") review++;
+    const dueAt = Date.parse(c.due_at);
+    if (!Number.isNaN(dueAt) && dueAt <= now) due++;
+  }
+  return {
+    dueCount: due,
+    newCount: nw,
+    learningCount: learning,
+    reviewCount: review,
+    totalCards: cards.length,
+    sourceCount,
+  };
+}
+
 export default function DueSummary() {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasResumable, setHasResumable] = useState(false);
@@ -14,12 +38,13 @@ export default function DueSummary() {
     let alive = true;
     (async () => {
       try {
-        const s = await api.getStats();
-        if (alive) setStats(s);
+        const [cards, sources] = await Promise.all([
+          api.listCards(),
+          api.listSources(),
+        ]);
+        if (alive) setStats(computeStats(cards, sources.length));
       } catch (err) {
-        if (alive) {
-          setError(err instanceof ApiError ? err.message : String(err));
-        }
+        if (alive) setError(err instanceof ApiError ? err.message : String(err));
       } finally {
         if (alive) setLoading(false);
       }
@@ -58,8 +83,7 @@ export default function DueSummary() {
 
       {hasResumable && (
         <div className="alert">
-          You have an unfinished session.{" "}
-          <a href="/session">Resume it →</a>
+          You have an unfinished session. <a href="/session">Resume it →</a>
         </div>
       )}
 
@@ -70,9 +94,9 @@ export default function DueSummary() {
       <div className="row between small faint">
         <span>
           {stats ? `${stats.totalCards} cards` : "—"} ·{" "}
-          {stats ? `${stats.videoCount} videos` : "—"}
+          {stats ? `${stats.sourceCount} sources` : "—"}
         </span>
-        <a href="/ingest">Add a video →</a>
+        <a href="/ingest">Add a source →</a>
       </div>
     </div>
   );

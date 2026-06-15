@@ -1,99 +1,156 @@
 /**
- * Shared domain types for the learning-engine backend.
+ * Domain types for the FastAPI learning engine.
  *
- * These mirror the *assumed* FastAPI contract. If the real backend differs,
- * adjust these types and the mapping in `api.ts` — nothing else in the UI
- * references raw response shapes.
+ * The session/grading types below mirror the REAL backend contract. The
+ * ingest/library/stats types are still treated as assumed (no contract given
+ * yet) and are isolated so they can be adjusted independently.
  */
 
-export type IngestStatus = "queued" | "processing" | "done" | "error";
+// ── Sessions & grading (REAL contract) ─────────────────────────────────────
 
-export interface IngestJob {
-  jobId: string;
-  status: IngestStatus;
-  /** Populated once status === "done". */
-  videoId?: string;
-  title?: string;
-  sentenceCount?: number;
-  /** Progress 0..1 if the backend reports it. */
-  progress?: number;
-  error?: string;
-}
+export type PromptType = "cloze" | "english_to_spanish" | "audio_shadow";
+export type ItemResult = "pass" | "fail" | "partial" | "pending";
+export type FsrsRating = 1 | 2 | 3 | 4;
 
-export interface Video {
-  id: string;
-  title: string;
-  youtubeUrl: string;
-  thumbnailUrl?: string;
-  sentenceCount: number;
-  cardCount: number;
-  createdAt: string;
-}
-
-/** A single recall card. `targetText` is the Spanish answer (revealed after recall). */
-export interface Card {
-  id: string;
-  videoId: string;
-  videoTitle?: string;
-  /** Cue shown to the learner during recall (e.g. translation / context). */
-  promptText: string;
-  /** The Spanish sentence to recall — hidden until reveal. */
-  targetText: string;
-  /** URL to the sliced native source audio for this sentence. */
-  nativeAudioUrl: string;
-  /** Seconds allotted for the active recall phase. */
-  recallSeconds: number;
-  dueAt?: string;
-  /** Scheduling state from the FSRS-like scheduler. */
-  state?: "new" | "learning" | "review" | "relearning";
-}
-
-export interface SessionPayload {
-  sessionId: string;
-  cards: Card[];
-}
-
-export type GradeStatus = "grading" | "graded" | "error";
-export type GradeResult = "pass" | "fail";
-
-export interface Attempt {
-  attemptId: string;
-  cardId: string;
-  status: GradeStatus;
-  /** Populated once status === "graded". */
-  result?: GradeResult;
-  /** 0..1 similarity / confidence if provided. */
+export interface SessionItem {
+  sprint_item_id: number;
+  phrase_id: number;
+  position: number;
+  prompt: string;
+  prompt_type: PromptType;
+  spanish: string;
+  english: string;
+  context_clue?: string | null;
+  cloze_prompt: string;
+  source_audio_url: string;
+  recording_id?: number;
+  result?: ItemResult;
   score?: number;
-  expectedTranscript?: string;
-  userTranscript?: string;
-  /** Human-readable correction feedback (may contain markup-free text). */
-  correction?: string;
-  /** URL to the learner's uploaded recording. */
-  userAudioUrl?: string;
-  nativeAudioUrl?: string;
-  error?: string;
+  feedback?: string;
+  user_transcript_segment?: string;
+  fsrs_rating?: FsrsRating;
+  timed_out?: boolean;
+  response_seconds?: number;
 }
 
-/** A failed card surfaced on the correction-review screen. */
-export interface CorrectionCard {
-  cardId: string;
-  attemptId: string;
-  videoTitle?: string;
-  expectedTranscript: string;
-  userTranscript: string;
-  correction?: string;
-  userAudioUrl?: string;
-  nativeAudioUrl: string;
-  failedAt?: string;
+export interface SessionSummary {
+  total: number;
+  passed: number;
+  failed: number;
+  partial: number;
+  score: number;
+  overtime_count: number;
 }
 
-export interface Stats {
+export interface Session {
+  session_id: number;
+  items: SessionItem[];
+  summary?: SessionSummary;
+  status?: string;
+}
+
+/** Returned by POST /api/sessions/:id/recording. */
+export interface RecordingResponse {
+  recording_id: number;
+}
+
+/** Returned by POST /api/sessions/:id/grade. */
+export interface GradeResponse {
+  job_id: string | number;
+}
+
+export type JobState = "queued" | "processing" | "complete" | "failed";
+
+export interface Job {
+  job_id: number;
+  status: JobState;
+  result: unknown | null;
+  error_message: string | null;
+}
+
+export function isJobComplete(j: Job): boolean {
+  return j.status === "complete";
+}
+export function isJobFailed(j: Job): boolean {
+  return j.status === "failed";
+}
+
+/** Metadata sent alongside each recording upload. */
+export interface RecordingMeta {
+  mimeType: string;
+  promptShownAt: string; // ISO 8601
+  answeredAt: string; // ISO 8601
+  responseSeconds: number;
+  timedOut: boolean;
+  filename: string;
+}
+
+// ── Sources / phrases / cards (REAL contract) ──────────────────────────────
+
+/** A source without aggregate counts (e.g. on create / detail). */
+export interface SourceRaw {
+  id: number;
+  source_type: string;
+  source_url: string;
+  source_video_id: string | null;
+  title: string | null;
+  channel: string | null;
+  language: string | null;
+  transcript_status: string | null;
+  audio_status: string | null;
+  created_at: string;
+}
+
+/** A source with phrase aggregates (e.g. on GET /api/sources). */
+export interface Source extends SourceRaw {
+  phrase_count: number;
+  active_count: number;
+}
+
+export interface Phrase {
+  id: number;
+  source_id: number;
+  spanish: string;
+  english: string;
+  context_clue: string | null;
+  cloze_prompt: string;
+  audio_path: string;
+  active: boolean;
+}
+
+export type CardState = "new" | "learning" | "review" | "relearning";
+
+export interface Card {
+  phrase_id: number;
+  spanish: string;
+  english: string;
+  context_clue: string | null;
+  cloze_prompt: string;
+  audio_url: string;
+  due_at: string;
+  state: CardState;
+  reps: number;
+  lapses: number;
+}
+
+/** Dashboard counts derived client-side from /api/cards + /api/sources. */
+export interface DashboardStats {
   dueCount: number;
   newCount: number;
   learningCount: number;
+  reviewCount: number;
   totalCards: number;
-  videoCount: number;
+  sourceCount: number;
 }
 
-/** Self-grade rating forwarded to the FSRS-like scheduler. */
-export type ReviewRating = "again" | "hard" | "good" | "easy";
+/** A treated-as-ready status set for source ingestion polling (assumed). */
+export function isStatusReady(status: string | null): boolean {
+  if (!status) return false;
+  return ["done", "complete", "completed", "ready", "ok", "success"].includes(
+    status.toLowerCase(),
+  );
+}
+export function isStatusFailed(status: string | null): boolean {
+  if (!status) return false;
+  return ["error", "failed", "failure"].includes(status.toLowerCase());
+}

@@ -39,18 +39,24 @@ export default function BackendSettings() {
 
   async function testConnection() {
     setProbe({ state: "checking" });
-    try {
-      const stats = await api.getStats();
-      setProbe({
-        state: "ok",
-        message: `Connected — ${stats.totalCards} cards, ${stats.dueCount} due.`,
-      });
-    } catch (err) {
-      setProbe({
-        state: "fail",
-        message: err instanceof ApiError ? err.message : String(err),
-      });
+    const checks: { name: string; run: () => Promise<unknown> }[] = [
+      { name: "/health", run: () => api.health() },
+      { name: "/api/stats", run: () => api.getStats() },
+      { name: "/api/sources", run: () => api.listSources() },
+      { name: "/api/cards", run: () => api.listCards() },
+    ];
+    const lines: string[] = [];
+    let allOk = true;
+    for (const c of checks) {
+      try {
+        await c.run();
+        lines.push(`✓ ${c.name}`);
+      } catch (err) {
+        allOk = false;
+        lines.push(`✗ ${c.name} — ${err instanceof ApiError ? err.message : String(err)}`);
+      }
     }
+    setProbe({ state: allOk ? "ok" : "fail", message: lines.join("\n") });
   }
 
   return (
@@ -109,10 +115,17 @@ export default function BackendSettings() {
           {probe.state === "checking" ? "Testing…" : "Test connection"}
         </button>
         {probe.state === "ok" && (
-          <div className="alert alert-ok" style={{ margin: 0 }}>{probe.message}</div>
+          <div className="alert alert-ok" style={{ margin: 0, whiteSpace: "pre-line" }}>
+            {probe.message}
+          </div>
         )}
         {probe.state === "fail" && (
-          <div className="alert alert-error" style={{ margin: 0 }}>{probe.message}</div>
+          <div
+            className="alert alert-error"
+            style={{ margin: 0, whiteSpace: "pre-line" }}
+          >
+            {probe.message}
+          </div>
         )}
       </div>
     </div>
