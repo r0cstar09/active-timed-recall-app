@@ -1,0 +1,10 @@
+---
+import Base from "../layouts/Base.astro";
+import BackendSettings from "../components/BackendSettings.tsx";
+---
+
+<Base title="Settings · Recall" heading="Settings" current="settings">
+  <h1>Settings</h1>
+  <p class="muted">Point the app at your Tailscale FastAPI backend.</p>
+  <BackendSettings client:load />
+</Base>

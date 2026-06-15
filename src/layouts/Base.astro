@@ -1,0 +1,71 @@
+---
+import "../styles/global.css";
+import Nav from "../components/Nav.astro";
+
+interface Props {
+  title?: string;
+  heading?: string;
+  current?: "home" | "ingest" | "library" | "review" | "settings";
+  /** Hide the bottom tab bar (used by the focused recall session screen). */
+  hideNav?: boolean;
+}
+const {
+  title = "Active Timed Recall",
+  heading,
+  current,
+  hideNav = false,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
+    />
+    <title>{title}</title>
+    <meta name="description" content="Spanish acoustic-first active timed recall." />
+
+    <!-- PWA / iOS home-screen install -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Recall" />
+    <link rel="apple-touch-icon" href="/icons/icon.svg" />
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app-header">
+        <a class="brand" href="/">
+          <img src="/icons/icon.svg" alt="" width="30" height="30" />
+          <span>{heading ?? "Recall"}</span>
+        </a>
+        <slot name="header-actions" />
+      </header>
+
+      <main class="main">
+        <slot />
+      </main>
+    </div>
+
+    {!hideNav && <Nav current={current} />}
+
+    <script>
+      // Register the non-intercepting service worker for installability.
+      // It has NO fetch handler, so it never touches audio/media or /api
+      // requests (acceptance test #11).
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js", { scope: "/" })
+            .catch((err) => console.warn("SW registration failed:", err));
+        });
+      }
+    </script>
+  </body>
+</html>

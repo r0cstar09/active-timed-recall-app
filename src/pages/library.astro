@@ -1,0 +1,10 @@
+---
+import Base from "../layouts/Base.astro";
+import Library from "../components/Library.tsx";
+---
+
+<Base title="Library · Recall" heading="Library" current="library">
+  <h1>Library</h1>
+  <p class="muted">Your ingested videos and their cards.</p>
+  <Library client:load />
+</Base>

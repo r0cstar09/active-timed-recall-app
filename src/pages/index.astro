@@ -1,0 +1,10 @@
+---
+import Base from "../layouts/Base.astro";
+import DueSummary from "../components/DueSummary.tsx";
+---
+
+<Base title="Active Timed Recall" heading="Recall" current="home">
+  <h1>Today</h1>
+  <p class="muted">Acoustic-first Spanish active recall.</p>
+  <DueSummary client:load />
+</Base>

@@ -1,0 +1,9 @@
+---
+import Base from "../layouts/Base.astro";
+import RecallSession from "../components/RecallSession.tsx";
+---
+
+<!-- Focused screen: bottom nav hidden to minimize clutter during recall. -->
+<Base title="Session · Recall" heading="Session" hideNav={true}>
+  <RecallSession client:load />
+</Base>

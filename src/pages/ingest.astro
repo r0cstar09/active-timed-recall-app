@@ -1,0 +1,13 @@
+---
+import Base from "../layouts/Base.astro";
+import IngestForm from "../components/IngestForm.tsx";
+---
+
+<Base title="Ingest · Recall" heading="Ingest" current="ingest">
+  <h1>Ingest a video</h1>
+  <p class="muted">
+    Paste a YouTube URL. The engine extracts high-value Spanish sentences,
+    slices native audio, and schedules cards.
+  </p>
+  <IngestForm client:load />
+</Base>

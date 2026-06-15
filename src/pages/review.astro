@@ -1,0 +1,10 @@
+---
+import Base from "../layouts/Base.astro";
+import CorrectionReview from "../components/CorrectionReview.tsx";
+---
+
+<Base title="Review · Recall" heading="Review" current="review">
+  <h1>Corrections</h1>
+  <p class="muted">Failed cards with expected vs. your transcript and audio.</p>
+  <CorrectionReview client:load />
+</Base>
