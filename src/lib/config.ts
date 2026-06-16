@@ -13,6 +13,7 @@
  */
 
 const STORAGE_KEY = "atr.apiBaseUrl";
+const TAILNET_API_BASE_URL = "https://tonys-alienware-1.tail85fe36.ts.net";
 
 const ENV_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? "").trim();
 
@@ -57,7 +58,10 @@ export function getApiBaseUrl(): string {
   const override = getApiBaseOverride();
   if (override) return override;
   if (ENV_BASE_URL) return stripTrailingSlash(ENV_BASE_URL);
-  return ""; // same-origin
+  if (typeof window !== "undefined" && window.location.hostname === "spanish-app.tonymuzo.dev") {
+    return TAILNET_API_BASE_URL;
+  }
+  return ""; // same-origin for local preview or a future co-hosted deployment
 }
 
 /** The configured env default, exposed for display in Settings. */
