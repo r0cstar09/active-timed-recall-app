@@ -87,9 +87,20 @@ export default function DueSummary() {
         </div>
       )}
 
-      <a className="btn btn-primary btn-block btn-lg" href="/session">
-        {hasResumable ? "Resume session" : "Start recall session"}
-      </a>
+      <div className="stack">
+        <a className="btn btn-primary btn-block btn-lg" href="/session?mode=learn">
+          Learn new phrases
+        </a>
+        <a className="btn btn-block" href="/session?mode=review">
+          {hasResumable ? "Resume session" : "Review due"}
+        </a>
+        <a className="btn btn-block" href="/session?mode=practice">
+          Practice anytime <span className="small faint">(no FSRS)</span>
+        </a>
+        <a className="btn btn-block" href="/session?mode=misses">
+          Misses lab <span className="small faint">(target weak spots)</span>
+        </a>
+      </div>
 
       <div className="row between small faint">
         <span>

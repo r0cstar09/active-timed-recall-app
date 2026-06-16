@@ -8,9 +8,25 @@
 
 // ── Sessions & grading (REAL contract) ─────────────────────────────────────
 
-export type PromptType = "cloze" | "english_to_spanish" | "audio_shadow";
+export type SessionMode = "learn" | "review" | "practice" | "misses" | "cloze" | "english_to_spanish" | "audio_shadow";
+export type PromptType = "learn" | "english" | "context" | "cloze" | "audio" | "minimal" | "miss" | "english_to_spanish" | "audio_shadow";
 export type ItemResult = "pass" | "fail" | "partial" | "pending";
 export type FsrsRating = 1 | 2 | 3 | 4;
+
+export interface LearningCard {
+  english_meaning?: string;
+  spanish_logic?: string;
+  english_trap?: string;
+  grammar_focus?: string;
+  examples?: string[];
+}
+
+export interface SchedulingInfo {
+  affects_fsrs: boolean;
+  due_at?: string | null;
+  prompt_stage: number;
+  time_limit_seconds: number;
+}
 
 export interface SessionItem {
   sprint_item_id: number;
@@ -18,15 +34,21 @@ export interface SessionItem {
   position: number;
   prompt: string;
   prompt_type: PromptType;
+  mode?: SessionMode;
   spanish: string;
+  target_spanish?: string;
   english: string;
+  english_meaning?: string;
   context_clue?: string | null;
   cloze_prompt: string;
   source_audio_url: string;
+  learning_card?: LearningCard;
+  scheduling?: SchedulingInfo;
   recording_id?: number;
   result?: ItemResult;
   score?: number;
   feedback?: string;
+  error_type?: string | null;
   user_transcript_segment?: string;
   fsrs_rating?: FsrsRating;
   timed_out?: boolean;
@@ -47,6 +69,9 @@ export interface Session {
   items: SessionItem[];
   summary?: SessionSummary;
   status?: string;
+  mode?: SessionMode;
+  affects_fsrs?: boolean;
+  seconds_per_card?: number;
 }
 
 /** Returned by POST /api/sessions/:id/recording. */

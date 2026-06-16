@@ -18,7 +18,7 @@ import type { Session } from "./types";
 const KEY = "atr.session";
 const GRADED_KEY = "atr.lastGraded";
 
-export type Phase = "recall" | "uploading" | "grading" | "summary";
+export type Phase = "learn" | "recall" | "uploading" | "grading" | "summary";
 
 export interface PersistedSession {
   sessionId: number;

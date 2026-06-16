@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, pollJob } from "../lib/api";
 import { RECALL_SECONDS } from "../lib/config";
-import type { Session, SessionItem } from "../lib/types";
+import type { Session, SessionItem, SessionMode } from "../lib/types";
 import { Recorder, isRecordingSupported } from "../lib/recorder";
 import {
   clearSession,
@@ -20,9 +20,33 @@ type Status = "idle" | "active" | "error";
 const isoFromMs = (ms: number) => new Date(ms).toISOString();
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
+const VALID_MODES = new Set<SessionMode>(["learn", "review", "practice", "misses", "cloze", "english_to_spanish", "audio_shadow"]);
+
+function modeFromUrl(): SessionMode {
+  if (typeof window === "undefined") return "review";
+  const raw = new URLSearchParams(window.location.search).get("mode") || "review";
+  return VALID_MODES.has(raw as SessionMode) ? (raw as SessionMode) : "review";
+}
+
+function modeLabel(mode: SessionMode): string {
+  return {
+    learn: "Learn new phrases",
+    review: "Due review",
+    practice: "Practice only",
+    misses: "Misses lab",
+    cloze: "Cloze recall",
+    english_to_spanish: "English → Spanish",
+    audio_shadow: "Audio shadow",
+  }[mode];
+}
+
 function promptText(item: SessionItem): string {
   if (item.prompt_type === "cloze") return item.cloze_prompt || item.prompt;
   return item.prompt;
+}
+
+function itemForDuration(item?: SessionItem): number {
+  return item?.scheduling?.time_limit_seconds || RECALL_SECONDS;
 }
 
 export default function RecallSession() {
@@ -36,6 +60,7 @@ export default function RecallSession() {
   const [deadline, setDeadline] = useState<number | null>(null);
   const [durationMs, setDurationMs] = useState<number | null>(null);
   const [graded, setGraded] = useState<Session | null>(null);
+  const [sessionMode, setSessionMode] = useState<SessionMode>("review");
   const [, setTick] = useState(0);
 
   const sessionIdRef = useRef<number>(0);
@@ -72,6 +97,8 @@ export default function RecallSession() {
   );
 
   useEffect(() => {
+    const mode = modeFromUrl();
+    setSessionMode(mode);
     if (status === "idle") setResumable(loadSession());
   }, [status]);
 
@@ -108,7 +135,7 @@ export default function RecallSession() {
   }, []);
 
   function beginItem(i: number, list: SessionItem[], preserveDeadline: number | null) {
-    const dur = Math.max(1, RECALL_SECONDS) * 1000;
+    const dur = Math.max(1, itemForDuration(list[i]) ?? RECALL_SECONDS) * 1000;
     let dl = preserveDeadline;
     if (dl == null || remainingMs(dl) < 1000) dl = Date.now() + dur;
     promptShownAtRef.current = dl - dur;
@@ -153,14 +180,18 @@ export default function RecallSession() {
   }
 
   async function start() {
+    const mode = modeFromUrl();
+    setSessionMode(mode);
     setError(null);
-    if (!supported) {
-      setError("This browser does not support audio recording.");
-      return;
+    if (mode !== "learn") {
+      if (!supported) {
+        setError("This browser does not support audio recording.");
+        return;
+      }
+      if (!(await armRecorder())) return;
     }
-    if (!(await armRecorder())) return;
     try {
-      const session = await api.createSession();
+      const session = await api.createSession(mode);
       if (!session.items?.length) {
         clearSession();
         setGraded({ session_id: session.session_id, items: [] });
@@ -171,8 +202,27 @@ export default function RecallSession() {
       sessionIdRef.current = session.session_id;
       uploadedRef.current = [];
       setItems(session.items);
+      setSessionMode(session.mode ?? mode);
       setStatus("active");
-      beginItem(0, session.items, null);
+      if ((session.mode ?? mode) === "learn") {
+        setIndex(0);
+        setPhase("learn");
+        saveSession({
+          sessionId: session.session_id,
+          items: session.items,
+          index: 0,
+          phase: "learn",
+          deadline: null,
+          durationMs: null,
+          promptShownAt: null,
+          uploadedItemIds: [],
+          jobId: null,
+          graded: null,
+          savedAt: Date.now(),
+        });
+      } else {
+        beginItem(0, session.items, null);
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
       setStatus("error");
@@ -187,6 +237,12 @@ export default function RecallSession() {
     uploadedRef.current = saved.uploadedItemIds ?? [];
     setItems(saved.items);
     setIndex(saved.index);
+
+    if (saved.phase === "learn") {
+      setPhase("learn");
+      setStatus("active");
+      return;
+    }
 
     if (saved.phase === "summary" && saved.graded) {
       setGraded(saved.graded);
@@ -207,6 +263,37 @@ export default function RecallSession() {
     }
     setStatus("active");
     beginItem(saved.index, saved.items, saved.deadline);
+  }
+
+  async function acknowledgeLearned() {
+    if (!item) return;
+    setError(null);
+    try {
+      await api.introducePhrase(item.phrase_id);
+      if (index + 1 < items.length) {
+        const next = index + 1;
+        setIndex(next);
+        saveSession({
+          sessionId: sessionIdRef.current,
+          items,
+          index: next,
+          phase: "learn",
+          deadline: null,
+          durationMs: null,
+          promptShownAt: null,
+          uploadedItemIds: uploadedRef.current,
+          jobId: null,
+          graded: null,
+          savedAt: Date.now(),
+        });
+      } else {
+        clearSession();
+        setGraded({ session_id: sessionIdRef.current, mode: "learn", affects_fsrs: false, items });
+        setPhase("summary");
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    }
   }
 
   const submit = useCallback(async () => {
@@ -317,7 +404,7 @@ export default function RecallSession() {
   if (status === "idle") {
     return (
       <div className="stack">
-        {!supported && (
+        {!supported && sessionMode !== "learn" && (
           <div className="alert alert-error">
             Audio recording isn’t supported here. Open the app in iPhone Safari.
           </div>
@@ -347,16 +434,22 @@ export default function RecallSession() {
           </div>
         ) : (
           <div className="card stack center">
+            <span className="pill">{modeLabel(sessionMode)}</span>
             <p className="muted">
-              Tap begin and allow microphone access. Recall each prompt aloud
-              before the timer ends. The backend grades your spoken answers.
+              {sessionMode === "learn"
+                ? "Learn the meaning, Spanish logic, traps, and audio before this phrase enters timed recall."
+                : sessionMode === "practice"
+                  ? "Practice introduced phrases anytime. This does not update FSRS."
+                  : sessionMode === "misses"
+                    ? "Fix failed or partial items from previous sessions. This does not update FSRS."
+                    : "Recall each prompt aloud before the timer ends. The backend grades your spoken answers."}
             </p>
             <button
               className="btn btn-primary btn-lg btn-block"
               onClick={start}
-              disabled={!supported}
+              disabled={sessionMode !== "learn" && !supported}
             >
-              Begin session
+              {sessionMode === "learn" ? "Begin learning" : "Begin session"}
             </button>
           </div>
         )}
@@ -403,6 +496,88 @@ export default function RecallSession() {
             </button>
           </>
         )}
+      </div>
+    );
+  }
+
+  // ── render: LEARN ─────────────────────────────────────────────────────────
+  if (phase === "learn" && item) {
+    const learning = item.learning_card;
+    return (
+      <div className="stack">
+        <div className="row between small faint">
+          <span>Learn {index + 1} / {items.length}</span>
+          <button
+            className="btn btn-ghost"
+            style={{ minHeight: 32, padding: "4px 10px" }}
+            onClick={quit}
+          >
+            End
+          </button>
+        </div>
+
+        <div className="card stack">
+          <div className="row between">
+            <span className="pill">Learn first · no FSRS</span>
+            <span className="small faint">Not timed</span>
+          </div>
+
+          <div>
+            <div className="small faint">Spanish</div>
+            <h2 style={{ margin: "4px 0 0" }}>{item.spanish}</h2>
+          </div>
+
+          {item.source_audio_url && <AudioPlayer src={item.source_audio_url} label="Native audio" />}
+
+          <div>
+            <div className="small faint">Meaning</div>
+            <div style={{ fontWeight: 600 }}>{item.english_meaning || item.english}</div>
+          </div>
+
+          {item.context_clue && (
+            <div>
+              <div className="small faint">Context cue</div>
+              <div>{item.context_clue}</div>
+            </div>
+          )}
+
+          {learning?.spanish_logic && (
+            <div className="alert" style={{ margin: 0 }}>
+              <strong>Spanish logic:</strong> {learning.spanish_logic}
+            </div>
+          )}
+
+          {learning?.english_trap && (
+            <div className="alert" style={{ margin: 0 }}>
+              <strong>English trap:</strong> {learning.english_trap}
+            </div>
+          )}
+
+          {learning?.grammar_focus && (
+            <div>
+              <div className="small faint">Pattern</div>
+              <span className="pill">{learning.grammar_focus}</span>
+            </div>
+          )}
+
+          {!!learning?.examples?.length && (
+            <div>
+              <div className="small faint">Related examples</div>
+              <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                {learning.examples.map((ex) => <li key={ex}>{ex}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {error && <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>}
+
+          <button className="btn btn-primary btn-lg btn-block" onClick={acknowledgeLearned}>
+            {index + 1 < items.length ? "I understand · next" : "I understand · finish"}
+          </button>
+          <a className="btn btn-ghost btn-block" href="/session?mode=practice">
+            Practice introduced phrases instead
+          </a>
+        </div>
       </div>
     );
   }
@@ -556,7 +731,10 @@ function Summary({
   return (
     <div className="stack">
       <div className="card stack center">
-        <h2 style={{ margin: 0 }}>Session graded</h2>
+        <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Learning complete" : "Session graded"}</h2>
+        {graded?.mode === "learn" && (
+          <p className="muted">These phrases are now introduced and can enter review/practice sessions.</p>
+        )}
         {summary && (
           <>
             <div className="stat-grid" style={{ width: "100%" }}>

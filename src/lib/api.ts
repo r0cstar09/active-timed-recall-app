@@ -42,6 +42,7 @@ import type {
   RecordingResponse,
   Session,
   SessionItem,
+  SessionMode,
   Source,
   SourceRaw,
 } from "./types";
@@ -138,8 +139,16 @@ function toArray<T>(res: unknown, keys: string[]): T[] {
 
 export const api = {
   // ── Sessions / grading (real contract) ───────────────────────────────────
-  async createSession(): Promise<Session> {
-    return hydrateSession(await requestJson<Session>("/api/sessions", "POST", {}));
+  async createSession(mode: SessionMode = "review", size = 10): Promise<Session> {
+    return hydrateSession(await requestJson<Session>("/api/sessions", "POST", { mode, size }));
+  },
+
+  introducePhrase(phraseId: number | string): Promise<{ id: number; introduced_at: string; learning_status: string }> {
+    return requestJson<{ id: number; introduced_at: string; learning_status: string }>(
+      `/api/cards/${encodeURIComponent(String(phraseId))}/introduce`,
+      "POST",
+      {},
+    );
   },
 
   async getSession(sessionId: number | string): Promise<Session> {
