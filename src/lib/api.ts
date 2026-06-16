@@ -28,9 +28,9 @@
  *   GET    /api/sources                                       -> Source[]
  *   GET    /api/cards                                         -> Card[]
  *
- * INGESTION (assumed — no confirmed contract; remap here if it differs)
- *   POST   /api/sources               { source_url }          -> SourceRaw
- *   GET    /api/sources/:id                                   -> SourceRaw
+ * INGESTION (real contract)
+ *   POST   /api/ingest              { url }                 -> IngestJob
+ *   GET    /api/ingest/:jobId                               -> IngestJob
  */
 
 import { getApiBaseUrl, resolveUrl } from "./config";
@@ -43,8 +43,8 @@ import type {
   Session,
   SessionItem,
   SessionMode,
+  IngestJob,
   Source,
-  SourceRaw,
 } from "./types";
 import { isJobComplete, isJobFailed } from "./types";
 
@@ -209,12 +209,20 @@ export const api = {
     return cards.map((c) => ({ ...c, audio_url: resolveUrl(c.audio_url) }));
   },
 
-  // ── Ingestion (assumed) ──────────────────────────────────────────────────
-  createSource(sourceUrl: string): Promise<SourceRaw> {
-    return requestJson<SourceRaw>("/api/sources", "POST", { source_url: sourceUrl });
+  // ── Ingestion (real) ─────────────────────────────────────────────────────
+  createIngest(sourceUrl: string): Promise<IngestJob> {
+    return requestJson<IngestJob>("/api/ingest", "POST", { url: sourceUrl });
   },
-  getSource(id: number | string): Promise<SourceRaw> {
-    return request<SourceRaw>(`/api/sources/${encodeURIComponent(String(id))}`);
+  getIngest(jobId: number | string): Promise<IngestJob> {
+    return request<IngestJob>(`/api/ingest/${encodeURIComponent(String(jobId))}`);
+  },
+
+  // Backward-compatible names used by older UI code.
+  createSource(sourceUrl: string): Promise<IngestJob> {
+    return this.createIngest(sourceUrl);
+  },
+  getSource(jobId: number | string): Promise<IngestJob> {
+    return this.getIngest(jobId);
   },
 };
 

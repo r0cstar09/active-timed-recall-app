@@ -143,6 +143,31 @@ export interface Phrase {
   active: boolean;
 }
 
+export type IngestStatus =
+  | "queued"
+  | "processing"
+  | "transcript_done"
+  | "audio_downloaded"
+  | "sliced"
+  | "complete"
+  | "partial"
+  | "failed";
+
+export interface IngestJob {
+  job_id: number;
+  status: IngestStatus | string;
+  error_message?: string | null;
+  phrases?: Phrase[];
+}
+
+export function isIngestComplete(job: IngestJob): boolean {
+  return job.status === "complete" || job.status === "partial";
+}
+
+export function isIngestFailed(job: IngestJob): boolean {
+  return job.status === "failed";
+}
+
 export type CardState = "new" | "learning" | "review" | "relearning";
 
 export interface Card {

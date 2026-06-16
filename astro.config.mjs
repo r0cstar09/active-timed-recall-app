@@ -18,5 +18,9 @@ export default defineConfig({
       // dev-server host check.
       allowedHosts: [".ts.net"],
     },
+    preview: {
+      // Tailscale Serve terminates TLS and forwards Host: *.ts.net.
+      allowedHosts: true,
+    },
   },
 });

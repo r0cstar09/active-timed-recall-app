@@ -1,21 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../lib/api";
-import type { SourceRaw } from "../lib/types";
-import { isStatusFailed, isStatusReady } from "../lib/types";
+import type { IngestJob } from "../lib/types";
+import { isIngestComplete, isIngestFailed } from "../lib/types";
 
 const YT_RE =
   /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/|embed\/)|youtu\.be\/)[\w-]{6,}/i;
 
-function bothDone(s: SourceRaw): boolean {
-  return isStatusReady(s.transcript_status) && isStatusReady(s.audio_status);
-}
-function anyFailed(s: SourceRaw): boolean {
-  return isStatusFailed(s.transcript_status) || isStatusFailed(s.audio_status);
+const TERMINAL_STATUSES = new Set(["complete", "partial", "failed"]);
+
+function statusLabel(job: IngestJob): string {
+  if (job.status === "partial") return "partial";
+  if (isIngestComplete(job)) return "ready";
+  if (isIngestFailed(job)) return "failed";
+  return job.status || "processing";
 }
 
 export default function IngestForm() {
   const [urlValue, setUrlValue] = useState("");
-  const [source, setSource] = useState<SourceRaw | null>(null);
+  const [job, setJob] = useState<IngestJob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -33,7 +35,16 @@ export default function IngestForm() {
     }
   }
 
-  async function submit(e: React.FormEvent) {
+  function finishIfTerminal(next: IngestJob): boolean {
+    if (TERMINAL_STATUSES.has(next.status)) {
+      stopPolling();
+      setBusy(false);
+      return true;
+    }
+    return false;
+  }
+
+  async function submit(e: { preventDefault(): void }) {
     e.preventDefault();
     setError(null);
     const trimmed = urlValue.trim();
@@ -44,20 +55,15 @@ export default function IngestForm() {
     setBusy(true);
     stopPolling();
     try {
-      const created = await api.createSource(trimmed);
-      setSource(created);
-      if (bothDone(created) || anyFailed(created)) {
-        setBusy(false);
-        return;
-      }
+      const created = await api.createIngest(trimmed);
+      setJob(created);
+      if (finishIfTerminal(created)) return;
+
       pollRef.current = setInterval(async () => {
         try {
-          const next = await api.getSource(created.id);
-          setSource(next);
-          if (bothDone(next) || anyFailed(next)) {
-            stopPolling();
-            setBusy(false);
-          }
+          const next = await api.getIngest(created.job_id);
+          setJob(next);
+          finishIfTerminal(next);
         } catch (err) {
           stopPolling();
           setBusy(false);
@@ -72,14 +78,15 @@ export default function IngestForm() {
 
   function reset() {
     stopPolling();
-    setSource(null);
+    setJob(null);
     setUrlValue("");
     setError(null);
     setBusy(false);
   }
 
-  const done = source && bothDone(source);
-  const failed = source && anyFailed(source);
+  const done = job && isIngestComplete(job);
+  const failed = job && isIngestFailed(job);
+  const phraseCount = job?.phrases?.length ?? 0;
 
   return (
     <div className="stack">
@@ -110,45 +117,63 @@ export default function IngestForm() {
 
       {error && <div className="alert alert-error">{error}</div>}
 
-      {source && (
+      {job && (
         <div className="card stack">
           <div className="row between">
-            <strong className="truncate" style={{ maxWidth: "70%" }}>
-              {source.title ?? source.source_url}
-            </strong>
+            <strong>Ingestion job #{job.job_id}</strong>
             <span
               className={
                 done ? "pill pill-good" : failed ? "pill pill-bad" : "pill pill-warn"
               }
             >
-              {done ? "ready" : failed ? "failed" : "processing"}
+              {statusLabel(job)}
             </span>
           </div>
 
           <div className="row wrap" style={{ gap: 8 }}>
-            <span className="pill">transcript: {source.transcript_status ?? "—"}</span>
-            <span className="pill">audio: {source.audio_status ?? "—"}</span>
+            <span className="pill">status: {job.status}</span>
+            <span className="pill">phrases: {phraseCount}</span>
           </div>
 
           {!done && !failed && (
             <div className="row">
               <div className="spinner spinner-sm" aria-hidden="true" />
               <span className="small faint">
-                Extracting sentences & slicing audio…
+                Extracting transcript, selecting sentences, downloading audio, and slicing clips…
               </span>
             </div>
           )}
 
           {done && (
-            <div className="btn-row">
-              <a className="btn btn-primary" href="/session">Start session</a>
-              <a className="btn" href="/library">View library</a>
+            <div className="stack">
+              {job.status === "partial" && (
+                <div className="alert alert-warn">
+                  Ingest completed partially. Some slices may have failed, but usable phrases were added.
+                </div>
+              )}
+              <div className="small faint">
+                Added or found {phraseCount} phrase{phraseCount === 1 ? "" : "s"}. New phrases appear in Learn first.
+              </div>
+              {phraseCount > 0 && (
+                <div className="stack">
+                  {job.phrases?.slice(0, 5).map((phrase) => (
+                    <div className="card card-compact" key={phrase.id}>
+                      <strong>{phrase.spanish}</strong>
+                      <div className="small faint">{phrase.english}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="btn-row">
+                <a className="btn btn-primary" href="/session?mode=learn">Learn new phrases</a>
+                <a className="btn" href="/library">View library</a>
+              </div>
             </div>
           )}
 
           {failed && (
             <div className="small" style={{ color: "var(--bad)" }}>
-              Ingestion failed. Try a different video.
+              Ingestion failed{job.error_message ? `: ${job.error_message}` : ". Try a different video."}
             </div>
           )}
 
