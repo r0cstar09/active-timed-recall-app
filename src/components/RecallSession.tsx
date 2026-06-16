@@ -760,7 +760,7 @@ function Summary({
       </div>
 
       {items.map((it) => {
-        const userUrl = recordings.get(it.sprint_item_id);
+        const userUrl = it.recording_audio_url || recordings.get(it.sprint_item_id);
         const cls =
           it.result === "pass"
             ? "pill-good"

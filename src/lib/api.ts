@@ -112,7 +112,11 @@ async function requestJson<T>(path: string, method: string, body: unknown): Prom
  * base is "" so `/api/audio/source/...` stays same-origin and untouched.
  */
 function hydrateItem(item: SessionItem): SessionItem {
-  return { ...item, source_audio_url: resolveUrl(item.source_audio_url) };
+  return {
+    ...item,
+    source_audio_url: resolveUrl(item.source_audio_url),
+    recording_audio_url: item.recording_audio_url ? resolveUrl(item.recording_audio_url) : item.recording_audio_url,
+  };
 }
 function hydrateSession(s: Session): Session {
   return { ...s, items: (s.items ?? []).map(hydrateItem) };

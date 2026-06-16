@@ -45,6 +45,7 @@ export interface SessionItem {
   learning_card?: LearningCard;
   scheduling?: SchedulingInfo;
   recording_id?: number;
+  recording_audio_url?: string | null;
   result?: ItemResult;
   score?: number;
   feedback?: string;
