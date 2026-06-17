@@ -1,31 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api";
-import type { Card, DashboardStats } from "../lib/types";
+import type { DashboardStats } from "../lib/types";
 import { loadSession } from "../lib/timer";
-
-/** Derive dashboard counts client-side from the cards + sources endpoints. */
-function computeStats(cards: Card[], sourceCount: number): DashboardStats {
-  const now = Date.now();
-  let due = 0;
-  let learning = 0;
-  let review = 0;
-  let nw = 0;
-  for (const c of cards) {
-    if (c.state === "new") nw++;
-    else if (c.state === "learning" || c.state === "relearning") learning++;
-    else if (c.state === "review") review++;
-    const dueAt = Date.parse(c.due_at);
-    if (!Number.isNaN(dueAt) && dueAt <= now) due++;
-  }
-  return {
-    dueCount: due,
-    newCount: nw,
-    learningCount: learning,
-    reviewCount: review,
-    totalCards: cards.length,
-    sourceCount,
-  };
-}
 
 export default function DueSummary() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -38,11 +14,26 @@ export default function DueSummary() {
     let alive = true;
     (async () => {
       try {
-        const [cards, sources] = await Promise.all([
-          api.listCards(),
-          api.listSources(),
+        // Server-side aggregation: correct even when the deck grows past the
+        // /api/cards 100-row cap (which silently undercounted before).
+        const [counts, sourceCount] = await Promise.all([
+          api.getDashboardCounts(),
+          api.countSources(),
         ]);
-        if (alive) setStats(computeStats(cards, sources.length));
+        if (alive) {
+          setStats({
+            dueCount: counts.due_count,
+            newCount: counts.new_count,
+            learningCount: counts.learning_count,
+            reviewCount: counts.review_count,
+            totalCards:
+              counts.new_count +
+              counts.learning_count +
+              counts.review_count +
+              counts.suspended_count,
+            sourceCount,
+          });
+        }
       } catch (err) {
         if (alive) setError(err instanceof ApiError ? err.message : String(err));
       } finally {

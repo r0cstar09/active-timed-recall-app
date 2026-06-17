@@ -202,6 +202,38 @@ export const api = {
     return request<unknown>("/api/stats");
   },
 
+  /**
+   * Server-side aggregated dashboard counts. Prefer this over deriving counts
+   * from listCards(), which is capped at 100 rows and silently undercounts once
+   * the deck grows past that.
+   */
+  async getDashboardCounts(): Promise<{
+    due_count: number;
+    new_count: number;
+    review_count: number;
+    learning_count: number;
+    suspended_count: number;
+  }> {
+    const res = (await request<Record<string, unknown>>("/api/stats")) ?? {};
+    const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+    return {
+      due_count: num(res.due_count),
+      new_count: num(res.new_count),
+      review_count: num(res.review_count),
+      learning_count: num(res.learning_count),
+      suspended_count: num(res.suspended_count),
+    };
+  },
+
+  /** Total source count (reads the `total` field the list endpoint returns). */
+  async countSources(): Promise<number> {
+    const res = await request<unknown>("/api/sources");
+    if (res && typeof res === "object" && typeof (res as Record<string, unknown>).total === "number") {
+      return (res as Record<string, number>).total;
+    }
+    return toArray<Source>(res, ["sources", "items", "data", "results"]).length;
+  },
+
   // ── Library (real) ───────────────────────────────────────────────────────
   async listSources(): Promise<Source[]> {
     const res = await request<unknown>("/api/sources");
