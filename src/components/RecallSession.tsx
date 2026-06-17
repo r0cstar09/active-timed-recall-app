@@ -194,7 +194,12 @@ export default function RecallSession() {
       const session = await api.createSession(mode);
       if (!session.items?.length) {
         clearSession();
-        setGraded({ session_id: session.session_id, items: [] });
+        setGraded({
+          session_id: session.session_id,
+          items: [],
+          mode: session.mode ?? mode,
+          affects_fsrs: session.affects_fsrs,
+        });
         setPhase("summary");
         setStatus("active");
         return;
@@ -522,6 +527,10 @@ export default function RecallSession() {
             <span className="small faint">Not timed</span>
           </div>
 
+          <div className="alert" style={{ margin: 0 }}>
+            Study this freely now. The timed test comes later from the English meaning only.
+          </div>
+
           <div>
             <div className="small faint">Spanish</div>
             <h2 style={{ margin: "4px 0 0" }}>{item.spanish}</h2>
@@ -674,6 +683,12 @@ export default function RecallSession() {
           <p className="small faint" style={{ margin: 0 }}>{item.context_clue}</p>
         )}
 
+        {sessionMode === "misses" && item?.feedback && (
+          <div className="alert" style={{ margin: "8px 0 0", textAlign: "left" }}>
+            <strong>Previous coaching:</strong> {item.feedback}
+          </div>
+        )}
+
         {item?.prompt_type === "audio_shadow" && (
           <AudioPlayer src={item.source_audio_url} />
         )}
@@ -717,13 +732,27 @@ function Summary({
 }) {
   const summary = graded?.summary;
   const items = graded?.items ?? [];
+  const mode = graded?.mode;
+  const misses = items.filter((it) => it.result === "fail" || it.result === "partial");
 
   if (!items.length) {
+    const title = mode === "learn" ? "No new phrases" : mode === "misses" ? "No misses waiting" : "Nothing due";
+    const body = mode === "learn"
+      ? "Everything new has already been introduced."
+      : mode === "misses"
+        ? "No failed or partial items are waiting for a workout."
+        : "No items were scheduled for this session.";
     return (
       <div className="card stack center">
-        <h2>Nothing due</h2>
-        <p className="muted">No items were scheduled for this session.</p>
-        <a className="btn btn-primary btn-block" href="/">Home</a>
+        <h2>{title}</h2>
+        <p className="muted">{body}</p>
+        {mode !== "learn" && (
+          <a className="btn btn-primary btn-block" href="/session?mode=learn">Learn first queue</a>
+        )}
+        {mode !== "practice" && (
+          <a className="btn btn-block" href="/session?mode=practice">Practice anytime</a>
+        )}
+        <a className="btn btn-ghost btn-block" href="/">Home</a>
       </div>
     );
   }
@@ -733,7 +762,10 @@ function Summary({
       <div className="card stack center">
         <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Learning complete" : "Session graded"}</h2>
         {graded?.mode === "learn" && (
-          <p className="muted">These phrases are now introduced and can enter review/practice sessions.</p>
+          <p className="muted">These phrases are now introduced. Next step: produce them from English under the timer.</p>
+        )}
+        {graded?.mode === "misses" && (
+          <p className="muted">Misses workout complete. Passing here resolves weak spots without touching FSRS.</p>
         )}
         {summary && (
           <>
@@ -758,6 +790,29 @@ function Summary({
           </>
         )}
       </div>
+
+      {graded?.mode === "learn" && (
+        <div className="card stack center">
+          <h3 style={{ margin: 0 }}>Ready for timed production</h3>
+          <p className="muted">Practice uses clear English prompts and does not update FSRS.</p>
+          <a className="btn btn-primary btn-block" href="/session?mode=practice">
+            Practice these now
+          </a>
+          <a className="btn btn-block" href="/session?mode=review">
+            Review due cards instead
+          </a>
+        </div>
+      )}
+
+      {graded?.mode !== "learn" && misses.length > 0 && (
+        <div className="card stack center">
+          <h3 style={{ margin: 0 }}>Work the misses next</h3>
+          <p className="muted">{misses.length} failed/partial item{misses.length === 1 ? "" : "s"} ready for targeted retry.</p>
+          <a className="btn btn-primary btn-block" href="/session?mode=misses">
+            Start misses workout
+          </a>
+        </div>
+      )}
 
       {items.map((it) => {
         const userUrl = it.recording_audio_url || recordings.get(it.sprint_item_id);
@@ -808,7 +863,8 @@ function Summary({
       })}
 
       <div className="btn-row">
-        <a className="btn btn-primary" href="/review">Review misses</a>
+        <a className="btn btn-primary" href="/session?mode=misses">Misses workout</a>
+        <a className="btn" href="/session?mode=learn">Learn first queue</a>
         <a className="btn" href="/">Home</a>
       </div>
     </div>

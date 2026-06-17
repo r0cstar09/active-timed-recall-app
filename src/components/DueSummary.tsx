@@ -89,7 +89,8 @@ export default function DueSummary() {
 
       <div className="stack">
         <a className="btn btn-primary btn-block btn-lg" href="/session?mode=learn">
-          Learn new phrases
+          Learn first queue
+          <span className="small faint"> · meaning + audio before timed recall</span>
         </a>
         <a className="btn btn-block" href="/session?mode=review">
           {hasResumable ? "Resume session" : "Review due"}
@@ -98,7 +99,7 @@ export default function DueSummary() {
           Practice anytime <span className="small faint">(no FSRS)</span>
         </a>
         <a className="btn btn-block" href="/session?mode=misses">
-          Misses lab <span className="small faint">(target weak spots)</span>
+          Misses workout <span className="small faint">(redo failed/partial cards)</span>
         </a>
       </div>
 
