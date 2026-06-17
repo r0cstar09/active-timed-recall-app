@@ -12,6 +12,7 @@ type VerbEntry = {
   verb: string;
   englishBase: string;
   category: string;
+  inDailyRotation: boolean;
   usageHint: string;
   assignments: Assignment[];
 };
@@ -19,6 +20,7 @@ type VerbEntry = {
 const data = verbsData as {
   sourceRepo: string;
   count: number;
+  rotationCount: number;
   tenses: string[];
   pronouns: string[];
   verbs: VerbEntry[];
@@ -155,7 +157,7 @@ export default function VerbTrainer() {
 
         <div className="row between small faint">
           <span>{filled}/{rows.length} prompts answered</span>
-          <span>{verb?.category}</span>
+          <span>{data.count} verbs · {data.rotationCount} daily · {verb?.category}</span>
         </div>
       </div>
 

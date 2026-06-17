@@ -29,18 +29,34 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding='utf-8'))
 
 
+def all_verbs(rotation: list[str], by_category: dict[str, list[str]]) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for verb in rotation:
+        if verb not in seen:
+            seen.add(verb)
+            ordered.append(verb)
+    for verbs in by_category.values():
+        for verb in verbs:
+            if verb not in seen:
+                seen.add(verb)
+                ordered.append(verb)
+    return ordered
+
+
 def build_verbs() -> None:
     sys.path.insert(0, str(VERB_REPO))
     from tenses import TENSES  # type: ignore
     from verb_selector import PRONOUNS  # type: ignore
     from translations import get_english_translation, get_english_base  # type: ignore
 
-    verbs = load_json(VERB_REPO / 'verbs.json')
+    rotation = load_json(VERB_REPO / 'verbs.json')
     by_category = load_json(VERB_REPO / 'verbs_by_category.json')
     hints = load_json(VERB_REPO / 'verb_usage_hints.json')
 
     data = []
-    for verb in verbs:
+    rotation_set = set(rotation)
+    for verb in all_verbs(rotation, by_category):
         category = next((k for k, vals in by_category.items() if verb in vals), 'uncategorized')
         assignments = []
         for tense in TENSES:
@@ -54,6 +70,7 @@ def build_verbs() -> None:
             'verb': verb,
             'englishBase': get_english_base(verb),
             'category': category,
+            'inDailyRotation': verb in rotation_set,
             'usageHint': hints.get(verb, ''),
             'assignments': assignments,
         })
@@ -61,6 +78,7 @@ def build_verbs() -> None:
     write_json('verbs.json', {
         'sourceRepo': 'r0cstar09/Spanish-daily-verb-project',
         'count': len(data),
+        'rotationCount': len(rotation_set),
         'tenses': TENSES,
         'pronouns': PRONOUNS,
         'verbs': data,
