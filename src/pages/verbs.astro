@@ -1,0 +1,10 @@
+---
+import Base from "../layouts/Base.astro";
+import VerbTrainer from "../components/verbs/VerbTrainer.tsx";
+---
+
+<Base title="Spanish Verb Trainer" heading="Verbs" current="verbs">
+  <h1>Verb Trainer</h1>
+  <p class="muted">Pick a verb and drill the conjugation prompts from the daily verb project.</p>
+  <VerbTrainer client:load />
+</Base>

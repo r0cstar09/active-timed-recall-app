@@ -3,8 +3,14 @@ import Base from "../layouts/Base.astro";
 import DueSummary from "../components/DueSummary.tsx";
 ---
 
-<Base title="Active Timed Recall" heading="Recall" current="home">
+<Base title="Spanish Learning Hub" heading="Spanish" current="home">
   <h1>Today</h1>
-  <p class="muted">Acoustic-first Spanish active recall.</p>
+  <p class="muted">Unified Spanish learning hub: recall, verbs, and sentence lessons.</p>
   <DueSummary client:load />
+
+  <div class="card stack">
+    <h2>Study modules</h2>
+    <a class="btn btn-block" href="/verbs">Verb Trainer</a>
+    <a class="btn btn-block" href="/lessons">Sentence Lessons</a>
+  </div>
 </Base>

@@ -124,10 +124,16 @@ p {
   max-width: var(--maxw);
   margin: 0 auto;
   height: var(--nav-h);
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.tabbar-inner::-webkit-scrollbar {
+  display: none;
 }
 .tab {
+  flex: 0 0 72px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -363,6 +369,27 @@ label.field > span {
 .audio-player {
   width: 100%;
   margin-top: 8px;
+}
+
+.code-block {
+  white-space: pre-wrap;
+  overflow-x: auto;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.alert-ok {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.alert-danger {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
 }
 
 /* visually-hidden but accessible */

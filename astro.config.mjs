@@ -22,5 +22,10 @@ export default defineConfig({
       // Tailscale Serve terminates TLS and forwards Host: *.ts.net.
       allowedHosts: true,
     },
+    build: {
+      // The lessons island intentionally bundles the static fuzzy-funicular deck.
+      // It is ~185 kB gzip and acceptable for this Tailnet-first learning app.
+      chunkSizeWarningLimit: 1000,
+    },
   },
 });

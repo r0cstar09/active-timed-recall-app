@@ -1,0 +1,10 @@
+---
+import Base from "../layouts/Base.astro";
+import LessonsBrowser from "../components/lessons/LessonsBrowser.tsx";
+---
+
+<Base title="Spanish Sentence Lessons" heading="Lessons" current="lessons">
+  <h1>Sentence Lessons</h1>
+  <p class="muted">Browse and practice fuzzy-funicular lessons inside the unified Spanish hub.</p>
+  <LessonsBrowser client:load />
+</Base>

@@ -141,6 +141,46 @@ function toArray<T>(res: unknown, keys: string[]): T[] {
   return [];
 }
 
+export type StudyGradeItem = {
+  client_id?: string;
+  prompt?: string;
+  expected_answer?: string;
+  user_answer: string;
+  verb?: string;
+  pronoun?: string;
+  tense?: string;
+};
+
+export type StudyGradeRequest = {
+  exercise_type: "verb_conjugation" | "sentence_lesson";
+  source?: string;
+  lesson_id?: string;
+  section?: string;
+  lesson_context?: Record<string, unknown>;
+  items: StudyGradeItem[];
+};
+
+export type StudyGradeResultItem = {
+  attempt_id: number;
+  client_id?: string | null;
+  result: "pass" | "partial" | "fail";
+  score: number;
+  corrected_answer: string;
+  accepted_variants: string[];
+  error_type: string;
+  feedback: string;
+  should_review: boolean;
+  should_promote_to_recall: boolean;
+};
+
+export type StudyGradeResponse = {
+  exercise_type: string;
+  model: string;
+  items: StudyGradeResultItem[];
+  summary: string;
+  next_drill_recommendation: string;
+};
+
 export const api = {
   // ── Sessions / grading (real contract) ───────────────────────────────────
   async createSession(mode: SessionMode = "review", size = 10): Promise<Session> {
@@ -243,6 +283,19 @@ export const api = {
     const res = await request<unknown>("/api/cards");
     const cards = toArray<Card>(res, ["cards", "items", "data", "results"]);
     return cards.map((c) => ({ ...c, audio_url: resolveUrl(c.audio_url) }));
+  },
+
+  // ── Study grading (LLM-backed, additive) ──────────────────────────────────
+  gradeStudy(payload: StudyGradeRequest): Promise<StudyGradeResponse> {
+    return requestJson<StudyGradeResponse>("/api/study/grade", "POST", payload);
+  },
+  async listVerbMisses(): Promise<unknown[]> {
+    const res = await request<unknown>("/api/study/verb-misses");
+    return toArray<unknown>(res, ["items", "data", "results"]);
+  },
+  async listLessonMisses(): Promise<unknown[]> {
+    const res = await request<unknown>("/api/study/lesson-misses");
+    return toArray<unknown>(res, ["items", "data", "results"]);
   },
 
   // ── Ingestion (real) ─────────────────────────────────────────────────────

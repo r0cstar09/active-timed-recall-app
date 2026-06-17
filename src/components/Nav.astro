@@ -4,12 +4,14 @@
  * `current` controls the active-tab highlight.
  */
 interface Props {
-  current?: "home" | "ingest" | "library" | "review" | "settings";
+  current?: "home" | "verbs" | "lessons" | "ingest" | "library" | "review" | "settings";
 }
 const { current } = Astro.props;
 
 const tabs = [
   { id: "home", href: "/", label: "Home" },
+  { id: "verbs", href: "/verbs", label: "Verbs" },
+  { id: "lessons", href: "/lessons", label: "Lessons" },
   { id: "ingest", href: "/ingest", label: "Ingest" },
   { id: "library", href: "/library", label: "Library" },
   { id: "review", href: "/review", label: "Review" },
@@ -39,6 +41,22 @@ const tabs = [
               <>
                 <path d="M3 10.5 12 3l9 7.5" />
                 <path d="M5 9.5V21h14V9.5" />
+              </>
+            )}
+            {t.id === "verbs" && (
+              <>
+                <path d="M5 4h14" />
+                <path d="M7 8h10" />
+                <path d="M8 12h8" />
+                <path d="M10 16h4" />
+              </>
+            )}
+            {t.id === "lessons" && (
+              <>
+                <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5Z" />
+                <path d="M4 5.5v16" />
+                <path d="M8 7h8" />
+                <path d="M8 11h6" />
               </>
             )}
             {t.id === "ingest" && (
