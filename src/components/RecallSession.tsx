@@ -30,10 +30,10 @@ function modeFromUrl(): SessionMode {
 
 function modeLabel(mode: SessionMode): string {
   return {
-    learn: "Learn new phrases",
+    learn: "Learn first queue",
     review: "Due review",
-    practice: "Practice only",
-    misses: "Misses lab",
+    practice: "Practice anytime",
+    misses: "Misses workout",
     cloze: "Cloze recall",
     english_to_spanish: "English → Spanish",
     audio_shadow: "Audio shadow",
