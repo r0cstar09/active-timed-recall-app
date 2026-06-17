@@ -181,6 +181,40 @@ export type StudyGradeResponse = {
   next_drill_recommendation: string;
 };
 
+export type VerbMiss = {
+  id: number;
+  verb: string;
+  pronoun: string;
+  tense: string;
+  prompt: string | null;
+  user_answer: string | null;
+  correct_answer: string | null;
+  feedback: string | null;
+  error_type: string | null;
+  status: string;
+  miss_count: number;
+  last_seen_at: string | null;
+  next_due_at: string | null;
+};
+
+export type LessonMiss = {
+  id: number;
+  lesson_id: string;
+  section: string | null;
+  prompt: string;
+  expected_answer: string | null;
+  user_answer: string | null;
+  corrected_answer: string | null;
+  feedback: string | null;
+  error_type: string | null;
+  target_pattern: string | null;
+  should_promote_to_recall: number;
+  status: string;
+  miss_count: number;
+  last_seen_at: string | null;
+  next_due_at: string | null;
+};
+
 export const api = {
   // ── Sessions / grading (real contract) ───────────────────────────────────
   async createSession(mode: SessionMode = "review", size = 10): Promise<Session> {
@@ -289,13 +323,13 @@ export const api = {
   gradeStudy(payload: StudyGradeRequest): Promise<StudyGradeResponse> {
     return requestJson<StudyGradeResponse>("/api/study/grade", "POST", payload);
   },
-  async listVerbMisses(): Promise<unknown[]> {
-    const res = await request<unknown>("/api/study/verb-misses");
-    return toArray<unknown>(res, ["items", "data", "results"]);
+  async listVerbMisses(limit = 100): Promise<VerbMiss[]> {
+    const res = await request<unknown>(`/api/study/verb-misses?limit=${encodeURIComponent(String(limit))}`);
+    return toArray<VerbMiss>(res, ["items", "data", "results"]);
   },
-  async listLessonMisses(): Promise<unknown[]> {
-    const res = await request<unknown>("/api/study/lesson-misses");
-    return toArray<unknown>(res, ["items", "data", "results"]);
+  async listLessonMisses(limit = 100): Promise<LessonMiss[]> {
+    const res = await request<unknown>(`/api/study/lesson-misses?limit=${encodeURIComponent(String(limit))}`);
+    return toArray<LessonMiss>(res, ["items", "data", "results"]);
   },
 
   // ── Ingestion (real) ─────────────────────────────────────────────────────

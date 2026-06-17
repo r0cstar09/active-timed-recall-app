@@ -1,0 +1,10 @@
+---
+import Base from "../layouts/Base.astro";
+import MissesReview from "../components/misses/MissesReview.tsx";
+---
+
+<Base title="Spanish Misses" heading="Misses" current="misses">
+  <h1>Targeted Misses</h1>
+  <p class="muted">Re-drill the verb and sentence prompts you missed. Correct answers clear them.</p>
+  <MissesReview client:load />
+</Base>

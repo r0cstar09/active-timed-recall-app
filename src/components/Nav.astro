@@ -4,7 +4,7 @@
  * `current` controls the active-tab highlight.
  */
 interface Props {
-  current?: "home" | "verbs" | "lessons" | "ingest" | "library" | "review" | "settings";
+  current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings";
 }
 const { current } = Astro.props;
 
@@ -12,6 +12,7 @@ const tabs = [
   { id: "home", href: "/", label: "Home" },
   { id: "verbs", href: "/verbs", label: "Verbs" },
   { id: "lessons", href: "/lessons", label: "Lessons" },
+  { id: "misses", href: "/misses", label: "Misses" },
   { id: "ingest", href: "/ingest", label: "Ingest" },
   { id: "library", href: "/library", label: "Library" },
   { id: "review", href: "/review", label: "Review" },
@@ -57,6 +58,12 @@ const tabs = [
                 <path d="M4 5.5v16" />
                 <path d="M8 7h8" />
                 <path d="M8 11h6" />
+              </>
+            )}
+            {t.id === "misses" && (
+              <>
+                <circle cx="12" cy="12" r="8" />
+                <circle cx="12" cy="12" r="3" />
               </>
             )}
             {t.id === "ingest" && (

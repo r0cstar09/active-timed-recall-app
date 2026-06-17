@@ -82,6 +82,7 @@ def first_list(obj: dict, keys: list[str]) -> list[str]:
 
 def build_lessons() -> None:
     lessons = []
+    mismatches: list[str] = []
     for json_path in sorted((FUZZY_REPO / 'lessons').glob('lesson-*/lesson.json'), key=lesson_number, reverse=True):
         raw = load_json(json_path)
         lesson = raw.get('lesson', {}) if isinstance(raw.get('lesson'), dict) else {}
@@ -143,6 +144,22 @@ def build_lessons() -> None:
             },
             'commonErrors': lesson.get('common_errors', []),
         })
+
+        # Prompts and answers are aligned by index downstream (the grader and
+        # the answer-key reveal both look up answers[idx]). If the source arrays
+        # disagree in length, prompts silently get the wrong (or empty) expected
+        # answer, so surface it loudly at generation time.
+        for name, sec in lessons[-1]['sections'].items():
+            prompts, answers = sec['prompts'], sec['answers']
+            if prompts and answers and len(prompts) != len(answers):
+                mismatches.append(
+                    f"{lessons[-1]['id']}/{name}: {len(prompts)} prompts vs {len(answers)} answers"
+                )
+
+    if mismatches:
+        print(f'[warn] {len(mismatches)} lesson section(s) have prompt/answer length mismatches:')
+        for line in mismatches:
+            print(f'  - {line}')
 
     write_json('fuzzy_lessons.json', {
         'sourceRepo': 'r0cstar09/fuzzy-funicular',
