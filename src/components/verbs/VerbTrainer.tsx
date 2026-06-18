@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, type StudyGradeResponse, type VerbProgress } from "../../lib/api";
-import verbsData from "../../data/generated/verbs.json";
 
 type Assignment = {
   pronoun: string;
@@ -17,13 +16,22 @@ type VerbEntry = {
   assignments: Assignment[];
 };
 
-const data = verbsData as {
+type VerbData = {
   sourceRepo: string;
   count: number;
   rotationCount: number;
   tenses: string[];
   pronouns: string[];
   verbs: VerbEntry[];
+};
+
+const emptyData: VerbData = {
+  sourceRepo: "",
+  count: 0,
+  rotationCount: 0,
+  tenses: [],
+  pronouns: [],
+  verbs: [],
 };
 
 function normalize(value: string) {
@@ -42,8 +50,10 @@ function resultClass(result?: string) {
 }
 
 export default function VerbTrainer() {
-  const [verbName, setVerbName] = useState(data.verbs[0]?.verb ?? "ser");
-  const [tense, setTense] = useState(data.tenses[0] ?? "Present");
+  const [data, setData] = useState<VerbData>(emptyData);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [verbName, setVerbName] = useState("");
+  const [tense, setTense] = useState("Present");
   const [showAllTenses, setShowAllTenses] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showPromptList, setShowPromptList] = useState(false);
@@ -55,8 +65,27 @@ export default function VerbTrainer() {
 
   const verb = useMemo(
     () => data.verbs.find((v) => v.verb === verbName) ?? data.verbs[0],
-    [verbName],
+    [data.verbs, verbName],
   );
+
+  useEffect(() => {
+    let alive = true;
+    import("../../data/generated/verbs.json")
+      .then((mod) => {
+        if (!alive) return;
+        const loaded = mod.default as VerbData;
+        setData(loaded);
+        setVerbName((current) => current || loaded.verbs[0]?.verb || "");
+        setTense((current) => current || loaded.tenses[0] || "Present");
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => {
+        if (alive) setCatalogLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const rows = useMemo(() => {
     if (!verb) return [];
@@ -153,11 +182,31 @@ export default function VerbTrainer() {
     .map((row, idx) => `${idx + 1}. ${row.translation} (${row.pronoun}, ${row.tense})`)
     .join("\n");
 
+  if (catalogLoading) {
+    return (
+      <div className="card card-tile stack center">
+        <div className="spinner" aria-hidden="true" />
+        <h2>Cargando verbos…</h2>
+        <p className="muted">Preparando el tablero de azulejos.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="stack">
-      <div className="card stack">
+      <div className="card card-tile stack">
+        <div className="row between wrap">
+          <div>
+            <div className="spanish-kicker">verbo elegido</div>
+            <h2 style={{ margin: 0 }}>{verb?.verb || "—"}</h2>
+            <p className="muted" style={{ margin: 0 }}>{verb?.englishBase} · {verb?.category}</p>
+          </div>
+          <span className={verbComplete ? "pill pill-good" : "pill"}>
+            {verbComplete ? "dominado" : `${fullPassCount}/${requiredPasses} perfectas`}
+          </span>
+        </div>
         <label className="field">
-          <span>Verb</span>
+          <span>Elige verbo</span>
           <select className="input" value={verbName} onChange={(e) => { setVerbName(e.target.value); clearAnswers(); }}>
             {data.verbs.map((v) => (
               <option key={v.verb} value={v.verb}>
@@ -169,10 +218,10 @@ export default function VerbTrainer() {
 
         <div className="btn-row">
           <button className={showAllTenses ? "btn" : "btn btn-primary"} type="button" onClick={() => { setShowAllTenses(false); clearAnswers(); }}>
-            One tense
+            Un tiempo
           </button>
           <button className={showAllTenses ? "btn btn-primary" : "btn"} type="button" onClick={() => { setShowAllTenses(true); clearAnswers(); }}>
-            Full grid
+            Tablero completo
           </button>
         </div>
 

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, type StudyGradeResponse } from "../../lib/api";
-import lessonsData from "../../data/generated/fuzzy_lessons.json";
 
 type LessonSection = {
   instructions: string;
@@ -24,7 +23,9 @@ type Lesson = {
   commonErrors: Array<{ mistake?: string; why_it_happens?: string; correct_spanish?: string }>;
 };
 
-const data = lessonsData as { sourceRepo: string; count: number; lessons: Lesson[] };
+type LessonsData = { sourceRepo: string; count: number; lessons: Lesson[] };
+
+const emptyLessonsData: LessonsData = { sourceRepo: "", count: 0, lessons: [] };
 const sectionOrder = ["controlled", "mutation", "contrast", "writing", "reverse"] as const;
 const sectionLabels: Record<string, string> = {
   controlled: "Controlled recombination",
@@ -42,8 +43,10 @@ function resultClass(result?: string) {
 }
 
 export default function LessonsBrowser() {
+  const [data, setData] = useState<LessonsData>(emptyLessonsData);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [lessonId, setLessonId] = useState(data.lessons[0]?.id ?? "");
+  const [lessonId, setLessonId] = useState("");
   const [sectionName, setSectionName] = useState<string>("controlled");
   const [showAnswers, setShowAnswers] = useState(false);
   const [responses, setResponses] = useState<Record<number, string>>({});
@@ -54,6 +57,24 @@ export default function LessonsBrowser() {
   const [promoting, setPromoting] = useState<Record<number, string>>({});
   const [resetting, setResetting] = useState(false);
 
+  useEffect(() => {
+    let alive = true;
+    import("../../data/generated/fuzzy_lessons.json")
+      .then((mod) => {
+        if (!alive) return;
+        const loaded = mod.default as LessonsData;
+        setData(loaded);
+        setLessonId((current) => current || loaded.lessons[0]?.id || "");
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => {
+        if (alive) setCatalogLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return data.lessons;
@@ -63,7 +84,7 @@ export default function LessonsBrowser() {
         .toLowerCase()
         .includes(q),
     );
-  }, [query]);
+  }, [data.lessons, query]);
 
   const lesson = data.lessons.find((l) => l.id === lessonId) ?? filtered[0] ?? data.lessons[0];
   const section = lesson?.sections?.[sectionName] ?? lesson?.sections?.controlled;
@@ -192,11 +213,25 @@ export default function LessonsBrowser() {
     return map;
   }, [grade]);
 
+  if (catalogLoading) {
+    return (
+      <div className="card notebook-card stack center">
+        <div className="spinner" aria-hidden="true" />
+        <h2>Abriendo el cuaderno…</h2>
+        <p className="muted">Cargando patrones, trampas y ejemplos naturales.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="stack">
-      <div className="card stack">
+      <div className="card notebook-card stack">
+        <div>
+          <div className="spanish-kicker">biblioteca de patrones</div>
+          <h2 style={{ margin: 0 }}>Busca una estructura que quieras dominar</h2>
+        </div>
         <label className="field">
-          <span>Find a fuzzy-funicular lesson</span>
+          <span>Buscar en el cuaderno</span>
           <input className="input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="subjunctive, reported speech, se me..." />
         </label>
         <label className="field">
