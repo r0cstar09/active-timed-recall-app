@@ -77,6 +77,10 @@ export class Recorder {
     return this.recorder?.state === "recording";
   }
 
+  getStream(): MediaStream | null {
+    return this.stream;
+  }
+
   start(): void {
     if (!this.stream) throw new Error("Recorder not initialized.");
     this.chunks = [];

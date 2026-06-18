@@ -19,6 +19,15 @@ type Status = "idle" | "active" | "error";
 
 const isoFromMs = (ms: number) => new Date(ms).toISOString();
 const round1 = (n: number) => Math.round(n * 10) / 10;
+const WAVE_BARS = 5;
+
+function pulseDevice(pattern: number | number[]) {
+  try {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(pattern);
+  } catch {
+    /* haptics are best-effort */
+  }
+}
 
 const VALID_MODES = new Set<SessionMode>(["learn", "review", "practice", "misses", "cloze", "english_to_spanish", "audio_shadow"]);
 
@@ -61,6 +70,7 @@ export default function RecallSession() {
   const [durationMs, setDurationMs] = useState<number | null>(null);
   const [graded, setGraded] = useState<Session | null>(null);
   const [sessionMode, setSessionMode] = useState<SessionMode>("review");
+  const [micLevels, setMicLevels] = useState<number[]>(Array.from({ length: WAVE_BARS }, () => 0.35));
   const [, setTick] = useState(0);
 
   const sessionIdRef = useRef<number>(0);
@@ -124,6 +134,41 @@ export default function RecallSession() {
       if (remainingMs(deadline) <= 0) submitRef.current();
     }
   });
+
+  // ── live mic amplitude drives the ritual waveform ─────────────────────────
+  useEffect(() => {
+    if (status !== "active" || phase !== "recall") return;
+    const stream = recorderRef.current?.getStream();
+    if (!stream || typeof AudioContext === "undefined") return;
+    let raf = 0;
+    const AudioCtx = AudioContext;
+    const ctx = new AudioCtx();
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.72;
+    const source = ctx.createMediaStreamSource(stream);
+    source.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    const loop = () => {
+      analyser.getByteFrequencyData(data);
+      const bucketSize = Math.max(1, Math.floor(data.length / WAVE_BARS));
+      const levels = Array.from({ length: WAVE_BARS }, (_, i) => {
+        const start = i * bucketSize;
+        const bucket = data.slice(start, start + bucketSize);
+        const avg = bucket.reduce((sum, v) => sum + v, 0) / Math.max(1, bucket.length);
+        return Math.max(0.18, Math.min(1, avg / 110));
+      });
+      setMicLevels(levels);
+      raf = requestAnimationFrame(loop);
+    };
+    loop();
+    return () => {
+      cancelAnimationFrame(raf);
+      source.disconnect();
+      void ctx.close();
+      setMicLevels(Array.from({ length: WAVE_BARS }, () => 0.35));
+    };
+  }, [status, phase, index]);
 
   // ── cleanup: release mic + revoke local recording URLs ───────────────────
   useEffect(() => {
@@ -305,6 +350,7 @@ export default function RecallSession() {
     if (phase !== "recall" || !item) return;
     const answeredAtMs = Date.now();
     const timedOut = deadline != null && remainingMs(deadline) <= 0;
+    if (timedOut) pulseDevice([35, 35, 80]);
     const responseSeconds = round1((answeredAtMs - promptShownAtRef.current) / 1000);
 
     setPhase("uploading");
@@ -641,36 +687,29 @@ export default function RecallSession() {
       </div>
 
       <div className="card hero-card voice-card stack center">
-        <div className="timer-num" style={{ color: danger ? "var(--bad)" : undefined }}>
-          {secs}
-        </div>
         <div
-          style={{
-            height: 8,
-            width: "100%",
-            borderRadius: 999,
-            background: "var(--bg-elev-2)",
-            overflow: "hidden",
-          }}
+          className={`mic-timer-ring ${danger ? "danger" : ""}`}
+          style={{ "--pct": `${pct}%` } as React.CSSProperties}
+          aria-label={`${secs} seconds remaining`}
         >
-          <div
-            style={{
-              height: "100%",
-              width: `${pct}%`,
-              background: danger ? "var(--bad)" : "var(--accent-grad)",
-            }}
-          />
+          <div className="mic-orb" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
+              <path d="M19 11a7 7 0 0 1-14 0" />
+              <path d="M12 18v3" />
+              <path d="M8 21h8" />
+            </svg>
+          </div>
+          <div className="timer-num" style={{ color: danger ? "var(--bad)" : undefined }}>
+            {secs}
+          </div>
         </div>
 
-        <div className="mic-orb" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
-            <path d="M19 11a7 7 0 0 1-14 0" />
-            <path d="M12 18v3" />
-            <path d="M8 21h8" />
-          </svg>
+        <div className="waveform live" aria-hidden="true">
+          {micLevels.map((level, i) => (
+            <span key={i} style={{ transform: `scaleY(${level})`, opacity: 0.42 + level * 0.58 }} />
+          ))}
         </div>
-        <div className="waveform" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
 
         <p className="small faint" style={{ margin: "8px 0 0" }}>
           {item?.prompt_type === "audio_shadow"
@@ -741,6 +780,21 @@ function Summary({
   const items = graded?.items ?? [];
   const mode = graded?.mode;
   const misses = items.filter((it) => it.result === "fail" || it.result === "partial");
+  const maxPassStreak = items.reduce(
+    (acc, it) => {
+      const current = it.result === "pass" ? acc.current + 1 : 0;
+      return { current, best: Math.max(acc.best, current) };
+    },
+    { current: 0, best: 0 },
+  ).best;
+  const cleanRecall = graded?.mode !== "learn" && !!summary && summary.failed === 0 && summary.partial === 0;
+
+  useEffect(() => {
+    if (!summary || graded?.mode === "learn") return;
+    if (cleanRecall) pulseDevice([18, 35, 18, 55, 90]);
+    else if (summary.failed > 0) pulseDevice([90, 45, 90]);
+    else pulseDevice(35);
+  }, [cleanRecall, graded?.mode, summary]);
 
   if (!items.length) {
     const title = mode === "learn" ? "No new phrases" : mode === "misses" ? "No misses waiting" : "Nothing due";
@@ -767,10 +821,15 @@ function Summary({
   return (
     <div className="stack">
       <div className="card stack center">
-        {graded?.mode !== "learn" && summary && summary.failed === 0 && summary.partial === 0 && (
-          <div className="ole-burst" aria-hidden="true">¡Olé!</div>
+        {cleanRecall && (
+          <>
+            <div className="ole-burst" aria-hidden="true">¡Olé!</div>
+            <div className="petal-burst" aria-hidden="true">
+              {Array.from({ length: 18 }).map((_, i) => <span key={i} />)}
+            </div>
+          </>
         )}
-        <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Ready to speak" : summary && summary.failed === 0 && summary.partial === 0 ? "Clean recall" : "Session graded"}</h2>
+        <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Ready to speak" : cleanRecall ? "Clean recall" : "Session graded"}</h2>
         {graded?.mode === "learn" && (
           <p className="muted">These phrases are now introduced. Next step: produce them from English under the timer.</p>
         )}
@@ -791,6 +850,10 @@ function Summary({
               <div className="stat">
                 <div className="num">{summary.failed}</div>
                 <div className="lbl">Failed</div>
+              </div>
+              <div className="stat">
+                <div className="num">🔥 {maxPassStreak}</div>
+                <div className="lbl">Best combo</div>
               </div>
             </div>
             <div className="small faint">
