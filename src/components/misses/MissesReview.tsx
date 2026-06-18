@@ -118,10 +118,10 @@ export default function MissesReview() {
       <div className="card stack">
         <div className="btn-row">
           <button className={tab === "verbs" ? "btn btn-primary" : "btn"} type="button" onClick={() => setTab("verbs")}>
-            A pulir ({verbMisses.length})
+            Verb misses ({verbMisses.length})
           </button>
           <button className={tab === "lessons" ? "btn btn-primary" : "btn"} type="button" onClick={() => setTab("lessons")}>
-            Frases ({lessonMisses.length})
+            Sentence misses ({lessonMisses.length})
           </button>
         </div>
         <div className="row between small faint">

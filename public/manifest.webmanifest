@@ -1,6 +1,6 @@
 {
-  "name": "Español · Active Timed Recall",
-  "short_name": "Español",
+  "name": "Spanish Active Timed Recall",
+  "short_name": "Spanish Recall",
   "description": "Spanish acoustic-first active timed recall.",
   "start_url": "/",
   "scope": "/",

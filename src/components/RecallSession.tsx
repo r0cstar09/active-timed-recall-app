@@ -525,16 +525,16 @@ export default function RecallSession() {
 
         <div className="card notebook-card stack">
           <div className="row between">
-            <span className="pill">cuaderno · sin FSRS</span>
-            <span className="small faint">sin prisa</span>
+            <span className="pill">notebook · no FSRS</span>
+            <span className="small faint">no timer</span>
           </div>
 
           <div className="alert" style={{ margin: 0 }}>
-            Mira la idea, escucha la música de la frase y luego la producimos sin andamios.
+            Look at the idea, listen to the shape of the phrase, then we’ll produce it without scaffolds.
           </div>
 
           <div>
-            <div className="small faint">Frase española</div>
+            <div className="small faint">Spanish phrase</div>
             <h2 style={{ margin: "4px 0 0" }}>{item.spanish}</h2>
           </div>
 
@@ -629,14 +629,14 @@ export default function RecallSession() {
     <div className="stack recall-shell">
       <div className="row between small faint">
         <span>
-          frase {index + 1} / {items.length}
+          phrase {index + 1} / {items.length}
         </span>
         <button
           className="btn btn-ghost"
           style={{ minHeight: 32, padding: "4px 10px" }}
           onClick={quit}
         >
-          salir
+          Exit
         </button>
       </div>
 
@@ -674,10 +674,10 @@ export default function RecallSession() {
 
         <p className="small faint" style={{ margin: "8px 0 0" }}>
           {item?.prompt_type === "audio_shadow"
-            ? "Escucha y repite con calma"
+            ? "Listen, then shadow it calmly"
             : item?.prompt_type === "cloze"
-              ? "Completa la frase en voz alta"
-              : danger ? "Rápido — suéltalo" : "Respira, piensa en la idea, habla en español"}
+              ? "Complete the phrase out loud"
+              : danger ? "Fast now — say it" : "Breathe, think of the idea, speak in Spanish"}
         </p>
         <h2 style={{ margin: "2px 0 0" }}>{item ? promptText(item) : ""}</h2>
         {item?.context_clue && (
@@ -686,7 +686,7 @@ export default function RecallSession() {
 
         {sessionMode === "misses" && item?.feedback && (
           <div className="alert" style={{ margin: "8px 0 0", textAlign: "left" }}>
-            <strong>Casi…</strong> {item.feedback}
+            <strong>Almost…</strong> {item.feedback}
           </div>
         )}
 
@@ -706,7 +706,7 @@ export default function RecallSession() {
             }}
           />
           <span className="small" style={{ color: "var(--rioja)", fontWeight: 800 }}>
-            grabando · {totalSecs - secs}s
+            recording · {totalSecs - secs}s
           </span>
         </div>
 
@@ -715,7 +715,7 @@ export default function RecallSession() {
           style={{ marginTop: 10 }}
           onClick={() => submitRef.current()}
         >
-          {index + 1 < items.length ? "Comprobar y seguir" : "Comprobar y calificar"}
+          {index + 1 < items.length ? "Check and continue" : "Check and grade"}
         </button>
         {error && <div className="alert alert-error" style={{ margin: "8px 0 0" }}>{error}</div>}
       </div>
@@ -761,7 +761,7 @@ function Summary({
   return (
     <div className="stack">
       <div className="card stack center">
-        <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Listo para hablar" : summary && summary.failed === 0 && summary.partial === 0 ? "¡Olé!" : "Sesión calificada"}</h2>
+        <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Ready to speak" : summary && summary.failed === 0 && summary.partial === 0 ? "Clean recall" : "Session graded"}</h2>
         {graded?.mode === "learn" && (
           <p className="muted">These phrases are now introduced. Next step: produce them from English under the timer.</p>
         )}

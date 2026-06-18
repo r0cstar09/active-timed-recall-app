@@ -217,8 +217,8 @@ export default function LessonsBrowser() {
     return (
       <div className="card notebook-card stack center">
         <div className="spinner" aria-hidden="true" />
-        <h2>Abriendo el cuaderno…</h2>
-        <p className="muted">Cargando patrones, trampas y ejemplos naturales.</p>
+        <h2>Opening the notebook…</h2>
+        <p className="muted">Loading patterns, traps, and natural examples.</p>
       </div>
     );
   }
@@ -227,11 +227,11 @@ export default function LessonsBrowser() {
     <div className="stack">
       <div className="card notebook-card stack">
         <div>
-          <div className="spanish-kicker">biblioteca de patrones</div>
-          <h2 style={{ margin: 0 }}>Busca una estructura que quieras dominar</h2>
+          <div className="spanish-kicker">pattern library</div>
+          <h2 style={{ margin: 0 }}>Find a structure to master</h2>
         </div>
         <label className="field">
-          <span>Buscar en el cuaderno</span>
+          <span>Search lessons</span>
           <input className="input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="subjunctive, reported speech, se me..." />
         </label>
         <label className="field">

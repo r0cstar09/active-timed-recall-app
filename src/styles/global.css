@@ -498,3 +498,189 @@ label.field > span {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* Second-pass product polish: English UI, richer dynamic dashboard */
+.home-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 260px;
+}
+
+.hero-glow {
+  position: absolute;
+  inset: auto -12% -42% 28%;
+  height: 220px;
+  background:
+    radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--saffron) 58%, transparent), transparent 46%),
+    radial-gradient(circle at 70% 30%, color-mix(in srgb, var(--azulejo) 36%, transparent), transparent 42%);
+  filter: blur(8px);
+  z-index: -1;
+}
+
+.hero-copy {
+  max-width: 38rem;
+  font-size: clamp(1rem, 3vw, 1.2rem);
+}
+
+.mosaic-strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(28px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mosaic-strip span {
+  min-height: 18px;
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--paper) 88%, white), color-mix(in srgb, var(--saffron) 35%, var(--paper))),
+    var(--tile-pattern);
+  box-shadow: inset 0 0 0 1px var(--line), var(--shadow-soft);
+}
+
+.mosaic-strip span:nth-child(2n) { background-color: color-mix(in srgb, var(--azulejo) 18%, var(--paper)); }
+.mosaic-strip span:nth-child(3n) { background-color: color-mix(in srgb, var(--terracotta) 20%, var(--paper)); }
+
+.ritual-panel {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--terracotta) 28%, var(--line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--paper) 94%, white), color-mix(in srgb, var(--saffron) 11%, var(--paper))),
+    var(--tile-pattern);
+  box-shadow: var(--shadow);
+}
+
+.voice-orb-small {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+}
+
+.metric-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.metric-card {
+  position: relative;
+  overflow: hidden;
+  padding: 14px;
+  min-height: 104px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 82%, white);
+  box-shadow: var(--shadow-soft);
+}
+
+.metric-card::after {
+  content: "";
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  right: -28px;
+  bottom: -28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--saffron) 28%, transparent);
+}
+
+.metric-card.hot::after { background: color-mix(in srgb, var(--terracotta) 32%, transparent); }
+.metric-card.cool::after { background: color-mix(in srgb, var(--azulejo) 26%, transparent); }
+
+.metric-card .num {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 9vw, 3.2rem);
+  line-height: .9;
+  color: var(--ink);
+}
+
+.metric-card .lbl {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-weight: 800;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.action-card {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  min-height: 132px;
+  padding: 16px;
+  border-radius: var(--radius);
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--paper) 90%, white), color-mix(in srgb, var(--bg-elev) 6%, var(--paper))),
+    var(--tile-pattern);
+  box-shadow: var(--shadow-soft);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.action-card:hover,
+.action-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: color-mix(in srgb, var(--terracotta) 42%, var(--line));
+}
+
+.action-card span {
+  color: var(--terracotta);
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .18em;
+}
+
+.action-card strong {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+
+.action-card small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.compact-card {
+  padding: 14px;
+}
+
+@media (max-width: 560px) {
+  .ritual-panel {
+    grid-template-columns: 1fr;
+  }
+  .voice-orb-small {
+    width: 64px;
+    height: 64px;
+  }
+  .metric-board {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .metric-card {
+    min-height: 96px;
+    padding: 12px 10px;
+  }
+  .metric-card .lbl {
+    font-size: .68rem;
+    letter-spacing: .08em;
+  }
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+}

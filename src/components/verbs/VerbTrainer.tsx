@@ -186,8 +186,8 @@ export default function VerbTrainer() {
     return (
       <div className="card card-tile stack center">
         <div className="spinner" aria-hidden="true" />
-        <h2>Cargando verbos…</h2>
-        <p className="muted">Preparando el tablero de azulejos.</p>
+        <h2>Loading verbs…</h2>
+        <p className="muted">Preparing the tile board.</p>
       </div>
     );
   }
@@ -197,16 +197,16 @@ export default function VerbTrainer() {
       <div className="card card-tile stack">
         <div className="row between wrap">
           <div>
-            <div className="spanish-kicker">verbo elegido</div>
+            <div className="spanish-kicker">selected verb</div>
             <h2 style={{ margin: 0 }}>{verb?.verb || "—"}</h2>
             <p className="muted" style={{ margin: 0 }}>{verb?.englishBase} · {verb?.category}</p>
           </div>
           <span className={verbComplete ? "pill pill-good" : "pill"}>
-            {verbComplete ? "dominado" : `${fullPassCount}/${requiredPasses} perfectas`}
+            {verbComplete ? "mastered" : `${fullPassCount}/${requiredPasses} perfect`}
           </span>
         </div>
         <label className="field">
-          <span>Elige verbo</span>
+          <span>Choose verb</span>
           <select className="input" value={verbName} onChange={(e) => { setVerbName(e.target.value); clearAnswers(); }}>
             {data.verbs.map((v) => (
               <option key={v.verb} value={v.verb}>
@@ -218,10 +218,10 @@ export default function VerbTrainer() {
 
         <div className="btn-row">
           <button className={showAllTenses ? "btn" : "btn btn-primary"} type="button" onClick={() => { setShowAllTenses(false); clearAnswers(); }}>
-            Un tiempo
+            One tense
           </button>
           <button className={showAllTenses ? "btn btn-primary" : "btn"} type="button" onClick={() => { setShowAllTenses(true); clearAnswers(); }}>
-            Tablero completo
+            Full grid
           </button>
         </div>
 

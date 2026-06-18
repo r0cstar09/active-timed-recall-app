@@ -3,11 +3,11 @@ import Base from "../layouts/Base.astro";
 import MissesReview from "../components/misses/MissesReview.tsx";
 ---
 
-<Base title="Repaso · Spanish Practice" heading="Repaso" current="misses">
+<Base title="Review · Spanish Practice" heading="Review" current="misses">
   <section class="card card-tile stack">
-    <div class="spanish-kicker">a pulir</div>
-    <h1>Repaso amable</h1>
-    <p class="muted">Misses are not failures. They are phrases almost ready to speak naturally.</p>
+    <div class="spanish-kicker">polish queue</div>
+    <h1>Review without punishment</h1>
+    <p class="muted">Misses are useful signal. Clear the queue, promote weak sentences, and make them speakable.</p>
   </section>
   <MissesReview client:load />
 </Base>

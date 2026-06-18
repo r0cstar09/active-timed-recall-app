@@ -9,15 +9,15 @@ interface Props {
 const { current } = Astro.props;
 
 const tabs = [
-  { id: "home", href: "/", label: "Inicio" },
-  { id: "verbs", href: "/verbs", label: "Verbos" },
-  { id: "lessons", href: "/lessons", label: "Cuaderno" },
-  { id: "misses", href: "/misses", label: "Repaso" },
-  { id: "ingest", href: "/ingest", label: "Añadir" },
-  { id: "library", href: "/library", label: "Biblioteca" },
-  { id: "review", href: "/review", label: "Voz" },
-  { id: "settings", href: "/settings", label: "Ajustes" },
-] as const;
+  { id: "home", href: "/", label: "Home" },
+  { id: "verbs", href: "/verbs", label: "Verbs" },
+  { id: "lessons", href: "/lessons", label: "Lessons" },
+  { id: "misses", href: "/misses", label: "Review" },
+  { id: "ingest", href: "/ingest", label: "Add" },
+  { id: "library", href: "/library", label: "Library" },
+  { id: "session", href: "/session", label: "Speak" },
+  { id: "settings", href: "/settings", label: "Settings" },
+];
 ---
 
 <nav class="tabbar" aria-label="Primary">
