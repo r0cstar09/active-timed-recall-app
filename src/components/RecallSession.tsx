@@ -456,7 +456,7 @@ export default function RecallSession() {
               onClick={start}
               disabled={sessionMode !== "learn" && !supported}
             >
-              {sessionMode === "learn" ? "Aprender" : "Empieza"}
+              {sessionMode === "learn" ? "Start learning" : "Start speaking"}
             </button>
           </div>
         )}
@@ -761,6 +761,9 @@ function Summary({
   return (
     <div className="stack">
       <div className="card stack center">
+        {graded?.mode !== "learn" && summary && summary.failed === 0 && summary.partial === 0 && (
+          <div className="ole-burst" aria-hidden="true">¡Olé!</div>
+        )}
         <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Ready to speak" : summary && summary.failed === 0 && summary.partial === 0 ? "Clean recall" : "Session graded"}</h2>
         {graded?.mode === "learn" && (
           <p className="muted">These phrases are now introduced. Next step: produce them from English under the timer.</p>
