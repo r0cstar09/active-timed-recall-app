@@ -145,8 +145,8 @@ export default function PatternDrills() {
                   <span>{pattern.level} · {pattern.target_dialect}</span>
                 </div>
                 {canGenerate ? (
-                  <button className="btn btn-primary btn-block" type="button" disabled={busy[key]} onClick={() => void generatePack(pattern)}>
-                    {busy[key] ? "Generating…" : patternPacks.length ? "Generate another pack" : "Generate drill pack"}
+                  <button className="btn btn-primary btn-block" type="button" disabled={busy[key]} onClick={() => patternPacks.length ? setView("packs") : void generatePack(pattern)}>
+                    {busy[key] ? "Generating…" : patternPacks.length ? "Open saved pack" : "Generate drill pack"}
                   </button>
                 ) : (
                   <div className="alert">Unlock this by sealing enough tagged prompts in core lessons.</div>
