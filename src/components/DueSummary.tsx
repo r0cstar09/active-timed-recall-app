@@ -14,9 +14,21 @@ function dayPart() {
 
 function scoreLabel(score?: number | null) {
   if (score == null) return "last session saved";
-  if (score >= 0.9) return "sharp last session";
-  if (score >= 0.72) return "solid last session";
-  return "good data for review";
+  if (score >= 0.9) return "clean pronunciation energy";
+  if (score >= 0.72) return "solid recall, keep the rhythm";
+  return "weak spots found — perfect fuel";
+}
+
+function queueMood(stats: DashboardStats | null, hasResumable: boolean) {
+  if (hasResumable) return { label: "paused mid-flow", tone: "Resume the rep before starting anything new." };
+  const due = stats?.dueCount ?? 0;
+  const learning = stats?.learningCount ?? 0;
+  const fresh = stats?.newCount ?? 0;
+  if (due > 12) return { label: "review wave", tone: "Big due stack. Hit reviews first and let the timer sharpen recall." };
+  if (due > 0) return { label: "ready to speak", tone: `${due} phrase${due === 1 ? "" : "s"} due. Clear the deck.` };
+  if (learning > 0) return { label: "warming up", tone: `${learning} phrase${learning === 1 ? "" : "s"} in learning. Keep the reps moving.` };
+  if (fresh > 0) return { label: "fresh material", tone: "No urgent reviews. Pull in new phrases or run a freestyle sprint." };
+  return { label: "quiet deck", tone: "Add a source, drill verbs, or practice patterns while FSRS waits." };
 }
 
 export default function DueSummary() {
@@ -59,22 +71,12 @@ export default function DueSummary() {
     };
   }, []);
 
-  const mission = useMemo(() => {
-    if (loading) return "Loading today’s speaking queue…";
-    const due = stats?.dueCount ?? 0;
-    const learning = stats?.learningCount ?? 0;
-    const fresh = stats?.newCount ?? 0;
-    if (hasResumable) return "You have a paused speaking session waiting.";
-    if (due > 0) return `${due} phrase${due === 1 ? "" : "s"} due. Clear those first.`;
-    if (learning > 0) return `${learning} phrase${learning === 1 ? "" : "s"} warming up. Keep them moving.`;
-    if (fresh > 0) return "No urgent reviews. Add a few new phrases or do a free practice sprint.";
-    return "Your deck is quiet. Add a source or practice verbs while FSRS waits.";
-  }, [hasResumable, loading, stats]);
-
+  const mood = useMemo(() => queueMood(stats, hasResumable), [hasResumable, stats]);
   const primaryHref = hasResumable ? "/session" : (stats?.dueCount ?? 0) > 0 ? "/session?mode=review" : "/session?mode=practice";
+  const completion = stats ? Math.min(100, Math.round(((stats.reviewCount + stats.learningCount) / Math.max(1, stats.totalCards)) * 100)) : 0;
 
   return (
-    <div className="stack">
+    <div className="stack dashboard-stack">
       {error && (
         <div className="alert alert-error">
           {error}
@@ -84,68 +86,83 @@ export default function DueSummary() {
         </div>
       )}
 
-      <div className="ritual-panel">
-        <div className="voice-orb voice-orb-small" aria-hidden="true"><span></span></div>
-        <div className="stack" style={{ gap: 8 }}>
-          <div className="spanish-kicker">{dayPart()} practice</div>
-          <h2 style={{ margin: 0 }}>Today’s mission</h2>
-          <p className="muted" style={{ margin: 0 }}>{mission}</p>
+      <div className="mission-card">
+        <div className="mission-map" aria-hidden="true">
+          <span className="pin pin-madrid">MAD</span>
+          <span className="pin pin-mexico">MX</span>
+          <span className="pin pin-medellin">MED</span>
+          <span className="pin pin-baires">BA</span>
+        </div>
+        <div className="mission-content stack">
+          <div className="row between wrap">
+            <div>
+              <div className="spanish-kicker">{dayPart()} mission · {mood.label}</div>
+              <h2 style={{ margin: 0 }}>Speak with rhythm, not hesitation.</h2>
+            </div>
+            <span className="flavor-badge">sabor mode</span>
+          </div>
+          <p className="muted" style={{ margin: 0 }}>{loading ? "Loading today’s speaking queue…" : mood.tone}</p>
           <div className="row wrap" style={{ gap: 10 }}>
-            <a className="btn btn-primary btn-lg" href={primaryHref}>{hasResumable ? "Resume speaking" : "Start speaking"}</a>
-            <a className="btn" href="/session?mode=learn">Learn new phrases</a>
+            <a className="btn btn-primary btn-lg" href={primaryHref}>{hasResumable ? "Resume the flow" : "Start speaking"}</a>
+            <a className="btn btn-azul" href="/session?mode=learn">Learn phrases</a>
+            <a className="btn btn-ghost" href="/session?mode=practice">Freestyle sprint</a>
           </div>
         </div>
       </div>
 
-      <div className="metric-board" aria-label="Practice counts">
+      <div className="score-strip">
+        <div className="score-ring" style={{ "--pct": `${completion}%` } as React.CSSProperties}>
+          <strong>{loading ? "·" : `${completion}%`}</strong>
+          <span>active</span>
+        </div>
+        <div className="score-copy">
+          <div className="spanish-kicker">momentum</div>
+          <strong>{lastSession ? scoreLabel(lastSession.score) : "build today’s first rep"}</strong>
+          <p className="muted small" style={{ margin: "4px 0 0" }}>
+            {stats ? `${stats.totalCards} phrase cards · ${stats.sourceCount} sources · ${stats.reviewCount} mature reviews` : "Loading library totals…"}
+          </p>
+        </div>
+      </div>
+
+      <div className="metric-board metric-board-pop" aria-label="Practice counts">
         <div className="metric-card hot">
+          <div className="metric-icon">🔥</div>
           <div className="num">{loading ? "·" : (stats?.dueCount ?? 0)}</div>
           <div className="lbl">due to speak</div>
         </div>
-        <div className="metric-card">
+        <div className="metric-card rhythm">
+          <div className="metric-icon">🎧</div>
           <div className="num">{loading ? "·" : (stats?.learningCount ?? 0)}</div>
-          <div className="lbl">in learning</div>
+          <div className="lbl">finding rhythm</div>
         </div>
         <div className="metric-card cool">
+          <div className="metric-icon">✨</div>
           <div className="num">{loading ? "·" : (stats?.newCount ?? 0)}</div>
-          <div className="lbl">new available</div>
+          <div className="lbl">new sparks</div>
         </div>
       </div>
 
-      <div className="action-grid">
-        <a className="action-card" href="/session?mode=review">
-          <span>01</span>
+      <div className="action-grid action-grid-pop">
+        <a className="action-card action-card-red" href="/session?mode=review">
+          <span>primero</span>
           <strong>Clear reviews</strong>
-          <small>FSRS due queue, spoken answers only.</small>
+          <small>Lock in due Spanish under real timer pressure.</small>
         </a>
-        <a className="action-card" href="/verbs">
-          <span>02</span>
+        <a className="action-card action-card-blue" href="/verbs">
+          <span>motor</span>
           <strong>Drill verbs</strong>
-          <small>Tile-board conjugation practice.</small>
+          <small>Conjugation grids that feel like reps, not worksheets.</small>
         </a>
-        <a className="action-card" href="/lessons">
-          <span>03</span>
+        <a className="action-card action-card-gold" href="/lessons">
+          <span>patrón</span>
           <strong>Build patterns</strong>
-          <small>Meaning → variation → fast production.</small>
+          <small>From meaning to flexible Spanish sentence shapes.</small>
         </a>
-        <a className="action-card" href="/misses">
-          <span>04</span>
+        <a className="action-card action-card-green" href="/misses">
+          <span>pulir</span>
           <strong>Polish misses</strong>
-          <small>Turn weak spots into targeted recall.</small>
+          <small>Weak spots become targeted recall fuel.</small>
         </a>
-      </div>
-
-      <div className="card stack compact-card">
-        <div className="row between wrap">
-          <div>
-            <div className="spanish-kicker">momentum</div>
-            <strong>{lastSession ? scoreLabel(lastSession.score) : "ready when you are"}</strong>
-            <p className="muted small" style={{ margin: "4px 0 0" }}>
-              {stats ? `${stats.totalCards} phrase cards · ${stats.sourceCount} sources` : "Loading library totals…"}
-            </p>
-          </div>
-          <a className="btn btn-small" href="/ingest">Add source</a>
-        </div>
       </div>
     </div>
   );

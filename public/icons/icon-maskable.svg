@@ -1,11 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Spanish recall app icon">
   <defs>
-    <linearGradient id="g" x1="20" y1="18" x2="112" y2="110"><stop stop-color="#e8a33d"/><stop offset=".55" stop-color="#c75b39"/><stop offset="1" stop-color="#7c2d3a"/></linearGradient>
-    <pattern id="p" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M16 3c5 7 9 11 13 13-4 2-8 6-13 13C11 22 7 18 3 16 7 14 11 10 16 3Z" fill="none" stroke="#1f7a8c" stroke-width="1.3" opacity=".3"/></pattern>
+    <linearGradient id="sunset" x1="16" y1="14" x2="112" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f6c85f"/>
+      <stop offset=".36" stop-color="#e86f3a"/>
+      <stop offset=".68" stop-color="#c13f6f"/>
+      <stop offset="1" stop-color="#1d4e89"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="24" y1="104" x2="108" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00a0b0"/>
+      <stop offset="1" stop-color="#4f8a5b"/>
+    </linearGradient>
+    <pattern id="tile" width="26" height="26" patternUnits="userSpaceOnUse">
+      <path d="M13 2c4 6 8 9 11 11-3 2-7 6-11 11C9 19 6 15 2 13 6 11 9 8 13 2Z" fill="none" stroke="#fff8ea" stroke-width="1.25" opacity=".28"/>
+    </pattern>
   </defs>
-  <rect width="128" height="128" fill="#f4ead8"/>
-  <rect width="128" height="128" fill="url(#p)" opacity=".75"/>
-  <path d="M28 78c0-27 17-48 39-48 20 0 33 15 33 33 0 24-21 39-45 34-4 9-11 16-21 21 4-10 5-18 2-25-5-3-8-8-8-15Z" fill="url(#g)"/>
-  <path d="M56 51a12 12 0 0 1 24 0v23a12 12 0 0 1-24 0V51Z" fill="#fff8ea"/>
-  <path d="M45 68c0 14 9 24 23 24s23-10 23-24M68 92v13M54 105h28" fill="none" stroke="#2a1810" stroke-width="6" stroke-linecap="round"/>
+  <rect width="128" height="128" fill="#21111b"/>
+  <rect x="4" y="4" width="120" height="120" rx="34" fill="url(#sunset)"/>
+  <rect x="4" y="4" width="120" height="120" rx="34" fill="url(#tile)"/>
+  <circle cx="88" cy="34" r="18" fill="#f6c85f" opacity=".94"/>
+  <path d="M15 91c23-10 38-11 55-2 14 8 27 9 43 1v23H15Z" fill="url(#sea)" opacity=".92"/>
+  <path d="M34 74c0-22 14-38 33-38 17 0 28 12 28 27 0 21-18 32-38 28-4 8-10 14-19 17 3-8 4-14 2-20-4-3-6-8-6-14Z" fill="#fff8ea" opacity=".96"/>
+  <path d="M59 52a9 9 0 0 1 18 0v20a9 9 0 0 1-18 0V52Z" fill="#21111b"/>
+  <path d="M48 67c0 12 8 21 20 21s20-9 20-21M68 88v12M56 100h24" fill="none" stroke="#21111b" stroke-width="5.5" stroke-linecap="round"/>
+  <circle cx="31" cy="35" r="5" fill="#00a0b0"/>
+  <circle cx="103" cy="78" r="5" fill="#c13f6f"/>
 </svg>
