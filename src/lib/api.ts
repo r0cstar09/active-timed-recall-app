@@ -241,6 +241,28 @@ export type LessonProgress = {
   completed_at?: string | null;
 };
 
+export type LessonPromptProgress = {
+  lesson_id: string;
+  section: string;
+  prompt: string;
+  expected_answer?: string | null;
+  status: "open" | "pass" | string;
+  last_result?: string | null;
+  last_attempt_id?: number | null;
+  updated_at?: string | null;
+};
+
+export type VerbPromptProgress = {
+  verb: string;
+  pronoun: string;
+  tense: string;
+  prompt?: string | null;
+  status: "open" | "pass" | string;
+  last_result?: string | null;
+  last_attempt_id?: number | null;
+  updated_at?: string | null;
+};
+
 export type VerbProgress = {
   verb: string;
   category?: string | null;
@@ -372,6 +394,12 @@ export const api = {
     const res = await request<unknown>(`/api/study/lesson-progress${suffix}`);
     return toArray<LessonProgress>(res, ["items", "data", "results"]);
   },
+  async listLessonPromptProgress(lessonId: string, section?: string): Promise<LessonPromptProgress[]> {
+    const params = new URLSearchParams({ lesson_id: lessonId });
+    if (section) params.set("section", section);
+    const res = await request<unknown>(`/api/study/lesson-prompt-progress?${params.toString()}`);
+    return toArray<LessonPromptProgress>(res, ["items", "data", "results"]);
+  },
   resetLessonProgress(lessonId: string): Promise<LessonProgress> {
     return requestJson<LessonProgress>("/api/study/lesson-progress/reset", "POST", { lesson_id: lessonId });
   },
@@ -379,6 +407,12 @@ export const api = {
     const suffix = verb ? `?verb=${encodeURIComponent(verb)}` : "";
     const res = await request<unknown>(`/api/study/verb-progress${suffix}`);
     return toArray<VerbProgress>(res, ["items", "data", "results"]);
+  },
+  async listVerbPromptProgress(verb: string, tense?: string): Promise<VerbPromptProgress[]> {
+    const params = new URLSearchParams({ verb });
+    if (tense) params.set("tense", tense);
+    const res = await request<unknown>(`/api/study/verb-prompt-progress?${params.toString()}`);
+    return toArray<VerbPromptProgress>(res, ["items", "data", "results"]);
   },
   resetVerbProgress(verb: string): Promise<VerbProgress> {
     return requestJson<VerbProgress>("/api/study/verb-progress/reset", "POST", { verb });

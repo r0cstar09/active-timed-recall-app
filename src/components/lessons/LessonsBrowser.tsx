@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, type StudyGradeResponse } from "../../lib/api";
+import { api, type LessonPromptProgress, type StudyGradeResponse } from "../../lib/api";
 
 type LessonSection = {
   instructions: string;
@@ -54,6 +54,7 @@ export default function LessonsBrowser() {
   const [error, setError] = useState<string | null>(null);
   const [grade, setGrade] = useState<StudyGradeResponse | null>(null);
   const [lessonProgress, setLessonProgress] = useState<Record<string, { total_prompts: number; passed_prompts: number; completed: number }>>({});
+  const [promptProgress, setPromptProgress] = useState<Record<string, LessonPromptProgress>>({});
   const [promoting, setPromoting] = useState<Record<number, string>>({});
   const [resetting, setResetting] = useState(false);
 
@@ -95,6 +96,25 @@ export default function LessonsBrowser() {
   const currentProgress = lesson ? lessonProgress[lesson.id] : undefined;
   const progressTotal = currentProgress?.total_prompts || moduleTotalPrompts;
   const lessonComplete = Boolean(currentProgress?.completed);
+  const promptKey = (section: string, prompt: string) => `${lesson?.id ?? ""}::${section}::${prompt}`;
+  const passedPromptKeys = useMemo(
+    () => new Set(Object.entries(promptProgress).filter(([, p]) => p.status === "pass").map(([key]) => key)),
+    [promptProgress],
+  );
+
+  async function refreshPromptProgress(targetLessonId?: string) {
+    const id = targetLessonId || lesson?.id;
+    if (!id) return;
+    const items = await api.listLessonPromptProgress(id);
+    setPromptProgress((prev) => {
+      const next = { ...prev };
+      for (const key of Object.keys(next)) {
+        if (key.startsWith(`${id}::`)) delete next[key];
+      }
+      for (const item of items) next[`${item.lesson_id}::${item.section}::${item.prompt}`] = item;
+      return next;
+    });
+  }
 
   async function refreshLessonProgress(targetLessonId?: string) {
     const items = await api.listLessonProgress(targetLessonId);
@@ -109,6 +129,11 @@ export default function LessonsBrowser() {
     }).catch(() => undefined);
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!lesson?.id) return;
+    refreshPromptProgress(lesson.id).catch(() => undefined);
+  }, [lesson?.id]);
 
   function resetWork() {
     setShowAnswers(false);
@@ -132,6 +157,7 @@ export default function LessonsBrowser() {
     if (!lesson || !section) return;
     const submitted = section.prompts
       .map((prompt, idx) => ({ prompt, idx, answer: responses[idx] ?? "" }))
+      .filter((item) => !passedPromptKeys.has(promptKey(sectionName, item.prompt)))
       .filter((item) => item.answer.trim());
     if (!submitted.length) return;
     setGrading(true);
@@ -160,6 +186,32 @@ export default function LessonsBrowser() {
         })),
       });
       setGrade(response);
+      setPromptProgress((prev) => {
+        const next = { ...prev };
+        for (const item of response.items ?? []) {
+          const idx = Number(item.client_id);
+          const prompt = Number.isFinite(idx) ? section.prompts[idx] : "";
+          if (prompt && item.result === "pass") {
+            next[promptKey(sectionName, prompt)] = {
+              lesson_id: lesson.id,
+              section: sectionName,
+              prompt,
+              expected_answer: section.answers?.[idx] ?? "",
+              status: "pass",
+              last_result: item.result,
+              last_attempt_id: item.attempt_id,
+            };
+          }
+        }
+        return next;
+      });
+      setResponses((prev) => {
+        const next = { ...prev };
+        for (const item of response.items ?? []) {
+          if (item.result === "pass" && item.client_id != null) delete next[Number(item.client_id)];
+        }
+        return next;
+      });
       if (response.progress?.lesson_id) {
         setLessonProgress((prev) => ({
           ...prev,
@@ -168,6 +220,7 @@ export default function LessonsBrowser() {
       } else {
         await refreshLessonProgress(lesson.id);
       }
+      await refreshPromptProgress(lesson.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -182,6 +235,14 @@ export default function LessonsBrowser() {
     try {
       const progress = await api.resetLessonProgress(lesson.id);
       setLessonProgress((prev) => ({ ...prev, [lesson.id]: progress }));
+      setPromptProgress((prev) => {
+        const next = { ...prev };
+        for (const key of Object.keys(next)) {
+          if (key.startsWith(`${lesson.id}::`)) delete next[key];
+        }
+        return next;
+      });
+      resetWork();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -204,7 +265,14 @@ export default function LessonsBrowser() {
     }
   }
 
-  const filled = section?.prompts?.filter((_, idx) => responses[idx]?.trim()).length ?? 0;
+  const visiblePrompts = useMemo(
+    () => (section?.prompts ?? [])
+      .map((prompt, idx) => ({ prompt, idx }))
+      .filter(({ prompt }) => !passedPromptKeys.has(promptKey(sectionName, prompt))),
+    [section?.prompts, passedPromptKeys, sectionName, lesson?.id],
+  );
+  const hiddenPassedCount = (section?.prompts?.length ?? 0) - visiblePrompts.length;
+  const filled = visiblePrompts.filter(({ idx }) => responses[idx]?.trim()).length;
   const gradeByIndex = useMemo(() => {
     const map = new Map<number, NonNullable<StudyGradeResponse["items"]>[number]>();
     for (const item of grade?.items ?? []) {
@@ -294,11 +362,14 @@ export default function LessonsBrowser() {
             </label>
             {section?.instructions && <p className="muted">{section.instructions}</p>}
             <div className="row between small faint">
-              <span>{filled}/{section?.prompts?.length ?? 0} responses filled</span>
-              <span>LLM graded by backend</span>
+              <span>{filled}/{visiblePrompts.length} open responses filled</span>
+              <span>{hiddenPassedCount ? `${hiddenPassedCount} completed hidden` : "LLM graded by backend"}</span>
             </div>
             <div className="stack">
-              {section?.prompts?.map((prompt, idx) => {
+              {visiblePrompts.length === 0 && (
+                <div className="alert alert-ok">All prompts in this section are complete. Reset the module to bring them back.</div>
+              )}
+              {visiblePrompts.map(({ prompt, idx }) => {
                 const itemGrade = gradeByIndex.get(idx);
                 return (
                   <div className="card card-tight stack" key={`${prompt}-${idx}`}>
@@ -348,7 +419,7 @@ export default function LessonsBrowser() {
                 {grade.summary || grade.next_drill_recommendation}
               </div>
             )}
-            <button className="btn btn-primary btn-block" type="button" disabled={grading || filled === 0} onClick={submit}>
+            <button className="btn btn-primary btn-block" type="button" disabled={grading || filled === 0 || visiblePrompts.length === 0} onClick={submit}>
               {grading ? "Grading…" : "Submit for LLM grading"}
             </button>
             <button className="btn btn-block" type="button" onClick={() => setShowAnswers((v) => !v)}>

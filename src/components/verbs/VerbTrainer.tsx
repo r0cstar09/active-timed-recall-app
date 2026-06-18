@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, type StudyGradeResponse, type VerbProgress } from "../../lib/api";
+import { api, type StudyGradeResponse, type VerbProgress, type VerbPromptProgress } from "../../lib/api";
 
 type Assignment = {
   pronoun: string;
@@ -42,6 +42,10 @@ function rowKey(row: Assignment, idx: number) {
   return `${idx}-${row.tense}-${row.pronoun}`;
 }
 
+function progressKey(verb: string, row: Assignment) {
+  return `${verb}::${row.tense}::${row.pronoun}`;
+}
+
 function resultClass(result?: string) {
   if (result === "pass") return "alert alert-ok";
   if (result === "partial") return "alert";
@@ -61,6 +65,7 @@ export default function VerbTrainer() {
   const [error, setError] = useState<string | null>(null);
   const [grade, setGrade] = useState<StudyGradeResponse | null>(null);
   const [verbProgress, setVerbProgress] = useState<Record<string, VerbProgress>>({});
+  const [promptProgress, setPromptProgress] = useState<Record<string, VerbPromptProgress>>({});
   const [resetting, setResetting] = useState(false);
 
   const verb = useMemo(
@@ -91,6 +96,15 @@ export default function VerbTrainer() {
     if (!verb) return [];
     return verb.assignments.filter((a) => showAllTenses || a.tense === tense);
   }, [verb, tense, showAllTenses]);
+  const passedPromptKeys = useMemo(
+    () => new Set(Object.entries(promptProgress).filter(([, p]) => p.status === "pass").map(([key]) => key)),
+    [promptProgress],
+  );
+  const visibleRows = useMemo(
+    () => verb ? rows.map((row, idx) => ({ row, idx })).filter(({ row }) => !passedPromptKeys.has(progressKey(verb.verb, row))) : [],
+    [rows, passedPromptKeys, verb?.verb],
+  );
+  const hiddenPassedCount = rows.length - visibleRows.length;
   const currentProgress = verb ? verbProgress[verb.verb] : undefined;
   const isIrregular = (verb?.category ?? "").toLowerCase().includes("irregular");
   const requiredPasses = currentProgress?.required_full_passes ?? (isIrregular ? 7 : 1);
@@ -106,6 +120,25 @@ export default function VerbTrainer() {
     return () => { cancelled = true; };
   }, []);
 
+  async function refreshPromptProgress(targetVerb?: string) {
+    const name = targetVerb || verb?.verb;
+    if (!name) return;
+    const items = await api.listVerbPromptProgress(name);
+    setPromptProgress((prev) => {
+      const next = { ...prev };
+      for (const key of Object.keys(next)) {
+        if (key.startsWith(`${name}::`)) delete next[key];
+      }
+      for (const item of items) next[`${item.verb}::${item.tense}::${item.pronoun}`] = item;
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    if (!verb?.verb) return;
+    refreshPromptProgress(verb.verb).catch(() => undefined);
+  }, [verb?.verb]);
+
   function setAnswer(key: string, value: string) {
     setAnswers((prev) => ({ ...prev, [key]: value }));
     setGrade(null);
@@ -120,8 +153,8 @@ export default function VerbTrainer() {
 
   async function submit() {
     if (!verb) return;
-    const submitted = rows
-      .map((row, idx) => ({ row, key: rowKey(row, idx), answer: answers[rowKey(row, idx)] ?? "" }))
+    const submitted = visibleRows
+      .map(({ row, idx }) => ({ row, key: rowKey(row, idx), answer: answers[rowKey(row, idx)] ?? "" }))
       .filter((item) => item.answer.trim());
     if (!submitted.length) return;
     setGrading(true);
@@ -143,12 +176,38 @@ export default function VerbTrainer() {
         })),
       });
       setGrade(response);
+      setPromptProgress((prev) => {
+        const next = { ...prev };
+        for (const item of response.items ?? []) {
+          const submittedItem = submitted.find((s) => s.key === String(item.client_id));
+          if (submittedItem && item.result === "pass") {
+            next[progressKey(verb.verb, submittedItem.row)] = {
+              verb: verb.verb,
+              pronoun: submittedItem.row.pronoun,
+              tense: submittedItem.row.tense,
+              prompt: submittedItem.row.translation,
+              status: "pass",
+              last_result: item.result,
+              last_attempt_id: item.attempt_id,
+            };
+          }
+        }
+        return next;
+      });
+      setAnswers((prev) => {
+        const next = { ...prev };
+        for (const item of response.items ?? []) {
+          if (item.result === "pass" && item.client_id != null) delete next[String(item.client_id)];
+        }
+        return next;
+      });
       if (response.progress?.verb) {
         setVerbProgress((prev) => ({ ...prev, [String(response.progress?.verb)]: response.progress as VerbProgress }));
       } else {
         const items = await api.listVerbProgress(verb.verb);
         if (items[0]) setVerbProgress((prev) => ({ ...prev, [verb.verb]: items[0] }));
       }
+      await refreshPromptProgress(verb.verb);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -163,6 +222,14 @@ export default function VerbTrainer() {
     try {
       const progress = await api.resetVerbProgress(verb.verb);
       setVerbProgress((prev) => ({ ...prev, [verb.verb]: progress }));
+      setPromptProgress((prev) => {
+        const next = { ...prev };
+        for (const key of Object.keys(next)) {
+          if (key.startsWith(`${verb.verb}::`)) delete next[key];
+        }
+        return next;
+      });
+      clearAnswers();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -170,7 +237,7 @@ export default function VerbTrainer() {
     }
   }
 
-  const filled = rows.filter((row, idx) => normalize(answers[rowKey(row, idx)] ?? "")).length;
+  const filled = visibleRows.filter(({ row, idx }) => normalize(answers[rowKey(row, idx)] ?? "")).length;
   const gradeByKey = useMemo(() => {
     const map = new Map<string, NonNullable<StudyGradeResponse["items"]>[number]>();
     for (const item of grade?.items ?? []) {
@@ -256,8 +323,8 @@ export default function VerbTrainer() {
         </div>
 
         <div className="row between small faint">
-          <span>{filled}/{rows.length} prompts answered</span>
-          <span>{data.count} verbs · {data.rotationCount} daily · {verb?.category}</span>
+          <span>{filled}/{visibleRows.length} open prompts answered</span>
+          <span>{hiddenPassedCount ? `${hiddenPassedCount} completed hidden` : `${data.count} verbs · ${data.rotationCount} daily · ${verb?.category}`}</span>
         </div>
       </div>
 
@@ -267,7 +334,10 @@ export default function VerbTrainer() {
           Submit sends your answers to the backend LLM grader. Misses are saved for targeted review.
         </p>
         <div className="stack">
-          {rows.map((row, idx) => {
+          {visibleRows.length === 0 && (
+            <div className="alert alert-ok">All visible verb prompts are complete. Reset the verb to bring them back.</div>
+          )}
+          {visibleRows.map(({ row, idx }) => {
             const key = rowKey(row, idx);
             const itemGrade = gradeByKey.get(key);
             return (
@@ -303,7 +373,7 @@ export default function VerbTrainer() {
             {grade.summary || grade.next_drill_recommendation}
           </div>
         )}
-        <button className="btn btn-primary btn-block" type="button" disabled={grading || filled === 0} onClick={submit}>
+        <button className="btn btn-primary btn-block" type="button" disabled={grading || filled === 0 || visibleRows.length === 0} onClick={submit}>
           {grading ? "Grading…" : "Submit for LLM grading"}
         </button>
       </div>
