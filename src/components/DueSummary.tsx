@@ -96,7 +96,7 @@ export default function DueSummary() {
         <div className="mission-content stack">
           <div className="row between wrap">
             <div>
-              <div className="spanish-kicker">{dayPart()} mission · {mood.label}</div>
+              <div className="spanish-kicker">Today's mission · {dayPart()} · {mood.label}</div>
               <h2 style={{ margin: 0 }}>Speak with rhythm, not hesitation.</h2>
             </div>
             <span className="flavor-badge">sabor mode</span>
