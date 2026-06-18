@@ -20,6 +20,11 @@ export default function IngestForm() {
   const [job, setJob] = useState<IngestJob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [verbValue, setVerbValue] = useState("");
+  const [verbEnglish, setVerbEnglish] = useState("");
+  const [verbHint, setVerbHint] = useState("");
+  const [verbBusy, setVerbBusy] = useState(false);
+  const [verbAdded, setVerbAdded] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -76,6 +81,30 @@ export default function IngestForm() {
     }
   }
 
+  async function addVerb(e: { preventDefault(): void }) {
+    e.preventDefault();
+    const verb = verbValue.trim().toLowerCase();
+    const english = verbEnglish.trim().toLowerCase();
+    if (!verb || !english) {
+      setError("Enter both the Spanish verb and English base meaning.");
+      return;
+    }
+    setVerbBusy(true);
+    setError(null);
+    setVerbAdded(null);
+    try {
+      const created = await api.addVerb({ verb, english_base: english, category: "custom", usage_hint: verbHint.trim() });
+      setVerbAdded(`${created.verb} added to the full verb grid.`);
+      setVerbValue("");
+      setVerbEnglish("");
+      setVerbHint("");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setVerbBusy(false);
+    }
+  }
+
   function reset() {
     stopPolling();
     setJob(null);
@@ -113,6 +142,32 @@ export default function IngestForm() {
         >
           {busy ? "Ingesting…" : "Ingest video"}
         </button>
+      </form>
+
+      <form onSubmit={addVerb} className="card stack">
+        <div>
+          <div className="spanish-kicker">verb grid</div>
+          <h2 style={{ margin: 0 }}>Add another verb</h2>
+          <p className="muted small" style={{ margin: "4px 0 0" }}>Adds the verb to the full conjugation grid.</p>
+        </div>
+        <div className="grid-two">
+          <label className="field">
+            <span>Spanish infinitive</span>
+            <input className="input" value={verbValue} onChange={(e) => setVerbValue(e.target.value)} placeholder="bailar" autoCapitalize="none" autoCorrect="off" spellCheck={false} disabled={verbBusy} />
+          </label>
+          <label className="field">
+            <span>English base</span>
+            <input className="input" value={verbEnglish} onChange={(e) => setVerbEnglish(e.target.value)} placeholder="dance" autoCapitalize="none" autoCorrect="off" spellCheck={false} disabled={verbBusy} />
+          </label>
+        </div>
+        <label className="field">
+          <span>Usage hint</span>
+          <input className="input" value={verbHint} onChange={(e) => setVerbHint(e.target.value)} placeholder="optional note" disabled={verbBusy} />
+        </label>
+        <button className="btn btn-primary btn-block" type="submit" disabled={verbBusy || !verbValue.trim() || !verbEnglish.trim()}>
+          {verbBusy ? "Adding…" : "Add verb"}
+        </button>
+        {verbAdded && <div className="alert alert-ok">{verbAdded}</div>}
       </form>
 
       {error && <div className="alert alert-error">{error}</div>}

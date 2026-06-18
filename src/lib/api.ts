@@ -273,6 +273,38 @@ export type VerbProgress = {
   completed_at?: string | null;
 };
 
+export type VerbCatalogAssignment = {
+  pronoun: string;
+  tense: string;
+  translation: string;
+};
+
+export type VerbCatalogEntry = {
+  verb: string;
+  englishBase: string;
+  category: string;
+  inDailyRotation: boolean;
+  usageHint: string;
+  assignments: VerbCatalogAssignment[];
+};
+
+export type VerbCatalog = {
+  sourceRepo: string;
+  count: number;
+  rotationCount: number;
+  tenses: string[];
+  pronouns: string[];
+  verbs: VerbCatalogEntry[];
+};
+
+export type CreateVerbRequest = {
+  verb: string;
+  english_base: string;
+  category?: string;
+  usage_hint?: string;
+  add_to_daily_rotation?: boolean;
+};
+
 export const api = {
   // ── Sessions / grading (real contract) ───────────────────────────────────
   async createSession(mode: SessionMode = "review", size = 10): Promise<Session> {
@@ -416,6 +448,12 @@ export const api = {
   },
   resetVerbProgress(verb: string): Promise<VerbProgress> {
     return requestJson<VerbProgress>("/api/study/verb-progress/reset", "POST", { verb });
+  },
+  listVerbCatalog(): Promise<VerbCatalog> {
+    return request<VerbCatalog>("/api/study/verbs");
+  },
+  addVerb(payload: CreateVerbRequest): Promise<VerbCatalogEntry> {
+    return requestJson<VerbCatalogEntry>("/api/study/verbs", "POST", payload);
   },
   promoteLessonMiss(missId: number): Promise<{ phrase_id: number; already_promoted: boolean }> {
     return requestJson<{ phrase_id: number; already_promoted: boolean }>("/api/study/promote-lesson-miss", "POST", { miss_id: missId });

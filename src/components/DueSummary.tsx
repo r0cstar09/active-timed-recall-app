@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, ApiError } from "../lib/api";
+import { api, ApiError, type VerbCatalog } from "../lib/api";
 import type { DashboardStats } from "../lib/types";
 import { loadSession } from "../lib/timer";
 
@@ -37,16 +37,25 @@ export default function DueSummary() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasResumable, setHasResumable] = useState(false);
+  const [verbCompletion, setVerbCompletion] = useState({ completed: 0, total: 0 });
+  const [lessonCompletion, setLessonCompletion] = useState({ completed: 0, total: 0 });
 
   useEffect(() => {
     setHasResumable(!!loadSession());
     let alive = true;
     (async () => {
       try {
-        const [counts, sourceCount, rawStats] = await Promise.all([
+        const [counts, sourceCount, rawStats, verbCatalog, verbProgress, lessonProgress, lessonCatalog] = await Promise.all([
           api.getDashboardCounts(),
           api.countSources(),
           api.getStats(),
+          api.listVerbCatalog().catch(async () => {
+            const mod = await import("../data/generated/verbs.json");
+            return mod.default as VerbCatalog;
+          }),
+          api.listVerbProgress().catch(() => []),
+          api.listLessonProgress().catch(() => []),
+          import("../data/generated/fuzzy_lessons.json").then((mod) => mod.default as { count: number }),
         ]);
         if (!alive) return;
         setStats({
@@ -56,6 +65,14 @@ export default function DueSummary() {
           reviewCount: counts.review_count,
           totalCards: counts.new_count + counts.learning_count + counts.review_count + counts.suspended_count,
           sourceCount,
+        });
+        setVerbCompletion({
+          completed: verbProgress.filter((p) => Number(p.completed) === 1).length,
+          total: verbCatalog.count || verbCatalog.verbs?.length || 0,
+        });
+        setLessonCompletion({
+          completed: lessonProgress.filter((p) => Number(p.completed) === 1).length,
+          total: lessonCatalog.count || 0,
         });
         if (rawStats && typeof rawStats === "object" && "last_session" in rawStats) {
           setLastSession((rawStats as { last_session?: LastSession | null }).last_session ?? null);
@@ -76,6 +93,8 @@ export default function DueSummary() {
   const completion = stats ? Math.min(100, Math.round(((stats.reviewCount + stats.learningCount) / Math.max(1, stats.totalCards)) * 100)) : 0;
   const MOSAIC_TILES = 16;
   const filledTiles = Math.round((completion / 100) * MOSAIC_TILES);
+  const verbPct = verbCompletion.total ? Math.round((verbCompletion.completed / verbCompletion.total) * 100) : 0;
+  const lessonPct = lessonCompletion.total ? Math.round((lessonCompletion.completed / lessonCompletion.total) * 100) : 0;
 
   return (
     <div className="stack dashboard-stack">
@@ -123,6 +142,30 @@ export default function DueSummary() {
           <p className="muted small" style={{ margin: "4px 0 0" }}>
             {stats ? `${stats.totalCards} phrase cards · ${stats.sourceCount} sources · ${stats.reviewCount} mature reviews` : "Loading library totals…"}
           </p>
+        </div>
+      </div>
+
+      <div className="card stack progress-card">
+        <div className="row between wrap">
+          <div>
+            <div className="spanish-kicker">visible progress</div>
+            <strong>Curriculum completion</strong>
+          </div>
+          <span className="pill">verbs + sentence lessons</span>
+        </div>
+        <div className="progress-row">
+          <div className="row between small">
+            <span>Verb grids completed</span>
+            <strong>{loading ? "·" : `${verbCompletion.completed}/${verbCompletion.total} (${verbPct}%)`}</strong>
+          </div>
+          <div className="progress-track" aria-label={`Verb progress ${verbPct}%`}><span style={{ width: `${verbPct}%` }} /></div>
+        </div>
+        <div className="progress-row">
+          <div className="row between small">
+            <span>Sentence lessons completed</span>
+            <strong>{loading ? "·" : `${lessonCompletion.completed}/${lessonCompletion.total} (${lessonPct}%)`}</strong>
+          </div>
+          <div className="progress-track" aria-label={`Sentence lesson progress ${lessonPct}%`}><span style={{ width: `${lessonPct}%` }} /></div>
         </div>
       </div>
 

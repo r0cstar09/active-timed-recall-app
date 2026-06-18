@@ -305,11 +305,14 @@ export default function LessonsBrowser() {
         <label className="field">
           <span>Lesson</span>
           <select className="input" value={lesson?.id ?? ""} onChange={(e) => pickLesson(e.target.value)}>
-            {filtered.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.title} {l.difficulty ? `(${l.difficulty})` : ""}
-              </option>
-            ))}
+            {filtered.map((l) => {
+              const complete = Boolean(lessonProgress[l.id]?.completed);
+              return (
+                <option key={l.id} value={l.id}>
+                  {complete ? "✓ " : "○ "}{l.title} {l.difficulty ? `(${l.difficulty})` : ""}
+                </option>
+              );
+            })}
           </select>
         </label>
         <div className="row between small faint">

@@ -1,29 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, type StudyGradeResponse, type VerbProgress, type VerbPromptProgress } from "../../lib/api";
+import { api, type StudyGradeResponse, type VerbCatalog, type VerbCatalogAssignment, type VerbProgress, type VerbPromptProgress } from "../../lib/api";
 
-type Assignment = {
-  pronoun: string;
-  tense: string;
-  translation: string;
-};
-
-type VerbEntry = {
-  verb: string;
-  englishBase: string;
-  category: string;
-  inDailyRotation: boolean;
-  usageHint: string;
-  assignments: Assignment[];
-};
-
-type VerbData = {
-  sourceRepo: string;
-  count: number;
-  rotationCount: number;
-  tenses: string[];
-  pronouns: string[];
-  verbs: VerbEntry[];
-};
+type Assignment = VerbCatalogAssignment;
+type VerbData = VerbCatalog;
 
 const emptyData: VerbData = {
   sourceRepo: "",
@@ -57,16 +36,18 @@ export default function VerbTrainer() {
   const [data, setData] = useState<VerbData>(emptyData);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [verbName, setVerbName] = useState("");
-  const [tense, setTense] = useState("Present");
-  const [showAllTenses, setShowAllTenses] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [showPromptList, setShowPromptList] = useState(false);
   const [grading, setGrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [grade, setGrade] = useState<StudyGradeResponse | null>(null);
   const [verbProgress, setVerbProgress] = useState<Record<string, VerbProgress>>({});
   const [promptProgress, setPromptProgress] = useState<Record<string, VerbPromptProgress>>({});
   const [resetting, setResetting] = useState(false);
+  const [newVerb, setNewVerb] = useState("");
+  const [newEnglishBase, setNewEnglishBase] = useState("");
+  const [newCategory, setNewCategory] = useState("custom");
+  const [newUsageHint, setNewUsageHint] = useState("");
+  const [addingVerb, setAddingVerb] = useState(false);
 
   const verb = useMemo(
     () => data.verbs.find((v) => v.verb === verbName) ?? data.verbs[0],
@@ -75,13 +56,15 @@ export default function VerbTrainer() {
 
   useEffect(() => {
     let alive = true;
-    import("../../data/generated/verbs.json")
-      .then((mod) => {
+    api.listVerbCatalog()
+      .catch(async () => {
+        const mod = await import("../../data/generated/verbs.json");
+        return mod.default as VerbData;
+      })
+      .then((loaded) => {
         if (!alive) return;
-        const loaded = mod.default as VerbData;
         setData(loaded);
         setVerbName((current) => current || loaded.verbs[0]?.verb || "");
-        setTense((current) => current || loaded.tenses[0] || "Present");
       })
       .catch((err) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => {
@@ -92,10 +75,7 @@ export default function VerbTrainer() {
     };
   }, []);
 
-  const rows = useMemo(() => {
-    if (!verb) return [];
-    return verb.assignments.filter((a) => showAllTenses || a.tense === tense);
-  }, [verb, tense, showAllTenses]);
+  const rows = useMemo(() => verb?.assignments ?? [], [verb]);
   const passedPromptKeys = useMemo(
     () => new Set(Object.entries(promptProgress).filter(([, p]) => p.status === "pass").map(([key]) => key)),
     [promptProgress],
@@ -245,9 +225,37 @@ export default function VerbTrainer() {
     }
     return map;
   }, [grade]);
-  const promptText = rows
-    .map((row, idx) => `${idx + 1}. ${row.translation} (${row.pronoun}, ${row.tense})`)
-    .join("\n");
+
+  async function addVerb(e: { preventDefault(): void }) {
+    e.preventDefault();
+    const verbValue = newVerb.trim().toLowerCase();
+    const englishValue = newEnglishBase.trim().toLowerCase();
+    if (!verbValue || !englishValue) {
+      setError("Enter both the Spanish verb and the English base meaning.");
+      return;
+    }
+    setAddingVerb(true);
+    setError(null);
+    try {
+      const created = await api.addVerb({
+        verb: verbValue,
+        english_base: englishValue,
+        category: newCategory.trim() || "custom",
+        usage_hint: newUsageHint.trim(),
+      });
+      const refreshed = await api.listVerbCatalog();
+      setData(refreshed);
+      setVerbName(created.verb);
+      setNewVerb("");
+      setNewEnglishBase("");
+      setNewUsageHint("");
+      clearAnswers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAddingVerb(false);
+    }
+  }
 
   if (catalogLoading) {
     return (
@@ -275,33 +283,50 @@ export default function VerbTrainer() {
         <label className="field">
           <span>Choose verb</span>
           <select className="input" value={verbName} onChange={(e) => { setVerbName(e.target.value); clearAnswers(); }}>
-            {data.verbs.map((v) => (
-              <option key={v.verb} value={v.verb}>
-                {v.verb} — {v.englishBase || v.category}
-              </option>
-            ))}
+            {data.verbs.map((v) => {
+              const complete = Boolean(verbProgress[v.verb]?.completed);
+              return (
+                <option key={v.verb} value={v.verb}>
+                  {complete ? "✓ " : "○ "}{v.verb} — {v.englishBase || v.category}
+                </option>
+              );
+            })}
           </select>
         </label>
 
-        <div className="btn-row">
-          <button className={showAllTenses ? "btn" : "btn btn-primary"} type="button" onClick={() => { setShowAllTenses(false); clearAnswers(); }}>
-            One tense
-          </button>
-          <button className={showAllTenses ? "btn btn-primary" : "btn"} type="button" onClick={() => { setShowAllTenses(true); clearAnswers(); }}>
-            Full grid
-          </button>
+        <div className="alert alert-ok">
+          <strong>Full grid mode:</strong> every tense and pronoun is shown for the selected verb.
         </div>
 
-        {!showAllTenses && (
-          <label className="field">
-            <span>Tense</span>
-            <select className="input" value={tense} onChange={(e) => { setTense(e.target.value); clearAnswers(); }}>
-              {data.tenses.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </label>
-        )}
+        <form className="card card-tight stack" onSubmit={addVerb}>
+          <div className="row between wrap">
+            <strong>Add another verb</strong>
+            <span className="pill">full grid</span>
+          </div>
+          <div className="grid-two">
+            <label className="field">
+              <span>Spanish infinitive</span>
+              <input className="input" value={newVerb} onChange={(e) => setNewVerb(e.target.value)} placeholder="bailar" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+            </label>
+            <label className="field">
+              <span>English base</span>
+              <input className="input" value={newEnglishBase} onChange={(e) => setNewEnglishBase(e.target.value)} placeholder="dance" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
+            </label>
+          </div>
+          <div className="grid-two">
+            <label className="field">
+              <span>Category</span>
+              <input className="input" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="custom" />
+            </label>
+            <label className="field">
+              <span>Usage hint</span>
+              <input className="input" value={newUsageHint} onChange={(e) => setNewUsageHint(e.target.value)} placeholder="optional note" />
+            </label>
+          </div>
+          <button className="btn btn-primary" type="submit" disabled={addingVerb || !newVerb.trim() || !newEnglishBase.trim()}>
+            {addingVerb ? "Adding…" : "Add verb to grid"}
+          </button>
+        </form>
 
         {verb?.usageHint && (
           <div className="alert">
@@ -379,10 +404,6 @@ export default function VerbTrainer() {
       </div>
 
       <div className="card stack">
-        <button className="btn btn-block" type="button" onClick={() => setShowPromptList((v) => !v)}>
-          {showPromptList ? "Hide" : "Show"} prompt list for Claude/Cursor
-        </button>
-        {showPromptList && <pre className="code-block">{promptText}</pre>}
         <button className="btn btn-danger btn-block" type="button" onClick={clearAnswers}>Clear answers</button>
       </div>
     </div>
