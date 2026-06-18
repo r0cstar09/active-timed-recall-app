@@ -30,14 +30,15 @@ export default function DueSummary() {
   const [hasResumable, setHasResumable] = useState(false);
   const [verbCompletion, setVerbCompletion] = useState({ completed: 0, total: 0 });
   const [lessonCompletion, setLessonCompletion] = useState({ completed: 0, total: 0 });
-  const [missCounts, setMissCounts] = useState({ lessons: 0, verbs: 0 });
+  const [patternCompletion, setPatternCompletion] = useState({ unlocked: 0, total: 0, packs: 0, sealed: 0, drills: 0 });
+  const [missCounts, setMissCounts] = useState({ lessons: 0, verbs: 0, patterns: 0 });
 
   useEffect(() => {
     setHasResumable(!!loadSession());
     let alive = true;
     (async () => {
       try {
-        const [counts, sourceCount, verbCatalog, verbProgress, lessonProgress, lessonCatalog, lessonMisses, verbMisses] = await Promise.all([
+        const [counts, sourceCount, verbCatalog, verbProgress, lessonProgress, lessonCatalog, lessonMisses, verbMisses, patternState, patternMisses] = await Promise.all([
           api.getDashboardCounts(),
           api.countSources(),
           api.listVerbCatalog().catch(async () => {
@@ -49,6 +50,8 @@ export default function DueSummary() {
           import("../data/generated/fuzzy_lessons.json").then((mod) => mod.default as { count: number }),
           api.listLessonMisses(200).catch(() => []),
           api.listVerbMisses(200).catch(() => []),
+          api.listPatterns().catch(() => ({ patterns: [], packs: [] })),
+          api.listPatternMisses(200).catch(() => []),
         ]);
         if (!alive) return;
         setStats({
@@ -67,9 +70,18 @@ export default function DueSummary() {
           completed: lessonProgress.filter((p) => Number(p.completed) === 1).length,
           total: lessonCatalog.count || 0,
         });
+        const allDrills = patternState.packs.flatMap((p) => p.drills ?? []);
+        setPatternCompletion({
+          unlocked: patternState.patterns.filter((p) => p.status !== "locked").length,
+          total: patternState.patterns.length,
+          packs: patternState.packs.length,
+          sealed: allDrills.filter((d) => d.sealed).length,
+          drills: allDrills.length,
+        });
         setMissCounts({
           lessons: lessonMisses.filter((m) => m.status !== "cleared").length,
           verbs: verbMisses.filter((m) => m.status !== "cleared").length,
+          patterns: patternMisses.filter((m) => m.status !== "cleared" && m.status !== "resolved").length,
         });
       } catch (err) {
         if (alive) setError(err instanceof ApiError ? err.message : String(err));
@@ -91,14 +103,19 @@ export default function DueSummary() {
   const dueCount = stats?.dueCount ?? 0;
   const lessonRemaining = Math.max(0, lessonCompletion.total - lessonCompletion.completed);
   const verbRemaining = Math.max(0, verbCompletion.total - verbCompletion.completed);
-  const openMisses = missCounts.lessons + missCounts.verbs;
-  const passportPct = Math.round((verbPct + lessonPct + Math.max(0, 100 - Math.min(100, openMisses * 8))) / 3);
+  const patternPct = patternCompletion.drills ? Math.round((patternCompletion.sealed / patternCompletion.drills) * 100) : (patternCompletion.unlocked ? 20 : 0);
+  const openMisses = missCounts.lessons + missCounts.verbs + missCounts.patterns;
+  const passportPct = Math.round((verbPct + lessonPct + patternPct + Math.max(0, 100 - Math.min(100, openMisses * 8))) / 4);
   const nextFocus = hasResumable
     ? { label: "Resume session", href: "/session", note: "Finish the interrupted speaking rep before adding more work." }
     : dueCount > 0
       ? { label: "Clear reviews", href: "/session?mode=review", note: `${dueCount} due card${dueCount === 1 ? "" : "s"} are blocking clean momentum.` }
       : openMisses > 0
         ? { label: "Polish misses", href: "/misses", note: `${openMisses} open miss${openMisses === 1 ? "" : "es"} should become targeted recall fuel.` }
+        : patternCompletion.unlocked > patternCompletion.packs
+          ? { label: "Generate pattern pack", href: "/lessons/patterns", note: `${patternCompletion.unlocked - patternCompletion.packs} unlocked pattern${patternCompletion.unlocked - patternCompletion.packs === 1 ? "" : "s"} need saved drill packs.` }
+          : patternCompletion.drills > patternCompletion.sealed
+            ? { label: "Seal pattern drills", href: "/lessons/patterns", note: `${patternCompletion.drills - patternCompletion.sealed} generated pattern drill${patternCompletion.drills - patternCompletion.sealed === 1 ? "" : "s"} still open.` }
         : lessonRemaining > verbRemaining
           ? { label: "Sentence lessons", href: "/lessons", note: `${lessonRemaining} lesson${lessonRemaining === 1 ? "" : "s"} left in the pattern library.` }
           : { label: "Verb grids", href: "/verbs", note: `${verbRemaining} verb grid${verbRemaining === 1 ? "" : "s"} left to lock in.` };
@@ -156,7 +173,7 @@ export default function DueSummary() {
           <div className="spanish-kicker">passport readiness</div>
           <strong>{loading ? "calculating the route" : `${passportPct}% toward the next visible milestone`}</strong>
           <p className="muted small" style={{ margin: "4px 0 0" }}>
-            {stats ? `${dueCount} due · ${openMisses} open misses · ${lessonRemaining} lessons left · ${verbRemaining} verb grids left` : "Loading library totals…"}
+            {stats ? `${dueCount} due · ${openMisses} open misses · ${patternCompletion.unlocked} patterns unlocked · ${lessonRemaining} lessons left · ${verbRemaining} verb grids left` : "Loading library totals…"}
           </p>
         </div>
       </div>
@@ -166,13 +183,16 @@ export default function DueSummary() {
           <span>1</span><strong>{dueCount} reviews due</strong><small>{dueCount ? "Clear these before new work." : "Review queue clear."}</small>
         </a>
         <a className={`route-card ${openMisses ? "urgent" : "done"}`} href="/misses">
-          <span>2</span><strong>{openMisses} misses open</strong><small>{missCounts.lessons} lesson · {missCounts.verbs} verb</small>
+          <span>2</span><strong>{openMisses} misses open</strong><small>{missCounts.lessons} lesson · {missCounts.verbs} verb · {missCounts.patterns} pattern</small>
         </a>
         <a className="route-card" href="/lessons">
           <span>3</span><strong>{lessonRemaining} lessons left</strong><small>{lessonPct}% sentence curriculum stamped</small>
         </a>
+        <a className={`route-card ${patternCompletion.drills > patternCompletion.sealed ? "urgent" : patternCompletion.unlocked ? "done" : ""}`} href="/lessons/patterns">
+          <span>4</span><strong>{patternCompletion.unlocked} patterns unlocked</strong><small>{patternCompletion.sealed}/{patternCompletion.drills} generated drills sealed</small>
+        </a>
         <a className="route-card" href="/verbs">
-          <span>4</span><strong>{verbRemaining} verb grids left</strong><small>{verbPct}% verb atlas complete</small>
+          <span>5</span><strong>{verbRemaining} verb grids left</strong><small>{verbPct}% verb atlas complete</small>
         </a>
       </div>
 
@@ -182,7 +202,7 @@ export default function DueSummary() {
             <div className="spanish-kicker">visible progress</div>
             <strong>Curriculum completion</strong>
           </div>
-          <span className="pill">verbs + sentence lessons</span>
+          <span className="pill">verbs + lessons + patterns</span>
         </div>
         <div className="progress-row">
           <div className="row between small">
@@ -197,6 +217,13 @@ export default function DueSummary() {
             <strong>{loading ? "·" : `${lessonCompletion.completed}/${lessonCompletion.total} (${lessonPct}%)`}</strong>
           </div>
           <div className="progress-track" aria-label={`Sentence lesson progress ${lessonPct}%`}><span style={{ width: `${lessonPct}%` }} /></div>
+        </div>
+        <div className="progress-row">
+          <div className="row between small">
+            <span>Pattern drills sealed</span>
+            <strong>{loading ? "·" : `${patternCompletion.sealed}/${patternCompletion.drills} (${patternPct}%)`}</strong>
+          </div>
+          <div className="progress-track" aria-label={`Pattern drill progress ${patternPct}%`}><span style={{ width: `${patternPct}%` }} /></div>
         </div>
       </div>
 
@@ -249,6 +276,11 @@ export default function DueSummary() {
           <span>patrón</span>
           <strong>Build patterns</strong>
           <small>From meaning to flexible Spanish sentence shapes.</small>
+        </a>
+        <a className="action-card action-card-blue" href="/lessons/patterns">
+          <span>generar</span>
+          <strong>Pattern drills</strong>
+          <small>LLM-generated packs unlocked from completed lessons.</small>
         </a>
         <a className="action-card action-card-green" href="/misses">
           <span>pulir</span>

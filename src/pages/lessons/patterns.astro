@@ -1,0 +1,13 @@
+---
+import Base from "../../layouts/Base.astro";
+import PatternDrills from "../../components/lessons/PatternDrills";
+---
+
+<Base title="Pattern Drills · Spanish Practice" heading="Pattern Drills" current="lessons">
+  <section class="page-header stack">
+    <span class="eyebrow">LLM-generated, curriculum-gated</span>
+    <h1>Pattern Drills</h1>
+    <p>Unlocked from sentence lessons, saved as stable practice packs, then fed into review when you miss them.</p>
+  </section>
+  <PatternDrills client:load />
+</Base>

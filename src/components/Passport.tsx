@@ -20,6 +20,10 @@ type PassportStats = DashboardStats & {
   verbTotal: number;
   lessonCompleted: number;
   lessonTotal: number;
+  patternUnlocked: number;
+  patternTotal: number;
+  patternSealed: number;
+  patternDrills: number;
   missesOpen: number;
 };
 
@@ -37,12 +41,15 @@ function buildStamps(s: PassportStats): Stamp[] {
   const curriculumPct = Math.round(((s.verbCompleted + s.lessonCompleted) / Math.max(1, s.verbTotal + s.lessonTotal)) * 100);
   const lessonPct = Math.round((s.lessonCompleted / Math.max(1, s.lessonTotal)) * 100);
   const verbPct = Math.round((s.verbCompleted / Math.max(1, s.verbTotal)) * 100);
+  const patternPct = Math.round((s.patternSealed / Math.max(1, s.patternDrills)) * 100);
   const reviewClear = s.dueCount === 0 && s.totalCards > 0;
   return [
     { id: "first-session", title: "First entry", condition: "Complete your first spoken session or introduce cards", region: "madrid", earned: s.lastSession || introduced > 0, progress: introduced ? `${introduced} active cards` : "start a session" },
     { id: "review-inbox-zero", title: "Review gate clear", condition: "Clear today’s due review queue", region: "cdmx", earned: reviewClear, progress: `${s.dueCount} due reviews` },
     { id: "lessons-5", title: "5 sentence stamps", condition: "Complete 5 sentence lessons", region: "medellin", earned: s.lessonCompleted >= 5, progress: `${s.lessonCompleted}/5 lessons` },
     { id: "lessons-25pct", title: "Pattern quarter", condition: "Complete 25% of sentence lessons", region: "buenos-aires", earned: lessonPct >= 25, progress: `${lessonPct}% lessons` },
+    { id: "pattern-unlocked", title: "First pattern visa", condition: "Unlock your first generated pattern drill", region: "san-juan", earned: s.patternUnlocked >= 1, progress: `${s.patternUnlocked}/${Math.max(1, s.patternTotal)} patterns unlocked` },
+    { id: "pattern-pack-sealed", title: "Pattern pack stamped", condition: "Seal every drill in one generated pattern pack", region: "madrid", earned: s.patternDrills > 0 && patternPct >= 100, progress: `${s.patternSealed}/${s.patternDrills} drills sealed` },
     { id: "verbs-10", title: "10 verb visas", condition: "Complete 10 full verb grids", region: "san-juan", earned: s.verbCompleted >= 10, progress: `${s.verbCompleted}/10 grids` },
     { id: "verbs-25pct", title: "Verb atlas quarter", condition: "Complete 25% of verb grids", region: "madrid", earned: verbPct >= 25, progress: `${verbPct}% verbs` },
     { id: "curriculum-25", title: "Route 25%", condition: "Complete 25% of verbs + sentence lessons", region: "cdmx", earned: curriculumPct >= 25, progress: `${curriculumPct}% curriculum` },
@@ -60,7 +67,7 @@ export default function Passport() {
     let alive = true;
     (async () => {
       try {
-        const [counts, sourceCount, raw, verbProgress, lessonProgress, verbMisses, lessonMisses, verbCatalog, lessonCatalog] = await Promise.all([
+        const [counts, sourceCount, raw, verbProgress, lessonProgress, verbMisses, lessonMisses, patternMisses, patternState, verbCatalog, lessonCatalog] = await Promise.all([
           api.getDashboardCounts(),
           api.countSources().catch(() => 0),
           api.getStats().catch(() => ({})),
@@ -68,6 +75,8 @@ export default function Passport() {
           api.listLessonProgress().catch(() => [] as LessonProgress[]),
           api.listVerbMisses(200).catch(() => []),
           api.listLessonMisses(200).catch(() => []),
+          api.listPatternMisses(200).catch(() => []),
+          api.listPatterns().catch(() => ({ patterns: [], packs: [] })),
           api.listVerbCatalog().catch(async () => {
             const mod = await import("../data/generated/verbs.json");
             return mod.default as VerbCatalog;
@@ -76,6 +85,7 @@ export default function Passport() {
         ]);
         if (!alive) return;
         const rawObj = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+        const patternDrills = patternState.packs.flatMap((p) => p.drills ?? []);
         const next: PassportStats = {
           dueCount: counts.due_count,
           newCount: counts.new_count,
@@ -90,7 +100,11 @@ export default function Passport() {
           verbTotal: Math.max(verbCatalog.count || verbCatalog.verbs?.length || verbProgress.length, 1),
           lessonCompleted: lessonProgress.filter((p) => Number(p.completed) === 1).length,
           lessonTotal: Math.max(lessonCatalog.count || lessonProgress.length, 1),
-          missesOpen: verbMisses.filter((m) => m.status !== "cleared").length + lessonMisses.filter((m) => m.status !== "cleared").length,
+          patternUnlocked: patternState.patterns.filter((p) => p.status !== "locked").length,
+          patternTotal: Math.max(patternState.patterns.length, 1),
+          patternSealed: patternDrills.filter((d) => d.sealed).length,
+          patternDrills: patternDrills.length,
+          missesOpen: verbMisses.filter((m) => m.status !== "cleared").length + lessonMisses.filter((m) => m.status !== "cleared").length + patternMisses.filter((m) => m.status !== "cleared" && m.status !== "resolved").length,
         };
         setStats(next);
         const earned = buildStamps(next).filter((x) => x.earned).map((x) => x.id);
@@ -119,7 +133,7 @@ export default function Passport() {
         <RegionArt region={leadRegion.key} />
         <div className="spanish-kicker">passport / sellos</div>
         <h1>Your Spanish travel passport</h1>
-        <p className="muted">Earn stamps for the work that actually moves this app: due reviews, sentence lessons, verb grids, open misses, and streak consistency.</p>
+        <p className="muted">Earn stamps for the work that actually moves this app: due reviews, sentence lessons, generated pattern drills, verb grids, open misses, and streak consistency.</p>
         <div className="passport-progress"><strong>{stats ? `${earnedCount}/${stamps.length}` : "·"}</strong><span>stamps earned</span></div>
         {nextStamp && <div className="passport-next-stamp"><strong>Next stamp:</strong> {nextStamp.title} · {nextStamp.progress ?? nextStamp.condition}</div>}
       </section>
@@ -136,6 +150,7 @@ export default function Passport() {
             <div className="passport-mini-stats">
               <span><strong>{stats.learningCount + stats.reviewCount}</strong> introduced</span>
               <span><strong>{stats.lessonCompleted}/{stats.lessonTotal}</strong> lessons</span>
+              <span><strong>{stats.patternSealed}/{stats.patternDrills}</strong> pattern drills</span>
               <span><strong>{stats.verbCompleted}/{stats.verbTotal}</strong> verbs</span>
               <span><strong>{stats.missesOpen}</strong> misses open</span>
             </div>

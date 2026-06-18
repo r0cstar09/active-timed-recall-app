@@ -327,6 +327,10 @@ export default function LessonsBrowser() {
           <span>{filtered.length}/{data.count} lessons</span>
           <span>{lesson?.id}</span>
         </div>
+        <div className="alert pattern-unlock-teaser">
+          <strong>New:</strong> completed lessons can unlock LLM-generated pattern packs.
+          <a className="btn btn-small" href="/lessons/patterns">Open Pattern Drills</a>
+        </div>
       </div>
 
       {lesson && (

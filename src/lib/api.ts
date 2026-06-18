@@ -206,6 +206,9 @@ export type StudyGradeItem = {
   verb?: string;
   pronoun?: string;
   tense?: string;
+  pattern_ids?: string[];
+  verb_ids?: string[];
+  slots?: Record<string, unknown>;
 };
 
 export type StudyGradeRequest = {
@@ -245,11 +248,77 @@ export type StudyProgress = {
   completed?: boolean | number;
 };
 
+export type PatternCatalogEntry = {
+  id: string;
+  pattern_id?: string;
+  name: string;
+  frame: string;
+  description?: string | null;
+  level: string;
+  target_dialect: string;
+  examples: string[];
+  unlock_threshold?: Record<string, unknown>;
+  status: "locked" | "unlocked" | "drilling" | "recall_active" | "stable" | "mastered" | string;
+  unlocked_at?: string | null;
+  source_lesson_id?: string | null;
+  mastery_score: number;
+};
+
+export type PatternDrill = {
+  id: number;
+  pack_id: number;
+  pattern_id: string;
+  verb_id?: string | null;
+  prompt_en: string;
+  expected_es: string;
+  acceptable_answers: string[];
+  slots: Record<string, unknown>;
+  grading_notes?: string | null;
+  difficulty: string;
+  sealed?: boolean;
+};
+
+export type PatternPack = {
+  id: number;
+  pattern_id: string;
+  source_lesson_id?: string | null;
+  status: string;
+  drills: PatternDrill[];
+};
+
+export type PatternMiss = {
+  id: number;
+  pattern_id: string;
+  verb_id?: string | null;
+  drill_id?: number | null;
+  prompt_en?: string | null;
+  expected_es?: string | null;
+  user_answer?: string | null;
+  feedback?: string | null;
+  error_tags?: string[];
+  status: string;
+  miss_count: number;
+};
+
+export type PatternGradeResultItem = {
+  drill_id: number;
+  result: "pass" | "partial" | "fail";
+  score: number;
+  corrected_answer: string;
+  feedback: string;
+  error_tags: string[];
+  pattern_correct: boolean;
+  verb_correct: boolean;
+  object_correct: boolean;
+  word_order_correct: boolean;
+};
+
 export type StudyGradeResponse = {
   exercise_type: string;
   model: string;
   items: StudyGradeResultItem[];
   progress?: StudyProgress | null;
+  pattern_unlocks?: PatternCatalogEntry[];
   summary: string;
   next_drill_recommendation: string;
 };
@@ -514,6 +583,29 @@ export const api = {
   },
   promoteLessonMiss(missId: number): Promise<{ phrase_id: number; already_promoted: boolean }> {
     return requestJson<{ phrase_id: number; already_promoted: boolean }>("/api/study/promote-lesson-miss", "POST", { miss_id: missId });
+  },
+  async listPatterns(): Promise<{ patterns: PatternCatalogEntry[]; packs: PatternPack[] }> {
+    const res = await request<unknown>("/api/study/patterns");
+    const obj = res && typeof res === "object" ? res as Record<string, unknown> : {};
+    return {
+      patterns: toArray<PatternCatalogEntry>(obj.patterns, ["items", "data", "results"]),
+      packs: toArray<PatternPack>(obj.packs, ["items", "data", "results"]),
+    };
+  },
+  async listPatternPacks(patternId?: string): Promise<PatternPack[]> {
+    const suffix = patternId ? `?pattern_id=${encodeURIComponent(patternId)}` : "";
+    const res = await request<unknown>(`/api/study/pattern-packs${suffix}`);
+    return toArray<PatternPack>(res, ["packs", "items", "data", "results"]);
+  },
+  generatePatternPack(patternId: string, payload: { source_lesson_id?: string | null; count?: number } = {}): Promise<{ pack: PatternPack }> {
+    return requestJson<{ pack: PatternPack }>(`/api/study/patterns/${encodeURIComponent(patternId)}/generate-pack`, "POST", payload);
+  },
+  gradePatternDrills(attempts: { drill_id: number; user_answer: string }[]): Promise<{ items: PatternGradeResultItem[]; summary: string }> {
+    return requestJson<{ items: PatternGradeResultItem[]; summary: string }>("/api/study/pattern-drills/grade", "POST", { attempts });
+  },
+  async listPatternMisses(limit = 100): Promise<PatternMiss[]> {
+    const res = await request<unknown>(`/api/study/pattern-misses?limit=${encodeURIComponent(String(limit))}`);
+    return toArray<PatternMiss>(res, ["items", "data", "results"]);
   },
 
   // ── Ingestion (real) ─────────────────────────────────────────────────────
