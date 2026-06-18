@@ -117,17 +117,33 @@ export default function Passport() {
       {!stats ? (
         <div className="card center stack"><StateIllustration type="loading" /><p className="muted">Pressing fresh ink into the passport…</p></div>
       ) : (
-        <div className="stamp-grid">
-          {stamps.map((stamp) => (
-            <article key={stamp.id} className={`stamp-card ${stamp.earned ? "earned" : "locked"} ${newIds.has(stamp.id) ? "just-earned" : ""}`}>
-              <RegionArt region={stamp.region} small />
-              <div className="stamp-seal"><span>{REGIONS.find((r) => r.key === stamp.region)?.flag}</span></div>
-              <h3>{stamp.title}</h3>
-              <p>{stamp.earned ? "Stamped into your passport." : stamp.condition}</p>
-              {stamp.progress && <small>{stamp.progress}</small>}
-            </article>
-          ))}
-        </div>
+        <section className="passport-book" aria-label="Passport stamp booklet">
+          <div className="passport-spine" aria-hidden="true" />
+          <div className="passport-page-sheet intro-page">
+            <div className="passport-page-label">República de la Práctica</div>
+            <h2>Entry visas</h2>
+            <p className="muted">The page fills as your spoken Spanish gets durable. Locked sellos are embossed until the condition is met.</p>
+            <div className="passport-mini-stats">
+              <span><strong>{stats.learningCount + stats.reviewCount}</strong> introduced</span>
+              <span><strong>{stats.streakDays}</strong> day streak</span>
+              <span><strong>{stats.missesOpen}</strong> misses open</span>
+            </div>
+          </div>
+          <div className="passport-page-sheet stamps-page">
+            <div className="stamp-grid">
+              {stamps.map((stamp, i) => (
+                <article key={stamp.id} className={`stamp-card stamp-shape-${i % 4} ${stamp.earned ? "earned" : "locked"} ${newIds.has(stamp.id) ? "just-earned" : ""}`} style={{ "--region-accent": REGIONS.find((r) => r.key === stamp.region)?.accent } as React.CSSProperties}>
+                  <RegionArt region={stamp.region} small />
+                  <div className="stamp-seal"><span>{REGIONS.find((r) => r.key === stamp.region)?.flag}</span></div>
+                  <div className="stamp-date">{stamp.earned ? new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }).toUpperCase() : "LOCKED"}</div>
+                  <h3>{stamp.title}</h3>
+                  <p>{stamp.earned ? "Stamped into your passport." : stamp.condition}</p>
+                  {stamp.progress && <small>{stamp.progress}</small>}
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );

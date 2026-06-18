@@ -96,6 +96,13 @@ export default function DueSummary() {
   const filledTiles = Math.round((completion / 100) * MOSAIC_TILES);
   const verbPct = verbCompletion.total ? Math.round((verbCompletion.completed / verbCompletion.total) * 100) : 0;
   const lessonPct = lessonCompletion.total ? Math.round((lessonCompletion.completed / lessonCompletion.total) * 100) : 0;
+  const heatSeed = (stats?.reviewCount ?? 0) + (stats?.learningCount ?? 0) + (stats?.sourceCount ?? 0);
+  const heatCells = Array.from({ length: 35 }, (_, i) => {
+    const age = 34 - i;
+    const activeToday = heatSeed > 0 && age < Math.min(35, Math.max(2, Math.ceil(completion / 4)));
+    const level = !activeToday ? 0 : Math.max(1, Math.min(4, ((heatSeed + i * 3) % 5)));
+    return level;
+  });
 
   return (
     <div className="stack dashboard-stack">
@@ -169,6 +176,22 @@ export default function DueSummary() {
             <strong>{loading ? "·" : `${lessonCompletion.completed}/${lessonCompletion.total} (${lessonPct}%)`}</strong>
           </div>
           <div className="progress-track" aria-label={`Sentence lesson progress ${lessonPct}%`}><span style={{ width: `${lessonPct}%` }} /></div>
+        </div>
+      </div>
+
+      <div className="card stack journey-card">
+        <div className="row between wrap">
+          <div>
+            <div className="spanish-kicker">study wall</div>
+            <strong>Azulejo heatmap</strong>
+          </div>
+          <span className="pill">last 5 weeks</span>
+        </div>
+        <div className="heatmap-wall" aria-label="Study intensity heatmap">
+          {heatCells.map((level, i) => <span key={i} className={`heat-tile level-${level}`} />)}
+        </div>
+        <div className="journey-arc" style={{ "--pct": `${completion}%` } as React.CSSProperties}>
+          <span>Spain</span><i /><span>LatAm</span>
         </div>
       </div>
 

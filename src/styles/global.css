@@ -1326,3 +1326,122 @@ html[data-region="san-juan"], .tile-caribbean { --tile-pattern: url("data:image/
 @media (prefers-reduced-motion: reduce) {
   .stamp-card.just-earned, .state-loading .state-stamp, .state-spark { animation: none !important; }
 }
+
+/* Nav v2 + Speak-safe tabs */
+.tabbar-primary { justify-content: space-around; overflow: visible; }
+.tabbar-primary .tab { flex: 1 1 0; min-width: 54px; }
+.tab-speak {
+  transform: translateY(-12px);
+  min-height: 64px;
+  border-radius: 22px;
+  color: var(--paper);
+  background: var(--accent-grad);
+  box-shadow: 0 14px 28px rgba(199,91,57,.28);
+}
+.tab-speak svg { color: var(--paper); }
+.tab-speak[aria-current="page"] { color: var(--paper); }
+.tab-speak[aria-current="page"] svg { stroke: currentColor; fill: transparent; }
+.tab-more { flex: 1 1 0; position: relative; min-width: 54px; }
+.tab-more summary { list-style: none; cursor: pointer; width: 100%; }
+.tab-more summary::-webkit-details-marker { display: none; }
+.tab-more-menu {
+  position: absolute;
+  right: 8px;
+  bottom: calc(var(--nav-h) + 12px);
+  min-width: 185px;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px) saturate(1.1);
+}
+.tab-more:not([open]) .tab-more-menu { display: none; }
+.tab-more-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; color: var(--text); }
+.tab-more-item svg { width: 20px; height: 20px; }
+.tab-more-item[aria-current="page"], .tab-more-item:hover { background: color-mix(in srgb, var(--saffron) 18%, transparent); color: var(--terracotta); }
+
+/* Passport booklet v2 */
+.passport-book {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
+  gap: 0;
+  padding: 12px;
+  border-radius: 32px;
+  background: linear-gradient(135deg, #7c2d3a, #1f7a8c 48%, #c75b39);
+  box-shadow: 0 22px 50px rgba(79,43,19,.18);
+  overflow: hidden;
+}
+.passport-book::before { content:""; position:absolute; inset:8px; border-radius:26px; border:1px solid rgba(255,250,240,.28); pointer-events:none; }
+.passport-spine { position:absolute; top:12px; bottom:12px; left:34%; width:16px; border-radius:999px; background: linear-gradient(90deg, rgba(0,0,0,.18), rgba(255,255,255,.22), rgba(0,0,0,.12)); z-index:2; }
+.passport-page-sheet {
+  min-height: 420px;
+  padding: 20px;
+  background:
+    radial-gradient(circle at 18% 10%, color-mix(in srgb, var(--saffron) 16%, transparent), transparent 130px),
+    var(--tile-pattern),
+    color-mix(in srgb, var(--paper) 96%, #f3d9a6 4%);
+  background-size: auto, 90px 90px, auto;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, white 12%);
+}
+.intro-page { border-radius: 24px 4px 4px 24px; display:flex; flex-direction:column; justify-content:space-between; }
+.stamps-page { border-radius: 4px 24px 24px 4px; padding-left: 28px; }
+.passport-page-label { width: fit-content; padding: 7px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-dim); font-size: .68rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.passport-mini-stats { display:grid; gap:8px; margin-top: 18px; }
+.passport-mini-stats span { display:flex; justify-content:space-between; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:14px; background: color-mix(in srgb, var(--paper) 74%, transparent); color: var(--text-dim); }
+.passport-mini-stats strong { color: var(--text); font-family: var(--font-display); font-size:1.35rem; }
+.stamps-page .stamp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.stamp-card {
+  isolation: isolate;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--paper) 82%, var(--region-accent) 12%), color-mix(in srgb, var(--paper) 94%, transparent)),
+    radial-gradient(circle at 12px 12px, color-mix(in srgb, var(--region-accent) 26%, transparent) 0 2px, transparent 3px);
+  background-size: auto, 18px 18px;
+}
+.stamp-card::before {
+  content:"";
+  position:absolute;
+  inset:8px;
+  border:2px solid color-mix(in srgb, var(--region-accent, var(--accent)) 54%, transparent);
+  border-radius: inherit;
+  opacity:.58;
+  pointer-events:none;
+}
+.stamp-card::after {
+  content:"";
+  position:absolute;
+  inset:-20px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--region-accent, var(--accent)) 12%, transparent), transparent 58%);
+  z-index:-1;
+}
+.stamp-shape-1 { border-radius: 34px 18px 34px 18px; transform: rotate(.6deg); }
+.stamp-shape-2 { border-radius: 18px 34px 18px 34px; transform: rotate(-.7deg); }
+.stamp-shape-3 { clip-path: polygon(8% 0, 92% 0, 100% 10%, 100% 90%, 92% 100%, 8% 100%, 0 90%, 0 10%); }
+.stamp-date { display:inline-block; margin-top: 4px; padding: 3px 7px; border:1px solid currentColor; border-radius: 999px; color: var(--region-accent, var(--accent)); font-size: .62rem; font-weight: 950; letter-spacing:.08em; transform: rotate(-3deg); }
+.stamp-card.locked::before { border-style: dashed; opacity:.28; }
+.stamp-card.locked .stamp-date { color: var(--text-faint); }
+
+/* Study heatmap / journey wall */
+.journey-card { background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 92%, var(--azulejo) 6%), var(--paper)); }
+.heatmap-wall { display:grid; grid-template-columns: repeat(7, 1fr); gap: 7px; padding: 4px; }
+.heat-tile { aspect-ratio: 1; border-radius: 9px; border:1px solid color-mix(in srgb, var(--border) 72%, transparent); background: color-mix(in srgb, var(--paper) 82%, var(--border) 18%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); }
+.heat-tile.level-1 { background: color-mix(in srgb, var(--azulejo) 30%, var(--paper)); }
+.heat-tile.level-2 { background: color-mix(in srgb, var(--olive) 42%, var(--paper)); }
+.heat-tile.level-3 { background: color-mix(in srgb, var(--saffron) 58%, var(--paper)); }
+.heat-tile.level-4 { background: color-mix(in srgb, var(--terracotta) 72%, var(--paper)); }
+.journey-arc { display:grid; grid-template-columns: auto 1fr auto; align-items:center; gap:10px; color: var(--text-dim); font-weight:800; font-size:.8rem; }
+.journey-arc i { height: 10px; border-radius:999px; background: linear-gradient(90deg, var(--terracotta) var(--pct), color-mix(in srgb, var(--border) 62%, transparent) 0); position:relative; overflow:hidden; }
+.journey-arc i::after { content:"✈"; position:absolute; left: calc(var(--pct) - 10px); top:-9px; color: var(--rioja); font-style:normal; font-size:18px; }
+
+@media (max-width: 520px) {
+  .passport-book { grid-template-columns: 1fr; padding: 10px; }
+  .passport-spine { left: 12px; right: 12px; top: 50%; bottom: auto; width: auto; height: 12px; }
+  .intro-page { border-radius: 22px 22px 4px 4px; min-height: 260px; }
+  .stamps-page { border-radius: 4px 4px 22px 22px; padding-left: 20px; min-height: 0; }
+  .stamps-page .stamp-grid { grid-template-columns: 1fr; }
+  .tabbar-primary .tab { font-size: .62rem; }
+  .tab-speak { transform: translateY(-10px); }
+}
