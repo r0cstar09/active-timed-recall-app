@@ -694,6 +694,12 @@ export default function RecallSession() {
           <AudioPlayer src={item.source_audio_url} />
         )}
 
+        {item?.source_audio_url && item.prompt_type !== "audio_shadow" && item.answer_visible === false && (
+          <div style={{ width: "100%", textAlign: "left" }}>
+            <AudioPlayer src={item.source_audio_url} label="Pronunciation audio" />
+          </div>
+        )}
+
         <div className="row" style={{ gap: 8, marginTop: 6, justifyContent: "center" }}>
           <span
             aria-hidden="true"
@@ -841,7 +847,7 @@ function Summary({
 
             <div>
               <div className="small faint">Answer</div>
-              <div style={{ fontWeight: 600 }}>{it.spanish}</div>
+              <div style={{ fontWeight: 600 }}>{it.spanish || "Answer hidden until grading completes"}</div>
               <div className="small faint">{it.english}</div>
             </div>
 

@@ -35,14 +35,15 @@ export interface SessionItem {
   prompt: string;
   prompt_type: PromptType;
   mode?: SessionMode;
-  spanish: string;
+  spanish?: string;
   target_spanish?: string;
   english: string;
   english_meaning?: string;
   context_clue?: string | null;
   cloze_prompt: string;
   source_audio_url: string;
-  learning_card?: LearningCard;
+  answer_visible?: boolean;
+  learning_card?: LearningCard | null;
   scheduling?: SchedulingInfo;
   recording_id?: number;
   recording_audio_url?: string | null;
