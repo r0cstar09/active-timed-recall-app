@@ -4,20 +4,11 @@ import type { DashboardStats } from "../lib/types";
 import { loadSession } from "../lib/timer";
 import { REGIONS, RegionArt, StateIllustration } from "../lib/visuals";
 
-type LastSession = { id: number; score?: number | null; completed_at?: string | null };
-
 function dayPart() {
   const h = new Date().getHours();
   if (h < 12) return "Morning";
   if (h < 17) return "Afternoon";
   return "Evening";
-}
-
-function scoreLabel(score?: number | null) {
-  if (score == null) return "last session saved";
-  if (score >= 0.9) return "clean pronunciation energy";
-  if (score >= 0.72) return "solid recall, keep the rhythm";
-  return "weak spots found — perfect fuel";
 }
 
 function queueMood(stats: DashboardStats | null, hasResumable: boolean) {
@@ -34,22 +25,21 @@ function queueMood(stats: DashboardStats | null, hasResumable: boolean) {
 
 export default function DueSummary() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [lastSession, setLastSession] = useState<LastSession | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasResumable, setHasResumable] = useState(false);
   const [verbCompletion, setVerbCompletion] = useState({ completed: 0, total: 0 });
   const [lessonCompletion, setLessonCompletion] = useState({ completed: 0, total: 0 });
+  const [missCounts, setMissCounts] = useState({ lessons: 0, verbs: 0 });
 
   useEffect(() => {
     setHasResumable(!!loadSession());
     let alive = true;
     (async () => {
       try {
-        const [counts, sourceCount, rawStats, verbCatalog, verbProgress, lessonProgress, lessonCatalog] = await Promise.all([
+        const [counts, sourceCount, verbCatalog, verbProgress, lessonProgress, lessonCatalog, lessonMisses, verbMisses] = await Promise.all([
           api.getDashboardCounts(),
           api.countSources(),
-          api.getStats(),
           api.listVerbCatalog().catch(async () => {
             const mod = await import("../data/generated/verbs.json");
             return mod.default as VerbCatalog;
@@ -57,6 +47,8 @@ export default function DueSummary() {
           api.listVerbProgress().catch(() => []),
           api.listLessonProgress().catch(() => []),
           import("../data/generated/fuzzy_lessons.json").then((mod) => mod.default as { count: number }),
+          api.listLessonMisses(200).catch(() => []),
+          api.listVerbMisses(200).catch(() => []),
         ]);
         if (!alive) return;
         setStats({
@@ -75,9 +67,10 @@ export default function DueSummary() {
           completed: lessonProgress.filter((p) => Number(p.completed) === 1).length,
           total: lessonCatalog.count || 0,
         });
-        if (rawStats && typeof rawStats === "object" && "last_session" in rawStats) {
-          setLastSession((rawStats as { last_session?: LastSession | null }).last_session ?? null);
-        }
+        setMissCounts({
+          lessons: lessonMisses.filter((m) => m.status !== "cleared").length,
+          verbs: verbMisses.filter((m) => m.status !== "cleared").length,
+        });
       } catch (err) {
         if (alive) setError(err instanceof ApiError ? err.message : String(err));
       } finally {
@@ -90,12 +83,25 @@ export default function DueSummary() {
   }, []);
 
   const mood = useMemo(() => queueMood(stats, hasResumable), [hasResumable, stats]);
-  const primaryHref = hasResumable ? "/session" : (stats?.dueCount ?? 0) > 0 ? "/session?mode=review" : "/session?mode=practice";
   const completion = stats ? Math.min(100, Math.round(((stats.reviewCount + stats.learningCount) / Math.max(1, stats.totalCards)) * 100)) : 0;
   const MOSAIC_TILES = 16;
   const filledTiles = Math.round((completion / 100) * MOSAIC_TILES);
   const verbPct = verbCompletion.total ? Math.round((verbCompletion.completed / verbCompletion.total) * 100) : 0;
   const lessonPct = lessonCompletion.total ? Math.round((lessonCompletion.completed / lessonCompletion.total) * 100) : 0;
+  const dueCount = stats?.dueCount ?? 0;
+  const lessonRemaining = Math.max(0, lessonCompletion.total - lessonCompletion.completed);
+  const verbRemaining = Math.max(0, verbCompletion.total - verbCompletion.completed);
+  const openMisses = missCounts.lessons + missCounts.verbs;
+  const passportPct = Math.round((verbPct + lessonPct + Math.max(0, 100 - Math.min(100, openMisses * 8))) / 3);
+  const nextFocus = hasResumable
+    ? { label: "Resume session", href: "/session", note: "Finish the interrupted speaking rep before adding more work." }
+    : dueCount > 0
+      ? { label: "Clear reviews", href: "/session?mode=review", note: `${dueCount} due card${dueCount === 1 ? "" : "s"} are blocking clean momentum.` }
+      : openMisses > 0
+        ? { label: "Polish misses", href: "/misses", note: `${openMisses} open miss${openMisses === 1 ? "" : "es"} should become targeted recall fuel.` }
+        : lessonRemaining > verbRemaining
+          ? { label: "Sentence lessons", href: "/lessons", note: `${lessonRemaining} lesson${lessonRemaining === 1 ? "" : "s"} left in the pattern library.` }
+          : { label: "Verb grids", href: "/verbs", note: `${verbRemaining} verb grid${verbRemaining === 1 ? "" : "s"} left to lock in.` };
   const heatSeed = (stats?.reviewCount ?? 0) + (stats?.learningCount ?? 0) + (stats?.sourceCount ?? 0);
   const heatCells = Array.from({ length: 35 }, (_, i) => {
     const age = 34 - i;
@@ -128,13 +134,13 @@ export default function DueSummary() {
           <div className="row between wrap">
             <div>
               <div className="spanish-kicker">Today's route · {dayPart()} · {mood.label}</div>
-              <h2 style={{ margin: 0 }}>Reviews, lessons, verbs — one Spanish loop.</h2>
+              <h2 style={{ margin: 0 }}>Move the bottleneck, earn the stamp.</h2>
             </div>
-            <span className="flavor-badge">flight plan</span>
+            <span className="flavor-badge">next: {nextFocus.label}</span>
           </div>
-          <p className="muted" style={{ margin: 0 }}>{loading ? "Checking reviews, sentence lessons, and verb progress…" : mood.tone}</p>
+          <p className="muted" style={{ margin: 0 }}>{loading ? "Checking reviews, sentence lessons, verb grids, and open misses…" : nextFocus.note}</p>
           <div className="row wrap" style={{ gap: 10 }}>
-            <a className="btn btn-primary btn-lg" href={primaryHref}>{hasResumable ? "Resume session" : "Clear reviews"}</a>
+            <a className="btn btn-primary btn-lg" href={nextFocus.href}>{nextFocus.label}</a>
             <a className="btn btn-azul" href="/lessons">Sentence lessons</a>
             <a className="btn btn-ghost" href="/verbs">Verb grids</a>
           </div>
@@ -147,12 +153,27 @@ export default function DueSummary() {
           <span>active</span>
         </div>
         <div className="score-copy">
-          <div className="spanish-kicker">momentum</div>
-          <strong>{lastSession ? scoreLabel(lastSession.score) : "build today’s first rep"}</strong>
+          <div className="spanish-kicker">passport readiness</div>
+          <strong>{loading ? "calculating the route" : `${passportPct}% toward the next visible milestone`}</strong>
           <p className="muted small" style={{ margin: "4px 0 0" }}>
-            {stats ? `${stats.totalCards} phrase cards · ${stats.sourceCount} sources · ${stats.reviewCount} mature reviews` : "Loading library totals…"}
+            {stats ? `${dueCount} due · ${openMisses} open misses · ${lessonRemaining} lessons left · ${verbRemaining} verb grids left` : "Loading library totals…"}
           </p>
         </div>
+      </div>
+
+      <div className="route-board" aria-label="Today’s progress route">
+        <a className={`route-card ${dueCount ? "urgent" : "done"}`} href="/session?mode=review">
+          <span>1</span><strong>{dueCount} reviews due</strong><small>{dueCount ? "Clear these before new work." : "Review queue clear."}</small>
+        </a>
+        <a className={`route-card ${openMisses ? "urgent" : "done"}`} href="/misses">
+          <span>2</span><strong>{openMisses} misses open</strong><small>{missCounts.lessons} lesson · {missCounts.verbs} verb</small>
+        </a>
+        <a className="route-card" href="/lessons">
+          <span>3</span><strong>{lessonRemaining} lessons left</strong><small>{lessonPct}% sentence curriculum stamped</small>
+        </a>
+        <a className="route-card" href="/verbs">
+          <span>4</span><strong>{verbRemaining} verb grids left</strong><small>{verbPct}% verb atlas complete</small>
+        </a>
       </div>
 
       <div className="card stack progress-card">
@@ -183,15 +204,15 @@ export default function DueSummary() {
         <div className="row between wrap">
           <div>
             <div className="spanish-kicker">study wall</div>
-            <strong>Azulejo heatmap</strong>
+            <strong>Azulejo heatmap + passport route</strong>
           </div>
           <span className="pill">last 5 weeks</span>
         </div>
         <div className="heatmap-wall" aria-label="Study intensity heatmap">
           {heatCells.map((level, i) => <span key={i} className={`heat-tile level-${level}`} />)}
         </div>
-        <div className="journey-arc" style={{ "--pct": `${completion}%` } as React.CSSProperties}>
-          <span>Spain</span><i /><span>LatAm</span>
+        <div className="journey-arc" style={{ "--pct": `${passportPct}%` } as React.CSSProperties}>
+          <span>reviews</span><i /><span>passport</span>
         </div>
       </div>
 
@@ -199,17 +220,17 @@ export default function DueSummary() {
         <div className="metric-card hot">
           <div className="metric-icon">🔥</div>
           <div className="num">{loading ? "·" : (stats?.dueCount ?? 0)}</div>
-          <div className="lbl">due to speak</div>
+          <div className="lbl">reviews due</div>
         </div>
         <div className="metric-card rhythm">
           <div className="metric-icon">🎧</div>
           <div className="num">{loading ? "·" : (stats?.learningCount ?? 0)}</div>
-          <div className="lbl">finding rhythm</div>
+          <div className="lbl">learning cards</div>
         </div>
         <div className="metric-card cool">
           <div className="metric-icon">✨</div>
           <div className="num">{loading ? "·" : (stats?.newCount ?? 0)}</div>
-          <div className="lbl">new sparks</div>
+          <div className="lbl">new cards</div>
         </div>
       </div>
 

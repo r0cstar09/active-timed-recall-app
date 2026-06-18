@@ -30,7 +30,7 @@ const secondaryActive = secondaryTabs.some((t) => t.id === current);
         <span>{t.label}</span>
       </a>
     ))}
-    <details class="tab-more" open={secondaryActive}>
+    <details class="tab-more">
       <summary class="tab tab-more-trigger" aria-current={secondaryActive ? "page" : undefined}>
         <Glyph name="more" />
         <span>More</span>

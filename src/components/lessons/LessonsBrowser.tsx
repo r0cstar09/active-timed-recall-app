@@ -57,6 +57,7 @@ export default function LessonsBrowser() {
   const [promptProgress, setPromptProgress] = useState<Record<string, LessonPromptProgress>>({});
   const [promoting, setPromoting] = useState<Record<number, string>>({});
   const [resetting, setResetting] = useState(false);
+  const [celebration, setCelebration] = useState<{ passed: number; partial: number; failed: number } | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -139,6 +140,7 @@ export default function LessonsBrowser() {
     setShowAnswers(false);
     setResponses({});
     setGrade(null);
+    setCelebration(null);
     setError(null);
   }
 
@@ -186,6 +188,10 @@ export default function LessonsBrowser() {
         })),
       });
       setGrade(response);
+      const passed = (response.items ?? []).filter((item) => item.result === "pass").length;
+      const partial = (response.items ?? []).filter((item) => item.result === "partial").length;
+      const failed = (response.items ?? []).filter((item) => item.result === "fail").length;
+      setCelebration({ passed, partial, failed });
       setPromptProgress((prev) => {
         const next = { ...prev };
         for (const item of response.items ?? []) {
@@ -273,6 +279,8 @@ export default function LessonsBrowser() {
   );
   const hiddenPassedCount = (section?.prompts?.length ?? 0) - visiblePrompts.length;
   const filled = visiblePrompts.filter(({ idx }) => responses[idx]?.trim()).length;
+  const sectionTotal = section?.prompts?.length ?? 0;
+  const sectionPassedPct = sectionTotal ? Math.round((hiddenPassedCount / sectionTotal) * 100) : 0;
   const gradeByIndex = useMemo(() => {
     const map = new Map<number, NonNullable<StudyGradeResponse["items"]>[number]>();
     for (const item of grade?.items ?? []) {
@@ -354,7 +362,7 @@ export default function LessonsBrowser() {
             )}
           </div>
 
-          <div className="card stack">
+          <div className="card stack lesson-drill-card">
             <label className="field">
               <span>Drill section</span>
               <select className="input" value={sectionName} onChange={(e) => { setSectionName(e.target.value); resetWork(); }}>
@@ -364,19 +372,35 @@ export default function LessonsBrowser() {
               </select>
             </label>
             {section?.instructions && <p className="muted">{section.instructions}</p>}
+            <div className="lesson-section-progress" aria-label={`Section progress ${sectionPassedPct}%`}>
+              <div className="row between small">
+                <strong>{hiddenPassedCount}/{sectionTotal} sealed</strong>
+                <span>{visiblePrompts.length ? `${visiblePrompts.length} left to earn` : "section complete"}</span>
+              </div>
+              <div className="progress-track"><span style={{ width: `${sectionPassedPct}%` }} /></div>
+            </div>
             <div className="row between small faint">
               <span>{filled}/{visiblePrompts.length} open responses filled</span>
-              <span>{hiddenPassedCount ? `${hiddenPassedCount} completed hidden` : "LLM graded by backend"}</span>
+              <span>{hiddenPassedCount ? `${hiddenPassedCount} correct answers banked` : "LLM graded by backend"}</span>
             </div>
+            {celebration && (
+              <div className={celebration.failed === 0 && celebration.partial === 0 ? "lesson-win-banner all-clear" : "lesson-win-banner"}>
+                <strong>{celebration.passed ? `${celebration.passed} sealed` : "Keep polishing"}</strong>
+                <span>{celebration.partial} close · {celebration.failed} to review</span>
+              </div>
+            )}
             <div className="stack">
               {visiblePrompts.length === 0 && (
-                <div className="alert alert-ok">All prompts in this section are complete. Reset the module to bring them back.</div>
+                <div className="lesson-complete-callout">
+                  <strong>Section stamped.</strong>
+                  <span>Every prompt here is sealed. Move sections or reset the module if you want a fresh run.</span>
+                </div>
               )}
               {visiblePrompts.map(({ prompt, idx }) => {
                 const itemGrade = gradeByIndex.get(idx);
                 return (
-                  <div className="card card-tight stack" key={`${prompt}-${idx}`}>
-                    <div className="small faint">Prompt {idx + 1}</div>
+                  <div className={`card card-tight stack lesson-prompt-card ${itemGrade ? `grade-${itemGrade.result}` : ""}`} key={`${prompt}-${idx}`}>
+                    <div className="row between small faint"><span>Prompt {idx + 1}</span>{itemGrade?.result === "pass" && <span className="seal-chip">sealed ✓</span>}</div>
                     <p>{prompt}</p>
                     <textarea
                       className="input"
@@ -387,7 +411,7 @@ export default function LessonsBrowser() {
                     />
                     {itemGrade && (
                       <div className={resultClass(itemGrade.result)}>
-                        <strong>{itemGrade.result.toUpperCase()}</strong> · {itemGrade.feedback}
+                        <strong>{itemGrade.result === "pass" ? "SEALED" : itemGrade.result.toUpperCase()}</strong> · {itemGrade.feedback}
                         {itemGrade.corrected_answer && <div><strong>Corrected:</strong> {itemGrade.corrected_answer}</div>}
                         {itemGrade.should_promote_to_recall && (
                           <div className="stack gap-small">
@@ -423,7 +447,7 @@ export default function LessonsBrowser() {
               </div>
             )}
             <button className="btn btn-primary btn-block" type="button" disabled={grading || filled === 0 || visiblePrompts.length === 0} onClick={submit}>
-              {grading ? "Grading…" : "Submit for LLM grading"}
+              {grading ? "Grading…" : "Check answers and seal correct prompts"}
             </button>
             <button className="btn btn-block" type="button" onClick={() => setShowAnswers((v) => !v)}>
               {showAnswers ? "Hide answers" : "Reveal answer key"}

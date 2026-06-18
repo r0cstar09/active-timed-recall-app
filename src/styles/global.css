@@ -1408,7 +1408,8 @@ html[data-region="san-juan"], .tile-caribbean { --tile-pattern: url("data:image/
 }
 .tab-more summary::-webkit-details-marker { display: none; }
 .tab-more-trigger { align-self: stretch; }
-.tab-more-trigger svg { transform: translateY(0); }
+.tab-more-trigger svg { transform: translateY(0); stroke-width: 2.25; }
+.tab-more-trigger span { transform: translateY(0); }
 .tab-more[open] summary.tab,
 .tab-more summary.tab[aria-current="page"] {
   color: var(--text);
@@ -1498,6 +1499,30 @@ html[data-region="san-juan"], .tile-caribbean { --tile-pattern: url("data:image/
 .stamp-date { display:inline-block; margin-top: 4px; padding: 3px 7px; border:1px solid currentColor; border-radius: 999px; color: var(--region-accent, var(--accent)); font-size: .62rem; font-weight: 950; letter-spacing:.08em; transform: rotate(-3deg); }
 .stamp-card.locked::before { border-style: dashed; opacity:.28; }
 .stamp-card.locked .stamp-date { color: var(--text-faint); }
+.passport-next-stamp { padding: 10px 12px; border-radius: 16px; background: color-mix(in srgb, var(--paper) 12%, transparent); border:1px solid rgba(255,248,234,.22); color: #fff8ea; font-weight: 800; }
+
+/* Route board + lesson satisfaction */
+.route-board { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.route-card { position:relative; min-height: 124px; display:flex; flex-direction:column; justify-content:space-between; gap:8px; padding: 14px; border:1px solid var(--border); border-radius: 22px; background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 94%, white 4%), var(--paper)); box-shadow: var(--shadow-soft); color: var(--text); overflow:hidden; }
+.route-card::after { content:""; position:absolute; right:-18px; bottom:-22px; width:74px; height:74px; border-radius:24px; background: var(--card-pop, var(--azulejo)); opacity:.14; transform: rotate(15deg); }
+.route-card span { width:28px; height:28px; display:grid; place-items:center; border-radius:999px; background: color-mix(in srgb, var(--azulejo) 14%, var(--paper)); color: var(--azulejo); font-weight:950; }
+.route-card strong { font-family: var(--font-display); font-size:1.08rem; line-height:1.05; }
+.route-card small { color: var(--text-dim); font-weight:700; }
+.route-card.urgent { --card-pop: var(--terracotta); border-color: color-mix(in srgb, var(--terracotta) 34%, var(--border)); }
+.route-card.urgent span { background: color-mix(in srgb, var(--terracotta) 16%, var(--paper)); color: var(--terracotta); }
+.route-card.done { --card-pop: var(--olive); }
+.route-card.done span { background: color-mix(in srgb, var(--olive) 16%, var(--paper)); color: var(--olive); }
+
+.lesson-drill-card { border-color: color-mix(in srgb, var(--azulejo) 18%, var(--border)); }
+.lesson-section-progress { display:grid; gap:8px; padding: 12px; border-radius: 18px; background: color-mix(in srgb, var(--azulejo) 8%, var(--paper)); border: 1px solid color-mix(in srgb, var(--azulejo) 18%, var(--border)); }
+.lesson-win-banner { display:flex; justify-content:space-between; gap:12px; align-items:center; padding: 12px 14px; border-radius: 18px; background: color-mix(in srgb, var(--saffron) 14%, var(--paper)); border:1px solid color-mix(in srgb, var(--saffron) 28%, var(--border)); font-weight:850; }
+.lesson-win-banner.all-clear { background: linear-gradient(135deg, color-mix(in srgb, var(--olive) 18%, var(--paper)), color-mix(in srgb, var(--saffron) 13%, var(--paper))); }
+.lesson-complete-callout { display:grid; gap:4px; padding: 18px; border-radius: 22px; background: linear-gradient(135deg, color-mix(in srgb, var(--olive) 20%, var(--paper)), color-mix(in srgb, var(--saffron) 16%, var(--paper))); border:1px solid color-mix(in srgb, var(--olive) 28%, var(--border)); box-shadow: var(--shadow-soft); }
+.lesson-prompt-card { transition: border-color .18s ease, transform .18s ease, background .18s ease; }
+.lesson-prompt-card.grade-pass { border-color: color-mix(in srgb, var(--olive) 48%, var(--border)); background: linear-gradient(180deg, color-mix(in srgb, var(--olive) 8%, var(--paper)), var(--paper)); }
+.lesson-prompt-card.grade-partial { border-color: color-mix(in srgb, var(--saffron) 54%, var(--border)); }
+.lesson-prompt-card.grade-fail { border-color: color-mix(in srgb, var(--terracotta) 44%, var(--border)); }
+.seal-chip { padding: 4px 8px; border-radius: 999px; background: color-mix(in srgb, var(--olive) 14%, var(--paper)); color: var(--olive); font-weight:950; }
 
 /* Study heatmap / journey wall */
 .journey-card { background: linear-gradient(180deg, color-mix(in srgb, var(--paper) 92%, var(--azulejo) 6%), var(--paper)); }
@@ -1512,6 +1537,8 @@ html[data-region="san-juan"], .tile-caribbean { --tile-pattern: url("data:image/
 .journey-arc i::after { content:"✈"; position:absolute; left: calc(var(--pct) - 10px); top:-9px; color: var(--rioja); font-style:normal; font-size:18px; }
 
 @media (max-width: 520px) {
+  .route-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .route-card { min-height: 112px; padding: 12px; }
   .passport-book { grid-template-columns: 1fr; padding: 10px; }
   .passport-spine { left: 12px; right: 12px; top: 50%; bottom: auto; width: auto; height: 12px; }
   .intro-page { border-radius: 22px 22px 4px 4px; min-height: 260px; }

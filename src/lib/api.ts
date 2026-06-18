@@ -65,6 +65,63 @@ function url(path: string): string {
   return `${base}${p}`;
 }
 
+function extractFirstJsonValue(text: string): unknown {
+  const src = text.trim();
+  if (!src) return undefined;
+  try {
+    return JSON.parse(src);
+  } catch {
+    /* fall through to one-shot extraction */
+  }
+
+  const starts = [src.indexOf("{"), src.indexOf("[")].filter((i) => i >= 0).sort((a, b) => a - b);
+  for (const start of starts) {
+    const opener = src[start];
+    const closer = opener === "{" ? "}" : "]";
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let i = start; i < src.length; i += 1) {
+      const ch = src[i];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (ch === "\\") escaped = true;
+        else if (ch === '"') inString = false;
+        continue;
+      }
+      if (ch === '"') inString = true;
+      else if (ch === opener) depth += 1;
+      else if (ch === closer) {
+        depth -= 1;
+        if (depth === 0) {
+          const candidate = src.slice(start, i + 1);
+          try {
+            return JSON.parse(candidate);
+          } catch {
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  throw new SyntaxError("Response did not contain a valid JSON object or array.");
+}
+
+async function readJsonBody(res: Response): Promise<unknown> {
+  const text = await res.text();
+  try {
+    return extractFirstJsonValue(text);
+  } catch (err) {
+    const preview = text.trim().slice(0, 280) || res.statusText;
+    throw new ApiError(
+      `Backend returned malformed JSON (${res.status}). ${err instanceof Error ? err.message : String(err)} Preview: ${preview}`,
+      res.status,
+      { preview },
+    );
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
@@ -85,7 +142,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     let body: unknown;
     let detail = res.statusText;
     try {
-      body = await res.json();
+      body = await readJsonBody(res);
       if (body && typeof body === "object" && "detail" in body) {
         detail = String((body as Record<string, unknown>).detail);
       }
@@ -96,7 +153,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  return (await readJsonBody(res)) as T;
 }
 
 async function requestJson<T>(path: string, method: string, body: unknown): Promise<T> {
