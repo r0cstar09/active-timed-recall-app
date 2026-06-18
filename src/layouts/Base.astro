@@ -8,7 +8,7 @@ import { ClientRouter } from "astro:transitions";
 interface Props {
   title?: string;
   heading?: string;
-  current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings";
+  current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings" | "passport";
   /** Hide the bottom tab bar (used by the focused recall session screen). */
   hideNav?: boolean;
 }
@@ -42,6 +42,11 @@ const {
     />
     <title>{title}</title>
     <meta name="description" content="Spanish acoustic-first active timed recall." />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content="Ear-first Spanish recall with passport stamps, regional flavor, and spoken timer pressure." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og/spanish-recall-og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
 
     <!-- PWA / iOS home-screen install -->
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -51,8 +56,10 @@ const {
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Recall" />
-    <link rel="apple-touch-icon" href="/icons/icon.svg" />
-    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="apple-touch-startup-image" href="/splash/apple-splash-1170-2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
     <ClientRouter />
   </head>
   <body>
@@ -79,7 +86,7 @@ const {
       const updateThemeButton = () => {
         const button = document.querySelector("[data-theme-toggle]");
         if (!button) return;
-        button.textContent = document.documentElement.dataset.theme === "dark" ? "☾" : "☀︎";
+        button.textContent = document.documentElement.dataset.theme === "dark" ? "Noche" : "Paper";
       };
       updateThemeButton();
       document.querySelector("[data-theme-toggle]")?.addEventListener("click", () => {

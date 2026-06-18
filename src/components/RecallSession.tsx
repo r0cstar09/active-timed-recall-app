@@ -788,6 +788,7 @@ function Summary({
     { current: 0, best: 0 },
   ).best;
   const cleanRecall = graded?.mode !== "learn" && !!summary && summary.failed === 0 && summary.partial === 0;
+  const celebrationTier = graded?.mode === "learn" || !summary ? null : cleanRecall ? "¡Olé!" : summary.failed === 0 ? "¡Eso es!" : summary.partial > 0 ? "¡Casi!" : null;
 
   useEffect(() => {
     if (!summary || graded?.mode === "learn") return;
@@ -821,11 +822,11 @@ function Summary({
   return (
     <div className="stack">
       <div className="card stack center">
-        {cleanRecall && (
+        {celebrationTier && (
           <>
-            <div className="ole-burst" aria-hidden="true">¡Olé!</div>
+            <div className={`ole-burst ${cleanRecall ? "" : "soft"}`} aria-hidden="true">{celebrationTier}</div>
             <div className="petal-burst" aria-hidden="true">
-              {Array.from({ length: 18 }).map((_, i) => <span key={i} />)}
+              {Array.from({ length: cleanRecall ? 18 : 10 }).map((_, i) => <span key={i} />)}
             </div>
           </>
         )}

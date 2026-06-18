@@ -3,6 +3,7 @@ import { api, ApiError } from "../lib/api";
 import type { Card, Source } from "../lib/types";
 import { isStatusFailed, isStatusReady } from "../lib/types";
 import AudioPlayer from "./AudioPlayer";
+import { REGIONS, RegionArt, StateIllustration, regionForIndex } from "../lib/visuals";
 
 type Tab = "sources" | "cards";
 
@@ -58,17 +59,33 @@ export default function Library() {
 
       {error && <div className="alert alert-error">{error}</div>}
 
+      {tab === "sources" && <RegionCards />}
       {tab === "sources" && <Sources sources={sources} />}
       {tab === "cards" && <Cards cards={cards} />}
     </div>
   );
 }
 
+function RegionCards() {
+  return (
+    <div className="region-card-strip" aria-label="Flavor regions">
+      {REGIONS.map((r) => (
+        <article key={r.key} className="region-mini-card" style={{ "--region-accent": r.accent } as React.CSSProperties}>
+          <RegionArt region={r.key} small />
+          <strong>{r.name}</strong>
+          <small>{r.landmark}</small>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 function Sources({ sources }: { sources: Source[] | null }) {
-  if (!sources) return <div className="card center faint">Loading sources…</div>;
+  if (!sources) return <div className="card center stack"><StateIllustration type="loading" /><p className="faint">Loading sources…</p></div>;
   if (sources.length === 0) {
     return (
       <div className="card center stack">
+        <StateIllustration type="empty" />
         <p className="muted">No sources yet.</p>
         <a className="btn btn-primary" href="/ingest">Ingest your first video</a>
       </div>
@@ -76,8 +93,9 @@ function Sources({ sources }: { sources: Source[] | null }) {
   }
   return (
     <>
-      {sources.map((s) => (
-        <div className="card stack" key={s.id}>
+      {sources.map((s, i) => (
+        <div className="card stack source-region-card" key={s.id} style={{ "--region-accent": regionForIndex(i).accent } as React.CSSProperties}>
+          <RegionArt region={regionForIndex(i).key} small />
           <div>
             <div style={{ fontWeight: 600 }}>{s.title ?? s.source_url}</div>
             <div className="small faint">
@@ -99,10 +117,11 @@ function Sources({ sources }: { sources: Source[] | null }) {
 }
 
 function Cards({ cards }: { cards: Card[] | null }) {
-  if (!cards) return <div className="card center faint">Loading cards…</div>;
+  if (!cards) return <div className="card center stack"><StateIllustration type="loading" /><p className="faint">Loading cards…</p></div>;
   if (cards.length === 0) {
     return (
       <div className="card center stack">
+        <StateIllustration type="empty" />
         <p className="muted">No cards yet.</p>
         <a className="btn btn-primary" href="/ingest">Ingest a video</a>
       </div>

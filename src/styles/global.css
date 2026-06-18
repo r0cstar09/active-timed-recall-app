@@ -1232,3 +1232,97 @@ body {
   }
   .btn, .waveform.live span { transition: none !important; }
 }
+
+/* Passport / regional illustration system */
+html[data-theme="dark"] {
+  --bg: #18100c;
+  --bg-elev: #24170f;
+  --bg-elev-2: #352315;
+  --paper: #2a1b12;
+  --paper-warm: #21150f;
+  --ink: #fff0d2;
+  --text: #fff0d2;
+  --text-dim: #d9bd94;
+  --text-faint: #a88965;
+  --border: #5a3b25;
+  --border-strong: #8b5f35;
+  --accent-grad: linear-gradient(135deg, #f0b45e 0%, #c75b39 52%, #7c2d3a 100%);
+}
+
+html[data-region="madrid"], .tile-talavera { --tile-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cg fill='none' stroke='%231f7a8c' stroke-opacity='.24' stroke-width='1.5'%3E%3Cpath d='M48 6c12 18 24 30 42 42-18 12-30 24-42 42C36 72 24 60 6 48 24 36 36 24 48 6Z'/%3E%3Ccircle cx='48' cy='48' r='8'/%3E%3C/g%3E%3C/svg%3E"); }
+html[data-region="buenos-aires"], .tile-andalusian { --tile-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cg fill='none' stroke='%237c2d3a' stroke-opacity='.22' stroke-width='1.6'%3E%3Cpath d='M45 8a37 37 0 0 1 37 37 37 37 0 0 1-37 37A37 37 0 0 1 8 45 37 37 0 0 1 45 8Z'/%3E%3Cpath d='M45 8v74M8 45h74'/%3E%3C/g%3E%3C/svg%3E"); }
+html[data-region="san-juan"], .tile-caribbean { --tile-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cg fill='none' stroke='%23e8a33d' stroke-opacity='.24' stroke-width='1.8'%3E%3Cpath d='M0 64c24-22 48 22 96 0M0 32c24-22 48 22 96 0'/%3E%3Ccircle cx='24' cy='24' r='7'/%3E%3Ccircle cx='72' cy='72' r='7'/%3E%3C/g%3E%3C/svg%3E"); }
+
+.hero-region-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.region-orbit {
+  position: absolute;
+  width: 148px;
+  height: 92px;
+  border-radius: 28px;
+  opacity: .34;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--region-accent, var(--terracotta)) 40%, transparent), transparent), var(--tile-pattern);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--region-accent, var(--accent)) 34%, transparent);
+}
+.region-orbit::before { content: ""; position: absolute; left: 22px; right: 22px; bottom: 22px; height: 34px; border: 8px solid currentColor; border-top: 0; opacity: .25; }
+.region-orbit.madrid { --region-accent: #c75b39; right: -28px; top: 40px; transform: rotate(-8deg); }
+.region-orbit.cdmx { --region-accent: #1f7a8c; left: -45px; bottom: 36px; transform: rotate(10deg); }
+.region-orbit.medellin { --region-accent: #6b7d4e; right: 54px; bottom: -34px; transform: rotate(4deg); }
+
+.region-art { color: var(--region-accent, var(--accent)); width: 100%; max-width: 260px; height: auto; flex: 0 0 auto; filter: drop-shadow(0 12px 22px rgba(79,43,19,.12)); }
+.region-art.small { max-width: 132px; }
+.mission-card { position: relative; overflow: hidden; }
+.mission-region-art { position: absolute; right: -34px; top: -16px; width: 190px; opacity: .22; }
+
+.region-card-strip { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 10px; overflow-x: auto; padding-bottom: 3px; }
+.region-mini-card { min-width: 126px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: color-mix(in srgb, var(--paper) 84%, var(--region-accent) 8%); box-shadow: var(--shadow-soft); display: grid; gap: 6px; }
+.region-mini-card strong { color: var(--text); }
+.region-mini-card small { color: var(--text-dim); }
+.source-region-card { position: relative; overflow: hidden; }
+.source-region-card > .region-art { position: absolute; right: -16px; top: -20px; opacity: .16; }
+
+.passport-hero { position: relative; overflow: hidden; min-height: 270px; background: linear-gradient(135deg, color-mix(in srgb, var(--paper) 82%, var(--region-accent) 12%), var(--paper)); }
+.passport-hero .region-art { position: absolute; right: -26px; top: -8px; opacity: .28; max-width: 320px; }
+.passport-progress { display: inline-flex; align-items: baseline; gap: 8px; width: fit-content; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--paper) 82%, transparent); }
+.passport-progress strong { font-family: var(--font-display); font-size: 1.8rem; line-height: 1; }
+.stamp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(152px, 1fr)); gap: 12px; }
+.stamp-card { position: relative; min-height: 210px; padding: 14px; border-radius: 24px; border: 1px dashed var(--border-strong); background: color-mix(in srgb, var(--paper) 88%, var(--region-accent, var(--accent)) 6%); overflow: hidden; box-shadow: var(--shadow-soft); }
+.stamp-card .region-art { width: 118px; opacity: .82; }
+.stamp-card.locked { filter: grayscale(.88); opacity: .62; background: color-mix(in srgb, var(--paper) 92%, var(--ink) 4%); }
+.stamp-card.locked .region-art { opacity: .22; }
+.stamp-card.earned { border-style: solid; border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+.stamp-card.just-earned { animation: stamp-press 880ms cubic-bezier(.2,1.4,.3,1); }
+.stamp-seal { position: absolute; right: 12px; top: 12px; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; border: 3px double currentColor; color: var(--region-accent, var(--accent)); transform: rotate(-11deg); font-weight: 900; }
+.stamp-card h3 { margin-top: 8px; }
+.stamp-card p { color: var(--text-dim); font-size: .9rem; margin-bottom: 6px; }
+.stamp-card small { color: var(--text-faint); font-weight: 800; }
+
+.state-illo { width: 96px; height: 76px; position: relative; margin-inline: auto; }
+.state-stamp { position: absolute; width: 42px; height: 42px; left: 27px; top: 7px; border-radius: 12px; background: var(--accent-grad); transform: rotate(-8deg); box-shadow: 0 10px 20px rgba(79,43,19,.16); }
+.state-stamp::after { content:""; position:absolute; inset:11px; border:2px solid var(--paper); border-radius:50%; }
+.state-bag { position: absolute; left: 18px; right: 18px; bottom: 2px; height: 34px; border-radius: 10px; border: 3px solid var(--azulejo); background: color-mix(in srgb, var(--paper) 88%, var(--azulejo) 8%); }
+.state-bag::before { content:""; position:absolute; left:20px; top:-14px; width:20px; height:14px; border:3px solid var(--azulejo); border-bottom:0; border-radius: 10px 10px 0 0; }
+.state-spark { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--saffron); animation: petal-pop 1200ms ease infinite; }
+.state-spark.one { right: 8px; top: 10px; }
+.state-spark.two { left: 5px; top: 28px; animation-delay: 180ms; background: var(--terracotta); }
+.state-loading .state-stamp { animation: stamp-press 1000ms ease-in-out infinite; }
+.mini-loading { display:flex; align-items:center; gap:10px; padding: 8px 10px; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--paper) 78%, transparent); color: var(--text-dim); font-size: .86rem; }
+.mini-loading .state-illo { width: 42px; height: 34px; margin: 0; transform: scale(.55); transform-origin: left center; }
+
+.ole-burst.soft { font-size: clamp(1.8rem, 10vw, 3rem); color: var(--azulejo); }
+
+@keyframes stamp-press {
+  0% { transform: translateY(-8px) rotate(-8deg) scale(1.08); filter: saturate(1.2); }
+  45% { transform: translateY(7px) rotate(-8deg) scale(.94); }
+  70% { transform: translateY(0) rotate(-8deg) scale(1.02); }
+  100% { transform: translateY(0) rotate(-8deg) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp-card.just-earned, .state-loading .state-stamp, .state-spark { animation: none !important; }
+}

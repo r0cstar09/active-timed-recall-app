@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api, ApiError, type VerbCatalog } from "../lib/api";
 import type { DashboardStats } from "../lib/types";
 import { loadSession } from "../lib/timer";
+import { REGIONS, RegionArt, StateIllustration } from "../lib/visuals";
 
 type LastSession = { id: number; score?: number | null; completed_at?: string | null };
 
@@ -106,8 +107,10 @@ export default function DueSummary() {
           </div>
         </div>
       )}
+      {loading && <div className="mini-loading"><StateIllustration type="loading" /><span>Stamping today’s queue…</span></div>}
 
-      <div className="mission-card">
+      <div className="mission-card" style={{ "--region-accent": REGIONS[(new Date().getDate() - 1) % REGIONS.length].accent } as React.CSSProperties}>
+        <RegionArt region={REGIONS[(new Date().getDate() - 1) % REGIONS.length].key} className="mission-region-art" />
         <div className="mission-mosaic" role="img" aria-label={`${completion}% of your deck is active`}>
           {Array.from({ length: MOSAIC_TILES }).map((_, i) => (
             <span key={i} className={i < filledTiles ? "m-tile filled" : "m-tile"} />
