@@ -739,8 +739,8 @@ body {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  min-height: 520px;
-  padding: 18px;
+  min-height: auto;
+  padding: 22px;
   margin-bottom: 14px;
   border-radius: 32px;
   border: 1px solid color-mix(in srgb, var(--border) 70%, white 30%);
@@ -765,16 +765,15 @@ body {
 .hero-showpiece::after {
   content: "";
   position: absolute;
-  width: 300px;
-  height: 300px;
+  width: 280px;
+  height: 280px;
   right: -120px;
-  top: -110px;
+  top: -120px;
   border-radius: 50%;
   background: conic-gradient(from 20deg, var(--maize), var(--terracotta), var(--magenta), var(--cobalt), var(--caribe), var(--maize));
-  filter: blur(.2px);
-  opacity: .24;
+  filter: blur(2px);
+  opacity: .14;
   z-index: -1;
-  animation: slowSpin 18s linear infinite;
 }
 
 .hero-ambient {
@@ -832,9 +831,9 @@ body {
 }
 
 .hero-copy-block {
-  min-height: 390px;
-  justify-content: end;
-  padding: 8px 0 6px;
+  min-height: auto;
+  justify-content: center;
+  padding: 4px 0 2px;
 }
 
 .hero-copy-block h1 {
@@ -1024,6 +1023,41 @@ body {
 .pin-medellin { left: 16px; bottom: 54px; background: var(--caribe); color: white; }
 .pin-baires { right: 12px; bottom: 18px; background: var(--magenta); color: white; }
 
+/* Mosaic progress wall: each tile = a slice of the deck that's active. */
+.mission-mosaic {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  align-content: start;
+  padding: 7px;
+  border-radius: 18px;
+  background: rgba(255, 248, 234, 0.06);
+  border: 1px solid rgba(255, 248, 234, 0.16);
+}
+.m-tile {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: rgba(255, 248, 234, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(255, 248, 234, 0.08);
+}
+.m-tile.filled {
+  background:
+    var(--tile-pattern),
+    linear-gradient(135deg, var(--maize), var(--terracotta));
+  background-size: 24px 24px, auto;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+.m-tile-label {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+  text-align: center;
+  color: rgba(255, 248, 234, 0.82);
+  font-weight: 900;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .flavor-badge {
   color: var(--night);
   background: var(--maize);
@@ -1109,14 +1143,16 @@ body {
 }
 
 @media (max-width: 640px) {
-  .hero-showpiece { min-height: auto; padding: 14px; border-radius: 28px; }
+  .hero-showpiece { min-height: auto; padding: 16px; border-radius: 28px; }
   .hero-stage { grid-template-columns: 1fr; }
-  .hero-copy-block { min-height: 300px; }
-  .hero-copy-block h1 { max-width: 10ch; }
+  .hero-copy-block { min-height: auto; }
+  .hero-copy-block h1 { max-width: 12ch; }
   .culture-card { min-height: 280px; }
   .sun-disc { width: 130px; height: 130px; left: calc(50% - 65px); top: 32px; }
   .mission-card { grid-template-columns: 1fr; }
   .mission-map { min-height: 126px; }
+  .mission-mosaic { grid-template-columns: repeat(8, 1fr); }
+  .mission-mosaic .m-tile-label { grid-column: 1 / -1; }
   .score-strip { grid-template-columns: 1fr; }
   .score-ring { width: 82px; height: 82px; }
 }

@@ -74,6 +74,8 @@ export default function DueSummary() {
   const mood = useMemo(() => queueMood(stats, hasResumable), [hasResumable, stats]);
   const primaryHref = hasResumable ? "/session" : (stats?.dueCount ?? 0) > 0 ? "/session?mode=review" : "/session?mode=practice";
   const completion = stats ? Math.min(100, Math.round(((stats.reviewCount + stats.learningCount) / Math.max(1, stats.totalCards)) * 100)) : 0;
+  const MOSAIC_TILES = 16;
+  const filledTiles = Math.round((completion / 100) * MOSAIC_TILES);
 
   return (
     <div className="stack dashboard-stack">
@@ -87,11 +89,11 @@ export default function DueSummary() {
       )}
 
       <div className="mission-card">
-        <div className="mission-map" aria-hidden="true">
-          <span className="pin pin-madrid">MAD</span>
-          <span className="pin pin-mexico">MX</span>
-          <span className="pin pin-medellin">MED</span>
-          <span className="pin pin-baires">BA</span>
+        <div className="mission-mosaic" role="img" aria-label={`${completion}% of your deck is active`}>
+          {Array.from({ length: MOSAIC_TILES }).map((_, i) => (
+            <span key={i} className={i < filledTiles ? "m-tile filled" : "m-tile"} />
+          ))}
+          <small className="m-tile-label">{loading ? "·" : `${completion}% active`}</small>
         </div>
         <div className="mission-content stack">
           <div className="row between wrap">
