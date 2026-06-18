@@ -3,15 +3,26 @@ import Base from "../layouts/Base.astro";
 import DueSummary from "../components/DueSummary.tsx";
 ---
 
-<Base title="Spanish Learning Hub" heading="Spanish" current="home">
-  <h1>Today</h1>
-  <p class="muted">Unified Spanish learning hub: recall, verbs, and sentence lessons.</p>
+<Base title="Spanish Learning Hub" heading="Español" current="home">
+  <section class="card hero-card stack" aria-labelledby="home-title">
+    <div class="spanish-kicker">tu ritual diario</div>
+    <h1 id="home-title" class="spanish-phrase">¡Vamos a hablar!</h1>
+    <p class="ritual-copy">
+      Warm up with meaning, speak under pressure, then let FSRS bring the right phrases back.
+    </p>
+    <a class="btn btn-primary btn-lg btn-block" href="/session?mode=review">Empieza</a>
+    <div class="mosaic-row" aria-hidden="true">
+      <span class="mosaic-tile mastered"></span><span class="mosaic-tile mastered"></span><span class="mosaic-tile"></span><span class="mosaic-tile"></span><span class="mosaic-tile mastered"></span>
+    </div>
+  </section>
+
   <DueSummary client:load />
 
-  <div class="card stack">
-    <h2>Study modules</h2>
-    <a class="btn btn-block" href="/verbs">Verb Trainer</a>
-    <a class="btn btn-block" href="/lessons">Sentence Lessons</a>
-    <a class="btn btn-block" href="/misses">Targeted Misses</a>
+  <div class="card card-tile stack">
+    <div class="spanish-kicker">elige tu camino</div>
+    <h2>Hoy se practica con la voz.</h2>
+    <a class="btn btn-block" href="/verbs">Verbos · tablero de azulejos</a>
+    <a class="btn btn-block" href="/lessons">Cuaderno · patrones y frases</a>
+    <a class="btn btn-block" href="/misses">Repaso · a pulir</a>
   </div>
 </Base>

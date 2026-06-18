@@ -1,7 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../lib/api";
 import type { DashboardStats } from "../lib/types";
 import { loadSession } from "../lib/timer";
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "¡Buenos días!";
+  if (h < 19) return "¡Buenas tardes!";
+  return "¡Buenas noches!";
+}
 
 export default function DueSummary() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -14,8 +21,6 @@ export default function DueSummary() {
     let alive = true;
     (async () => {
       try {
-        // Server-side aggregation: correct even when the deck grows past the
-        // /api/cards 100-row cap (which silently undercounted before).
         const [counts, sourceCount] = await Promise.all([
           api.getDashboardCounts(),
           api.countSources(),
@@ -45,61 +50,82 @@ export default function DueSummary() {
     };
   }, []);
 
+  const dailyGoalCopy = useMemo(() => {
+    if (loading) return "Preparando tu sesión…";
+    const due = stats?.dueCount ?? 0;
+    const learning = stats?.learningCount ?? 0;
+    if (due > 0) return `${due} frase${due === 1 ? "" : "s"} esperando tu voz`;
+    if (learning > 0) return `${learning} en aprendizaje · perfecto para calentar`;
+    return "Nada urgente: practica libre o aprende algo nuevo.";
+  }, [loading, stats]);
+
   return (
     <div className="stack">
       {error && (
         <div className="alert alert-error">
           {error}
           <div className="small faint" style={{ marginTop: 6 }}>
-            Confirm the backend is reachable over Tailscale, then check the API
-            base URL in Settings.
+            Confirm the backend is reachable over Tailscale, then check the API base URL in Ajustes.
           </div>
         </div>
       )}
 
-      <div className="stat-grid">
+      <div className="card card-tile stack">
+        <div className="row between wrap">
+          <div>
+            <div className="spanish-kicker">{greeting()}</div>
+            <h2 style={{ marginBottom: 4 }}>Tu racha empieza con una frase.</h2>
+            <p className="muted" style={{ margin: 0 }}>{dailyGoalCopy}</p>
+          </div>
+          <span className="pill pill-good">racha · hoy</span>
+        </div>
+        <a className="btn btn-primary btn-block btn-lg" href={hasResumable ? "/session" : "/session?mode=review"}>
+          {hasResumable ? "Continuar sesión" : "Empieza ahora"}
+        </a>
+      </div>
+
+      <div className="stat-grid" aria-label="Today's Spanish practice counts">
         <div className="stat">
           <div className="num">{loading ? "·" : (stats?.dueCount ?? 0)}</div>
-          <div className="lbl">Due</div>
+          <div className="lbl">para hablar</div>
         </div>
         <div className="stat">
           <div className="num">{loading ? "·" : (stats?.newCount ?? 0)}</div>
-          <div className="lbl">New</div>
+          <div className="lbl">nuevas</div>
         </div>
         <div className="stat">
           <div className="num">{loading ? "·" : (stats?.learningCount ?? 0)}</div>
-          <div className="lbl">Learning</div>
+          <div className="lbl">calentando</div>
         </div>
       </div>
 
       {hasResumable && (
         <div className="alert">
-          You have an unfinished session. <a href="/session">Resume it →</a>
+          Tu conversación está pausada. <a href="/session">Retómala →</a>
         </div>
       )}
 
-      <div className="stack">
+      <div className="card stack">
+        <div className="spanish-kicker">modo de práctica</div>
         <a className="btn btn-primary btn-block btn-lg" href="/session?mode=learn">
-          Learn first queue
-          <span className="small faint"> · meaning + audio before timed recall</span>
+          Aprende significado <span className="small faint">· audio + lógica española</span>
         </a>
         <a className="btn btn-block" href="/session?mode=review">
-          {hasResumable ? "Resume session" : "Review due"}
+          Repasar lo debido
         </a>
         <a className="btn btn-block" href="/session?mode=practice">
-          Practice anytime <span className="small faint">(no FSRS)</span>
+          Practicar libre <span className="small faint">sin FSRS</span>
         </a>
         <a className="btn btn-block" href="/session?mode=misses">
-          Misses workout <span className="small faint">(redo failed/partial cards)</span>
+          A pulir <span className="small faint">frases falladas</span>
         </a>
       </div>
 
       <div className="row between small faint">
         <span>
-          {stats ? `${stats.totalCards} cards` : "—"} ·{" "}
-          {stats ? `${stats.sourceCount} sources` : "—"}
+          {stats ? `${stats.totalCards} frases` : "—"} · {stats ? `${stats.sourceCount} fuentes` : "—"}
         </span>
-        <a href="/ingest">Add a source →</a>
+        <a href="/ingest">Añadir fuente →</a>
       </div>
     </div>
   );

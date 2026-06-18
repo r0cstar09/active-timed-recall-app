@@ -118,14 +118,14 @@ export default function MissesReview() {
       <div className="card stack">
         <div className="btn-row">
           <button className={tab === "verbs" ? "btn btn-primary" : "btn"} type="button" onClick={() => setTab("verbs")}>
-            Verbs ({verbMisses.length})
+            A pulir ({verbMisses.length})
           </button>
           <button className={tab === "lessons" ? "btn btn-primary" : "btn"} type="button" onClick={() => setTab("lessons")}>
-            Lessons ({lessonMisses.length})
+            Frases ({lessonMisses.length})
           </button>
         </div>
         <div className="row between small faint">
-          <span>Open misses are resolved automatically when you answer them correctly.</span>
+          <span>Correct answers clear the queue — this is polishing, not punishment.</span>
           <button className="btn" type="button" onClick={() => void refresh()} disabled={loading}>
             {loading ? "Loading…" : "Refresh"}
           </button>

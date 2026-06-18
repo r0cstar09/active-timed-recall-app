@@ -3,8 +3,11 @@ import Base from "../layouts/Base.astro";
 import MissesReview from "../components/misses/MissesReview.tsx";
 ---
 
-<Base title="Spanish Misses" heading="Misses" current="misses">
-  <h1>Targeted Misses</h1>
-  <p class="muted">Re-drill the verb and sentence prompts you missed. Correct answers clear them.</p>
+<Base title="Repaso · Spanish Practice" heading="Repaso" current="misses">
+  <section class="card card-tile stack">
+    <div class="spanish-kicker">a pulir</div>
+    <h1>Repaso amable</h1>
+    <p class="muted">Misses are not failures. They are phrases almost ready to speak naturally.</p>
+  </section>
   <MissesReview client:load />
 </Base>

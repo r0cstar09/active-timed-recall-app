@@ -416,7 +416,8 @@ export default function RecallSession() {
         )}
         {error && <div className="alert alert-error">{error}</div>}
         {resumable ? (
-          <div className="card stack center">
+          <div className="card hero-card stack center">
+            <div className="spanish-kicker">seguimos</div>
             <p className="muted">
               {resumable.phase === "summary"
                 ? "View your last session results?"
@@ -438,8 +439,9 @@ export default function RecallSession() {
             </button>
           </div>
         ) : (
-          <div className="card stack center">
+          <div className="card hero-card stack center">
             <span className="pill">{modeLabel(sessionMode)}</span>
+            <div className="spanish-phrase" style={{ fontSize: "2.6rem" }}>¿Listo?</div>
             <p className="muted">
               {sessionMode === "learn"
                 ? "Learn the meaning, Spanish logic, traps, and audio before this phrase enters timed recall."
@@ -454,7 +456,7 @@ export default function RecallSession() {
               onClick={start}
               disabled={sessionMode !== "learn" && !supported}
             >
-              {sessionMode === "learn" ? "Begin learning" : "Begin session"}
+              {sessionMode === "learn" ? "Aprender" : "Empieza"}
             </button>
           </div>
         )}
@@ -521,18 +523,18 @@ export default function RecallSession() {
           </button>
         </div>
 
-        <div className="card stack">
+        <div className="card notebook-card stack">
           <div className="row between">
-            <span className="pill">Learn first · no FSRS</span>
-            <span className="small faint">Not timed</span>
+            <span className="pill">cuaderno · sin FSRS</span>
+            <span className="small faint">sin prisa</span>
           </div>
 
           <div className="alert" style={{ margin: 0 }}>
-            Study this freely now. The timed test comes later from the English meaning only.
+            Mira la idea, escucha la música de la frase y luego la producimos sin andamios.
           </div>
 
           <div>
-            <div className="small faint">Spanish</div>
+            <div className="small faint">Frase española</div>
             <h2 style={{ margin: "4px 0 0" }}>{item.spanish}</h2>
           </div>
 
@@ -624,38 +626,27 @@ export default function RecallSession() {
   const danger = secs <= 3;
 
   return (
-    <div className="stack">
+    <div className="stack recall-shell">
       <div className="row between small faint">
         <span>
-          Item {index + 1} / {items.length}
+          frase {index + 1} / {items.length}
         </span>
         <button
           className="btn btn-ghost"
           style={{ minHeight: 32, padding: "4px 10px" }}
           onClick={quit}
         >
-          End
+          salir
         </button>
       </div>
 
-      <div className="card stack center" style={{ paddingTop: 28, paddingBottom: 28 }}>
-        <div
-          style={{
-            fontSize: "3.4rem",
-            fontWeight: 800,
-            lineHeight: 1,
-            color: danger ? "var(--bad)" : undefined,
-            background: danger ? "none" : "var(--accent-grad)",
-            WebkitBackgroundClip: danger ? undefined : "text",
-            backgroundClip: danger ? undefined : "text",
-            WebkitTextFillColor: danger ? "var(--bad)" : "transparent",
-          }}
-        >
+      <div className="card hero-card voice-card stack center">
+        <div className="timer-num" style={{ color: danger ? "var(--bad)" : undefined }}>
           {secs}
         </div>
         <div
           style={{
-            height: 6,
+            height: 8,
             width: "100%",
             borderRadius: 999,
             background: "var(--bg-elev-2)",
@@ -671,12 +662,22 @@ export default function RecallSession() {
           />
         </div>
 
+        <div className="mic-orb" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
+            <path d="M19 11a7 7 0 0 1-14 0" />
+            <path d="M12 18v3" />
+            <path d="M8 21h8" />
+          </svg>
+        </div>
+        <div className="waveform" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+
         <p className="small faint" style={{ margin: "8px 0 0" }}>
           {item?.prompt_type === "audio_shadow"
-            ? "Listen & repeat aloud"
+            ? "Escucha y repite con calma"
             : item?.prompt_type === "cloze"
-              ? "Complete it aloud"
-              : "Recall this aloud"}
+              ? "Completa la frase en voz alta"
+              : danger ? "Rápido — suéltalo" : "Respira, piensa en la idea, habla en español"}
         </p>
         <h2 style={{ margin: "2px 0 0" }}>{item ? promptText(item) : ""}</h2>
         {item?.context_clue && (
@@ -685,7 +686,7 @@ export default function RecallSession() {
 
         {sessionMode === "misses" && item?.feedback && (
           <div className="alert" style={{ margin: "8px 0 0", textAlign: "left" }}>
-            <strong>Previous coaching:</strong> {item.feedback}
+            <strong>Casi…</strong> {item.feedback}
           </div>
         )}
 
@@ -693,19 +694,19 @@ export default function RecallSession() {
           <AudioPlayer src={item.source_audio_url} />
         )}
 
-        <div className="row" style={{ gap: 8, marginTop: 6 }}>
+        <div className="row" style={{ gap: 8, marginTop: 6, justifyContent: "center" }}>
           <span
             aria-hidden="true"
             style={{
               width: 10,
               height: 10,
               borderRadius: 999,
-              background: "var(--bad)",
+              background: "var(--rioja)",
               animation: "pulse 1.2s infinite",
             }}
           />
-          <span className="small" style={{ color: "var(--bad)", fontWeight: 700 }}>
-            Recording · {totalSecs - secs}s
+          <span className="small" style={{ color: "var(--rioja)", fontWeight: 800 }}>
+            grabando · {totalSecs - secs}s
           </span>
         </div>
 
@@ -714,7 +715,7 @@ export default function RecallSession() {
           style={{ marginTop: 10 }}
           onClick={() => submitRef.current()}
         >
-          {index + 1 < items.length ? "Submit & next" : "Submit & grade"}
+          {index + 1 < items.length ? "Comprobar y seguir" : "Comprobar y calificar"}
         </button>
         {error && <div className="alert alert-error" style={{ margin: "8px 0 0" }}>{error}</div>}
       </div>
@@ -760,7 +761,7 @@ function Summary({
   return (
     <div className="stack">
       <div className="card stack center">
-        <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Learning complete" : "Session graded"}</h2>
+        <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Listo para hablar" : summary && summary.failed === 0 && summary.partial === 0 ? "¡Olé!" : "Sesión calificada"}</h2>
         {graded?.mode === "learn" && (
           <p className="muted">These phrases are now introduced. Next step: produce them from English under the timer.</p>
         )}

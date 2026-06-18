@@ -18,9 +18,21 @@ const {
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="paper">
   <head>
     <meta charset="utf-8" />
+    <script is:inline>
+      (() => {
+        try {
+          const stored = localStorage.getItem("atr-theme");
+          const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+          const theme = stored || (prefersDark ? "dark" : "paper");
+          document.documentElement.dataset.theme = theme;
+        } catch {
+          document.documentElement.dataset.theme = "paper";
+        }
+      })();
+    </script>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
@@ -30,7 +42,8 @@ const {
 
     <!-- PWA / iOS home-screen install -->
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#0b1020" />
+    <meta name="theme-color" content="#f6ead4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -45,7 +58,10 @@ const {
           <img src="/icons/icon.svg" alt="" width="30" height="30" />
           <span>{heading ?? "Recall"}</span>
         </a>
-        <slot name="header-actions" />
+        <div class="header-actions">
+          <slot name="header-actions" />
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle theme">☀︎</button>
+        </div>
       </header>
 
       <main class="main">
@@ -56,6 +72,19 @@ const {
     {!hideNav && <Nav current={current} />}
 
     <script>
+      const updateThemeButton = () => {
+        const button = document.querySelector("[data-theme-toggle]");
+        if (!button) return;
+        button.textContent = document.documentElement.dataset.theme === "dark" ? "☾" : "☀︎";
+      };
+      updateThemeButton();
+      document.querySelector("[data-theme-toggle]")?.addEventListener("click", () => {
+        const next = document.documentElement.dataset.theme === "dark" ? "paper" : "dark";
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem("atr-theme", next);
+        updateThemeButton();
+      });
+
       // Register the non-intercepting service worker for installability.
       // It has NO fetch handler, so it never touches audio/media or /api
       // requests (acceptance test #11).

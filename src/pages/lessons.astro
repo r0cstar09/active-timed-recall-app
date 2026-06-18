@@ -3,8 +3,11 @@ import Base from "../layouts/Base.astro";
 import LessonsBrowser from "../components/lessons/LessonsBrowser.tsx";
 ---
 
-<Base title="Spanish Sentence Lessons" heading="Lessons" current="lessons">
-  <h1>Sentence Lessons</h1>
-  <p class="muted">Browse and practice fuzzy-funicular lessons inside the unified Spanish hub.</p>
-  <LessonsBrowser client:load />
+<Base title="Cuaderno · Spanish Sentence Lessons" heading="Cuaderno" current="lessons">
+  <section class="card notebook-card stack">
+    <div class="spanish-kicker">patrones vivos</div>
+    <h1>Cuaderno de frases</h1>
+    <p class="muted">Learn the meaning, vary the pattern, then remove the English scaffold until Spanish comes fast.</p>
+  </section>
+  <LessonsBrowser client:idle />
 </Base>

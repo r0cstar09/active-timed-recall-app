@@ -3,8 +3,11 @@ import Base from "../layouts/Base.astro";
 import VerbTrainer from "../components/verbs/VerbTrainer.tsx";
 ---
 
-<Base title="Spanish Verb Trainer" heading="Verbs" current="verbs">
-  <h1>Verb Trainer</h1>
-  <p class="muted">Pick a verb and drill the conjugation prompts from the daily verb project.</p>
+<Base title="Verbos · Spanish Practice" heading="Verbos" current="verbs">
+  <section class="card card-tile stack">
+    <div class="spanish-kicker">verbo del día</div>
+    <h1>Tablero de verbos</h1>
+    <p class="muted">Conjugate like placing azulejo tiles: one precise form at a time, then a full-grid run.</p>
+  </section>
   <VerbTrainer client:load />
 </Base>
