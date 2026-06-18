@@ -31,8 +31,8 @@ const secondaryActive = secondaryTabs.some((t) => t.id === current);
       </a>
     ))}
     <details class="tab-more" open={secondaryActive}>
-      <summary class="tab" aria-current={secondaryActive ? "page" : undefined}>
-        <Glyph name="library" />
+      <summary class="tab tab-more-trigger" aria-current={secondaryActive ? "page" : undefined}>
+        <Glyph name="more" />
         <span>More</span>
       </summary>
       <div class="tab-more-menu">

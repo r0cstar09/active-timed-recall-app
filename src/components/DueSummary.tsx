@@ -25,11 +25,11 @@ function queueMood(stats: DashboardStats | null, hasResumable: boolean) {
   const due = stats?.dueCount ?? 0;
   const learning = stats?.learningCount ?? 0;
   const fresh = stats?.newCount ?? 0;
-  if (due > 12) return { label: "review wave", tone: "Big due stack. Hit reviews first and let the timer sharpen recall." };
-  if (due > 0) return { label: "ready to speak", tone: `${due} phrase${due === 1 ? "" : "s"} due. Clear the deck.` };
-  if (learning > 0) return { label: "warming up", tone: `${learning} phrase${learning === 1 ? "" : "s"} in learning. Keep the reps moving.` };
-  if (fresh > 0) return { label: "fresh material", tone: "No urgent reviews. Pull in new phrases or run a freestyle sprint." };
-  return { label: "quiet deck", tone: "Add a source, drill verbs, or practice patterns while FSRS waits." };
+  if (due > 12) return { label: "review wave", tone: "Big due stack. Clear reviews first, then move into lessons or verb grids." };
+  if (due > 0) return { label: "reviews ready", tone: `${due} sentence${due === 1 ? "" : "s"} due. Clear the review queue and keep the passport moving.` };
+  if (learning > 0) return { label: "lesson loop", tone: `${learning} sentence${learning === 1 ? "" : "s"} still learning. Finish the loop, then stamp progress.` };
+  if (fresh > 0) return { label: "new lessons", tone: "No urgent reviews. Learn sentence cards, drill verbs, or start a speaking sprint." };
+  return { label: "open route", tone: "Add a source, drill verbs, learn sentence patterns, or practice speaking while FSRS waits." };
 }
 
 export default function DueSummary() {
@@ -127,16 +127,16 @@ export default function DueSummary() {
         <div className="mission-content stack">
           <div className="row between wrap">
             <div>
-              <div className="spanish-kicker">Today's mission · {dayPart()} · {mood.label}</div>
-              <h2 style={{ margin: 0 }}>Speak with rhythm, not hesitation.</h2>
+              <div className="spanish-kicker">Today's route · {dayPart()} · {mood.label}</div>
+              <h2 style={{ margin: 0 }}>Reviews, lessons, verbs — one Spanish loop.</h2>
             </div>
-            <span className="flavor-badge">sabor mode</span>
+            <span className="flavor-badge">flight plan</span>
           </div>
-          <p className="muted" style={{ margin: 0 }}>{loading ? "Loading today’s speaking queue…" : mood.tone}</p>
+          <p className="muted" style={{ margin: 0 }}>{loading ? "Checking reviews, sentence lessons, and verb progress…" : mood.tone}</p>
           <div className="row wrap" style={{ gap: 10 }}>
-            <a className="btn btn-primary btn-lg" href={primaryHref}>{hasResumable ? "Resume the flow" : "Start speaking"}</a>
-            <a className="btn btn-azul" href="/session?mode=learn">Learn phrases</a>
-            <a className="btn btn-ghost" href="/session?mode=practice">Freestyle sprint</a>
+            <a className="btn btn-primary btn-lg" href={primaryHref}>{hasResumable ? "Resume session" : "Clear reviews"}</a>
+            <a className="btn btn-azul" href="/lessons">Sentence lessons</a>
+            <a className="btn btn-ghost" href="/verbs">Verb grids</a>
           </div>
         </div>
       </div>

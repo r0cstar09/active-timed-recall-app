@@ -1,5 +1,5 @@
 ---
-type GlyphName = "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "session" | "settings" | "passport" | "stamp" | "suitcase" | "spark";
+type GlyphName = "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "session" | "settings" | "passport" | "stamp" | "suitcase" | "spark" | "more";
 interface Props { name: GlyphName; class?: string; title?: string; }
 const { name, class: klass, title } = Astro.props;
 const paths: Record<GlyphName, string[]> = {
@@ -15,6 +15,7 @@ const paths: Record<GlyphName, string[]> = {
   stamp: ["M7 4h10v5l2 2-2 2v7H7v-7l-2-2 2-2Z", "M9 16h6", "M10 8h4"],
   suitcase: ["M7 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2", "M4 8h16v11H4z", "M8 12h8"],
   spark: ["M12 3l1.6 5.2L19 10l-5.4 1.8L12 17l-1.6-5.2L5 10l5.4-1.8Z", "M19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7Z"],
+  more: ["M5 7h14", "M5 12h14", "M5 17h14"],
 };
 ---
 <svg class={klass} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden={title ? undefined : "true"} role={title ? "img" : undefined}>
