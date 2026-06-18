@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { api, type StudyGradeResponse } from "../../lib/api";
+import { useEffect, useMemo, useState } from "react";
+import { api, type StudyGradeResponse, type VerbProgress } from "../../lib/api";
 import verbsData from "../../data/generated/verbs.json";
 
 type Assignment = {
@@ -50,6 +50,8 @@ export default function VerbTrainer() {
   const [grading, setGrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [grade, setGrade] = useState<StudyGradeResponse | null>(null);
+  const [verbProgress, setVerbProgress] = useState<Record<string, VerbProgress>>({});
+  const [resetting, setResetting] = useState(false);
 
   const verb = useMemo(
     () => data.verbs.find((v) => v.verb === verbName) ?? data.verbs[0],
@@ -60,6 +62,20 @@ export default function VerbTrainer() {
     if (!verb) return [];
     return verb.assignments.filter((a) => showAllTenses || a.tense === tense);
   }, [verb, tense, showAllTenses]);
+  const currentProgress = verb ? verbProgress[verb.verb] : undefined;
+  const isIrregular = (verb?.category ?? "").toLowerCase().includes("irregular");
+  const requiredPasses = currentProgress?.required_full_passes ?? (isIrregular ? 7 : 1);
+  const fullPassCount = currentProgress?.full_pass_count ?? 0;
+  const verbComplete = Boolean(currentProgress?.completed);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.listVerbProgress().then((items) => {
+      if (cancelled) return;
+      setVerbProgress(Object.fromEntries(items.map((p) => [p.verb, p])));
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, []);
 
   function setAnswer(key: string, value: string) {
     setAnswers((prev) => ({ ...prev, [key]: value }));
@@ -86,6 +102,8 @@ export default function VerbTrainer() {
       const response = await api.gradeStudy({
         exercise_type: "verb_conjugation",
         source: "daily_verb",
+        total_assignments: verb.assignments.length,
+        verb_category: verb.category,
         items: submitted.map(({ row, key, answer }) => ({
           client_id: key,
           verb: verb.verb,
@@ -96,10 +114,30 @@ export default function VerbTrainer() {
         })),
       });
       setGrade(response);
+      if (response.progress?.verb) {
+        setVerbProgress((prev) => ({ ...prev, [String(response.progress?.verb)]: response.progress as VerbProgress }));
+      } else {
+        const items = await api.listVerbProgress(verb.verb);
+        if (items[0]) setVerbProgress((prev) => ({ ...prev, [verb.verb]: items[0] }));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setGrading(false);
+    }
+  }
+
+  async function resetVerb() {
+    if (!verb) return;
+    setResetting(true);
+    setError(null);
+    try {
+      const progress = await api.resetVerbProgress(verb.verb);
+      setVerbProgress((prev) => ({ ...prev, [verb.verb]: progress }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -154,6 +192,19 @@ export default function VerbTrainer() {
             <strong>{verb.verb}</strong>: {verb.usageHint}
           </div>
         )}
+
+        <div className={verbComplete ? "alert alert-ok" : "alert"}>
+          <div className="row between wrap">
+            <span>
+              <strong>Verb progress:</strong> {fullPassCount}/{requiredPasses} perfect full-grid runs
+              {isIrregular ? " required for irregulars" : ""}
+            </span>
+            <span>{verbComplete ? "Complete" : "Incomplete"}</span>
+          </div>
+          <button className="btn btn-small" type="button" disabled={resetting || !verb} onClick={resetVerb}>
+            {resetting ? "Resetting…" : "Mark incomplete / reset verb"}
+          </button>
+        </div>
 
         <div className="row between small faint">
           <span>{filled}/{rows.length} prompts answered</span>

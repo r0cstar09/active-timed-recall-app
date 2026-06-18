@@ -157,6 +157,9 @@ export type StudyGradeRequest = {
   lesson_id?: string;
   section?: string;
   lesson_context?: Record<string, unknown>;
+  module_total_prompts?: number;
+  total_assignments?: number;
+  verb_category?: string;
   items: StudyGradeItem[];
 };
 
@@ -171,12 +174,25 @@ export type StudyGradeResultItem = {
   feedback: string;
   should_review: boolean;
   should_promote_to_recall: boolean;
+  lesson_miss_id?: number;
+};
+
+export type StudyProgress = {
+  lesson_id?: string;
+  verb?: string;
+  category?: string;
+  total_prompts?: number;
+  passed_prompts?: number;
+  full_pass_count?: number;
+  required_full_passes?: number;
+  completed?: boolean | number;
 };
 
 export type StudyGradeResponse = {
   exercise_type: string;
   model: string;
   items: StudyGradeResultItem[];
+  progress?: StudyProgress | null;
   summary: string;
   next_drill_recommendation: string;
 };
@@ -209,10 +225,30 @@ export type LessonMiss = {
   error_type: string | null;
   target_pattern: string | null;
   should_promote_to_recall: number;
+  promoted_phrase_id?: number | null;
   status: string;
   miss_count: number;
   last_seen_at: string | null;
   next_due_at: string | null;
+};
+
+export type LessonProgress = {
+  lesson_id: string;
+  title?: string | null;
+  total_prompts: number;
+  passed_prompts: number;
+  completed: number;
+  completed_at?: string | null;
+};
+
+export type VerbProgress = {
+  verb: string;
+  category?: string | null;
+  total_assignments: number;
+  full_pass_count: number;
+  required_full_passes: number;
+  completed: number;
+  completed_at?: string | null;
 };
 
 export const api = {
@@ -330,6 +366,25 @@ export const api = {
   async listLessonMisses(limit = 100): Promise<LessonMiss[]> {
     const res = await request<unknown>(`/api/study/lesson-misses?limit=${encodeURIComponent(String(limit))}`);
     return toArray<LessonMiss>(res, ["items", "data", "results"]);
+  },
+  async listLessonProgress(lessonId?: string): Promise<LessonProgress[]> {
+    const suffix = lessonId ? `?lesson_id=${encodeURIComponent(lessonId)}` : "";
+    const res = await request<unknown>(`/api/study/lesson-progress${suffix}`);
+    return toArray<LessonProgress>(res, ["items", "data", "results"]);
+  },
+  resetLessonProgress(lessonId: string): Promise<LessonProgress> {
+    return requestJson<LessonProgress>("/api/study/lesson-progress/reset", "POST", { lesson_id: lessonId });
+  },
+  async listVerbProgress(verb?: string): Promise<VerbProgress[]> {
+    const suffix = verb ? `?verb=${encodeURIComponent(verb)}` : "";
+    const res = await request<unknown>(`/api/study/verb-progress${suffix}`);
+    return toArray<VerbProgress>(res, ["items", "data", "results"]);
+  },
+  resetVerbProgress(verb: string): Promise<VerbProgress> {
+    return requestJson<VerbProgress>("/api/study/verb-progress/reset", "POST", { verb });
+  },
+  promoteLessonMiss(missId: number): Promise<{ phrase_id: number; already_promoted: boolean }> {
+    return requestJson<{ phrase_id: number; already_promoted: boolean }>("/api/study/promote-lesson-miss", "POST", { miss_id: missId });
   },
 
   // ── Ingestion (real) ─────────────────────────────────────────────────────

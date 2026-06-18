@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api, type StudyGradeResponse } from "../../lib/api";
 import lessonsData from "../../data/generated/fuzzy_lessons.json";
 
@@ -50,6 +50,9 @@ export default function LessonsBrowser() {
   const [grading, setGrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [grade, setGrade] = useState<StudyGradeResponse | null>(null);
+  const [lessonProgress, setLessonProgress] = useState<Record<string, { total_prompts: number; passed_prompts: number; completed: number }>>({});
+  const [promoting, setPromoting] = useState<Record<number, string>>({});
+  const [resetting, setResetting] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -64,6 +67,27 @@ export default function LessonsBrowser() {
 
   const lesson = data.lessons.find((l) => l.id === lessonId) ?? filtered[0] ?? data.lessons[0];
   const section = lesson?.sections?.[sectionName] ?? lesson?.sections?.controlled;
+  const moduleTotalPrompts = useMemo(() => {
+    if (!lesson) return 0;
+    return Object.values(lesson.sections ?? {}).reduce((sum, s) => sum + (s.prompts?.length ?? 0), 0);
+  }, [lesson]);
+  const currentProgress = lesson ? lessonProgress[lesson.id] : undefined;
+  const progressTotal = currentProgress?.total_prompts || moduleTotalPrompts;
+  const lessonComplete = Boolean(currentProgress?.completed);
+
+  async function refreshLessonProgress(targetLessonId?: string) {
+    const items = await api.listLessonProgress(targetLessonId);
+    setLessonProgress((prev) => ({ ...prev, ...Object.fromEntries(items.map((p) => [p.lesson_id, p])) }));
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    api.listLessonProgress().then((items) => {
+      if (cancelled) return;
+      setLessonProgress(Object.fromEntries(items.map((p) => [p.lesson_id, p])));
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, []);
 
   function resetWork() {
     setShowAnswers(false);
@@ -106,6 +130,7 @@ export default function LessonsBrowser() {
           formula: lesson.formula,
           natural_examples: lesson.naturalExamples,
         },
+        module_total_prompts: moduleTotalPrompts,
         items: submitted.map(({ prompt, idx, answer }) => ({
           client_id: String(idx),
           prompt,
@@ -114,10 +139,47 @@ export default function LessonsBrowser() {
         })),
       });
       setGrade(response);
+      if (response.progress?.lesson_id) {
+        setLessonProgress((prev) => ({
+          ...prev,
+          [String(response.progress?.lesson_id)]: response.progress as { total_prompts: number; passed_prompts: number; completed: number },
+        }));
+      } else {
+        await refreshLessonProgress(lesson.id);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setGrading(false);
+    }
+  }
+
+  async function resetModuleProgress() {
+    if (!lesson) return;
+    setResetting(true);
+    setError(null);
+    try {
+      const progress = await api.resetLessonProgress(lesson.id);
+      setLessonProgress((prev) => ({ ...prev, [lesson.id]: progress }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setResetting(false);
+    }
+  }
+
+  async function promoteMiss(missId: number) {
+    setPromoting((prev) => ({ ...prev, [missId]: "Adding…" }));
+    setError(null);
+    try {
+      const result = await api.promoteLessonMiss(missId);
+      setPromoting((prev) => ({
+        ...prev,
+        [missId]: result.already_promoted ? "Already in active recall" : `Added card #${result.phrase_id}`,
+      }));
+    } catch (err) {
+      setPromoting((prev) => ({ ...prev, [missId]: "Failed" }));
+      setError(err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -161,6 +223,15 @@ export default function LessonsBrowser() {
               {lesson.difficulty && <span className="pill pill-warn">{lesson.difficulty}</span>}
             </div>
             {lesson.targetPattern && <p>{lesson.targetPattern}</p>}
+            <div className={lessonComplete ? "alert alert-ok" : "alert"}>
+              <div className="row between wrap">
+                <span><strong>Module progress:</strong> {currentProgress?.passed_prompts ?? 0}/{progressTotal || 0} prompts passed</span>
+                <span>{lessonComplete ? "Complete" : "Incomplete"}</span>
+              </div>
+              <button className="btn btn-small" type="button" disabled={resetting} onClick={resetModuleProgress}>
+                {resetting ? "Resetting…" : "Mark incomplete / reset module"}
+              </button>
+            </div>
             {lesson.spanishLogic && <div className="alert"><strong>Spanish logic:</strong> {lesson.spanishLogic}</div>}
             {lesson.englishTrap && <div className="alert"><strong>English trap:</strong> {lesson.englishTrap}</div>}
             {!!lesson.formula?.length && (
@@ -209,7 +280,23 @@ export default function LessonsBrowser() {
                       <div className={resultClass(itemGrade.result)}>
                         <strong>{itemGrade.result.toUpperCase()}</strong> · {itemGrade.feedback}
                         {itemGrade.corrected_answer && <div><strong>Corrected:</strong> {itemGrade.corrected_answer}</div>}
-                        {itemGrade.should_promote_to_recall && <div className="small">Suggested for active timed recall.</div>}
+                        {itemGrade.should_promote_to_recall && (
+                          <div className="stack gap-small">
+                            <div className="small">Suggested for active timed recall.</div>
+                            {itemGrade.lesson_miss_id ? (
+                              <button
+                                className="btn"
+                                type="button"
+                                disabled={promoting[itemGrade.lesson_miss_id] === "Adding…"}
+                                onClick={() => promoteMiss(itemGrade.lesson_miss_id as number)}
+                              >
+                                {promoting[itemGrade.lesson_miss_id] ?? "Add to active timed recall"}
+                              </button>
+                            ) : (
+                              <div className="small faint">Submit again if no miss ID was returned.</div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                     {showAnswers && section.answers?.[idx] && (
