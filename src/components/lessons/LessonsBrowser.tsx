@@ -42,6 +42,17 @@ function resultClass(result?: string) {
   return "alert";
 }
 
+function inferPatternIds(text: string): string[] {
+  const haystack = text.toLowerCase();
+  const ids = new Set<string>();
+  if (/\bquier[oaesn]*\b/.test(haystack) && (/\binfinitiv/.test(haystack) || /\+\s*infinitive/.test(haystack) || /\bi want to\b/.test(haystack))) ids.add("querer_infinitive");
+  if (/\bnecesit[oaesn]*\b/.test(haystack) && (/\binfinitiv/.test(haystack) || /\+\s*infinitive/.test(haystack) || /\bi need to\b/.test(haystack))) ids.add("necesitar_infinitive");
+  if (/\b(voy|vas|va|vamos|van)\s+a\b/.test(haystack) || /ir\s+a\s*\+\s*infinitive/.test(haystack) || /\bi(?:'|’)m going to\b/.test(haystack)) ids.add("ir_a_infinitive");
+  if (/\btengo\s+que\b/.test(haystack) || /tener\s+que\s*\+\s*infinitive/.test(haystack) || /\bi have to\b/.test(haystack)) ids.add("tener_que_infinitive");
+  if (/\bpued[oesn]*\b/.test(haystack) || /poder\s*\+\s*infinitive/.test(haystack) || /\bi can\b/.test(haystack)) ids.add("poder_infinitive");
+  return [...ids];
+}
+
 export default function LessonsBrowser() {
   const [data, setData] = useState<LessonsData>(emptyLessonsData);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -180,12 +191,17 @@ export default function LessonsBrowser() {
           natural_examples: lesson.naturalExamples,
         },
         module_total_prompts: moduleTotalPrompts,
-        items: submitted.map(({ prompt, idx, answer }) => ({
-          client_id: String(idx),
-          prompt,
-          expected_answer: section.answers?.[idx] ?? "",
-          user_answer: answer,
-        })),
+        items: submitted.map(({ prompt, idx, answer }) => {
+          const expected = section.answers?.[idx] ?? "";
+          const patternText = [prompt, expected, lesson.targetPattern, lesson.formula?.join(" "), lesson.naturalExamples?.join(" ")].filter(Boolean).join(" ");
+          return {
+            client_id: String(idx),
+            prompt,
+            expected_answer: expected,
+            user_answer: answer,
+            pattern_ids: inferPatternIds(patternText),
+          };
+        }),
       });
       setGrade(response);
       const passed = (response.items ?? []).filter((item) => item.result === "pass").length;
