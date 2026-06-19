@@ -17,6 +17,18 @@ import AudioPlayer from "./AudioPlayer";
 
 type Status = "idle" | "active" | "error";
 
+type PendingUpload = {
+  item: SessionItem;
+  itemIndex: number;
+  blob: Blob;
+  mimeType: string;
+  filename: string;
+  promptShownAtMs: number;
+  answeredAtMs: number;
+  responseSeconds: number;
+  timedOut: boolean;
+};
+
 const isoFromMs = (ms: number) => new Date(ms).toISOString();
 const round1 = (n: number) => Math.round(n * 10) / 10;
 const WAVE_BARS = 5;
@@ -78,6 +90,7 @@ export default function RecallSession() {
   const uploadedRef = useRef<number[]>([]);
   const recorderRef = useRef<Recorder | null>(null);
   const recordingsRef = useRef<Map<number, string>>(new Map());
+  const pendingUploadRef = useRef<PendingUpload | null>(null);
   const submitRef = useRef<() => void>(() => {});
   const supported = isRecordingSupported();
 
@@ -346,6 +359,40 @@ export default function RecallSession() {
     }
   }
 
+  const uploadPendingAndAdvance = useCallback(async (pending = pendingUploadRef.current) => {
+    if (!pending) return;
+    setPhase("uploading");
+    setError(null);
+    persist({ phase: "uploading" });
+
+    try {
+      await api.uploadRecording(sessionIdRef.current, pending.item.sprint_item_id, pending.blob, {
+        mimeType: pending.mimeType,
+        promptShownAt: isoFromMs(pending.promptShownAtMs),
+        answeredAt: isoFromMs(pending.answeredAtMs),
+        responseSeconds: pending.responseSeconds,
+        timedOut: pending.timedOut,
+        filename: pending.filename,
+      });
+      if (!uploadedRef.current.includes(pending.item.sprint_item_id)) {
+        uploadedRef.current.push(pending.item.sprint_item_id);
+      }
+      pendingUploadRef.current = null;
+    } catch (err) {
+      setError(
+        `${err instanceof ApiError ? err.message : String(err)} — tap to retry.`,
+      );
+      return; // keep pendingUploadRef so the Retry button resends the same blob
+    }
+
+    if (pending.itemIndex + 1 < items.length) {
+      beginItem(pending.itemIndex + 1, items, null);
+    } else {
+      startGrading();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, persist]);
+
   const submit = useCallback(async () => {
     if (phase !== "recall" || !item) return;
     const answeredAtMs = Date.now();
@@ -375,32 +422,21 @@ export default function RecallSession() {
     if (prev) URL.revokeObjectURL(prev);
     recordingsRef.current.set(item.sprint_item_id, URL.createObjectURL(rec.blob));
 
-    try {
-      await api.uploadRecording(sessionIdRef.current, item.sprint_item_id, rec.blob, {
-        mimeType: rec.mimeType,
-        promptShownAt: isoFromMs(promptShownAtRef.current),
-        answeredAt: isoFromMs(answeredAtMs),
-        responseSeconds,
-        timedOut,
-        filename: rec.filename,
-      });
-      if (!uploadedRef.current.includes(item.sprint_item_id)) {
-        uploadedRef.current.push(item.sprint_item_id);
-      }
-    } catch (err) {
-      setError(
-        `${err instanceof ApiError ? err.message : String(err)} — tap to retry.`,
-      );
-      return; // stays in "uploading" with a Retry button
-    }
-
-    if (index + 1 < items.length) {
-      beginItem(index + 1, items, null);
-    } else {
-      startGrading();
-    }
+    const pending: PendingUpload = {
+      item,
+      itemIndex: index,
+      blob: rec.blob,
+      mimeType: rec.mimeType,
+      filename: rec.filename,
+      promptShownAtMs: promptShownAtRef.current,
+      answeredAtMs,
+      responseSeconds,
+      timedOut,
+    };
+    pendingUploadRef.current = pending;
+    await uploadPendingAndAdvance(pending);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, item, deadline, index, items, persist]);
+  }, [phase, item, deadline, index, items, persist, uploadPendingAndAdvance]);
 
   useEffect(() => {
     submitRef.current = submit;
@@ -648,7 +684,7 @@ export default function RecallSession() {
             <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
             <button
               className="btn btn-primary btn-block"
-              onClick={() => submitRef.current()}
+              onClick={() => void uploadPendingAndAdvance()}
             >
               Retry upload
             </button>
