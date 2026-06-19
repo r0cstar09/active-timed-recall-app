@@ -29,6 +29,7 @@ export default function MissesReview() {
   const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [results, setResults] = useState<Record<string, RowResult>>({});
   const [rowError, setRowError] = useState<Record<string, string>>({});
+  const [rowMessage, setRowMessage] = useState<Record<string, string>>({});
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -123,6 +124,27 @@ export default function MissesReview() {
     }
   }
 
+  async function promoteLessonMiss(miss: LessonMiss) {
+    const key = `promote:${miss.id}`;
+    setBusy((b) => ({ ...b, [key]: true }));
+    setRowError((e) => ({ ...e, [key]: "" }));
+    setRowMessage((m) => ({ ...m, [key]: "" }));
+    try {
+      const res = await api.promoteLessonMiss(miss.id);
+      setRowMessage((m) => ({
+        ...m,
+        [key]: res.already_promoted
+          ? `Already in timed recall as phrase #${res.phrase_id}.`
+          : `Added to timed recall as phrase #${res.phrase_id}.`,
+      }));
+      await refresh();
+    } catch (err) {
+      setRowError((e) => ({ ...e, [key]: err instanceof Error ? err.message : String(err) }));
+    } finally {
+      setBusy((b) => ({ ...b, [key]: false }));
+    }
+  }
+
   return (
     <div className="stack">
       <div className="card stack">
@@ -142,12 +164,20 @@ export default function MissesReview() {
         <div className="card stack">
           <h2>Suggested for active recall</h2>
           <p className="muted small">These missed sentences were natural enough to graduate into your timed-recall deck.</p>
-          {promoteCandidates.map((m) => (
-            <div className="alert" key={`promote-${m.id}`}>
-              <strong>{m.corrected_answer || m.expected_answer || m.prompt}</strong>
-              {m.prompt && <div className="small faint">{m.prompt}</div>}
-            </div>
-          ))}
+          {promoteCandidates.map((m) => {
+            const key = `promote:${m.id}`;
+            return (
+              <div className="alert" key={`promote-${m.id}`}>
+                <strong>{m.corrected_answer || m.expected_answer || m.prompt}</strong>
+                {m.prompt && <div className="small faint">{m.prompt}</div>}
+                {rowMessage[key] && <div className="small">{rowMessage[key]}</div>}
+                {rowError[key] && <div className="small danger-text">{rowError[key]}</div>}
+                <button className="btn btn-primary" type="button" disabled={busy[key]} onClick={() => void promoteLessonMiss(m)}>
+                  {busy[key] ? "Adding…" : m.promoted_phrase_id ? "Already in timed recall" : "Add to timed recall"}
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -186,7 +216,16 @@ export default function MissesReview() {
                 {miss.target_pattern && <div className="small faint">Target: {miss.target_pattern}</div>}
                 {miss.user_answer && <div className="small faint">You wrote: {miss.user_answer}</div>}
                 {miss.feedback && <div className="small faint">{miss.feedback}</div>}
-                {miss.should_promote_to_recall ? <span className="pill pill-good">Suggested for active recall</span> : null}
+                {miss.should_promote_to_recall ? (
+                  <div className="row wrap" style={{ gap: 8 }}>
+                    <span className="pill pill-good">Suggested for active recall</span>
+                    <button className="btn" type="button" disabled={busy[`promote:${miss.id}`]} onClick={() => void promoteLessonMiss(miss)}>
+                      {busy[`promote:${miss.id}`] ? "Adding…" : miss.promoted_phrase_id ? "Already added" : "Add to timed recall"}
+                    </button>
+                  </div>
+                ) : null}
+                {rowMessage[`promote:${miss.id}`] && <div className="alert alert-ok">{rowMessage[`promote:${miss.id}`]}</div>}
+                {rowError[`promote:${miss.id}`] && <div className="alert alert-danger">{rowError[`promote:${miss.id}`]}</div>}
                 <textarea className="input" rows={3} value={answers[key] ?? ""} onChange={(e) => setAnswers((a) => ({ ...a, [key]: e.target.value }))} placeholder="Type your Spanish answer..." />
                 {result && <div className={resultClass(result.result)}><strong>{result.result.toUpperCase()}</strong> · {result.feedback}{result.corrected_answer && <div><strong>Corrected:</strong> {result.corrected_answer}</div>}</div>}
                 {rowError[key] && <div className="alert alert-danger">{rowError[key]}</div>}
