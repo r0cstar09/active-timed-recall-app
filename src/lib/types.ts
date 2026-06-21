@@ -110,6 +110,7 @@ export interface RecordingMeta {
   responseSeconds: number;
   timedOut: boolean;
   filename: string;
+  noisyMode?: boolean;
 }
 
 // ── Sources / phrases / cards (REAL contract) ──────────────────────────────

@@ -82,6 +82,7 @@ export default function RecallSession() {
   const [durationMs, setDurationMs] = useState<number | null>(null);
   const [graded, setGraded] = useState<Session | null>(null);
   const [sessionMode, setSessionMode] = useState<SessionMode>("review");
+  const [noisyMode, setNoisyMode] = useState(false);
   const [micLevels, setMicLevels] = useState<number[]>(Array.from({ length: WAVE_BARS }, () => 0.35));
   const [, setTick] = useState(0);
 
@@ -373,6 +374,7 @@ export default function RecallSession() {
         responseSeconds: pending.responseSeconds,
         timedOut: pending.timedOut,
         filename: pending.filename,
+        noisyMode,
       });
       if (!uploadedRef.current.includes(pending.item.sprint_item_id)) {
         uploadedRef.current.push(pending.item.sprint_item_id);
@@ -391,7 +393,7 @@ export default function RecallSession() {
       startGrading();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, persist]);
+  }, [items, persist, noisyMode]);
 
   const submit = useCallback(async () => {
     if (phase !== "recall" || !item) return;
@@ -533,6 +535,21 @@ export default function RecallSession() {
                     ? "Fix failed or partial items from previous sessions. This does not update FSRS."
                     : "Recall each prompt aloud before the timer ends. The backend grades your spoken answers."}
             </p>
+            {sessionMode !== "learn" && (
+              <label className="alert row between" style={{ margin: 0, width: "100%", textAlign: "left", cursor: "pointer" }}>
+                <span>
+                  <strong>Noisy environment mode</strong>
+                  <br />
+                  <span className="small faint">Train / cafe / background voices. Uses stronger server-side audio cleanup before transcription.</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={noisyMode}
+                  onChange={(event) => setNoisyMode(event.currentTarget.checked)}
+                  aria-label="Enable noisy environment mode"
+                />
+              </label>
+            )}
             <button
               className="btn btn-primary btn-lg btn-block"
               onClick={start}
@@ -787,7 +804,7 @@ export default function RecallSession() {
             }}
           />
           <span className="small" style={{ color: "var(--rioja)", fontWeight: 800 }}>
-            recording · {totalSecs - secs}s
+            recording{noisyMode ? " · noisy mode" : ""} · {totalSecs - secs}s
           </span>
         </div>
 

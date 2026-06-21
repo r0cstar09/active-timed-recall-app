@@ -465,6 +465,7 @@ export const api = {
     form.append("answered_at", meta.answeredAt);
     form.append("response_seconds", String(meta.responseSeconds));
     form.append("timed_out", String(meta.timedOut));
+    form.append("noisy_mode", String(Boolean(meta.noisyMode)));
     return request<RecordingResponse>(
       `/api/sessions/${encodeURIComponent(String(sessionId))}/items/${encodeURIComponent(
         String(sprintItemId),
