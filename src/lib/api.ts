@@ -45,6 +45,7 @@ import type {
   SessionMode,
   IngestJob,
   Source,
+  Phrase,
 } from "./types";
 import { isJobComplete, isJobFailed } from "./types";
 
@@ -528,6 +529,13 @@ export const api = {
   async listSources(): Promise<Source[]> {
     const res = await request<unknown>("/api/sources");
     return toArray<Source>(res, ["sources", "items", "data", "results"]);
+  },
+  async listSourcePhrases(sourceId: number | string): Promise<Phrase[]> {
+    const res = await request<unknown>(`/api/sources/${encodeURIComponent(String(sourceId))}/phrases`);
+    return toArray<Phrase>(res, ["phrases", "items", "data", "results"]).map((p) => ({
+      ...p,
+      audio_url: resolveUrl(p.audio_url || (p.audio_path ? `/api/audio/source/${p.audio_path}` : "")),
+    }));
   },
   async listCards(): Promise<Card[]> {
     const res = await request<unknown>("/api/cards");

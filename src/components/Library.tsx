@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api";
-import type { Card, Source } from "../lib/types";
+import type { Card, Phrase, Source } from "../lib/types";
 import { isStatusFailed, isStatusReady } from "../lib/types";
 import AudioPlayer from "./AudioPlayer";
 import { REGIONS, RegionArt, StateIllustration, regionForIndex } from "../lib/visuals";
@@ -81,6 +81,30 @@ function RegionCards() {
 }
 
 function Sources({ sources }: { sources: Source[] | null }) {
+  const [openSourceId, setOpenSourceId] = useState<number | null>(null);
+  const [phrasesBySource, setPhrasesBySource] = useState<Record<number, Phrase[]>>({});
+  const [loadingSourceId, setLoadingSourceId] = useState<number | null>(null);
+  const [sourceError, setSourceError] = useState<string | null>(null);
+
+  async function toggleSource(sourceId: number) {
+    if (openSourceId === sourceId) {
+      setOpenSourceId(null);
+      return;
+    }
+    setOpenSourceId(sourceId);
+    setSourceError(null);
+    if (phrasesBySource[sourceId]) return;
+    setLoadingSourceId(sourceId);
+    try {
+      const phrases = await api.listSourcePhrases(sourceId);
+      setPhrasesBySource((prev) => ({ ...prev, [sourceId]: phrases }));
+    } catch (err) {
+      setSourceError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setLoadingSourceId(null);
+    }
+  }
+
   if (!sources) return <div className="card center stack"><StateIllustration type="loading" /><p className="faint">Loading sources…</p></div>;
   if (sources.length === 0) {
     return (
@@ -93,7 +117,10 @@ function Sources({ sources }: { sources: Source[] | null }) {
   }
   return (
     <>
-      {sources.map((s, i) => (
+      {sources.map((s, i) => {
+        const isOpen = openSourceId === s.id;
+        const phrases = phrasesBySource[s.id] ?? [];
+        return (
         <div className="card stack source-region-card" key={s.id} style={{ "--region-accent": regionForIndex(i).accent } as React.CSSProperties}>
           <RegionArt region={regionForIndex(i).key} small />
           <div>
@@ -110,8 +137,33 @@ function Sources({ sources }: { sources: Source[] | null }) {
           <div className="small faint">
             Added {new Date(s.created_at).toLocaleDateString()}
           </div>
+          <button className="btn btn-small" type="button" onClick={() => toggleSource(s.id)}>
+            {isOpen ? "Hide source cards" : `Load source cards (${s.phrase_count})`}
+          </button>
+          {isOpen && (
+            <div className="stack">
+              {loadingSourceId === s.id && <div className="alert">Loading cards for this source…</div>}
+              {sourceError && <div className="alert alert-error">{sourceError}</div>}
+              {!loadingSourceId && phrases.length === 0 && !sourceError && (
+                <div className="alert">No cards returned for this source.</div>
+              )}
+              {phrases.map((p) => (
+                <div className="card card-tight stack" key={p.id}>
+                  <div className="row between">
+                    <div style={{ fontWeight: 600 }}>{p.spanish}</div>
+                    <span className={`pill ${p.active ? "pill-good" : "pill-warn"}`}>{p.active ? "active" : "inactive"}</span>
+                  </div>
+                  <div className="small faint">{p.english}</div>
+                  {p.context_clue && <div className="small faint">{p.context_clue}</div>}
+                  {p.cloze_prompt && <div className="small faint"><strong>Cloze:</strong> {p.cloze_prompt}</div>}
+                  {p.audio_url && <AudioPlayer src={p.audio_url} />}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ))}
+        );
+      })}
     </>
   );
 }

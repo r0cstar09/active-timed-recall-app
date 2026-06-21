@@ -142,6 +142,7 @@ export interface Phrase {
   context_clue: string | null;
   cloze_prompt: string;
   audio_path: string;
+  audio_url?: string;
   active: boolean;
 }
 
