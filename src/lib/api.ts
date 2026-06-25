@@ -213,7 +213,7 @@ export type StudyGradeItem = {
 };
 
 export type StudyGradeRequest = {
-  exercise_type: "verb_conjugation" | "sentence_lesson";
+  exercise_type: "verb_conjugation" | "verb_usage" | "sentence_lesson";
   source?: string;
   lesson_id?: string;
   section?: string;

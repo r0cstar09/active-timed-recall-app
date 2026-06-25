@@ -3,6 +3,12 @@ import { api, type StudyGradeResponse, type VerbCatalog, type VerbCatalogAssignm
 
 type Assignment = VerbCatalogAssignment;
 type VerbData = VerbCatalog;
+type UsageDrill = {
+  id: string;
+  focus: string;
+  promptEn: string;
+  expectedEs?: string;
+};
 
 const emptyData: VerbData = {
   sourceRepo: "",
@@ -32,6 +38,158 @@ function resultClass(result?: string) {
   return "alert";
 }
 
+const CURATED_USAGE_DRILLS: Record<string, UsageDrill[]> = {
+  ser: [
+    { id: "ser-identity", focus: "ser + noun/adj", promptEn: "I am a responsible person.", expectedEs: "Soy una persona responsable." },
+    { id: "ser-de", focus: "ser de", promptEn: "She is from Mexico.", expectedEs: "Ella es de México." },
+  ],
+  estar: [
+    { id: "estar-location", focus: "estar + location", promptEn: "We are at home.", expectedEs: "Estamos en casa." },
+    { id: "estar-gerund", focus: "estar + gerund", promptEn: "They are studying now.", expectedEs: "Están estudiando ahora." },
+  ],
+  tener: [
+    { id: "tener-que", focus: "tener que + infinitive", promptEn: "I have to finish this today.", expectedEs: "Tengo que terminar esto hoy." },
+    { id: "tener-ganas", focus: "tener ganas de", promptEn: "We feel like going out tonight.", expectedEs: "Tenemos ganas de salir esta noche." },
+  ],
+  hacer: [
+    { id: "hacer-tiempo", focus: "hace + time + que", promptEn: "I have been studying Spanish for two years.", expectedEs: "Hace dos años que estudio español." },
+    { id: "hacer-falta", focus: "hacer falta", promptEn: "We need more time.", expectedEs: "Nos hace falta más tiempo." },
+  ],
+  ir: [
+    { id: "ir-a-inf", focus: "ir a + infinitive", promptEn: "I am going to call you tomorrow.", expectedEs: "Voy a llamarte mañana." },
+    { id: "irse", focus: "irse", promptEn: "They are leaving early.", expectedEs: "Se van temprano." },
+  ],
+  poder: [
+    { id: "poder-inf", focus: "poder + infinitive", promptEn: "I cannot explain it well.", expectedEs: "No puedo explicarlo bien." },
+    { id: "no-poder-con", focus: "no poder con", promptEn: "I can't handle so much pressure.", expectedEs: "No puedo con tanta presión." },
+  ],
+  querer: [
+    { id: "querer-inf", focus: "querer + infinitive", promptEn: "She wants to learn faster.", expectedEs: "Quiere aprender más rápido." },
+    { id: "querer-que-subj", focus: "querer que + subjunctive", promptEn: "I want you to listen carefully.", expectedEs: "Quiero que escuches con atención." },
+  ],
+  decir: [
+    { id: "decir-a", focus: "decir algo a alguien", promptEn: "I told him the truth.", expectedEs: "Le dije la verdad." },
+    { id: "decir-que", focus: "decir que", promptEn: "She said she was tired.", expectedEs: "Dijo que estaba cansada." },
+  ],
+  dar: [
+    { id: "dar-a", focus: "dar algo a alguien", promptEn: "I gave the book to my friend.", expectedEs: "Le di el libro a mi amigo." },
+    { id: "darse-cuenta", focus: "darse cuenta de que", promptEn: "I realized I had made a mistake.", expectedEs: "Me di cuenta de que había cometido un error." },
+  ],
+  poner: [
+    { id: "ponerse-adj", focus: "ponerse + adjective", promptEn: "He got nervous during the meeting.", expectedEs: "Se puso nervioso durante la reunión." },
+    { id: "ponerse-a", focus: "ponerse a + infinitive", promptEn: "We started working immediately.", expectedEs: "Nos pusimos a trabajar enseguida." },
+  ],
+  saber: [
+    { id: "saber-inf", focus: "saber + infinitive", promptEn: "I know how to cook rice.", expectedEs: "Sé cocinar arroz." },
+    { id: "saber-de", focus: "saber de", promptEn: "She knows a lot about history.", expectedEs: "Sabe mucho de historia." },
+  ],
+  salir: [
+    { id: "salir-de", focus: "salir de", promptEn: "I left work late.", expectedEs: "Salí tarde del trabajo." },
+    { id: "salir-con", focus: "salir con", promptEn: "He is dating a friend from school.", expectedEs: "Sale con una amiga de la escuela." },
+  ],
+  volver: [
+    { id: "volver-a-inf", focus: "volver a + infinitive", promptEn: "I read the message again.", expectedEs: "Volví a leer el mensaje." },
+    { id: "volver-de", focus: "volver de", promptEn: "We came back from the trip yesterday.", expectedEs: "Volvimos del viaje ayer." },
+  ],
+  seguir: [
+    { id: "seguir-gerund", focus: "seguir + gerund", promptEn: "I am still learning Spanish.", expectedEs: "Sigo aprendiendo español." },
+    { id: "seguir-a", focus: "seguir a alguien", promptEn: "They followed the teacher.", expectedEs: "Siguieron al profesor." },
+  ],
+  quedar: [
+    { id: "quedar-con", focus: "quedar con", promptEn: "I am meeting Ana tomorrow.", expectedEs: "Quedo con Ana mañana." },
+    { id: "quedar-en", focus: "quedar en + infinitive", promptEn: "We agreed to talk later.", expectedEs: "Quedamos en hablar más tarde." },
+  ],
+  dejar: [
+    { id: "dejar-de", focus: "dejar de + infinitive", promptEn: "I stopped drinking coffee.", expectedEs: "Dejé de tomar café." },
+    { id: "dejar-que", focus: "dejar que + subjunctive", promptEn: "Let him explain the problem.", expectedEs: "Deja que explique el problema." },
+  ],
+  llegar: [
+    { id: "llegar-a-place", focus: "llegar a", promptEn: "We arrived at the station early.", expectedEs: "Llegamos temprano a la estación." },
+    { id: "llegar-a-inf", focus: "llegar a + infinitive", promptEn: "I managed to understand the main idea.", expectedEs: "Llegué a entender la idea principal." },
+  ],
+  pensar: [
+    { id: "pensar-en", focus: "pensar en", promptEn: "I am thinking about the future.", expectedEs: "Estoy pensando en el futuro." },
+    { id: "pensar-inf", focus: "pensar + infinitive", promptEn: "We plan to leave early.", expectedEs: "Pensamos salir temprano." },
+  ],
+  pedir: [
+    { id: "pedir-obj", focus: "pedir algo", promptEn: "I asked for more time.", expectedEs: "Pedí más tiempo." },
+    { id: "pedir-que-subj", focus: "pedir que + subjunctive", promptEn: "She asked us to wait outside.", expectedEs: "Nos pidió que esperáramos afuera." },
+  ],
+  tratar: [
+    { id: "tratar-de", focus: "tratar de + infinitive", promptEn: "I tried to explain the situation.", expectedEs: "Traté de explicar la situación." },
+    { id: "tratarse-de", focus: "tratarse de", promptEn: "It is about an important problem.", expectedEs: "Se trata de un problema importante." },
+  ],
+  conseguir: [
+    { id: "conseguir-inf", focus: "conseguir + infinitive", promptEn: "I managed to finish on time.", expectedEs: "Conseguí terminar a tiempo." },
+    { id: "conseguir-obj", focus: "conseguir + object", promptEn: "We got the tickets yesterday.", expectedEs: "Conseguimos las entradas ayer." },
+  ],
+  comenzar: [
+    { id: "comenzar-a", focus: "comenzar a + infinitive", promptEn: "They began to work early.", expectedEs: "Comenzaron a trabajar temprano." },
+    { id: "comenzar-por", focus: "comenzar por", promptEn: "We started by reviewing the errors.", expectedEs: "Comenzamos por repasar los errores." },
+  ],
+  resultar: [
+    { id: "resultar-adj", focus: "resultar + adjective", promptEn: "The exercise turned out to be difficult.", expectedEs: "El ejercicio resultó difícil." },
+    { id: "resultar-que", focus: "resultar que", promptEn: "It turns out that he already knew.", expectedEs: "Resulta que ya lo sabía." },
+  ],
+  considerar: [
+    { id: "considerar-que", focus: "considerar que", promptEn: "I consider that this option is better.", expectedEs: "Considero que esta opción es mejor." },
+    { id: "considerar-obj-adj", focus: "considerar + object + adjective", promptEn: "They consider the plan risky.", expectedEs: "Consideran arriesgado el plan." },
+  ],
+  formar: [
+    { id: "formar-parte", focus: "formar parte de", promptEn: "This forms part of the process.", expectedEs: "Esto forma parte del proceso." },
+    { id: "formar-a", focus: "formar a alguien", promptEn: "The company trains new employees.", expectedEs: "La empresa forma a nuevos empleados." },
+  ],
+  lograr: [
+    { id: "lograr-inf", focus: "lograr + infinitive", promptEn: "I managed to finish the project.", expectedEs: "Logré terminar el proyecto." },
+    { id: "lograr-que-subj", focus: "lograr que + subjunctive", promptEn: "I got them to listen to me.", expectedEs: "Logré que me escucharan." },
+  ],
+  alcanzar: [
+    { id: "alcanzar-obj", focus: "alcanzar + object", promptEn: "We reached our goal.", expectedEs: "Alcanzamos nuestra meta." },
+    { id: "alcanzar-a-inf", focus: "alcanzar a + infinitive", promptEn: "I managed to see him before he left.", expectedEs: "Alcancé a verlo antes de que se fuera." },
+  ],
+  dirigir: [
+    { id: "dirigir-obj", focus: "dirigir + object", promptEn: "She manages the team.", expectedEs: "Ella dirige el equipo." },
+    { id: "dirigirse-a", focus: "dirigirse a", promptEn: "He addressed the audience calmly.", expectedEs: "Se dirigió al público con calma." },
+  ],
+  utilizar: [
+    { id: "utilizar-obj", focus: "utilizar + object", promptEn: "We use this tool every day.", expectedEs: "Utilizamos esta herramienta todos los días." },
+    { id: "utilizar-para", focus: "utilizar para + infinitive", promptEn: "I use the app to practice Spanish.", expectedEs: "Utilizo la app para practicar español." },
+  ],
+  intentar: [
+    { id: "intentar-inf", focus: "intentar + infinitive", promptEn: "I tried to call you last night.", expectedEs: "Intenté llamarte anoche." },
+    { id: "intentar-obj", focus: "intentar + object", promptEn: "They attempted a different solution.", expectedEs: "Intentaron una solución diferente." },
+  ],
+  aparecer: [
+    { id: "aparecer-en", focus: "aparecer en", promptEn: "The word appears in the text.", expectedEs: "La palabra aparece en el texto." },
+    { id: "aparecerse-a", focus: "aparecerse a", promptEn: "The idea appeared to me suddenly.", expectedEs: "La idea se me apareció de repente." },
+  ],
+};
+
+function usageFocusFromHint(verb: string, hint?: string) {
+  const first = (hint || "").split(";")[0]?.trim();
+  if (!first) return `${verb} in a complete sentence`;
+  return first.replace(/\s+—\s+.*/, "");
+}
+
+function buildUsageDrills(verb?: VerbCatalog["verbs"][number]): UsageDrill[] {
+  if (!verb) return [];
+  const curated = CURATED_USAGE_DRILLS[verb.verb];
+  if (curated?.length) return curated;
+  const focus = usageFocusFromHint(verb.verb, verb.usageHint);
+  return [
+    {
+      id: `${verb.verb}-usage-open`,
+      focus,
+      promptEn: `Write one natural Spanish sentence using: ${focus}.`,
+    },
+    {
+      id: `${verb.verb}-usage-personal`,
+      focus,
+      promptEn: `Write one personal sentence in Spanish that uses ${verb.verb} correctly in context.`,
+    },
+  ];
+}
+
 export default function VerbTrainer() {
   const [data, setData] = useState<VerbData>(emptyData);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -40,6 +198,11 @@ export default function VerbTrainer() {
   const [grading, setGrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [grade, setGrade] = useState<StudyGradeResponse | null>(null);
+  const [usageAnswers, setUsageAnswers] = useState<Record<string, string>>({});
+  const [usageGrade, setUsageGrade] = useState<StudyGradeResponse | null>(null);
+  const [usageGrading, setUsageGrading] = useState(false);
+  const [promotingMissId, setPromotingMissId] = useState<number | null>(null);
+  const [promotionStatus, setPromotionStatus] = useState<Record<number, string>>({});
   const [verbProgress, setVerbProgress] = useState<Record<string, VerbProgress>>({});
   const [promptProgress, setPromptProgress] = useState<Record<string, VerbPromptProgress>>({});
   const [resetting, setResetting] = useState(false);
@@ -76,6 +239,7 @@ export default function VerbTrainer() {
   }, []);
 
   const rows = useMemo(() => verb?.assignments ?? [], [verb]);
+  const usageDrills = useMemo(() => buildUsageDrills(verb), [verb]);
   const passedPromptKeys = useMemo(
     () => new Set(Object.entries(promptProgress).filter(([, p]) => p.status === "pass").map(([key]) => key)),
     [promptProgress],
@@ -125,9 +289,18 @@ export default function VerbTrainer() {
     setError(null);
   }
 
+  function setUsageAnswer(key: string, value: string) {
+    setUsageAnswers((prev) => ({ ...prev, [key]: value }));
+    setUsageGrade(null);
+    setError(null);
+  }
+
   function clearAnswers() {
     setAnswers({});
+    setUsageAnswers({});
     setGrade(null);
+    setUsageGrade(null);
+    setPromotionStatus({});
     setError(null);
   }
 
@@ -195,6 +368,69 @@ export default function VerbTrainer() {
     }
   }
 
+  async function submitUsage() {
+    if (!verb) return;
+    const submitted = usageDrills
+      .map((drill) => ({ drill, answer: usageAnswers[drill.id] ?? "" }))
+      .filter((item) => item.answer.trim());
+    if (!submitted.length) return;
+    setUsageGrading(true);
+    setError(null);
+    setUsageGrade(null);
+    try {
+      const response = await api.gradeStudy({
+        exercise_type: "verb_usage",
+        source: "verb_usage",
+        lesson_id: `verb-usage:${verb.verb}`,
+        section: "usage",
+        lesson_context: {
+          title: `${verb.verb} usage drills`,
+          target_pattern: verb.usageHint || submitted.map(({ drill }) => drill.focus).join("; "),
+          verb: verb.verb,
+          english_base: verb.englishBase,
+          category: verb.category,
+          usage_hint: verb.usageHint,
+        },
+        items: submitted.map(({ drill, answer }) => ({
+          client_id: drill.id,
+          verb: verb.verb,
+          prompt: drill.promptEn,
+          expected_answer: drill.expectedEs || "",
+          user_answer: answer,
+          usage_focus: drill.focus,
+        })),
+      });
+      setUsageGrade(response);
+      setUsageAnswers((prev) => {
+        const next = { ...prev };
+        for (const item of response.items ?? []) {
+          if (item.result === "pass" && item.client_id != null) delete next[String(item.client_id)];
+        }
+        return next;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setUsageGrading(false);
+    }
+  }
+
+  async function promoteUsageMiss(missId: number) {
+    setPromotingMissId(missId);
+    setError(null);
+    try {
+      const res = await api.promoteLessonMiss(missId);
+      setPromotionStatus((prev) => ({
+        ...prev,
+        [missId]: res.already_promoted ? `Already in timed recall as card #${res.phrase_id}` : `Added to timed recall as card #${res.phrase_id}`,
+      }));
+    } catch (err) {
+      setPromotionStatus((prev) => ({ ...prev, [missId]: err instanceof Error ? err.message : String(err) }));
+    } finally {
+      setPromotingMissId(null);
+    }
+  }
+
   async function resetVerb() {
     if (!verb) return;
     setResetting(true);
@@ -218,6 +454,7 @@ export default function VerbTrainer() {
   }
 
   const filled = visibleRows.filter(({ row, idx }) => normalize(answers[rowKey(row, idx)] ?? "")).length;
+  const filledUsage = usageDrills.filter((drill) => normalize(usageAnswers[drill.id] ?? "")).length;
   const gradeByKey = useMemo(() => {
     const map = new Map<string, NonNullable<StudyGradeResponse["items"]>[number]>();
     for (const item of grade?.items ?? []) {
@@ -225,6 +462,13 @@ export default function VerbTrainer() {
     }
     return map;
   }, [grade]);
+  const usageGradeByKey = useMemo(() => {
+    const map = new Map<string, NonNullable<StudyGradeResponse["items"]>[number]>();
+    for (const item of usageGrade?.items ?? []) {
+      if (item.client_id != null) map.set(String(item.client_id), item);
+    }
+    return map;
+  }, [usageGrade]);
 
   async function addVerb(e: { preventDefault(): void }) {
     e.preventDefault();
@@ -351,6 +595,66 @@ export default function VerbTrainer() {
           <span>{filled}/{visibleRows.length} open prompts answered</span>
           <span>{hiddenPassedCount ? `${hiddenPassedCount} completed hidden` : `${data.count} verbs · ${data.rotationCount} daily · ${verb?.category}`}</span>
         </div>
+      </div>
+
+      <div className="card stack">
+        <div className="row between wrap">
+          <div>
+            <h2>Usage drills</h2>
+            <p className="muted small">
+              These test the verb as usable Spanish: construction, preposition, mood, and natural sentence context.
+            </p>
+          </div>
+          <span className="pill">{filledUsage}/{usageDrills.length} answered</span>
+        </div>
+        <div className="stack">
+          {usageDrills.map((drill, idx) => {
+            const itemGrade = usageGradeByKey.get(drill.id);
+            const missId = itemGrade?.lesson_miss_id;
+            return (
+              <div className="stack" key={drill.id}>
+                <label className="field">
+                  <span>
+                    {idx + 1}. {drill.promptEn} <span className="faint">· {drill.focus}</span>
+                  </span>
+                  <input
+                    className="input"
+                    value={usageAnswers[drill.id] ?? ""}
+                    onChange={(e) => setUsageAnswer(drill.id, e.target.value)}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder={`Use ${verb?.verb ?? "the verb"} naturally`}
+                  />
+                </label>
+                {drill.expectedEs && <p className="small faint" style={{ margin: 0 }}>Target model hidden from grading UI: English → Spanish production.</p>}
+                {itemGrade && (
+                  <div className={resultClass(itemGrade.result)}>
+                    <strong>{itemGrade.result.toUpperCase()}</strong> · {itemGrade.feedback}
+                    {itemGrade.corrected_answer && <div><strong>Model:</strong> {itemGrade.corrected_answer}</div>}
+                    {itemGrade.result !== "pass" && missId && (
+                      <div className="stack" style={{ marginTop: "0.75rem" }}>
+                        <button className="btn btn-small" type="button" disabled={promotingMissId === missId} onClick={() => promoteUsageMiss(missId)}>
+                          {promotingMissId === missId ? "Adding…" : "Add this miss to active timed recall"}
+                        </button>
+                        {promotionStatus[missId] && <span className="small">{promotionStatus[missId]}</span>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {usageGrade && (
+          <div className="alert">
+            <strong>Usage model:</strong> {usageGrade.model}<br />
+            {usageGrade.summary || usageGrade.next_drill_recommendation}
+          </div>
+        )}
+        <button className="btn btn-primary btn-block" type="button" disabled={usageGrading || filledUsage === 0} onClick={submitUsage}>
+          {usageGrading ? "Grading usage…" : "Submit usage drills"}
+        </button>
       </div>
 
       <div className="card stack">
