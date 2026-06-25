@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api, type LessonPromptProgress, type StudyGradeResponse } from "../../lib/api";
 
 type LessonSection = {
+  title?: string;
   instructions: string;
   prompts: string[];
   answers: string[];
@@ -388,7 +389,7 @@ export default function LessonsBrowser() {
               <select className="input" value={sectionName} onChange={(e) => { setSectionName(e.target.value); resetWork(); }}>
                 {sectionOrder
                   .filter((name) => lesson.sections?.[name]?.prompts?.length)
-                  .map((name) => <option key={name} value={name}>{sectionLabels[name]}</option>)}
+                  .map((name) => <option key={name} value={name}>{lesson.sections?.[name]?.title ?? sectionLabels[name]}</option>)}
               </select>
             </label>
             {section?.instructions && <p className="muted">{section.instructions}</p>}
