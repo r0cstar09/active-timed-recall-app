@@ -1,6 +1,6 @@
 {
   "sourceRepo": "r0cstar09/Spanish-daily-verb-project",
-  "count": 212,
+  "count": 224,
   "rotationCount": 60,
   "tenses": [
     "Present",
@@ -47679,6 +47679,2596 @@
       ]
     },
     {
+      "verb": "tratar",
+      "englishBase": "try",
+      "category": "pareto_regular",
+      "inDailyRotation": false,
+      "usageHint": "tratar de + inf — to try to; tratar a alguien — to treat someone; tratarse de — to be about.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she trys"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will try"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I tried"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you tried"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she tried"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we tried"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they tried"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to try"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would try"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have tried"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have tried"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has tried"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have tried"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have tried"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had tried"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had tried"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had tried"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had tried"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had tried"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she try"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to try"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am trying"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are trying"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is trying"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are trying"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are trying"
+        }
+      ]
+    },
+    {
+      "verb": "aparecer",
+      "englishBase": "appear",
+      "category": "pareto_regular",
+      "inDailyRotation": false,
+      "usageHint": "aparecer — to appear/show up; aparecer en — appear in/on; aparecerse a — appear to someone.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I appear"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you appear"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she appears"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we appear"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they appear"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will appear"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will appear"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will appear"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will appear"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will appear"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I appeared"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you appeared"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she appeared"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we appeared"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they appeared"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to appear"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to appear"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to appear"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to appear"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to appear"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would appear"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would appear"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would appear"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would appear"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would appear"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have appeared"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have appeared"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has appeared"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have appeared"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have appeared"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had appeared"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had appeared"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had appeared"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had appeared"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had appeared"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I appear"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you appear"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she appear"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we appear"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they appear"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to appear"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to appear"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to appear"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to appear"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to appear"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am appearing"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are appearing"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is appearing"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are appearing"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are appearing"
+        }
+      ]
+    },
+    {
+      "verb": "resultar",
+      "englishBase": "turn out",
+      "category": "pareto_regular",
+      "inDailyRotation": false,
+      "usageHint": "resultar + adj — to turn out/be; resultar que — it turns out that; resultar en — result in.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I turn out"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you turn out"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she turn outs"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we turn out"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they turn out"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will turn out"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will turn out"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will turn out"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will turn out"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will turn out"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I turn outed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you turn outed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she turn outed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we turn outed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they turn outed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to turn out"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to turn out"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to turn out"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to turn out"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to turn out"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would turn out"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would turn out"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would turn out"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would turn out"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would turn out"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have turn outed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have turn outed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has turn outed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have turn outed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have turn outed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had turn outed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had turn outed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had turn outed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had turn outed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had turn outed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I turn out"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you turn out"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she turn out"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we turn out"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they turn out"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to turn out"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to turn out"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to turn out"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to turn out"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to turn out"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am turn outing"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are turn outing"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is turn outing"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are turn outing"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are turn outing"
+        }
+      ]
+    },
+    {
+      "verb": "considerar",
+      "englishBase": "consider",
+      "category": "pareto_regular",
+      "inDailyRotation": false,
+      "usageHint": "considerar + obj/adj — to consider; considerar que + indic — consider that.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I consider"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you consider"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she considers"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we consider"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they consider"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will consider"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will consider"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will consider"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will consider"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will consider"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I considered"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you considered"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she considered"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we considered"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they considered"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to consider"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to consider"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to consider"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to consider"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to consider"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would consider"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would consider"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would consider"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would consider"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would consider"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have considered"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have considered"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has considered"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have considered"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have considered"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had considered"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had considered"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had considered"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had considered"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had considered"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I consider"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you consider"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she consider"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we consider"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they consider"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to consider"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to consider"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to consider"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to consider"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to consider"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am considerring"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are considerring"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is considerring"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are considerring"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are considerring"
+        }
+      ]
+    },
+    {
+      "verb": "formar",
+      "englishBase": "form",
+      "category": "pareto_regular",
+      "inDailyRotation": false,
+      "usageHint": "formar + obj — to form; formar parte de — to be part of; formar a alguien — train someone.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I form"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you form"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she forms"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we form"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they form"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will form"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will form"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will form"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will form"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will form"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I formed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you formed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she formed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we formed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they formed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to form"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to form"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to form"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to form"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to form"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would form"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would form"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would form"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would form"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would form"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have formed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have formed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has formed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have formed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have formed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had formed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had formed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had formed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had formed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had formed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I form"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you form"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she form"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we form"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they form"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to form"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to form"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to form"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to form"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to form"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am forming"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are forming"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is forming"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are forming"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are forming"
+        }
+      ]
+    },
+    {
+      "verb": "lograr",
+      "englishBase": "manage",
+      "category": "pareto_regular",
+      "inDailyRotation": false,
+      "usageHint": "lograr + obj / + inf — to achieve/manage to; lograr que + subj — manage to get someone/something to.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she manages"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will manage"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I managed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you managed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she managed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we managed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they managed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to manage"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would manage"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have managed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have managed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has managed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have managed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have managed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had managed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had managed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had managed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had managed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had managed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she manage"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to manage"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am managing"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are managing"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is managing"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are managing"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are managing"
+        }
+      ]
+    },
+    {
+      "verb": "alcanzar",
+      "englishBase": "reach",
+      "category": "pareto_regular",
+      "inDailyRotation": false,
+      "usageHint": "alcanzar + obj — to reach; alcanzar a + inf — to manage to do.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I reach"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you reach"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she reaches"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we reach"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they reach"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will reach"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will reach"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will reach"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will reach"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will reach"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I reached"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you reached"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she reached"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we reached"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they reached"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to reach"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to reach"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to reach"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to reach"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to reach"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would reach"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would reach"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would reach"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would reach"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would reach"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have reached"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have reached"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has reached"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have reached"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have reached"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had reached"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had reached"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had reached"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had reached"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had reached"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I reach"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you reach"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she reach"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we reach"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they reach"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to reach"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to reach"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to reach"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to reach"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to reach"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am reaching"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are reaching"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is reaching"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are reaching"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are reaching"
+        }
+      ]
+    },
+    {
+      "verb": "dirigir",
+      "englishBase": "direct",
+      "category": "pareto_regular",
+      "inDailyRotation": false,
+      "usageHint": "dirigir + obj — to direct/manage; dirigirse a — to address/head toward.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I direct"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you direct"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she directs"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we direct"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they direct"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will direct"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will direct"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will direct"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will direct"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will direct"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I directed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you directed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she directed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we directed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they directed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to direct"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to direct"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to direct"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to direct"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to direct"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would direct"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would direct"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would direct"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would direct"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would direct"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have directed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have directed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has directed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have directed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have directed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had directed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had directed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had directed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had directed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had directed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I direct"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you direct"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she direct"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we direct"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they direct"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to direct"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to direct"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to direct"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to direct"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to direct"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am directing"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are directing"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is directing"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are directing"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are directing"
+        }
+      ]
+    },
+    {
+      "verb": "utilizar",
+      "englishBase": "use",
+      "category": "pareto_regular",
+      "inDailyRotation": false,
+      "usageHint": "utilizar + obj — to use; more formal than usar.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I use"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you use"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she uses"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we use"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they use"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will use"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will use"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will use"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will use"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will use"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I used"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you used"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she used"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we used"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they used"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to use"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to use"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to use"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to use"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to use"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would use"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would use"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would use"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would use"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would use"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have used"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have used"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has used"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have used"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have used"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had used"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had used"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had used"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had used"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had used"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I use"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you use"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she use"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we use"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they use"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to use"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to use"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to use"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to use"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to use"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am using"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are using"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is using"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are using"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are using"
+        }
+      ]
+    },
+    {
+      "verb": "intentar",
+      "englishBase": "try",
+      "category": "pareto_regular",
+      "inDailyRotation": false,
+      "usageHint": "intentar + inf — to try to; intentar + obj — to attempt.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she trys"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will try"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I tried"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you tried"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she tried"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we tried"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they tried"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to try"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would try"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have tried"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have tried"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has tried"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have tried"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have tried"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had tried"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had tried"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had tried"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had tried"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had tried"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she try"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to try"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to try"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to try"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to try"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to try"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am trying"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are trying"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is trying"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are trying"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are trying"
+        }
+      ]
+    },
+    {
       "verb": "andar",
       "englishBase": "walk",
       "category": "irregular",
@@ -54927,6 +57517,524 @@
           "pronoun": "ellos / ellas",
           "tense": "Estar + Gerund",
           "translation": "they are flying"
+        }
+      ]
+    },
+    {
+      "verb": "conseguir",
+      "englishBase": "manage",
+      "category": "stem_changing",
+      "inDailyRotation": false,
+      "usageHint": "conseguir + obj — to get/obtain; conseguir + inf — to manage to do.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she manages"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will manage"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I managed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you managed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she managed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we managed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they managed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to manage"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would manage"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have managed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have managed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has managed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have managed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have managed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had managed"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had managed"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had managed"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had managed"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had managed"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she manage"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to manage"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to manage"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to manage"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to manage"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to manage"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am managing"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are managing"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is managing"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are managing"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are managing"
+        }
+      ]
+    },
+    {
+      "verb": "comenzar",
+      "englishBase": "begin",
+      "category": "stem_changing",
+      "inDailyRotation": false,
+      "usageHint": "comenzar a + inf — to begin/start doing; comenzar por — start by/with.",
+      "assignments": [
+        {
+          "pronoun": "yo",
+          "tense": "Present",
+          "translation": "I begin"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present",
+          "translation": "you begin"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present",
+          "translation": "he/she begins"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present",
+          "translation": "we begin"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present",
+          "translation": "they begin"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Future",
+          "translation": "I will begin"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Future",
+          "translation": "you will begin"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Future",
+          "translation": "he/she will begin"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Future",
+          "translation": "we will begin"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Future",
+          "translation": "they will begin"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Preterite",
+          "translation": "I began"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Preterite",
+          "translation": "you began"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Preterite",
+          "translation": "he/she began"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Preterite",
+          "translation": "we began"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Preterite",
+          "translation": "they began"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect",
+          "translation": "I used to begin"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect",
+          "translation": "you used to begin"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect",
+          "translation": "he/she used to begin"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect",
+          "translation": "we used to begin"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect",
+          "translation": "they used to begin"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Conditional",
+          "translation": "I would begin"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Conditional",
+          "translation": "you would begin"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Conditional",
+          "translation": "he/she would begin"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Conditional",
+          "translation": "we would begin"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Conditional",
+          "translation": "they would begin"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Perfect",
+          "translation": "I have began"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Perfect",
+          "translation": "you have began"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Perfect",
+          "translation": "he/she has began"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Perfect",
+          "translation": "we have began"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Perfect",
+          "translation": "they have began"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Pluperfect",
+          "translation": "I had began"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Pluperfect",
+          "translation": "you had began"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Pluperfect",
+          "translation": "he/she had began"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Pluperfect",
+          "translation": "we had began"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Pluperfect",
+          "translation": "they had began"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Present Subjunctive",
+          "translation": "that I begin"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Present Subjunctive",
+          "translation": "that you begin"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Present Subjunctive",
+          "translation": "that he/she begin"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Present Subjunctive",
+          "translation": "that we begin"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Present Subjunctive",
+          "translation": "that they begin"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if I were to begin"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if you were to begin"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if he/she were to begin"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if we were to begin"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Imperfect Subjunctive",
+          "translation": "if they were to begin"
+        },
+        {
+          "pronoun": "yo",
+          "tense": "Estar + Gerund",
+          "translation": "I am beginning"
+        },
+        {
+          "pronoun": "tú",
+          "tense": "Estar + Gerund",
+          "translation": "you are beginning"
+        },
+        {
+          "pronoun": "él / ella",
+          "tense": "Estar + Gerund",
+          "translation": "he/she is beginning"
+        },
+        {
+          "pronoun": "nosotros / nosotras",
+          "tense": "Estar + Gerund",
+          "translation": "we are beginning"
+        },
+        {
+          "pronoun": "ellos / ellas",
+          "tense": "Estar + Gerund",
+          "translation": "they are beginning"
         }
       ]
     }
