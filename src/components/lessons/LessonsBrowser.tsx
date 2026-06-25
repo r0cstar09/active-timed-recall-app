@@ -185,11 +185,16 @@ export default function LessonsBrowser() {
         section: sectionName,
         lesson_context: {
           title: lesson.title,
+          difficulty: lesson.difficulty,
+          tags: lesson.tags,
+          section_title: section.title ?? sectionLabels[sectionName] ?? sectionName,
+          section_instructions: section.instructions,
           target_pattern: lesson.targetPattern,
           english_trap: lesson.englishTrap,
           spanish_logic: lesson.spanishLogic,
           formula: lesson.formula,
           natural_examples: lesson.naturalExamples,
+          common_errors: lesson.commonErrors,
         },
         module_total_prompts: moduleTotalPrompts,
         items: submitted.map(({ prompt, idx, answer }) => {
