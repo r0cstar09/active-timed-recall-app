@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-361",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "result of past action relevant now",
+    "prompt_en": "Say: The user interface has been a key factor in improving customer satisfaction this year.",
+    "expected_es": "La interfaz de usuario ha sido un factor clave para mejorar la satisfacción del cliente este año.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "interfaz"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ha sido' for the present perfect of 'ser' to describe a state or characteristic that began in the past and continues to be relevant now."
+  },
+  {
+    "id": "ser-usage-362",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Pluperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "prior cause for a past event",
+    "prompt_en": "Say: The company's image had been severely affected by the controversial dismissal of the director.",
+    "expected_es": "La imagen de la empresa había sido gravemente afectada por el despido controvertido del director.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "despido"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'había sido' for the pluperfect of 'ser' to indicate an action or state that occurred before another past action or point in time."
+  },
+  {
+    "id": "ser-usage-363",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Future Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "future completion/speculation about past",
+    "prompt_en": "Say: By the time we receive the official report, the audit will certainly have been a very complex process.",
+    "expected_es": "Para cuando recibamos el informe oficial, la auditoría habrá sido sin duda un proceso muy complejo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "auditoría"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'habrá sido' for the future perfect of 'ser' to express an action that will be completed by a certain future time, or to speculate about a past event."
+  },
+  {
+    "id": "ser-usage-364",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Conditional Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "counterfactual past",
+    "prompt_en": "Say: Without proper institutional support, managing such a care burden would have been an impossible task.",
+    "expected_es": "Sin un apoyo institucional adecuado, gestionar semejante carga de cuidados habría sido una tarea imposible.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "carga de cuidados"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'habría sido' for the conditional perfect of 'ser' to express what would have happened under hypothetical past conditions (counterfactual)."
+  },
+  {
+    "id": "ser-usage-365",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "result of past action relevant now",
+    "prompt_en": "Say: The specialist has been very diligent in reviewing all the patient's medical history.",
+    "expected_es": "El facultativo ha sido muy diligente al revisar todo el historial médico del paciente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "facultativo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ha sido' for the present perfect of 'ser' to describe a characteristic or role that has persisted up to the present."
+  },
+  {
+    "id": "ser-usage-366",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Pluperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "prior cause for a past event",
+    "prompt_en": "Say: The reason for his absence from the meeting had been a judicial summons he received unexpectedly.",
+    "expected_es": "El motivo de su ausencia en la reunión había sido una citación judicial que recibió inesperadamente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "citación judicial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'había sido' for the pluperfect of 'ser' to indicate a past event that caused or explained another past event."
+  },
+  {
+    "id": "ser-usage-367",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Future Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "future completion/speculation about past",
+    "prompt_en": "Say: By the time the course starts, all the didactic material will have been reviewed and approved by the pedagogical team.",
+    "expected_es": "Para cuando empiece el curso, todo el material didáctico habrá sido revisado y aprobado por el equipo pedagógico.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "material didáctico"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'habrá sido' for the future perfect of 'ser' to express an action or state that will be completed before a specific point in the future."
+  },
+  {
+    "id": "ser-usage-368",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Conditional Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "counterfactual past",
+    "prompt_en": "Say: If the company had detected the irregularities earlier, the insurance fraud would have been easily prevented.",
+    "expected_es": "Si la empresa hubiera detectado las irregularidades antes, el fraude al seguro habría sido fácilmente prevenido.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "fraude al seguro"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'habría sido' for the conditional perfect of 'ser' to describe what would have been (or not been) if a past condition had been different."
+  },
+  {
+    "id": "ser-usage-369",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "result of past action relevant now",
+    "prompt_en": "Say: Installing the laminate flooring in the entire office has been a significant investment but it was worth it.",
+    "expected_es": "La instalación de la tarima flotante en toda la oficina ha sido una inversión considerable pero ha merecido la pena.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "tarima flotante"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ha sido' for the present perfect of 'ser' to describe a past event whose consequences or results are still felt in the present."
+  },
+  {
+    "id": "ser-usage-370",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Pluperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "prior cause for a past event",
+    "prompt_en": "Say: The severe soil erosion had been a direct consequence of the uncontrolled runoff from the mountains.",
+    "expected_es": "La grave erosión del suelo había sido una consecuencia directa de la escorrentía descontrolada de las montañas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "escorrentía"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'había sido' for the pluperfect of 'ser' to explain a state or situation in the past that was caused by an even earlier event."
+  }
+]

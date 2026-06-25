@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-201",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "es + adjective + que + ser (subjunctive) for requirement/quality",
+    "prompt_en": "Say: It is essential that the validity of the contract be verified before signing.",
+    "expected_es": "Es esencial que la vigencia del contrato sea verificada antes de firmar.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "vigencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sea' for 'it be' in the subjunctive mood after expressions of necessity/importance, like 'es esencial que'."
+  },
+  {
+    "id": "ser-usage-202",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "es + adjective + que + ser (subjunctive) for requirement/role",
+    "prompt_en": "Say: It is important that the new project manager be a person capable of facilitating the transition.",
+    "expected_es": "Es importante que el nuevo jefe de proyecto sea una persona capaz de facilitar la transición.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "transición"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sea' for 'be' when expressing a requirement or desired quality in the subjunctive mood."
+  },
+  {
+    "id": "ser-usage-203",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "es + adjective + que + ser (subjunctive) for quality/identity",
+    "prompt_en": "Say: It is crucial that the patient's medical history be as detailed as possible.",
+    "expected_es": "Es crucial que la anamnesis del paciente sea lo más detallada posible.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "anamnesis"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "After 'es crucial que', use the subjunctive 'sea' to express a necessary quality or state."
+  },
+  {
+    "id": "ser-usage-204",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "es + adjective + que + ser (subjunctive) for requirement",
+    "prompt_en": "Say: It is indispensable that the smoke detector be fully functional before the inspection.",
+    "expected_es": "Es indispensable que el detector de humos sea completamente funcional antes de la inspección.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "detector de humos"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sea' in the subjunctive after expressions like 'es indispensable que' to indicate a requirement."
+  },
+  {
+    "id": "ser-usage-205",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "es + adjective + que + ser (subjunctive) for desired quality",
+    "prompt_en": "Say: It is preferable that any bank transfer be free of commissions.",
+    "expected_es": "Es preferible que cualquier transferencia bancaria sea sin comisión.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "comisión"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "'Es preferible que' triggers the subjunctive 'sea' to express a preference or desired condition."
+  },
+  {
+    "id": "ser-usage-206",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "es + adjective + que + ser (subjunctive) for requirement/quality",
+    "prompt_en": "Say: It is necessary that the company be more supportive of work-life balance initiatives.",
+    "expected_es": "Es necesario que la empresa sea más solidaria con las iniciativas de conciliación.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "conciliación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "'Es necesario que' requires the subjunctive 'sea' to express a need or requirement."
+  },
+  {
+    "id": "ser-usage-207",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "es + adjective + que + ser (subjunctive) for desired quality",
+    "prompt_en": "Say: It is fundamental that our coverage policy be comprehensive for all risks.",
+    "expected_es": "Es fundamental que nuestra póliza de cobertura sea integral para todos los riesgos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "póliza de cobertura"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "'Es fundamental que' triggers the subjunctive 'sea' to express a foundational requirement or desired characteristic."
+  },
+  {
+    "id": "ser-usage-208",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "es + adjective + que + ser (subjunctive) for recommendation",
+    "prompt_en": "Say: It is advisable that the software update be installed as soon as possible.",
+    "expected_es": "Es recomendable que la actualización de software sea instalada tan pronto como sea posible.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "actualización de software"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "'Es recomendable que' triggers the subjunctive 'sea' to express a recommendation."
+  },
+  {
+    "id": "ser-usage-209",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "es + adjective + que + ser (subjunctive) for desired quality",
+    "prompt_en": "Say: It is important that the evaluation of the flaw be objective and fair.",
+    "expected_es": "Es importante que la evaluación del desperfecto sea objetiva y justa.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "desperfecto"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "'Es importante que' requires the subjunctive 'sea' to express a necessary quality or characteristic."
+  },
+  {
+    "id": "ser-usage-210",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "es + adjective + que + ser (subjunctive) for requirement/definition",
+    "prompt_en": "Say: It is crucial that the enrollment period be clearly established for all students.",
+    "expected_es": "Es crucial que el periodo de inscripción sea claramente establecido para todos los estudiantes.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "periodo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "After 'es crucial que', use the subjunctive 'sea' to express a necessary definition or state."
+  }
+]

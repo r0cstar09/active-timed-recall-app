@@ -1,0 +1,184 @@
+[
+  {
+    "id": "ser-usage-101",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed evaluation",
+    "prompt_en": "Say: The initial assessment of the technical fault was very complex.",
+    "expected_es": "La evaluación inicial de la avería técnica fue muy compleja.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "avería técnica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' to describe a completed evaluation or characteristic of something in the past."
+  },
+  {
+    "id": "ser-usage-102",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "one-off role/characteristic",
+    "prompt_en": "Say: The court expert was crucial for the final resolution of the case.",
+    "expected_es": "El perito judicial fue crucial para la resolución final del caso.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "perito judicial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' to define a specific, completed role or essential characteristic in the past."
+  },
+  {
+    "id": "ser-usage-103",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event/cause identification",
+    "prompt_en": "Say: The main reason for the delay in delivery was the unexpected technical fault.",
+    "expected_es": "La razón principal del retraso en el tiempo de entrega fue la avería técnica inesperada.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "tiempo de entrega",
+      "avería técnica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' to identify the cause or origin of a completed event."
+  },
+  {
+    "id": "ser-usage-104",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice (fue + participle)",
+    "prompt_en": "Say: The modification of the contract was approved by the board last week.",
+    "expected_es": "La modificación del contrato fue aprobada por la junta la semana pasada.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "modificación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' + past participle to form the passive voice for a completed action in the past."
+  },
+  {
+    "id": "ser-usage-105",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed event place",
+    "prompt_en": "Say: The urgent meeting about the power supply cut was at the city hall.",
+    "expected_es": "La reunión urgente sobre el corte del suministro eléctrico fue en el ayuntamiento.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "suministro eléctrico"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' to indicate the specific, completed location of an event in the past."
+  },
+  {
+    "id": "ser-usage-106",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice (fue + participle)",
+    "prompt_en": "Say: His credibility was questioned by the media after the incident.",
+    "expected_es": "Su credibilidad fue cuestionada por los medios después del incidente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "credibilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' + past participle for passive voice when describing a completed action."
+  },
+  {
+    "id": "ser-usage-107",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event/cause identification",
+    "prompt_en": "Say: The true cause of the overbooking was an error in the reservation system.",
+    "expected_es": "La verdadera causa de la sobreventa fue un error en el sistema de reservas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "sobreventa"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' to identify the origin or cause of a completed event or situation."
+  },
+  {
+    "id": "ser-usage-108",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "one-off role/identity",
+    "prompt_en": "Say: That building was an important point of sale for the brand for many years.",
+    "expected_es": "Ese edificio fue un importante punto de venta para la marca durante muchos años.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "punto de venta"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' to define a specific identity or role that was held for a bounded period in the past."
+  },
+  {
+    "id": "ser-usage-109",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice (fue + participle)",
+    "prompt_en": "Say: All the required documentation was finally prepared before the deadline.",
+    "expected_es": "Toda la documentación requerida fue finalmente preparada antes de la fecha límite.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "documentación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' + past participle for the passive voice when describing a completed action."
+  },
+  {
+    "id": "ser-usage-110",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed event time/place",
+    "prompt_en": "Say: The first emergency drill was in the pedestrian area last month.",
+    "expected_es": "El primer simulacro de emergencia fue en la zona peatonal el mes pasado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "emergencia",
+      "zona peatonal"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' to indicate the specific, completed time or location of an event in the past."
+  }
+]

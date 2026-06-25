@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-191",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "past background identity/profession",
+    "prompt_en": "Say: Before retiring, he was the chief electrician for the entire hospital maintenance department.",
+    "expected_es": "Antes de jubilarse, él era el electricista jefe del departamento de mantenimiento de todo el hospital.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "electricista"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (imperfect 'era'), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect ('era') to describe a past, ongoing profession or role."
+  },
+  {
+    "id": "ser-usage-192",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "past habitual/inherent description",
+    "prompt_en": "Say: During that period, the reliability of their systems was a constant concern for the IT team.",
+    "expected_es": "Durante ese período, la fiabilidad de sus sistemas era una preocupación constante para el equipo de TI.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "fiabilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (imperfect 'era'), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect ('era') to describe a habitual or inherent characteristic in the past."
+  },
+  {
+    "id": "ser-usage-193",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "past inherent characteristic/classification",
+    "prompt_en": "Say: The main reason for the delay in approving the project was the initial construction quote, which was too high.",
+    "expected_es": "La razón principal de la demora en la aprobación del proyecto era el presupuesto de obra inicial, que era demasiado elevado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "presupuesto de obra"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (imperfect 'era'), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect ('era') to describe an inherent quality or classification of something in the past."
+  },
+  {
+    "id": "ser-usage-194",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "past contextual description (time/event type)",
+    "prompt_en": "Say: When the storm hit, it was already an official red alert, so everyone had to evacuate.",
+    "expected_es": "Cuando la tormenta llegó, ya era una alerta roja oficial, así que todos tuvieron que evacuar.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "alerta roja"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (imperfect 'era'), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect ('era') to describe the time or a contextual classification (like an 'alert') in the past."
+  },
+  {
+    "id": "ser-usage-195",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "past inherent characteristic/identity",
+    "prompt_en": "Say: Her sincere gratitude was always the greatest reward for those who supported her during her recovery.",
+    "expected_es": "Su sincera gratitud era siempre la mayor recompensa para quienes la apoyaron durante su recuperación.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "gratitud"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (imperfect 'era'), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect ('era') to describe an inherent or defining characteristic in the past, often habitual ('always')."
+  },
+  {
+    "id": "ser-usage-196",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "past inherent characteristic/description",
+    "prompt_en": "Say: In those years, the regulations for international trade were much less strict than they are now.",
+    "expected_es": "En aquellos años, la normativa para el comercio internacional era mucho menos estricta de lo que es ahora.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "normativa"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (imperfect 'era'), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect ('era') to describe an inherent quality or state of regulations in a past period."
+  },
+  {
+    "id": "ser-usage-197",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "past habitual identity/classification",
+    "prompt_en": "Say: The administrative penalty for that infraction was usually just a warning, not a heavy fine.",
+    "expected_es": "La sanción administrativa por esa infracción solía ser solo una advertencia, no una multa fuerte.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "sanción administrativa"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (imperfect 'solía ser'), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'soler' + infinitive ('solía ser') to express what was habitually or usually the case in the past, combining 'ser' for classification."
+  },
+  {
+    "id": "ser-usage-198",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "past background description/state",
+    "prompt_en": "Say: The hospital emergency situation was critical, with beds overflowing and staff exhausted.",
+    "expected_es": "La urgencia hospitalaria era crítica, con camas desbordadas y personal exhausto.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "urgencia hospitalaria"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (imperfect 'era'), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect ('era') to describe a defining characteristic or the background state of a situation in the past."
+  },
+  {
+    "id": "ser-usage-199",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "past habitual characteristic",
+    "prompt_en": "Say: Back then, the profit margin for small businesses was usually quite narrow due to high operating costs.",
+    "expected_es": "En aquel entonces, el margen de beneficio para las pequeñas empresas solía ser bastante estrecho debido a los altos costes operativos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "margen de beneficio"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (imperfect 'solía ser'), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'soler' + infinitive ('solía ser') to express what was usually or habitually true about the profit margin in the past."
+  },
+  {
+    "id": "ser-usage-200",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "past habitual event location",
+    "prompt_en": "Say: The annual meeting of the homeowners association was always in the basement community room, which was quite small.",
+    "expected_es": "La reunión anual de la comunidad de propietarios siempre era en la sala comunitaria del sótano, que era bastante pequeña.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "comunidad de propietarios"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (imperfect 'era'), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect ('era') to state where a habitual or scheduled event took place in the past. ('Estar' would be used for the current, temporary location of a person/thing)."
+  }
+]

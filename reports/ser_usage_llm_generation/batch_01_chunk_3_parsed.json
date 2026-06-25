@@ -1,0 +1,186 @@
+[
+  {
+    "id": "ser-usage-021",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "identity/classification",
+    "prompt_en": "Say: This is a judicial ruling that establishes a crucial precedent for similar cases.",
+    "expected_es": "Esta es una sentencia judicial que establece un precedente crucial para casos similares.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la sentencia judicial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' to classify or identify what something is (a judicial ruling)."
+  },
+  {
+    "id": "ser-usage-022",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "inherent description/cause",
+    "prompt_en": "Say: The bureaucracy in this process is intrinsically slow, and it is the main cause of all these delays.",
+    "expected_es": "La burocracia en este proceso es intrínsecamente lenta, y es la causa principal de todas estas demoras.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la burocracia",
+      "la demora"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' to describe an inherent, unchanging characteristic (slow) or to state the cause of something."
+  },
+  {
+    "id": "ser-usage-023",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "origin/source (ser de)",
+    "prompt_en": "Say: These tiles are from a renowned local artisan, known for their unique designs and durability.",
+    "expected_es": "Estos azulejos son de un artesano local de renombre, conocido por sus diseños únicos y durabilidad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el azulejo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser de' to indicate origin or source."
+  },
+  {
+    "id": "ser-usage-024",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event time/date",
+    "prompt_en": "Say: The initial triage for new patients is always in the morning, specifically between nine and eleven.",
+    "expected_es": "El triaje inicial para los nuevos pacientes es siempre por la mañana, específicamente entre las nueve y las once.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el triaje"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' to state the time or date of an event."
+  },
+  {
+    "id": "ser-usage-025",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "material (ser de)",
+    "prompt_en": "Say: The packaging is made of recycled plastic, but the paint inside is not plastic-based.",
+    "expected_es": "El envoltorio es de plástico reciclado, pero la pintura de dentro no es plástica.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el envoltorio",
+      "la pintura plástica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser de' to indicate the material something is made of. When referring to a characteristic, 'ser' is also used (not plastic-based)."
+  },
+  {
+    "id": "ser-usage-026",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "role/classification",
+    "prompt_en": "Say: Our main priority this year is talent retention, as it is a crucial factor for sustained growth.",
+    "expected_es": "Nuestra prioridad principal este año es la retención del talento, ya que es un factor crucial para el crecimiento sostenido.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la retención del talento"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' to classify or define what something is (a crucial factor)."
+  },
+  {
+    "id": "ser-usage-027",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event location (permanent/inherent)/classification",
+    "prompt_en": "Say: The main data center is located here, and it is considered a critical infrastructure for the entire region.",
+    "expected_es": "El centro de datos principal es aquí, y es una infraestructura crítica para toda la región.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la infraestructura crítica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' to indicate the inherent or expected location of an event or established entity, and for classification."
+  },
+  {
+    "id": "ser-usage-028",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "inherent description (essential characteristic)",
+    "prompt_en": "Say: Shared household responsibility is essential for building trust and a harmonious environment in any family.",
+    "expected_es": "La corresponsabilidad doméstica es esencial para construir confianza y un ambiente armonioso en cualquier familia.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la corresponsabilidad doméstica",
+      "la confianza"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' to describe an inherent or essential characteristic (essential)."
+  },
+  {
+    "id": "ser-usage-029",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "identity/classification",
+    "prompt_en": "Say: The municipal register is an official record, not just a simple administrative file that can be easily misplaced.",
+    "expected_es": "El padrón es un registro oficial, no solo un simple expediente administrativo que se pueda extraviar fácilmente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el padrón",
+      "el expediente"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' to define or classify what something is (an official record, an administrative file)."
+  },
+  {
+    "id": "ser-usage-030",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "duration/value (ser por)",
+    "prompt_en": "Say: This extended warranty is for five years and is fully included in the final purchase price.",
+    "expected_es": "Esta garantía extendida es por cinco años y está completamente incluida en el precio final de compra.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la garantía"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser por' to indicate duration or a reason/value. 'Ser' is also used for inclusion in the price."
+  }
+]

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-231",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + subjunctive for quality/requirement",
+    "prompt_en": "Say: It's important that the implementation of the new system be efficient to avoid delays.",
+    "expected_es": "Es importante que la implementación del nuevo sistema sea eficiente para evitar retrasos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la implementación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the present subjunctive (sea) after an impersonal expression of importance (Es importante que) when expressing a desired quality or requirement."
+  },
+  {
+    "id": "ser-usage-232",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + subjunctive for probability/identity",
+    "prompt_en": "Say: It's probable that rail electrification is a key project for sustainable transport in the coming years.",
+    "expected_es": "Es probable que la electrificación ferroviaria sea un proyecto clave para el transporte sostenible en los próximos años.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la electrificación ferroviaria"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the present subjunctive (sea) after an impersonal expression of probability (Es probable que) when stating an identity or role that is not yet certain or fixed."
+  },
+  {
+    "id": "ser-usage-233",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + subjunctive for quality/requirement",
+    "prompt_en": "Say: For the university degree to be valid abroad, it's necessary that the official accreditation be internationally recognized.",
+    "expected_es": "Para que el título universitario sea válido en el extranjero, es necesario que la acreditación oficial sea reconocida internacionalmente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la acreditación oficial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the present subjunctive (sea) after an impersonal expression of necessity (es necesario que) for a required quality or condition."
+  },
+  {
+    "id": "ser-usage-234",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + subjunctive for doubt/status",
+    "prompt_en": "Say: Due to new evidence, it's doubtful that the court ruling is definitive; an appeal is expected.",
+    "expected_es": "Dadas las nuevas pruebas, es dudoso que la sentencia judicial sea definitiva; se espera una apelación.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la sentencia judicial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the present subjunctive (sea) after an impersonal expression of doubt (Es dudoso que) when the status or nature is uncertain."
+  },
+  {
+    "id": "ser-usage-235",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "verb of seeking/desire + subjunctive for desired quality",
+    "prompt_en": "Say: The doctor recommended that we seek a referral that is urgent given the patient's critical condition.",
+    "expected_es": "El médico recomendó que busquemos una derivación que sea urgente dada la condición crítica del paciente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la derivación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the present subjunctive (sea) in a relative clause ('que sea urgente') following a main clause that expresses desire or recommendation ('busquemos') about a non-specific or desired quality."
+  },
+  {
+    "id": "ser-usage-236",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + subjunctive for quality/requirement",
+    "prompt_en": "Say: To avoid misunderstandings, it's important that the current regulations be clear and accessible to all.",
+    "expected_es": "Para evitar malentendidos, es importante que la normativa vigente sea clara y accesible para todos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la normativa vigente"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the present subjunctive (sea) after an impersonal expression of importance (Es importante que) when expressing a required quality."
+  },
+  {
+    "id": "ser-usage-237",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + subjunctive for quality/requirement",
+    "prompt_en": "Say: Before signing the lease, it's essential that the furniture inventory be accurate and reflect the actual state.",
+    "expected_es": "Antes de firmar el contrato de alquiler, es esencial que el inventario de muebles sea exacto y refleje el estado real.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el inventario de muebles"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the present subjunctive (sea) after an impersonal expression of essence/necessity (Es esencial que) for a required quality."
+  },
+  {
+    "id": "ser-usage-238",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + subjunctive for probability/status",
+    "prompt_en": "Say: Given the early hour, it's not probable that the emergency brigade is already fully staffed.",
+    "expected_es": "Dada la hora temprana, no es probable que la brigada de emergencia ya sea totalmente efectiva.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la brigada de emergencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the present subjunctive (sea) after an impersonal expression of probability (no es probable que) when referring to a characteristic or effectiveness."
+  },
+  {
+    "id": "ser-usage-239",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + subjunctive for quality/requirement",
+    "prompt_en": "Say: When making online purchases, it's crucial that the payment method be secure to protect personal data.",
+    "expected_es": "Al realizar compras en línea, es crucial que el método de pago sea seguro para proteger los datos personales.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el método de pago"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea), natural construction, agreement, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the present subjunctive (sea) after an impersonal expression of cruciality (Es crucial que) for a required quality."
+  },
+  {
+    "id": "ser-usage-240",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + subjunctive for desired state/quality",
+    "prompt_en": "Say: Due to the structural damage, it's advisable that the main pillar be reinforced as soon as possible.",
+    "expected_es": "Debido al daño estructural, es aconsejable que el pilar principal sea reforzado lo antes posible.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el pilar"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (sea) in passive voice, natural construction, agreement, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the present subjunctive (sea) to form the passive voice ('sea reforzado') after an impersonal expression of advisability (Es aconsejable que), indicating a desired action or state."
+  }
+]

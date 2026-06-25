@@ -1,0 +1,184 @@
+[
+  {
+    "id": "ser-usage-121",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed evaluation",
+    "prompt_en": "Say: The final evaluation of the project was extremely rigorous last month.",
+    "expected_es": "La evaluación final del proyecto fue extremadamente rigurosa el mes pasado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la evaluación",
+      "la rigurosidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue' in preterite, agreement with 'evaluación', natural construction, and correct vocabulary.",
+    "correction_hint": "Use 'fue' for a completed evaluation in the past. Remember to make adjectives agree with the noun."
+  },
+  {
+    "id": "ser-usage-122",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event/cause identification",
+    "prompt_en": "Say: The direct cause of the accident was gross negligence on the part of the contractor.",
+    "expected_es": "La causa directa del accidente fue negligencia grave por parte del contratista.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la negligencia grave"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue' for identifying the cause of a past event, and proper use of 'negligencia grave'.",
+    "correction_hint": "Use 'fue' to identify the cause or origin of a completed past event. 'Negligencia grave' is a key term here."
+  },
+  {
+    "id": "ser-usage-123",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "one-off role",
+    "prompt_en": "Say: For that specific period, he was the manager of the renovation works.",
+    "expected_es": "Durante ese período específico, él fue el encargado de las obras de reforma.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la reforma"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue' for a temporary or specific past role/identification, and natural collocation with 'encargado de la reforma'.",
+    "correction_hint": "'Fue' is used to describe a completed, temporary role or identification in the past. 'Encargado de' is a common collocation."
+  },
+  {
+    "id": "ser-usage-124",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice",
+    "prompt_en": "Say: The initial diagnosis was confirmed by several specialists last Tuesday.",
+    "expected_es": "El diagnóstico inicial fue confirmado por varios especialistas el martes pasado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el diagnóstico"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue' + past participle for passive voice in the preterite, and agreement of participle.",
+    "correction_hint": "For passive voice expressing a completed action, use 'ser' in the preterite ('fue') followed by the past participle, which must agree in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-125",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed event time/place",
+    "prompt_en": "Say: The emergency meeting was at the mayor's home this morning.",
+    "expected_es": "La reunión de emergencia fue en el domicilio del alcalde esta mañana.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el domicilio",
+      "la emergencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue' for specifying the location of a completed event, and natural use of 'domicilio'.",
+    "correction_hint": "Use 'fue' to indicate where a specific, completed event took place. 'Domicilio' often refers to a formal address or residence."
+  },
+  {
+    "id": "ser-usage-126",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed evaluation / characteristic",
+    "prompt_en": "Say: The quality of the construction adhesive was truly exceptional for that project.",
+    "expected_es": "La calidad del adhesivo de montaje fue realmente excepcional para ese proyecto.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el adhesivo de montaje"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue' to describe a completed characteristic or quality of something in the past, and proper use of 'adhesivo de montaje'.",
+    "correction_hint": "'Fue' is used to describe an inherent quality or characteristic that was true for a specific, bounded period or event in the past."
+  },
+  {
+    "id": "ser-usage-127",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event/cause identification",
+    "prompt_en": "Say: The main damage to the infrastructure was a direct consequence of the flash flood.",
+    "expected_es": "El daño principal a la infraestructura fue consecuencia directa de la riada.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la riada"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue' for identifying the consequence/cause of a past event, and natural phrasing with 'riada'.",
+    "correction_hint": "Use 'fue' to identify what something was or resulted from in a completed past event. 'Consecuencia directa de' is a good collocation."
+  },
+  {
+    "id": "ser-usage-128",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "one-off role / group identification",
+    "prompt_en": "Say: They were the first emergency brigade to arrive at the scene of the incident.",
+    "expected_es": "Ellos fueron la primera brigada de emergencia en llegar al lugar del incidente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la brigada de emergencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fueron' for identifying a group's specific role in a completed past event, and natural use of 'brigada de emergencia'.",
+    "correction_hint": "'Fueron' is used for plural subjects to describe a completed identification or role in the past."
+  },
+  {
+    "id": "ser-usage-129",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice",
+    "prompt_en": "Say: The old pipes were replaced due to corrosion last month.",
+    "expected_es": "Las tuberías viejas fueron reemplazadas debido a la corrosión el mes pasado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la tubería"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fueron' + past participle for passive voice, and agreement of participle with 'tuberías'.",
+    "correction_hint": "For passive voice with plural subjects and a completed action, use 'fueron' followed by the past participle, agreeing in gender and number."
+  },
+  {
+    "id": "ser-usage-130",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed event cause/origin",
+    "prompt_en": "Say: The inspection of hazardous materials was at the freight terminal, as planned.",
+    "expected_es": "La inspección de materiales peligrosos fue en la terminal de carga, como estaba previsto.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la terminal de carga"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue' for indicating the location of a completed event, and accurate use of 'terminal de carga'.",
+    "correction_hint": "'Fue' is used to specify the exact location where a completed event occurred. 'Como estaba previsto' is a useful C1 phrase."
+  }
+]

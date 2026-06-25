@@ -1,0 +1,183 @@
+[
+  {
+    "id": "ser-usage-351",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Result up to now",
+    "prompt_en": "Say: \"The grant has been crucial for the project's development since its approval.\"",
+    "expected_es": "La subvención ha sido crucial para el desarrollo del proyecto desde su aprobación.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la subvención"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use the present perfect of 'ser' (ha sido) to describe a state that began in the past and continues or has an effect in the present."
+  },
+  {
+    "id": "ser-usage-352",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Result up to now",
+    "prompt_en": "Say: \"The enrollment process has been unexpectedly complex this year for new students.\"",
+    "expected_es": "El proceso de matriculación ha sido inesperadamente complejo este año para los nuevos estudiantes.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el proceso de matriculación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The present perfect 'ha sido' is used for an action or state that started in the past and continues or affects the present."
+  },
+  {
+    "id": "ser-usage-353",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Pluperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Prior cause/state",
+    "prompt_en": "Say: \"The defense attorney explained that the previous ruling had been a serious legal error.\"",
+    "expected_es": "El abogado defensor explicó que la sentencia anterior había sido un grave error legal.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el abogado defensor"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The pluperfect 'había sido' describes an action or state that occurred before another past action."
+  },
+  {
+    "id": "ser-usage-354",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Pluperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Prior cause/state",
+    "prompt_en": "Say: \"Before the recent renovations, the habitability of the building had been questionable for years.\"",
+    "expected_es": "Antes de las recientes reformas, la habitabilidad del edificio había sido cuestionable durante años.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la habitabilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use the pluperfect 'había sido' to indicate a state that was true before another past event."
+  },
+  {
+    "id": "ser-usage-355",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Future Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Future retrospective probability",
+    "prompt_en": "Say: \"By the end of the month, the advanced training will probably have been vital for improving our team's skills.\"",
+    "expected_es": "Para finales de mes, la capacitación avanzada habrá sido probablemente vital para mejorar las habilidades de nuestro equipo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la capacitación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The future perfect 'habrá sido' expresses an action that will have been completed at some point in the future, often with a sense of probability about a past event viewed from the future."
+  },
+  {
+    "id": "ser-usage-356",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Future Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Future retrospective probability",
+    "prompt_en": "Say: \"By the time the full assessment is complete, the cognitive decline will likely have been significant.\"",
+    "expected_es": "Para cuando se complete la evaluación completa, el deterioro cognitivo probablemente habrá sido significativo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el deterioro cognitivo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The future perfect 'habrá sido' is used to express probability or conjecture about a past event, viewed from a future perspective."
+  },
+  {
+    "id": "ser-usage-357",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Conditional Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Counterfactual evaluation",
+    "prompt_en": "Say: \"If the driver had respected the norm, it would not have been a serious traffic offense.\"",
+    "expected_es": "Si el conductor hubiera respetado la norma, no habría sido una infracción de tráfico grave.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la infracción grave",
+      "la norma"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The conditional perfect 'habría sido' is used in conditional sentences (Type 3) to express what would have happened if a past condition had been met."
+  },
+  {
+    "id": "ser-usage-358",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Conditional Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Counterfactual evaluation",
+    "prompt_en": "Say: \"Without the timely rescue operation, the situation would have been much more tragic.\"",
+    "expected_es": "Sin el operativo de rescate a tiempo, la situación habría sido mucho más trágica.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el operativo de rescate"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The conditional perfect 'habría sido' expresses a hypothetical outcome in the past that did not occur."
+  },
+  {
+    "id": "ser-usage-359",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Result up to now",
+    "prompt_en": "Say: \"The requirements have been quite strict for this position in the company.\"",
+    "expected_es": "Los requisitos han sido bastante estrictos para este puesto en la empresa.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el requisito"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use the plural present perfect 'han sido' to describe a current state that originated in the past and affects the present."
+  },
+  {
+    "id": "ser-usage-360",
+    "verb": "ser",
+    "batch": 8,
+    "batch_size": 50,
+    "tense": "Conditional Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Counterfactual evaluation",
+    "prompt_en": "Say: \"With a clearer explanation, the decision would have been simpler for everyone.\"",
+    "expected_es": "Con una explicación más clara, la decisión habría sido más sencilla para todos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la explicación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The conditional perfect 'habría sido' expresses a hypothetical past outcome that depends on an unfulfilled past condition."
+  }
+]

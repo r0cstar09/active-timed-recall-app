@@ -1,0 +1,183 @@
+[
+  {
+    "id": "ser-usage-451",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + subjunctive (essential quality)",
+    "prompt_en": "Say: It is essential that leaders demonstrate genuine ambition for public service.",
+    "expected_es": "Es esencial que los líderes sean de una ambición genuina para el servicio público.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la ambición"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to describe an inherent, essential quality (ambition) that is required, triggering the subjunctive mood."
+  },
+  {
+    "id": "ser-usage-452",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "passive voice + cause",
+    "prompt_en": "Say: The spill was caused by negligence, which is why a red alert was activated.",
+    "expected_es": "El vertido fue causado por negligencia, por lo que fue activada una alerta roja.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el vertido",
+      "la alerta roja"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used for the passive voice, indicating the agent or cause of the action, and for the activation of the alert as a resulting event."
+  },
+  {
+    "id": "ser-usage-453",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "B2",
+    "construction": "purpose/origin",
+    "prompt_en": "Say: This didactic material was specifically for the new C1 Spanish course.",
+    "expected_es": "Este material didáctico fue específicamente para el nuevo curso de español C1.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el material didáctico"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to express the purpose or destination of the didactic material."
+  },
+  {
+    "id": "ser-usage-454",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "definition/characteristic (conditional)",
+    "prompt_en": "Say: Overcoming the generation gap would be a significant challenge for modern families.",
+    "expected_es": "Superar la brecha generacional sería un desafío significativo para las familias modernas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la brecha generacional"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to define what overcoming the generation gap inherently 'is' (a challenge), expressed in the conditional mood."
+  },
+  {
+    "id": "ser-usage-455",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event location (imperfect)",
+    "prompt_en": "Say: The final boarding call was always at gate 7, but the plane was never on time.",
+    "expected_es": "La última llamada para embarcar siempre era en la puerta de embarque 7, pero el avión nunca estaba a tiempo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la puerta de embarque"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used for the location of an event (the boarding call happening at a specific gate), as opposed to ESTAR for the temporary location or state of the plane."
+  },
+  {
+    "id": "ser-usage-456",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "doubt + passive voice (subjunctive)",
+    "prompt_en": "Say: I doubt that the litigation is resolved fairly, given the precedents.",
+    "expected_es": "Dudo que el litigio sea resuelto justamente, dados los precedentes.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el litigio"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used for the passive voice (the litigation 'being resolved'), and the expression of doubt triggers the subjunctive mood."
+  },
+  {
+    "id": "ser-usage-457",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "essential quality/future state",
+    "prompt_en": "Say: The complete electrical installation will be essential for the safety of the renovated building.",
+    "expected_es": "La instalación eléctrica completa será esencial para la seguridad del edificio reformado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la instalación eléctrica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to describe an inherent and permanent characteristic or necessity (being essential) for the future state of the building."
+  },
+  {
+    "id": "ser-usage-458",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "duration/time elapsed (perfect)",
+    "prompt_en": "Say: It has been over a month since she has been on medical leave, which is very unusual for her.",
+    "expected_es": "Ha sido más de un mes que ella ha estado de baja médica, lo cual es muy inusual para ella.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la baja"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER (ha sido) is used to express the duration or amount of time that has passed, while ESTAR describes her current temporary state of being on leave."
+  },
+  {
+    "id": "ser-usage-459",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "impersonal expression + passive voice (imperfect subjunctive)",
+    "prompt_en": "Say: It was important that extreme caution was observed during the delicate operation.",
+    "expected_es": "Era importante que fuera observada extrema cautela durante la delicada operación.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la cautela"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here in the passive voice with an impersonal expression ('Era importante que...') to express a past necessity or recommendation, triggering the imperfect subjunctive."
+  },
+  {
+    "id": "ser-usage-460",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Future Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "passive voice (future perfect)",
+    "prompt_en": "Say: By next month, the storage room will have been completely cleared out and ready for new use.",
+    "expected_es": "Para el próximo mes, el trastero habrá sido vaciado completamente y estará listo para un nuevo uso.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el trastero"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to form the future perfect passive voice, indicating an action that will have been completed by a certain future time."
+  }
+]

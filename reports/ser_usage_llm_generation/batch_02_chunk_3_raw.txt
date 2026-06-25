@@ -1,0 +1,185 @@
+
+```json
+[
+  {
+    "id": "ser-usage-071",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition/Impersonal evaluation",
+    "prompt_en": "Say: Protecting critical infrastructure is essential for national security.",
+    "expected_es": "Proteger la infraestructura crítica es esencial para la seguridad nacional.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "infraestructura crítica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to define or classify a concept as essential."
+  },
+  {
+    "id": "ser-usage-072",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ownership/Belonging (ser de)",
+    "prompt_en": "Say: This electrical certificate is from the new housing development, not the old one.",
+    "expected_es": "Este boletín eléctrico es de la nueva promoción de viviendas, no del antiguo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "boletín eléctrico"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser de' to indicate origin or belonging."
+  },
+  {
+    "id": "ser-usage-073",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Authorship/Origin (ser de)",
+    "prompt_en": "Say: That didactic material is from the university's research team.",
+    "expected_es": "Ese material didáctico es del equipo de investigación de la universidad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "material didáctico"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser de' to indicate authorship or the source of something."
+  },
+  {
+    "id": "ser-usage-074",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Cleft emphasis (lo que... es...)",
+    "prompt_en": "Say: What is truly important is to close the wage gap.",
+    "expected_es": "Lo que es verdaderamente importante es cerrar la brecha salarial.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "brecha salarial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The 'lo que es' construction is used for emphasis, highlighting the subject."
+  },
+  {
+    "id": "ser-usage-075",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Affiliation/Classification",
+    "prompt_en": "Say: Our artistic collective is part of the avant-garde movement.",
+    "expected_es": "Nuestro colectivo artístico es parte del movimiento de vanguardia.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "vanguardia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used for classification or to indicate group affiliation."
+  },
+  {
+    "id": "ser-usage-076",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal evaluation (es clave que...)",
+    "prompt_en": "Say: It is crucial that mental health is prioritized in the workplace.",
+    "expected_es": "Es clave que la salud mental sea priorizada en el ámbito laboral.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "salud mental"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (subjunctive), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Impersonal evaluations followed by 'que' often require the subjunctive mood for SER."
+  },
+  {
+    "id": "ser-usage-077",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition/Classification",
+    "prompt_en": "Say: Reckless negligence is a serious offense in our legal system.",
+    "expected_es": "La negligencia temeraria es una falta grave en nuestro sistema jurídico.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "negligencia temeraria"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to define or classify what something is."
+  },
+  {
+    "id": "ser-usage-078",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition/Classification",
+    "prompt_en": "Say: A compressed working day is an option for certain departments.",
+    "expected_es": "La jornada intensiva es una opción para ciertos departamentos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "jornada intensiva"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to define or categorize the subject."
+  },
+  {
+    "id": "ser-usage-079",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Cleft emphasis (lo que... es...)",
+    "prompt_en": "Say: What is most frustrating is the bureaucratic procedure itself.",
+    "expected_es": "Lo que es más frustrante es el trámite burocrático en sí.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "trámite burocrático"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The 'lo que es' construction is used for emphasis, highlighting the frustrating aspect."
+  },
+  {
+    "id": "ser-usage-080",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition/Classification",
+    "prompt_en": "Say: Reinforcing social cohesion is a fundamental challenge for the government.",
+    "expected_es": "Reforzar la cohesión social es un desafío fundamental para el gobierno.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "cohesión social"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to define what 'reinforcing social cohesion' represents (a challenge)."
+  }
+]
+```

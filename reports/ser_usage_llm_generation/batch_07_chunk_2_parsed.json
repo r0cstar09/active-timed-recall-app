@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-311",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "recommendation/evaluation",
+    "prompt_en": "Say: Improving time management would be crucial for the success of the project.",
+    "expected_es": "Mejorar la gestión del tiempo sería crucial para el éxito del proyecto.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la gestión del tiempo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to express a hypothetical evaluation or recommendation about what something 'would be'."
+  },
+  {
+    "id": "ser-usage-312",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "prediction/future role",
+    "prompt_en": "Say: Evaluating disaster risk will be a top priority for the new administration.",
+    "expected_es": "Evaluar el riesgo de desastre será una prioridad máxima para la nueva administración.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el riesgo de desastre"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to state what something 'will be' in the future, often a characteristic or role."
+  },
+  {
+    "id": "ser-usage-313",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "hypothetical evaluation",
+    "prompt_en": "Say: Without these new regulations, legal certainty would be considerably weaker.",
+    "expected_es": "Sin estas nuevas regulaciones, la seguridad jurídica sería considerablemente más débil.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la seguridad jurídica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to express a hypothetical state or characteristic under certain conditions."
+  },
+  {
+    "id": "ser-usage-314",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "future event time/location",
+    "prompt_en": "Say: The official ratification of the treaty will be next month, after the final review.",
+    "expected_es": "La ratificación oficial del tratado será el próximo mes, después de la revisión final.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la ratificación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to indicate the time or location of a future event."
+  },
+  {
+    "id": "ser-usage-315",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "polite evaluation/recommendation",
+    "prompt_en": "Say: For urban transport efficiency, intermodality would be the ideal solution, without a doubt.",
+    "expected_es": "Para la eficiencia del transporte urbano, la intermodalidad sería la solución ideal, sin duda.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la intermodalidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to express a polite or hypothetical opinion about what something 'would be'."
+  },
+  {
+    "id": "ser-usage-316",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "prediction about characteristic",
+    "prompt_en": "Say: In today's job market, a strong cover letter will be as important as the resume itself.",
+    "expected_es": "En el mercado laboral actual, una carta de presentación sólida será tan importante como el currículum mismo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el currículum"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to predict a future characteristic or inherent quality."
+  },
+  {
+    "id": "ser-usage-317",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "hypothetical consequence",
+    "prompt_en": "Say: Given the current interest rates, the amortization period for the loan would be significantly shorter.",
+    "expected_es": "Dadas las tasas de interés actuales, el período de amortización del préstamo sería significativamente más corto.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la amortización"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to describe a hypothetical consequence or outcome."
+  },
+  {
+    "id": "ser-usage-318",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "future identity/role",
+    "prompt_en": "Say: The final evaluation of the project will be comprehensive and include all stakeholders' feedback.",
+    "expected_es": "La evaluación final del proyecto será exhaustiva e incluirá la retroalimentación de todos los interesados.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la evaluación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to state what something's future nature or characteristic will be."
+  },
+  {
+    "id": "ser-usage-319",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "recommendation/opinion",
+    "prompt_en": "Say: For maximum transparency in the process, publishing all documents would be the best option.",
+    "expected_es": "Para una transparencia máxima en el proceso, publicar todos los documentos sería la mejor opción.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la transparencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to express a recommendation or opinion about what 'would be' ideal or best."
+  },
+  {
+    "id": "ser-usage-320",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "prediction about a challenge",
+    "prompt_en": "Say: Mitigating this specific side effect will be a complex challenge for the researchers.",
+    "expected_es": "Mitigar este efecto secundario específico será un desafío complejo para los investigadores.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el efecto secundario"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to predict what something's nature or inherent difficulty 'will be' in the future."
+  }
+]

@@ -1,0 +1,192 @@
+[
+  {
+    "id": "ser-usage-331",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Hypothetical evaluation/consequence",
+    "prompt_en": "Say: It would be an act of serious negligence not to perform proper due diligence in this acquisition.",
+    "expected_es": "Sería un acto de negligencia grave no realizar la diligencia debida en esta adquisición.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la negligencia",
+      "la diligencia debida"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sería' for a hypothetical evaluation or what something would be under certain conditions."
+  },
+  {
+    "id": "ser-usage-332",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Future prediction/consequence",
+    "prompt_en": "Say: The launch of the new product will be a significant repercussion for our competitors.",
+    "expected_es": "El lanzamiento del nuevo producto será una repercusión significativa para nuestros competidores.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el lanzamiento",
+      "la repercusión"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'será' to state what something will be in the future, often as a prediction or consequence."
+  },
+  {
+    "id": "ser-usage-333",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Polite recommendation/evaluation",
+    "prompt_en": "Say: It would be advisable to ensure the accommodation has good coverage, as connectivity is crucial for remote work.",
+    "expected_es": "Sería aconsejable asegurar que el alojamiento sea de buena cobertura, ya que la conectividad es crucial para el trabajo remoto.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el alojamiento",
+      "la cobertura"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sería' for polite recommendations or evaluations of what would be suitable/advisable."
+  },
+  {
+    "id": "ser-usage-334",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Future identity/purpose",
+    "prompt_en": "Say: The primary challenge for the student body in the coming years will be adapting to artificial intelligence.",
+    "expected_es": "El principal reto para el alumnado en los próximos años será la adaptación a la inteligencia artificial.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el alumnado",
+      "la inteligencia artificial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'será' to define a future role, identity, or purpose of something."
+  },
+  {
+    "id": "ser-usage-335",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Hypothetical condition/possibility",
+    "prompt_en": "Say: It would be much easier to repair that leak if we had a proper caulking gun.",
+    "expected_es": "Sería mucho más fácil reparar esa gotera si tuviéramos una pistola de silicona adecuada.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la gotera",
+      "la pistola de silicona"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sería' to express what something would be under a hypothetical or conditional circumstance."
+  },
+  {
+    "id": "ser-usage-336",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Future commitment/objective",
+    "prompt_en": "Say: Our main commitment will be to foster shared parental responsibility in all family policies.",
+    "expected_es": "Nuestro principal compromiso será fomentar la corresponsabilidad parental en todas las políticas familiares.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el compromiso",
+      "la corresponsabilidad parental"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'será' to define a future objective, commitment, or what something will consist of."
+  },
+  {
+    "id": "ser-usage-337",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Conditional evaluation of effectiveness",
+    "prompt_en": "Say: It would be an effective preventive measure to impose stricter penalties for environmental crimes.",
+    "expected_es": "Sería una medida preventiva eficaz imponer penas más estrictas para los delitos ecológicos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la medida",
+      "el delito ecológico"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sería' to express what something would be (e.g., effective, beneficial) as a hypothetical evaluation or suggestion."
+  },
+  {
+    "id": "ser-usage-338",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Future event/passive voice",
+    "prompt_en": "Say: The next workshop on energy transition will be organized by the non-profit organization.",
+    "expected_es": "El próximo taller sobre la transición energética será organizado por la entidad sin ánimo de lucro.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la transición",
+      "la entidad sin ánimo de lucro"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'será' to form the future passive voice, indicating who or what will perform an action on the subject."
+  },
+  {
+    "id": "ser-usage-339",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Recommendation/Necessity",
+    "prompt_en": "Say: Developing greater resilience would be essential to face future catastrophes.",
+    "expected_es": "Sería esencial desarrollar mayor resiliencia para afrontar futuras catástrofes.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la resiliencia",
+      "la catástrofe"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sería' to express what would be necessary or essential in a given context."
+  },
+  {
+    "id": "ser-usage-340",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Future importance/role",
+    "prompt_en": "Say: The new remuneration policy will be crucial for employees returning from sick leave.",
+    "expected_es": "La nueva política de remuneración será crucial para los empleados que regresan de la baja laboral.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la remuneración",
+      "la baja laboral"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'será' to state what something will be in terms of importance or its role in the future."
+  }
+]

@@ -1,0 +1,383 @@
+{
+  "prompts": 500,
+  "batches": [
+    [
+      1,
+      50
+    ],
+    [
+      2,
+      50
+    ],
+    [
+      3,
+      50
+    ],
+    [
+      4,
+      50
+    ],
+    [
+      5,
+      50
+    ],
+    [
+      6,
+      50
+    ],
+    [
+      7,
+      50
+    ],
+    [
+      8,
+      50
+    ],
+    [
+      9,
+      50
+    ],
+    [
+      10,
+      50
+    ]
+  ],
+  "tense_counts": [
+    [
+      "Present",
+      134
+    ],
+    [
+      "Preterite",
+      69
+    ],
+    [
+      "Present Subjunctive",
+      62
+    ],
+    [
+      "Imperfect",
+      53
+    ],
+    [
+      "Imperfect Subjunctive",
+      51
+    ],
+    [
+      "Future",
+      37
+    ],
+    [
+      "Conditional",
+      29
+    ],
+    [
+      "Present Perfect",
+      25
+    ],
+    [
+      "Pluperfect",
+      16
+    ],
+    [
+      "Future Perfect",
+      12
+    ],
+    [
+      "Conditional Perfect",
+      11
+    ],
+    [
+      "Mixed",
+      1
+    ]
+  ],
+  "top_constructions": [
+    [
+      "event/cause identification",
+      9
+    ],
+    [
+      "Ser passive voice (by agent)",
+      8
+    ],
+    [
+      "Ser + past participle (passive voice)",
+      8
+    ],
+    [
+      "identity/classification",
+      6
+    ],
+    [
+      "Cleft emphasis (lo que... es...)",
+      6
+    ],
+    [
+      "completed event time/place",
+      6
+    ],
+    [
+      "bounded passive voice",
+      6
+    ],
+    [
+      "event time/date",
+      5
+    ],
+    [
+      "impersonal expression + subjunctive for quality/requirement",
+      5
+    ],
+    [
+      "Definition",
+      4
+    ],
+    [
+      "Definition/Classification",
+      4
+    ],
+    [
+      "si fuera (hypothetical)",
+      4
+    ],
+    [
+      "Passive Voice (Preterite)",
+      4
+    ],
+    [
+      "inherent description",
+      3
+    ],
+    [
+      "material (ser de)",
+      3
+    ],
+    [
+      "Authorship (ser de)",
+      3
+    ],
+    [
+      "completed evaluation",
+      3
+    ],
+    [
+      "bounded passive voice (fue + participle)",
+      3
+    ],
+    [
+      "es + adjective + que + ser (subjunctive) for desired quality",
+      3
+    ],
+    [
+      "como si fuera (as if)",
+      3
+    ],
+    [
+      "si + imperfect subjunctive (hypothetical)",
+      3
+    ],
+    [
+      "como si + imperfect subjunctive",
+      3
+    ],
+    [
+      "Result up to now",
+      3
+    ],
+    [
+      "Counterfactual evaluation",
+      3
+    ],
+    [
+      "result of past action relevant now",
+      3
+    ],
+    [
+      "prior cause for a past event",
+      3
+    ],
+    [
+      "result up to now",
+      3
+    ],
+    [
+      "prior cause/state",
+      3
+    ],
+    [
+      "future retrospective probability/conjecture",
+      3
+    ],
+    [
+      "Passive Voice with Agent (Present)",
+      3
+    ],
+    [
+      "Passive Voice with Agent (Future)",
+      3
+    ],
+    [
+      "Passive Voice with Agent (Preterite)",
+      3
+    ],
+    [
+      "Passive voice (fue + participio)",
+      3
+    ],
+    [
+      "Passive voice (es + participio)",
+      3
+    ],
+    [
+      "profession/role",
+      2
+    ],
+    [
+      "origin/source (ser de)",
+      2
+    ],
+    [
+      "Inherent quality/Characteristic",
+      2
+    ],
+    [
+      "Event time",
+      2
+    ],
+    [
+      "definition",
+      2
+    ],
+    [
+      "cleft emphasis (lo que... es...)",
+      2
+    ]
+  ],
+  "unique_target_vocab": 514,
+  "top_target_vocab": [
+    [
+      "la normativa",
+      4
+    ],
+    [
+      "la sentencia judicial",
+      4
+    ],
+    [
+      "la brigada de emergencia",
+      4
+    ],
+    [
+      "la humedad",
+      4
+    ],
+    [
+      "la avería técnica",
+      3
+    ],
+    [
+      "la inmediatez",
+      3
+    ],
+    [
+      "certificado",
+      3
+    ],
+    [
+      "material didáctico",
+      3
+    ],
+    [
+      "repercusión",
+      3
+    ],
+    [
+      "costumbre",
+      3
+    ],
+    [
+      "expedición",
+      3
+    ],
+    [
+      "el operativo de rescate",
+      3
+    ],
+    [
+      "auditoría",
+      3
+    ],
+    [
+      "la reforma",
+      2
+    ],
+    [
+      "la implementación",
+      2
+    ],
+    [
+      "la resiliencia",
+      2
+    ],
+    [
+      "el cuestionario de satisfacción",
+      2
+    ],
+    [
+      "la burocracia",
+      2
+    ],
+    [
+      "el envoltorio",
+      2
+    ],
+    [
+      "la pintura plástica",
+      2
+    ],
+    [
+      "la corresponsabilidad doméstica",
+      2
+    ],
+    [
+      "el padrón",
+      2
+    ],
+    [
+      "el expediente",
+      2
+    ],
+    [
+      "la entidad sin ánimo de lucro",
+      2
+    ],
+    [
+      "la impugnación",
+      2
+    ],
+    [
+      "la deslocalización",
+      2
+    ],
+    [
+      "la amortización",
+      2
+    ],
+    [
+      "infraestructura crítica",
+      2
+    ],
+    [
+      "vanguardia",
+      2
+    ],
+    [
+      "cohesión social",
+      2
+    ]
+  ],
+  "output": "/home/rootadmin/active-timed-recall-app/src/data/generated/c1_verb_usage_banks.json",
+  "llm_review": "reports/ser_usage_llm_generation/llm_quality_review_text.md",
+  "post_review_fixes_applied": 13
+}

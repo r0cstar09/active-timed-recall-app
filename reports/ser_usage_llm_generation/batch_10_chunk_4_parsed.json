@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-481",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition/Identification",
+    "prompt_en": "Say: The court's decision was a clear case of gross negligence, given the evidence presented.",
+    "expected_es": "La decisión del tribunal fue un caso claro de negligencia grave, dada la evidencia presentada.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "negligencia grave"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to define or identify what something is (a clear case of gross negligence)."
+  },
+  {
+    "id": "ser-usage-482",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Impersonal statement/Definition",
+    "prompt_en": "Say: Prioritizing the collective well-being of the population is essential for a stable society.",
+    "expected_es": "Priorizar el bienestar colectivo de la población es esencial para una sociedad estable.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el bienestar"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used for inherent characteristics and essential qualities of something."
+  },
+  {
+    "id": "ser-usage-483",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice",
+    "prompt_en": "Say: The extraordinary assessment for the building's reform was approved by all residents.",
+    "expected_es": "La derrama extraordinaria para la reforma del edificio fue aprobada por todos los residentes.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la derrama extraordinaria"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to form the passive voice (ser + past participle) when indicating the agent of the action."
+  },
+  {
+    "id": "ser-usage-484",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition/Characteristic",
+    "prompt_en": "Say: Remote work is undoubtedly a flexible and efficient option for many professionals today.",
+    "expected_es": "El teletrabajo es, sin duda, una opción flexible y eficiente para muchos profesionales hoy en día.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el teletrabajo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to describe inherent qualities or characteristics, like 'being a flexible option'."
+  },
+  {
+    "id": "ser-usage-485",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal expression + Subjunctive (necessity)",
+    "prompt_en": "Say: It is crucial that the remuneration for this project is proportional to the effort and experience required.",
+    "expected_es": "Es crucial que la retribución para este proyecto sea proporcional al esfuerzo y la experiencia requeridos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la retribución"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The subjunctive mood is required after impersonal expressions of necessity or opinion like 'es crucial que'."
+  },
+  {
+    "id": "ser-usage-486",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition/Classification",
+    "prompt_en": "Say: The local water supply system is considered critical infrastructure due to its vital role for the population.",
+    "expected_es": "El sistema local de suministro de agua es considerado infraestructura crítica debido a su papel vital para la población.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "infraestructura crítica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used for classification and defining what something is or is considered to be."
+  },
+  {
+    "id": "ser-usage-487",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition/Identification",
+    "prompt_en": "Say: In today's economy, digital literacy is no longer a luxury but a fundamental necessity for everyone.",
+    "expected_es": "En la economía actual, la alfabetización digital ya no es un lujo, sino una necesidad fundamental para todos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la alfabetización digital"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to define what something is, indicating its nature or identity."
+  },
+  {
+    "id": "ser-usage-488",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Purpose/Destination",
+    "prompt_en": "Say: The recurring expenses for the building are mainly for the maintenance of common areas and services.",
+    "expected_es": "Los gastos recurrentes del edificio son principalmente para el mantenimiento de las zonas comunes y los servicios.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el mantenimiento"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to indicate purpose or destination, often with 'para'."
+  },
+  {
+    "id": "ser-usage-489",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Concessive clause + Subjunctive",
+    "prompt_en": "Say: Even though she is still a scholarship holder, her contributions to the research team are invaluable.",
+    "expected_es": "Aunque sea todavía una becaria, sus contribuciones al equipo de investigación son invaluables.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la becaria"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The subjunctive mood is used after 'aunque' when the information is presented as a hypothesis or not a confirmed fact by the speaker, or when it expresses a concession about a potential situation."
+  },
+  {
+    "id": "ser-usage-490",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Impersonal expression",
+    "prompt_en": "Say: It is undeniable that the current production methods are generating a significant ecological impact worldwide.",
+    "expected_es": "Es innegable que los métodos de producción actuales están generando un impacto ecológico significativo a nivel mundial.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el impacto ecológico"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used with impersonal expressions to state facts or universal truths, like 'es innegable'."
+  }
+]

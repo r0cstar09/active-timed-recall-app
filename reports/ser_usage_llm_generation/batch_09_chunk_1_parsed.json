@@ -1,0 +1,187 @@
+[
+  {
+    "id": "ser-usage-401",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive Voice (Preterite)",
+    "prompt_en": "Say: The lawsuit was formally filed by the legal department last week after thorough review.",
+    "expected_es": "La querella fue presentada formalmente por el departamento legal la semana pasada tras una revisión exhaustiva.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "querella"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue presentada' for preterite passive, agreement with 'querella', natural construction, and target vocabulary.",
+    "correction_hint": "Remember to use 'ser' in the preterite ('fue') followed by the past participle ('presentada') to form the passive voice, ensuring gender and number agreement with the subject."
+  },
+  {
+    "id": "ser-usage-402",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive Voice (Present)",
+    "prompt_en": "Say: The annual audit is usually conducted by an external firm to ensure complete transparency.",
+    "expected_es": "La auditoría anual suele ser realizada por una firma externa para asegurar una transparencia completa.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "auditoría"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'suele ser realizada' for present passive, agreement with 'auditoría', natural construction, and target vocabulary.",
+    "correction_hint": "For recurring actions in the passive voice, use 'soler' in the present tense followed by 'ser' and the past participle ('soler ser realizada')."
+  },
+  {
+    "id": "ser-usage-403",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive Voice (Future)",
+    "prompt_en": "Say: The main structural pillar will be reinforced by the maintenance team next month to guarantee safety.",
+    "expected_es": "El pilar estructural principal será reforzado por el equipo de mantenimiento el próximo mes para garantizar la seguridad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "pilar",
+      "mantenimiento"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'será reforzado' for future passive, agreement with 'pilar', natural construction, and target vocabulary.",
+    "correction_hint": "The future passive voice is formed with 'ser' in the future tense ('será') plus the past participle ('reforzado'), agreeing with the subject."
+  },
+  {
+    "id": "ser-usage-404",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive Voice (Present Perfect)",
+    "prompt_en": "Say: The standard working day has been reduced by the new regulations for all employees' well-being.",
+    "expected_es": "La jornada laboral estándar ha sido reducida por las nuevas regulaciones para el bienestar de todos los empleados.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "jornada laboral"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'ha sido reducida' for present perfect passive, agreement with 'jornada laboral', natural construction, and target vocabulary.",
+    "correction_hint": "The present perfect passive uses 'haber' in the present tense ('ha') followed by 'sido' (past participle of ser) and the main verb's past participle ('reducida')."
+  },
+  {
+    "id": "ser-usage-405",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Passive Voice (Present Subjunctive)",
+    "prompt_en": "Say: It is imperative that the technical inspection be passed by every vehicle annually to comply with safety standards.",
+    "expected_es": "Es imperativo que la inspección técnica sea superada por cada vehículo anualmente para cumplir con los estándares de seguridad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "inspección técnica"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'sea superada' for present subjunctive passive, agreement with 'inspección técnica', natural construction, and target vocabulary.",
+    "correction_hint": "When the main clause expresses necessity or obligation, the passive voice in the subordinate clause often requires the subjunctive mood ('sea superada')."
+  },
+  {
+    "id": "ser-usage-406",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive Voice (Preterite)",
+    "prompt_en": "Say: The impersonation attempt was detected immediately due to the new verification process implemented by the IT department.",
+    "expected_es": "El intento de suplantación fue detectado de inmediato debido al nuevo proceso de verificación implementado por el departamento de TI.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "suplantación",
+      "verificación"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue detectado' for preterite passive, agreement with 'intento', natural construction, and target vocabulary.",
+    "correction_hint": "The preterite passive uses 'ser' in the preterite ('fue') followed by the past participle ('detectado'), agreeing in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-407",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive Voice (Preterite)",
+    "prompt_en": "Say: The new classroom was designed with an innovative methodology in mind to foster interactive learning.",
+    "expected_es": "La nueva aula fue diseñada con una metodología innovadora en mente para fomentar el aprendizaje interactivo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "aula",
+      "metodología"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue diseñada' for preterite passive, agreement with 'aula', natural construction, and target vocabulary.",
+    "correction_hint": "Ensure the past participle ('diseñada') agrees in gender and number with the subject ('aula') when forming the passive voice with 'ser' in the preterite ('fue')."
+  },
+  {
+    "id": "ser-usage-408",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive Voice (Present with Modal)",
+    "prompt_en": "Say: The official certificate can only be issued by the accredited institution after completing all required procedures.",
+    "expected_es": "El certificado oficial solo puede ser expedido por la institución acreditada tras completar todos los trámites requeridos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "certificado",
+      "acreditación"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'puede ser expedido' for modal passive, agreement with 'certificado', natural construction, and target vocabulary.",
+    "correction_hint": "To form the passive with a modal verb, place the modal verb ('puede') before 'ser' and the past participle ('expedido'), ensuring agreement with the subject."
+  },
+  {
+    "id": "ser-usage-409",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive Voice (Conditional)",
+    "prompt_en": "Say: The commission for sales would be increased if the promotion target were met by the end of the quarter, as stipulated.",
+    "expected_es": "La comisión por ventas sería aumentada si el objetivo de promoción fuera alcanzado a finales del trimestre, según lo estipulado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "comisión",
+      "promoción"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'sería aumentada' for conditional passive, agreement with 'comisión', natural construction, and target vocabulary.",
+    "correction_hint": "The conditional passive is formed by 'ser' in the conditional tense ('sería') followed by the past participle ('aumentada'), agreeing with the subject."
+  },
+  {
+    "id": "ser-usage-410",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive Voice (Preterite)",
+    "prompt_en": "Say: The vehicle was removed by the municipal tow truck due to illegal parking regulations in the restricted zone.",
+    "expected_es": "El vehículo fue retirado por la grúa municipal debido a la normativa de estacionamiento ilegal en la zona restringida.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "grúa municipal"
+    ],
+    "grading_notes": "Grade for SER usage: correct 'fue retirado' for preterite passive, agreement with 'vehículo', natural construction, and target vocabulary.",
+    "correction_hint": "Use 'ser' in the preterite tense ('fue') with the past participle ('retirado') to form the passive voice, ensuring gender and number agreement with 'vehículo'."
+  }
+]

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-031",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "identity/classification",
+    "prompt_en": "Say: The municipal register is a fundamental administrative document for residents.",
+    "expected_es": "El padrón es un documento administrativo fundamental para los residentes.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el padrón"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to define what the municipal register is (its identity or classification)."
+  },
+  {
+    "id": "ser-usage-032",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "profession/role",
+    "prompt_en": "Say: My responsibility is to lead the emergency brigade during drills.",
+    "expected_es": "Mi responsabilidad es liderar la brigada de emergencia durante los simulacros.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la brigada de emergencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to describe an inherent role or responsibility."
+  },
+  {
+    "id": "ser-usage-033",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "material/inherent quality",
+    "prompt_en": "Say: This type of paint is plastic, making it very resistant to moisture.",
+    "expected_es": "Este tipo de pintura es plástica, lo que la hace muy resistente a la humedad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la pintura plástica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to describe an inherent quality or the material composition of the paint."
+  },
+  {
+    "id": "ser-usage-034",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "material (ser de)",
+    "prompt_en": "Say: The new seal for the window frame is made of silicone.",
+    "expected_es": "El nuevo sello para el marco de la ventana es de silicona.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la silicona"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER + 'de' is used to indicate the material something is made of."
+  },
+  {
+    "id": "ser-usage-035",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "inherent description",
+    "prompt_en": "Say: The company's liquidity is a key indicator of its financial health.",
+    "expected_es": "La liquidez de la empresa es un indicador clave de su salud financiera.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la liquidez"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to describe an inherent characteristic or classification of the liquidity."
+  },
+  {
+    "id": "ser-usage-036",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event time",
+    "prompt_en": "Say: The safety inspection of the building is scheduled for Friday morning.",
+    "expected_es": "La inspección de seguridad del edificio es el viernes por la mañana.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la inspección"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to indicate the time or date of an event."
+  },
+  {
+    "id": "ser-usage-037",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "value/price",
+    "prompt_en": "Say: The penalty for canceling the reservation late is 30% of the total cost.",
+    "expected_es": "La penalización por cancelar la reserva tarde es el 30% del coste total.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la penalización"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to state a value, price, or percentage."
+  },
+  {
+    "id": "ser-usage-038",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "identity/classification",
+    "prompt_en": "Say: This new release is an audiobook that combines fiction and historical facts.",
+    "expected_es": "Este nuevo lanzamiento es un audiolibro que combina ficción y hechos históricos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el audiolibro"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to identify or classify what the new release is."
+  },
+  {
+    "id": "ser-usage-039",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "inherent description",
+    "prompt_en": "Say: The immediacy of digital communication is a double-edged sword.",
+    "expected_es": "La inmediatez de la comunicación digital es un arma de doble filo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la inmediatez"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to describe an inherent quality or characteristic of immediacy."
+  },
+  {
+    "id": "ser-usage-040",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "inherent description/classification",
+    "prompt_en": "Say: The humidity in the old archives is a constant concern for preservation.",
+    "expected_es": "La humedad en los archivos antiguos es una preocupación constante para la conservación.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la humedad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to classify or describe the inherent nature of the humidity as a concern."
+  }
+]

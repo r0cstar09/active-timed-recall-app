@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-141",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed evaluation/classification",
+    "prompt_en": "Say: The court's decision was a controversial ruling.",
+    "expected_es": "La decisión del tribunal fue una sentencia controvertida.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la sentencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite for a completed evaluation or classification of an event or outcome."
+  },
+  {
+    "id": "ser-usage-142",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event/cause identification",
+    "prompt_en": "Say: The primary reason for the network outage was a technical fault.",
+    "expected_es": "La razón principal de la caída de la red fue una avería técnica.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la avería técnica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite to identify the cause or reason for a specific past event."
+  },
+  {
+    "id": "ser-usage-143",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "one-off role/profession identification",
+    "prompt_en": "Say: On that specific occasion, the person who fixed the leak was a very efficient plumber.",
+    "expected_es": "En aquella ocasión concreta, la persona que arregló la fuga fue un fontanero muy eficiente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el fontanero"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite to describe a completed, specific role or profession in a past event."
+  },
+  {
+    "id": "ser-usage-144",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice (fue/fueron + participle)",
+    "prompt_en": "Say: The entire city infrastructure was seriously damaged by the hurricane.",
+    "expected_es": "Toda la infraestructura urbana fue gravemente dañada por el huracán.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la infraestructura"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (fue/fueron), correct past participle agreement, natural construction, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite with a past participle for a completed passive action."
+  },
+  {
+    "id": "ser-usage-145",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed event time/place",
+    "prompt_en": "Say: The review of the attendance record was scheduled for last Friday in the main office.",
+    "expected_es": "La revisión del registro de asistencia fue programada para el viernes pasado en la oficina principal.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el registro de asistencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite to state the specific time or place of a completed event."
+  },
+  {
+    "id": "ser-usage-146",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed evaluation/description",
+    "prompt_en": "Say: According to all testimonials, the personalized service was exceptional.",
+    "expected_es": "Según todos los testimonios, la atención personalizada fue excepcional.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la atención personalizada"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite for a completed evaluation or description of a service or quality."
+  },
+  {
+    "id": "ser-usage-147",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event/cause identification",
+    "prompt_en": "Say: The reason for his financial difficulties was primarily the license suspension.",
+    "expected_es": "El motivo de sus dificultades financieras fue principalmente la retirada del permiso.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la retirada del permiso"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite to identify the primary cause or origin of a past situation or consequence."
+  },
+  {
+    "id": "ser-usage-148",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "one-off role/characteristic identification",
+    "prompt_en": "Say: That evening, the CEO was just another diner waiting for his table.",
+    "expected_es": "Esa noche, el director ejecutivo fue un comensal más esperando su mesa.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el comensal"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite to describe a completed, specific role or characteristic someone had in a past event."
+  },
+  {
+    "id": "ser-usage-149",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice (fue/fueron + participle)",
+    "prompt_en": "Say: The proposed curriculum was fully modified before its final approval.",
+    "expected_es": "El plan de estudios propuesto fue modificado por completo antes de su aprobación final.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el plan de estudios"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (fue/fueron), correct past participle agreement, natural construction, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite with a past participle for a completed passive action."
+  },
+  {
+    "id": "ser-usage-150",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed event time/place/destination",
+    "prompt_en": "Say: The emergency transfer was directly to the intensive care unit.",
+    "expected_es": "El traslado de emergencia fue directamente a la unidad de cuidados intensivos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la unidad de cuidados intensivos"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite to indicate the destination or location of a completed action or event."
+  }
+]

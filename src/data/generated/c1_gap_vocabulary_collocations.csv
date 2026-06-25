@@ -1,0 +1,1467 @@
+spanish,english,domain,collocations
+la cláusula,clause,legal,incluir una cláusula; redactar una cláusula; anular una cláusula; estipular una cláusula
+la indemnización,compensation,legal,reclamar una indemnización; recibir una indemnización; pagar una indemnización; fijar una indemnización
+el litigio,litigation/dispute,legal,resolver un litigio; evitar un litigio; ganar un litigio; iniciar un litigio
+el aval,guarantee/collateral,money,solicitar un aval; presentar un aval; exigir un aval; conceder un aval
+la solvencia,solvency,money,demostrar solvencia; comprobar solvencia; mantener la solvencia; carecer de solvencia
+la plusvalía,capital gain,money,generar plusvalía; obtener plusvalía; calcular plusvalía; gravar la plusvalía
+el activo,asset,money,valorar un activo; liquidar un activo; gestionar un activo; comprar un activo
+la auditoría,audit,admin,realizar una auditoría; superar una auditoría; encargar una auditoría; aprobar una auditoría
+el borrador,draft,admin,preparar un borrador; corregir un borrador; finalizar un borrador; revisar un borrador
+la normativa,regulations,admin,cumplir la normativa; infringir la normativa; aplicar la normativa; actualizar la normativa
+el acta,minutes/official record,admin,levantar acta; firmar el acta; leer el acta; archivar el acta
+la vacante,vacancy,work,cubrir una vacante; anunciar una vacante; solicitar una vacante; ocupar una vacante
+el finiquito,severance pay,work,firmar el finiquito; calcular el finiquito; recibir el finiquito; tramitar el finiquito
+la excedencia,leave of absence,work,pedir una excedencia; disfrutar una excedencia; solicitar una excedencia; conceder una excedencia
+el protocolo,protocol,safety,seguir el protocolo; establecer un protocolo; violar el protocolo; diseñar un protocolo
+el riesgo laboral,occupational hazard,safety,prevenir el riesgo laboral; evaluar el riesgo laboral; reducir el riesgo laboral; evitar el riesgo laboral
+el siniestro,accident/claim,safety,notificar un siniestro; cubrir un siniestro; investigar un siniestro; indemnizar un siniestro
+la negligencia,negligence,safety,cometer una negligencia; denunciar una negligencia; evitar una negligencia; probar una negligencia
+el cortocircuito,short circuit,repairs,provocar un cortocircuito; sufrir un cortocircuito; reparar un cortocircuito; evitar un cortocircuito
+la humedad,damp/humidity,repairs,detectar humedad; eliminar la humedad; aislar la humedad; sufrir humedad
+la gotera,leak,repairs,reparar una gotera; tapar una gotera; evitar una gotera; sufrir una gotera
+la partida,item/entry,money,asignar una partida; gastar una partida; revisar una partida; incluir una partida
+la morosidad,delinquency,money,combatir la morosidad; reducir la morosidad; evitar la morosidad; controlar la morosidad
+la plantilla,staff/workforce,work,reducir la plantilla; ampliar la plantilla; gestionar la plantilla; formar la plantilla
+el expediente,file/dossier,admin,abrir un expediente; cerrar un expediente; tramitar un expediente; archivar un expediente
+la instancia,application/request,admin,presentar una instancia; rellenar una instancia; tramitar una instancia; denegar una instancia
+el gravamen,tax/levy,money,aplicar un gravamen; suprimir un gravamen; eludir un gravamen; pagar un gravamen
+la fiscalidad,tax system,money,revisar la fiscalidad; optimizar la fiscalidad; entender la fiscalidad; aplicar la fiscalidad
+la jurisdicción,jurisdiction,legal,caer bajo jurisdicción; ampliar la jurisdicción; limitar la jurisdicción; definir la jurisdicción
+el peritaje,expert assessment,legal,solicitar un peritaje; realizar un peritaje; impugnar un peritaje; presentar un peritaje
+la demanda,lawsuit,legal,presentar una demanda; retirar una demanda; ganar una demanda; desestimar una demanda
+el veredicto,verdict,legal,emitir un veredicto; acatar un veredicto; anunciar un veredicto; cuestionar un veredicto
+la evacuación,evacuation,safety,ordenar una evacuación; realizar una evacuación; facilitar una evacuación; completar una evacuación
+el material inflamable,flammable material,safety,almacenar material inflamable; manipular material inflamable; retirar material inflamable; detectar material inflamable
+la vía de escape,escape route,safety,bloquear la vía de escape; señalizar la vía de escape; despejar la vía de escape; utilizar la vía de escape
+la brecha,gap/breach,tech,detectar una brecha; cerrar una brecha; sufrir una brecha; proteger contra una brecha
+el cifrado,encryption,tech,aplicar el cifrado; romper el cifrado; reforzar el cifrado; verificar el cifrado
+la vulnerabilidad,vulnerability,tech,explotar una vulnerabilidad; corregir una vulnerabilidad; descubrir una vulnerabilidad; analizar una vulnerabilidad
+el ancho de banda,bandwidth,tech,consumir ancho de banda; ampliar el ancho de banda; limitar el ancho de banda; optimizar el ancho de banda
+el despliegue,deployment,tech,realizar el despliegue; planificar el despliegue; acelerar el despliegue; completar el despliegue
+la interfaz,interface,tech,diseñar la interfaz; mejorar la interfaz; simplificar la interfaz; probar la interfaz
+la nómina,payroll,work,gestionar la nómina; procesar la nómina; pagar la nómina; auditar la nómina
+el incentivo,incentive,work,ofrecer un incentivo; recibir un incentivo; eliminar un incentivo; crear un incentivo
+la retención,withholding,money,aplicar una retención; calcular la retención; evitar la retención; deducir la retención
+el apalancamiento,leverage,money,utilizar el apalancamiento; reducir el apalancamiento; controlar el apalancamiento; aumentar el apalancamiento
+el flujo de caja,cash flow,money,mejorar el flujo de caja; controlar el flujo de caja; analizar el flujo de caja; gestionar el flujo de caja
+la amortización,amortization,money,calcular la amortización; pagar la amortización; aplazar la amortización; completar la amortización
+el formulario,form,admin,rellenar un formulario; enviar un formulario; tramitar un formulario; descargar un formulario
+el trámite,procedure,admin,agilizar un trámite; completar un trámite; iniciar un trámite; simplificar un trámite
+el certificado,certificate,admin,expedir un certificado; obtener un certificado; falsificar un certificado; validar un certificado
+la vigencia,validity,admin,prorrogar la vigencia; comprobar la vigencia; perder la vigencia; mantener la vigencia
+el recurso,appeal/resource,legal,presentar un recurso; desestimar un recurso; admitir un recurso; ganar un recurso
+la sentencia,ruling,legal,dictar sentencia; cumplir la sentencia; recurrir la sentencia; acatar la sentencia
+la mediación,mediation,legal,buscar una mediación; aceptar la mediación; facilitar la mediación; proponer la mediación
+la responsabilidad,liability,legal,asumir la responsabilidad; eludir la responsabilidad; limitar la responsabilidad; probar la responsabilidad
+la inspección,inspection,safety,pasar una inspección; realizar una inspección; superar una inspección; evitar una inspección
+el equipo de protección,protective gear,safety,utilizar equipo de protección; exigir equipo de protección; revisar equipo de protección; homologar equipo de protección
+la señalización,signage,safety,instalar la señalización; mejorar la señalización; ignorar la señalización; renovar la señalización
+la prevención,prevention,safety,fomentar la prevención; aplicar la prevención; mejorar la prevención; garantizar la prevención
+el mantenimiento,maintenance,repairs,realizar el mantenimiento; descuidar el mantenimiento; planificar el mantenimiento; contratar el mantenimiento
+la avería,breakdown,repairs,sufrir una avería; reparar una avería; detectar una avería; notificar una avería
+la reforma,renovation,repairs,planificar una reforma; financiar una reforma; realizar una reforma; supervisar una reforma
+el aislamiento,insulation,repairs,reforzar el aislamiento; mejorar el aislamiento; instalar el aislamiento; comprobar el aislamiento
+la infraestructura,infrastructure,work,desarrollar la infraestructura; mejorar la infraestructura; financiar la infraestructura; evaluar la infraestructura
+el puesto,position,work,desempeñar el puesto; abandonar el puesto; solicitar el puesto; cubrir el puesto
+la jornada,workday,work,reducir la jornada; ampliar la jornada; cumplir la jornada; controlar la jornada
+el ascenso,promotion,work,conseguir un ascenso; merecer un ascenso; proponer un ascenso; rechazar un ascenso
+la productividad,productivity,work,aumentar la productividad; medir la productividad; caer la productividad; optimizar la productividad
+el despido,dismissal,work,notificar un despido; impugnar un despido; evitar un despido; tramitar un despido
+el entorno,environment,work,mejorar el entorno; adaptar el entorno; evaluar el entorno; gestionar el entorno
+el margen,margin,money,aumentar el margen; reducir el margen; calcular el margen; asegurar el margen
+el dividendo,dividend,money,repartir el dividendo; cobrar el dividendo; reducir el dividendo; reinvertir el dividendo
+la acción,share,money,comprar una acción; vender una acción; cotizar una acción; valorar una acción
+el interés,interest rate,money,subir el interés; bajar el interés; pagar el interés; devengar el interés
+la deuda,debt,money,saldar la deuda; refinanciar la deuda; contraer la deuda; reducir la deuda
+el balance,balance sheet,money,presentar el balance; auditar el balance; cerrar el balance; analizar el balance
+la gestión,management,admin,optimizar la gestión; externalizar la gestión; mejorar la gestión; supervisar la gestión
+la expansión,expansion,money,planificar la expansión; financiar la expansión; acelerar la expansión; frenar la expansión
+el nicho,niche,money,identificar un nicho; ocupar un nicho; explotar un nicho; crear un nicho
+el lanzamiento,launch,money,programar el lanzamiento; retrasar el lanzamiento; preparar el lanzamiento; gestionar el lanzamiento
+la marca,brand,money,posicionar la marca; proteger la marca; registrar la marca; fortalecer la marca
+la instalación,installation,repairs,revisar la instalación; mejorar la instalación; realizar la instalación; certificar la instalación
+la cuantía,amount/sum,money,determinar la cuantía; elevar la cuantía; reducir la cuantía; cubrir la cuantía
+el desglose,breakdown/itemization,admin,solicitar el desglose; revisar el desglose; detallar el desglose; ocultar el desglose
+la diligencia,diligence/care,legal,actuar con diligencia; mostrar diligencia; carecer de diligencia; exigir diligencia
+la sucursal,branch/office,work,abrir una sucursal; cerrar una sucursal; gestionar una sucursal; visitar una sucursal
+el contratiempo,setback,work,surgir un contratiempo; evitar un contratiempo; superar un contratiempo; prever un contratiempo
+el convenio,agreement/covenant,legal,firmar un convenio; incumplir un convenio; ratificar un convenio; negociar un convenio
+la retribución,remuneration/pay,money,percibir una retribución; aumentar la retribución; ajustar la retribución; fijar una retribución
+el suministro,supply/provision,work,garantizar el suministro; cortar el suministro; gestionar el suministro; restablecer el suministro
+el resguardo,receipt/proof,admin,presentar el resguardo; conservar el resguardo; perder el resguardo; exigir el resguardo
+el hallazgo,discovery/finding,education,hacer un hallazgo; publicar un hallazgo; confirmar un hallazgo; respaldar un hallazgo
+la premisa,premise/assumption,education,partir de una premisa; cuestionar la premisa; establecer la premisa; demostrar la premisa
+el sesgo,bias,education,evitar el sesgo; analizar el sesgo; corregir el sesgo; identificar el sesgo
+la metodología,methodology,education,desarrollar la metodología; aplicar la metodología; revisar la metodología; seguir la metodología
+la ponencia,presentation/lecture,education,dar una ponencia; asistir a una ponencia; preparar una ponencia; moderar una ponencia
+el posgrado,postgraduate studies,education,cursar un posgrado; terminar un posgrado; financiar un posgrado; elegir un posgrado
+la beca,scholarship/grant,education,solicitar una beca; conceder una beca; obtener una beca; perder una beca
+el campus,campus,education,visitar el campus; ampliar el campus; vivir en el campus; recorrer el campus
+la tutoría,tutoring/office hours,education,solicitar una tutoría; acudir a una tutoría; programar una tutoría; aprovechar la tutoría
+el plan de estudios,curriculum/syllabus,education,diseñar el plan de estudios; modificar el plan de estudios; seguir el plan de estudios; aprobar el plan de estudios
+la nube,cloud (storage),tech,almacenar en la nube; subir a la nube; sincronizar con la nube; acceder a la nube
+la ciberseguridad,cybersecurity,tech,reforzar la ciberseguridad; mejorar la ciberseguridad; auditar la ciberseguridad; garantizar la ciberseguridad
+la plataforma,platform,tech,lanzar una plataforma; integrar una plataforma; alojar en una plataforma; usar una plataforma
+el código fuente,source code,tech,escribir el código fuente; compilar el código fuente; depurar el código fuente; proteger el código fuente
+el titular,headline,media,leer el titular; redactar el titular; cambiar el titular; destacar el titular
+la fuente,source (news),media,citar la fuente; verificar la fuente; proteger la fuente; revelar la fuente
+el reportaje,report/feature,media,emitir un reportaje; publicar un reportaje; realizar un reportaje; censurar un reportaje
+el sesgo mediático,media bias,media,denunciar el sesgo mediático; criticar el sesgo mediático; evitar el sesgo mediático
+la audiencia,audience,media,captar la audiencia; perder audiencia; medir la audiencia; dirigirse a la audiencia
+la veracidad,truthfulness/veracity,media,comprobar la veracidad; cuestionar la veracidad; garantizar la veracidad; confirmar la veracidad
+la línea editorial,editorial policy,media,seguir la línea editorial; defender la línea editorial; marcar la línea editorial; cuestionar la línea editorial
+la exclusiva,exclusive scoop,media,publicar una exclusiva; conseguir una exclusiva; preparar una exclusiva; vender una exclusiva
+el debate,debate,media,organizar un debate; moderar un debate; participar en un debate; seguir un debate
+la diversidad,diversity,culture,fomentar la diversidad; celebrar la diversidad; promover la diversidad; defender la diversidad
+el patrimonio,heritage,culture,proteger el patrimonio; restaurar el patrimonio; conservar el patrimonio; valorar el patrimonio
+la vanguardia,avant-garde,culture,estar a la vanguardia; liderar la vanguardia; representar la vanguardia; explorar la vanguardia
+la costumbre,custom/tradition,culture,adoptar una costumbre; perder una costumbre; respetar una costumbre; seguir una costumbre
+la identidad,identity,culture,forjar la identidad; defender la identidad; expresar la identidad; cuestionar la identidad
+la integración,integration,culture,favorecer la integración; promover la integración; facilitar la integración; lograr la integración
+el legado,legacy,culture,dejar un legado; preservar el legado; honrar el legado; continuar el legado
+la influencia,influence,culture,ejercer influencia; perder influencia; aumentar la influencia; reconocer la influencia
+la transgresión,transgression,culture,cometer una transgresión; evitar la transgresión; justificar la transgresión; señalar la transgresión
+el síntoma,symptom,health,aliviar el síntoma; tratar el síntoma; detectar el síntoma; ignorar el síntoma
+el diagnóstico,diagnosis,health,confirmar el diagnóstico; retrasar el diagnóstico; recibir un diagnóstico; cuestionar el diagnóstico
+la medicación,medication,health,tomar la medicación; ajustar la medicación; interrumpir la medicación; recetar la medicación
+la rehabilitación,rehabilitation,health,completar la rehabilitación; iniciar la rehabilitación; financiar la rehabilitación; seguir la rehabilitación
+el bienestar,well-being,health,promover el bienestar; cuidar el bienestar; priorizar el bienestar; mejorar el bienestar
+la consulta,doctor's appointment,health,solicitar una consulta; acudir a una consulta; posponer una consulta; programar una consulta
+el historial,medical history,health,revisar el historial; actualizar el historial; proteger el historial; consultar el historial
+la patología,pathology,health,tratar la patología; diagnosticar la patología; investigar la patología; controlar la patología
+la ansiedad,anxiety,emotion,gestionar la ansiedad; reducir la ansiedad; controlar la ansiedad; ocultar la ansiedad
+la frustración,frustration,emotion,expresar la frustración; superar la frustración; evitar la frustración; sentir la frustración
+la empatía,empathy,emotion,desarrollar la empatía; mostrar la empatía; fomentar la empatía; perder la empatía
+la resiliencia,resilience,emotion,demostrar la resiliencia; fortalecer la resiliencia; fomentar la resiliencia; valorar la resiliencia
+la euforia,euphoria,emotion,sentir la euforia; controlar la euforia; mostrar la euforia; evitar la euforia
+el vínculo,bond/link,emotion,reforzar el vínculo; crear un vínculo; romper un vínculo; mantener un vínculo
+la autoestima,self-esteem,emotion,mejorar la autoestima; fortalecer la autoestima; cuidar la autoestima; recuperar la autoestima
+la apatía,apathy,emotion,superar la apatía; combatir la apatía; mostrar la apatía; evitar la apatía
+el entusiasmo,enthusiasm,emotion,transmitir el entusiasmo; perder el entusiasmo; recuperar el entusiasmo; demostrar el entusiasmo
+la incertidumbre,uncertainty,emotion,reducir la incertidumbre; afrontar la incertidumbre; evitar la incertidumbre; gestionar la incertidumbre
+la convivencia,coexistence,community,mejorar la convivencia; fomentar la convivencia; facilitar la convivencia; arruinar la convivencia
+la participación,participation,community,fomentar la participación; incentivar la participación; limitar la participación; valorar la participación
+el voluntariado,volunteering,community,hacer voluntariado; organizar el voluntariado; fomentar el voluntariado; financiar el voluntariado
+la iniciativa,initiative,community,lanzar una iniciativa; apoyar una iniciativa; bloquear una iniciativa; liderar una iniciativa
+el espacio público,public space,community,limpiar el espacio público; recuperar el espacio público; utilizar el espacio público; proteger el espacio público
+la colaboración,collaboration,community,fomentar la colaboración; buscar la colaboración; iniciar la colaboración; romper la colaboración
+el compromiso,commitment,community,adquirir un compromiso; cumplir el compromiso; romper el compromiso; demostrar el compromiso
+la jornada intensiva,full-time shift/compressed hours,work,cumplir la jornada intensiva; instaurar la jornada intensiva; trabajar en jornada intensiva
+el teletrabajo,remote work,work,fomentar el teletrabajo; optar por el teletrabajo; regular el teletrabajo; adaptarse al teletrabajo
+la brecha digital,digital divide,tech,reducir la brecha digital; cerrar la brecha digital; alertar sobre la brecha digital
+la alfabetización mediática,media literacy,media,promover la alfabetización mediática; mejorar la alfabetización mediática; carecer de alfabetización mediática
+el consenso,consensus,community,alcanzar el consenso; buscar el consenso; romper el consenso; facilitar el consenso
+la huella ecológica,ecological footprint,environment,reducir la huella ecológica; medir la huella ecológica; compensar la huella ecológica
+el sesgo cognitivo,cognitive bias,emotion,evitar el sesgo cognitivo; identificar el sesgo cognitivo; superar el sesgo cognitivo
+la precariedad laboral,job insecurity,work,combatir la precariedad laboral; sufrir la precariedad laboral; denunciar la precariedad laboral
+el almacenamiento,storage,tech,ampliar el almacenamiento; gestionar el almacenamiento; liberar espacio de almacenamiento
+la convivencia ciudadana,civic coexistence,community,fomentar la convivencia ciudadana; mejorar la convivencia ciudadana; alterar la convivencia ciudadana
+el gasto público,public spending,money,recortar el gasto público; supervisar el gasto público; aumentar el gasto público
+el aula virtual,virtual classroom,education,acceder al aula virtual; gestionar el aula virtual; implementar el aula virtual
+la propiedad intelectual,intellectual property,legal,proteger la propiedad intelectual; vulnerar la propiedad intelectual; defender la propiedad intelectual
+el entorno digital,digital environment,tech,moverse en el entorno digital; dominar el entorno digital; proteger el entorno digital
+la competencia desleal,unfair competition,money,denunciar la competencia desleal; evitar la competencia desleal; frenar la competencia desleal
+la sobrecarga,overload,work,sufrir una sobrecarga; evitar la sobrecarga; gestionar la sobrecarga
+la formación continua,continuous training,education,recibir formación continua; ofrecer formación continua; apostar por la formación continua
+el trastorno,disorder,health,diagnosticar un trastorno; tratar un trastorno; padecer un trastorno
+la normativa vigente,current regulations,admin,cumplir la normativa vigente; infringir la normativa vigente; aplicar la normativa vigente
+el desarrollo sostenible,sustainable development,environment,promover el desarrollo sostenible; garantizar el desarrollo sostenible; avanzar hacia el desarrollo sostenible
+la calidad de vida,quality of life,health,mejorar la calidad de vida; mantener la calidad de vida; priorizar la calidad de vida
+el impacto ambiental,environmental impact,environment,evaluar el impacto ambiental; mitigar el impacto ambiental; reducir el impacto ambiental
+la red social,social network,media,gestionar la red social; navegar por la red social; viralizar en la red social
+la tasa de desempleo,unemployment rate,money,reducir la tasa de desempleo; analizar la tasa de desempleo; dispararse la tasa de desempleo
+la clave del éxito,key to success,work,ser la clave del éxito; buscar la clave del éxito; entender la clave del éxito
+el soporte técnico,technical support,tech,pedir soporte técnico; recibir soporte técnico; ofrecer soporte técnico
+la crisis financiera,financial crisis,money,afrontar la crisis financiera; superar la crisis financiera; evitar la crisis financiera
+el autocuidado,self-care,emotion,practicar el autocuidado; fomentar el autocuidado; descuidar el autocuidado
+la inteligencia artificial,artificial intelligence,tech,desarrollar la inteligencia artificial; regular la inteligencia artificial; aplicar la inteligencia artificial
+el plan de contingencia,contingency plan,admin,activar el plan de contingencia; diseñar el plan de contingencia; seguir el plan de contingencia
+la conciliación familiar,work-life balance,work,favorecer la conciliación familiar; exigir la conciliación familiar; mejorar la conciliación familiar
+el cambio climático,climate change,environment,frenar el cambio climático; combatir el cambio climático; alertar sobre el cambio climático
+la seguridad jurídica,legal certainty,legal,garantizar la seguridad jurídica; reforzar la seguridad jurídica; carecer de seguridad jurídica
+la opinión pública,public opinion,media,influir en la opinión pública; moldear la opinión pública; ignorar la opinión pública
+el rendimiento académico,academic performance,education,mejorar el rendimiento académico; evaluar el rendimiento académico; destacar en el rendimiento académico
+la infraestructura crítica,critical infrastructure,safety,proteger la infraestructura crítica; fallar la infraestructura crítica; mantener la infraestructura crítica
+el flujo de información,information flow,media,controlar el flujo de información; facilitar el flujo de información; interrumpir el flujo de información
+la salud mental,mental health,health,cuidar la salud mental; priorizar la salud mental; mejorar la salud mental
+el mercado laboral,job market,work,acceder al mercado laboral; entrar en el mercado laboral; transformar el mercado laboral
+la transición energética,energy transition,environment,acelerar la transición energética; liderar la transición energética; financiar la transición energética
+la gestión de residuos,waste management,environment,optimizar la gestión de residuos; mejorar la gestión de residuos; supervisar la gestión de residuos
+el derecho de admisión,right of admission,legal,ejercer el derecho de admisión; aplicar el derecho de admisión; reclamar el derecho de admisión
+la brecha salarial,wage gap,money,reducir la brecha salarial; cerrar la brecha salarial; denunciar la brecha salarial
+la alfabetización digital,digital literacy,tech,fomentar la alfabetización digital; adquirir alfabetización digital; carecer de alfabetización digital
+el bienestar social,social welfare,community,promover el bienestar social; garantizar el bienestar social; fortalecer el bienestar social
+la cultura organizacional,organizational culture,work,crear cultura organizacional; transformar la cultura organizacional; definir la cultura organizacional
+la actualización de software,software update,tech,instalar la actualización de software; posponer la actualización de software; descargar la actualización de software
+el servicio al cliente,customer service,money,mejorar el servicio al cliente; gestionar el servicio al cliente; valorar el servicio al cliente
+la estrategia de mercado,market strategy,money,diseñar la estrategia de mercado; ejecutar la estrategia de mercado; cambiar la estrategia de mercado
+el entorno familiar,family environment,family,crecer en el entorno familiar; proteger el entorno familiar; valorar el entorno familiar
+la prevención de riesgos,risk prevention,safety,aplicar la prevención de riesgos; cumplir la prevención de riesgos; fortalecer la prevención de riesgos
+la secuela,sequela/aftereffect,health,dejar secuelas; sufrir secuelas graves; tratar las secuelas; arrastrar secuelas
+el esguince,sprain,health,sufrir un esguince; diagnosticar un esguince; vendar un esguince; curar un esguince
+la dolencia,ailment/malady,health,tratar una dolencia; padecer una dolencia crónica; aliviar la dolencia; consultar una dolencia
+el sedentarismo,sedentary lifestyle,health,combatir el sedentarismo; evitar el sedentarismo; fomentar el sedentarismo; reducir el sedentarismo
+el fármaco,drug/medication,health,administrar un fármaco; recetar un fármaco; desarrollar un fármaco; probar un fármaco
+la contractura,muscle contraction/knot,health,aliviar una contractura; liberar la contractura; tratar una contractura; prevenir una contractura
+la rigidez,stiffness,health,sentir rigidez; combatir la rigidez; notar rigidez; disminuir la rigidez
+la inflamación,inflammation,health,reducir la inflamación; tratar la inflamación; notar una inflamación; bajar la inflamación
+la fatiga,fatigue,health,sentir fatiga; padecer fatiga; acumular fatiga; combatir la fatiga
+el mareo,dizziness,health,sentir un mareo; sufrir mareos; provocar un mareo; disimular el mareo
+el insomnio,insomnia,health,padecer insomnio; combatir el insomnio; sufrir insomnio; tratar el insomnio
+la alergia,allergy,health,desarrollar una alergia; detectar una alergia; sufrir una alergia; controlar la alergia
+la prescripción,prescription,health,seguir una prescripción; cumplir la prescripción; emitir una prescripción; modificar la prescripción
+la precariedad,precariousness,work,combatir la precariedad; denunciar la precariedad; sufrir precariedad; reducir la precariedad
+la estancia,stay,travel,prolongar la estancia; disfrutar la estancia; acortar la estancia; pagar la estancia
+el itinerario,itinerary,travel,planificar el itinerario; seguir el itinerario; cambiar el itinerario; cumplir el itinerario
+el transbordo,transfer,travel,realizar un transbordo; perder un transbordo; facilitar el transbordo; evitar el transbordo
+la escala,layover,travel,hacer una escala; prolongar la escala; evitar una escala; organizar una escala
+el embarque,boarding,travel,iniciar el embarque; cerrar el embarque; retrasar el embarque; confirmar el embarque
+la aduana,customs,travel,pasar la aduana; cruzar la aduana; declarar en la aduana; evitar la aduana
+el equipaje,luggage,travel,facturar el equipaje; perder el equipaje; recuperar el equipaje; registrar el equipaje
+la pernoctación,overnight stay,travel,reservar una pernoctación; organizar una pernoctación; pagar la pernoctación; cancelar la pernoctación
+la aptitud,aptitude/ability,education,demostrar aptitud; desarrollar la aptitud; evaluar la aptitud; poseer aptitud
+la pauta,guideline/pattern,health,seguir la pauta; marcar la pauta; establecer una pauta; cambiar la pauta
+el calambre,cramp,health,sufrir un calambre; aliviar el calambre; evitar el calambre; provocar un calambre
+el alicatado,tiling,repairs,renovar el alicatado; picar el alicatado; colocar el alicatado; restaurar el alicatado
+el rodapié,baseboard/skirting board,housing,instalar el rodapié; barnizar el rodapié; fijar el rodapié; cambiar el rodapié
+la escayola,plaster/stucco,materials,moldear la escayola; reparar la escayola; alisar la escayola; aplicar escayola
+el aislante,insulation,housing,instalar el aislante; reforzar el aislante; colocar el aislante; mejorar el aislante
+la llave de paso,shut-off valve,utilities,cerrar la llave de paso; abrir la llave de paso; localizar la llave de paso; bloquear la llave de paso
+el cableado,wiring,utilities,revisar el cableado; instalar el cableado; ocultar el cableado; renovar el cableado
+la bisagra,hinge,repairs,engrasar la bisagra; ajustar la bisagra; cambiar la bisagra; apretar la bisagra
+el taco,wall plug,repairs,colocar el taco; insertar el taco; perforar para el taco; comprar el taco
+la arandela,washer,tools,colocar la arandela; ajustar la arandela; buscar la arandela; apretar la arandela
+el nivel de burbuja,spirit level,tools,usar el nivel de burbuja; comprobar con el nivel de burbuja; colocar el nivel de burbuja
+la broca,drill bit,tools,cambiar la broca; elegir la broca; romper la broca; afilar la broca
+el disyuntor,circuit breaker,utilities,saltar el disyuntor; activar el disyuntor; revisar el disyuntor; instalar el disyuntor
+la acometida,service connection,utilities,realizar la acometida; contratar la acometida; reparar la acometida
+el falso techo,drop ceiling,housing,instalar el falso techo; desmontar el falso techo; reparar el falso techo
+la silicona,silicone,materials,aplicar la silicona; sellar con silicona; quitar la silicona
+el decapante,paint stripper,materials,aplicar el decapante; usar el decapante; eliminar con decapante
+la llave inglesa,adjustable wrench,tools,usar la llave inglesa; apretar con la llave inglesa; perder la llave inglesa
+el destornillador eléctrico,electric screwdriver,tools,cargar el destornillador eléctrico; usar el destornillador eléctrico; sujetar el destornillador eléctrico; cambiar la punta del destornillador eléctrico
+el rodillo,paint roller,tools,cargar el rodillo; limpiar el rodillo; usar el rodillo
+la espátula,putty knife,tools,usar la espátula; limpiar la espátula; manejar la espátula
+la tubería,piping,utilities,reparar la tubería; atascar la tubería; cambiar la tubería; instalar la tubería
+el sumidero,drain,utilities,limpiar el sumidero; desatascar el sumidero; instalar el sumidero
+la pintura plástica,emulsion paint,materials,aplicar la pintura plástica; comprar la pintura plástica; extender la pintura plástica
+el esmalte,enamel paint,materials,aplicar el esmalte; dejar secar el esmalte; lijar el esmalte
+la imprimación,primer,materials,aplicar la imprimación; comprar la imprimación; dejar secar la imprimación
+el sellador,sealant,materials,aplicar el sellador; comprar el sellador; usar el sellador
+la alcayata,hook screw,tools,colocar la alcayata; colgar en la alcayata; comprar la alcayata
+el perno,bolt,tools,apretar el perno; aflojar el perno; cambiar el perno
+la tuerca,nut,tools,apretar la tuerca; aflojar la tuerca; perder la tuerca
+la llave allen,allen key,tools,usar la llave allen; perder la llave allen; comprar la llave allen
+el barniz de poliuretano,polyurethane varnish,materials,aplicar el barniz de poliuretano; comprar el barniz de poliuretano; extender el barniz de poliuretano; dejar secar el barniz de poliuretano
+la brocha de cerdas,bristle brush,tools,limpiar la brocha de cerdas; usar la brocha de cerdas; mojar la brocha de cerdas; escurrir la brocha de cerdas
+la sierra de calar,jigsaw,tools,usar la sierra de calar; manejar la sierra de calar; guiar la sierra de calar; cambiar la hoja de la sierra de calar
+el papel de lija,sandpaper,materials,comprar el papel de lija; usar el papel de lija; cortar el papel de lija; lijar con el papel de lija
+la cinta de carrocero,masking tape,materials,pegar la cinta de carrocero; quitar la cinta de carrocero; usar la cinta de carrocero
+el adhesivo de montaje,construction adhesive,materials,aplicar el adhesivo de montaje; comprar el adhesivo de montaje; extender el adhesivo de montaje; pegar con el adhesivo de montaje
+el aislante acústico,sound insulation,housing,instalar el aislante acústico; mejorar el aislante acústico; colocar el aislante acústico; reforzar el aislante acústico
+la ventilación cruzada,cross ventilation,housing,aprovechar la ventilación cruzada; mejorar la ventilación cruzada; fomentar la ventilación cruzada; facilitar la ventilación cruzada
+la claraboya,skylight,housing,limpiar la claraboya; instalar la claraboya; reparar la claraboya
+el marco de la puerta,door frame,housing,pintar el marco de la puerta; reparar el marco de la puerta; lijar el marco de la puerta; ajustar el marco de la puerta
+la persiana,shutter/blind,housing,subir la persiana; bajar la persiana; reparar la persiana; encallar la persiana
+el pestillo,latch,repairs,cerrar el pestillo; abrir el pestillo; reparar el pestillo
+la mirilla,peephole,housing,mirar por la mirilla; instalar la mirilla; cambiar la mirilla
+el bombín,lock cylinder,repairs,cambiar el bombín; forzar el bombín; reparar el bombín
+la llave maestra,master key,tools,usar la llave maestra; perder la llave maestra; guardar la llave maestra; duplicar la llave maestra
+el cerrojo,deadbolt,repairs,echar el cerrojo; abrir el cerrojo; instalar el cerrojo
+el cable coaxial,coaxial cable,utilities,conectar el cable coaxial; instalar el cable coaxial; guiar el cable coaxial; cortar el cable coaxial
+el router,router,tech,reiniciar el router; configurar el router; instalar el router
+la toma de tierra,grounding,utilities,revisar la toma de tierra; instalar la toma de tierra; conectar a la toma de tierra; verificar la toma de tierra
+la caja de registro,junction box,utilities,abrir la caja de registro; revisar la caja de registro; cerrar la caja de registro; instalar la caja de registro
+el portalámparas,lampholder,utilities,cambiar el portalámparas; instalar el portalámparas; conectar el portalámparas; ajustar el portalámparas
+la bombilla LED,LED bulb,utilities,cambiar la bombilla LED; comprar la bombilla LED; enroscar la bombilla LED; instalar la bombilla LED
+el termostato,thermostat,utilities,programar el termostato; ajustar el termostato; regular el termostato
+el radiador,radiator,utilities,purgar el radiador; encender el radiador; reparar el radiador
+la caldera,boiler,utilities,revisar la caldera; encender la caldera; reparar la caldera
+el aire acondicionado,air conditioning,utilities,encender el aire acondicionado; revisar el aire acondicionado; limpiar el aire acondicionado
+el filtro,filter,utilities,limpiar el filtro; cambiar el filtro; obstruir el filtro
+la encimera,countertop,housing,limpiar la encimera; rayar la encimera; cambiar la encimera
+el grifo,faucet,utilities,cambiar el grifo; arreglar el grifo; cerrar el grifo
+la mampara,shower screen,housing,limpiar la mampara; instalar la mampara; cambiar la mampara
+el plato de ducha,shower tray,housing,instalar el plato de ducha; cambiar el plato de ducha; limpiar el plato de ducha; selllar el plato de ducha
+el inodoro,toilet,utilities,desatascar el inodoro; limpiar el inodoro; cambiar el inodoro
+la cisterna,flush tank,utilities,reparar la cisterna; accionar la cisterna; cambiar la cisterna
+el azulejo,tile,materials,colocar el azulejo; romper el azulejo; limpiar el azulejo
+la baldosa,floor tile,materials,colocar la baldosa; cambiar la baldosa; limpiar la baldosa
+el rodapié de madera,wooden baseboard,housing,instalar el rodapié de madera; barnizar el rodapié de madera; cortar el rodapié de madera; pegar el rodapié de madera
+el parquet,parquet,housing,pulir el parquet; barnizar el parquet; instalar el parquet
+la tarima flotante,laminate flooring,housing,instalar la tarima flotante; limpiar la tarima flotante; colocar la tarima flotante; cuidar la tarima flotante
+la moqueta,carpet,housing,aspirar la moqueta; limpiar la moqueta; cambiar la moqueta
+la pintura al temple,distemper paint,materials,aplicar la pintura al temple; comprar la pintura al temple; diluir la pintura al temple; preparar la pintura al temple
+el rodillo de espuma,foam roller,tools,usar el rodillo de espuma; limpiar el rodillo de espuma; cargar el rodillo de espuma; pasar el rodillo de espuma
+la paletina,brush,tools,usar la paletina; limpiar la paletina; mojar la paletina; recortar con la paletina
+la cubeta,paint tray,tools,limpiar la cubeta; usar la cubeta; llenar la cubeta; vaciar la cubeta
+el andamio,scaffolding,tools,montar el andamio; desmontar el andamio; trabajar en el andamio
+la escalera de mano,ladder,tools,subir la escalera de mano; usar la escalera de mano; desplegar la escalera de mano; apoyar la escalera de mano
+la cinta métrica,tape measure,tools,usar la cinta métrica; medir con la cinta métrica; extender la cinta métrica; enrollar la cinta métrica
+la escuadra,square,tools,usar la escuadra; medir con la escuadra; marcar con la escuadra; apoyar la escuadra
+el cúter,utility knife,tools,usar el cúter; cambiar la cuchilla del cúter; cortar con el cúter; retraer el cúter
+la sierra,saw,tools,usar la sierra; afilar la sierra; serrar con la sierra; guiar la sierra
+el martillo de carpintero,claw hammer,tools,usar el martillo de carpintero; clavar con el martillo de carpintero; extraer clavos con el martillo de carpintero; sujetar el martillo de carpintero
+el alicate,pliers,tools,usar el alicate; apretar con el alicate; cortar con el alicate; sujetar con el alicate
+la llave fija,open-ended wrench,tools,usar la llave fija; apretar con la llave fija; aflojar con la llave fija; ajustar con la llave fija
+la punta de atornillar,screwdriver bit,tools,cambiar la punta de atornillar; usar la punta de atornillar; insertar la punta de atornillar; seleccionar la punta de atornillar
+la lijadora orbital,orbital sander,tools,usar la lijadora orbital; limpiar la lijadora orbital; pasar la lijadora orbital; cambiar la lija de la lijadora orbital
+la pistola de silicona,caulking gun,tools,usar la pistola de silicona; cargar la pistola de silicona; aplicar silicona con la pistola; preparar la pistola de silicona
+el banco de trabajo,workbench,tools,limpiar el banco de trabajo; organizar el banco de trabajo; fijar piezas al banco de trabajo; usar el banco de trabajo
+la caja de herramientas,toolbox,tools,organizar la caja de herramientas; llevar la caja de herramientas; abrir la caja de herramientas; cerrar la caja de herramientas
+el tornillo de banco,vise,tools,sujetar con el tornillo de banco; apretar el tornillo de banco; fijar en el tornillo de banco
+el adhesivo,adhesive,materials,aplicar el adhesivo; extender el adhesivo; retirar el adhesivo; secar el adhesivo
+el disolvente,solvent,materials,usar el disolvente; aplicar el disolvente; verter el disolvente; limpiar con disolvente
+el decapante químico,chemical stripper,materials,aplicar el decapante químico; dejar actuar el decapante; retirar el decapante; neutralizar el decapante
+la masilla de carrocero,body filler,materials,aplicar la masilla de carrocero; lijar la masilla de carrocero; extender la masilla; alisar la masilla
+el yeso,plaster,materials,aplicar el yeso; preparar el yeso; extender el yeso; alisar el yeso; proyectar el yeso
+el cemento,cement,materials,preparar el cemento; aplicar el cemento; verter el cemento; fraguar el cemento; mezclar el cemento
+la arena,sand,materials,mezclar la arena; cribar la arena; transportar la arena; amontonar la arena
+la grava,gravel,materials,extender la grava; compactar la grava; nivelar la grava; verter la grava
+el ladrillo,brick,materials,colocar el ladrillo; asentar el ladrillo; cortar el ladrillo; pegar el ladrillo
+la viga,beam,housing,instalar la viga; reparar la viga; apuntalar la viga; reforzar la viga; colocar la viga
+el pilar,pillar,housing,reforzar el pilar; reparar el pilar; construir el pilar; inspeccionar el pilar; revestir el pilar
+el forjado,floor slab,housing,reparar el forjado; revisar el forjado; apuntalar el forjado; hormigonar el forjado
+el revestimiento,cladding/coating,housing,instalar el revestimiento; reparar el revestimiento; aplicar el revestimiento; renovar el revestimiento
+la fachada,facade,housing,limpiar la fachada; pintar la fachada; reparar la fachada
+la teja,roof tile,materials,cambiar la teja; colocar la teja; limpiar la teja
+el canalón,gutter,housing,limpiar el canalón; reparar el canalón; instalar el canalón
+el bajante,downspout,housing,limpiar el bajante; desatascar el bajante; reparar el bajante; sustituir el bajante; revisar el bajante
+el patio interior,courtyard,housing,limpiar el patio interior; reformar el patio interior; pavimentar el patio interior; iluminar el patio interior
+la terraza,terrace,housing,limpiar la terraza; reformar la terraza; impermeabilizar la terraza; alicatar la terraza; cerrar la terraza
+el trastero,storage room,housing,limpiar el trastero; organizar el trastero; alquilar el trastero; vaciar el trastero; habilitar el trastero
+la instalación eléctrica,electrical installation,utilities,revisar la instalación eléctrica; cambiar la instalación eléctrica; certificar la instalación eléctrica; reparar la instalación eléctrica
+el cuadro eléctrico,electrical panel,utilities,abrir el cuadro eléctrico; revisar el cuadro eléctrico; cambiar el cuadro eléctrico; instalar el cuadro eléctrico
+el retraso,delay,transport,acumular un retraso; sufrir un retraso; notificar un retraso; evitar el retraso
+la tarjeta de embarque,boarding pass,travel,imprimir la tarjeta de embarque; presentar la tarjeta de embarque; perder la tarjeta de embarque
+el control de seguridad,security check,travel,pasar el control de seguridad; superar el control de seguridad; evitar el control de seguridad
+la maleta facturada,checked baggage,travel,recoger la maleta facturada; perder la maleta facturada; facturar la maleta facturada
+la puerta de embarque,boarding gate,travel,localizar la puerta de embarque; cambiar la puerta de embarque; esperar en la puerta de embarque
+el enlace,connection/link,transport,perder el enlace; asegurar el enlace; esperar el enlace
+la tarifa,fare/rate,travel,consultar la tarifa; abonar la tarifa; aplicar la tarifa; comparar la tarifa
+el alojamiento,accommodation,travel,buscar alojamiento; reservar alojamiento; pagar el alojamiento; encontrar alojamiento
+la recepción,reception/front desk,travel,llamar a recepción; bajar a recepción; esperar en recepción
+el servicio de habitaciones,room service,travel,pedir el servicio de habitaciones; solicitar el servicio de habitaciones; cancelar el servicio de habitaciones
+la llave magnética,key card,travel,perder la llave magnética; desmagnetizar la llave magnética; devolver la llave magnética
+la oficina de turismo,tourist office,transport,visitar la oficina de turismo; consultar la oficina de turismo; encontrar la oficina de turismo
+el plano,map,transport,seguir el plano; consultar el plano; desplegar el plano
+el punto de encuentro,meeting point,transport,fijar el punto de encuentro; cambiar el punto de encuentro; llegar al punto de encuentro
+el transporte público,public transport,transport,utilizar el transporte público; fomentar el transporte público; mejorar el transporte público
+la zona peatonal,pedestrian area,transport,acceder a la zona peatonal; ampliar la zona peatonal; evitar la zona peatonal
+el atasco,traffic jam,transport,quedarse en un atasco; evitar un atasco; formar un atasco
+el billete sencillo,single ticket,transport,comprar el billete sencillo; validar el billete sencillo; perder el billete sencillo
+la frecuencia,frequency,transport,aumentar la frecuencia; reducir la frecuencia; consultar la frecuencia
+la parada,stop,transport,esperar en la parada; saltarse la parada; solicitar la parada
+la zona azul,blue zone (parking),transport,aparcar en zona azul; pagar la zona azul; multar en zona azul
+el cajero automático,ATM,money,utilizar el cajero automático; localizar el cajero automático; retirar dinero del cajero automático
+el cambio de divisas,currency exchange,money,realizar el cambio de divisas; consultar el cambio de divisas; solicitar el cambio de divisas
+la comisión,fee/commission,money,cobrar una comisión; evitar una comisión; pagar una comisión
+el extracto bancario,bank statement,money,solicitar el extracto bancario; revisar el extracto bancario; recibir el extracto bancario
+la cuenta corriente,checking account,money,abrir una cuenta corriente; bloquear la cuenta corriente; gestionar la cuenta corriente
+el saldo,balance,money,consultar el saldo; agotar el saldo; recargar el saldo
+la garantía,warranty,money,cubrir la garantía; exigir la garantía; perder la garantía
+la cita previa,appointment,admin,pedir cita previa; anular cita previa; confirmar cita previa
+el plazo de entrega,delivery time,admin,cumplir el plazo de entrega; ampliar el plazo de entrega; retrasar el plazo de entrega
+la política de empresa,company policy,work,aplicar la política de empresa; seguir la política de empresa; cuestionar la política de empresa
+la jornada laboral,working day,work,cumplir la jornada laboral; reducir la jornada laboral; ampliar la jornada laboral
+el puesto de trabajo,workstation,work,organizar el puesto de trabajo; abandonar el puesto de trabajo; ocupar el puesto de trabajo
+la baja médica,sick leave,work,pedir la baja médica; tramitar la baja médica; recibir la baja médica
+el feedback,feedback,work,recibir feedback; dar feedback; valorar el feedback
+la aplicación,app,tech,instalar la aplicación; actualizar la aplicación; eliminar la aplicación
+el formato,format,tech,cambiar el formato; convertir el formato; admitir el formato
+la avería técnica,technical fault,repairs,detectar la avería técnica; reparar la avería técnica; notificar la avería técnica
+la fuga,leak,repairs,tapar la fuga; localizar la fuga; reparar la fuga
+el presupuesto de obra,quote,repairs,aceptar el presupuesto de obra; pedir el presupuesto de obra; ajustar el presupuesto de obra
+la licencia,permit,repairs,solicitar la licencia; obtener la licencia; denegar la licencia
+el tratamiento,treatment,health,iniciar el tratamiento; abandonar el tratamiento; completar el tratamiento
+el chequeo,check-up,health,realizarse un chequeo; programar un chequeo; superar un chequeo
+la urgencia,emergency,health,acudir a urgencias; atender una urgencia; gestionar una urgencia
+el seguro médico,health insurance,health,contratar el seguro médico; cancelar el seguro médico; usar el seguro médico
+la alimentación,nutrition,health,cuidar la alimentación; mejorar la alimentación; controlar la alimentación
+la asociación,association,community,fundar una asociación; unirse a una asociación; disolver una asociación
+la normativa municipal,local regulation,community,cumplir la normativa municipal; violar la normativa municipal; modificar la normativa municipal
+el residuo,waste,environment,reciclar el residuo; gestionar el residuo; reducir el residuo
+la huella de carbono,carbon footprint,environment,reducir la huella de carbono; compensar la huella de carbono; calcular la huella de carbono
+la sostenibilidad,sustainability,environment,garantizar la sostenibilidad; promover la sostenibilidad; alcanzar la sostenibilidad
+la energía renovable,renewable energy,environment,instalar energía renovable; producir energía renovable; subvencionar energía renovable
+la contaminación,pollution,environment,reducir la contaminación; combatir la contaminación; evitar la contaminación
+la conciliación,work-life balance,family,facilitar la conciliación; solicitar la conciliación; mejorar la conciliación
+el conflicto,conflict,family,resolver el conflicto; evitar el conflicto; mediar en el conflicto
+la emergencia,emergency,safety,declarar la emergencia; gestionar la emergencia; atender la emergencia
+la protección,protection,safety,brindar protección; buscar protección; reforzar la protección
+la formación,training,education,recibir formación; impartir formación; actualizar la formación
+la matrícula,enrollment,education,formalizar la matrícula; pagar la matrícula; cancelar la matrícula
+la afluencia,influx/crowd,transport,gran afluencia; regular la afluencia; evitar la afluencia; afluencia de turistas
+el mostrador,check-in desk,travel,acercarse al mostrador; fila del mostrador; atender en el mostrador; mostrador de facturación
+la consigna,luggage locker,travel,dejar en la consigna; recoger de la consigna; consigna automática; consigna cerrada
+la expedición,issuance/expedition,admin,solicitar la expedición; retraso en la expedición; expedición de documentos; expedición inmediata
+el transito,transit,transport,zona de tránsito; área de tránsito; prohibido el tránsito; libre tránsito
+el control de pasaportes,passport control,travel,pasar el control de pasaportes; larga fila en el control de pasaportes; agilizar el control de pasaportes
+la zona de embarque,boarding area,travel,esperar en la zona de embarque; acceso a la zona de embarque; abandonar la zona de embarque
+la maleta de mano,carry-on luggage,travel,pesar la maleta de mano; exceder la maleta de mano; caber en la maleta de mano
+la tarifa plana,flat rate,transport,contratar tarifa plana; incluir tarifa plana; aplicar tarifa plana; tarifa plana mensual
+el billete integrado,integrated ticket,transport,validar el billete integrado; comprar el billete integrado; uso del billete integrado
+la ubicación,location,transport,compartir la ubicación; determinar la ubicación; ubicación estratégica; ubicación exacta
+el desvío,detour,transport,tomar un desvío; señalizar un desvío; obligatorio desvío; desvío provisional
+el carril bici,bike lane,transport,invadir el carril bici; cruzar el carril bici; carril bici segregado; carril bici urbano
+el transporte intermodal,intermodal transport,transport,fomentar el transporte intermodal; red de transporte intermodal; sistema de transporte intermodal
+la congestión,traffic jam,transport,evitar la congestión; aliviar la congestión; alta congestión; congestión circulatoria
+la accesibilidad,accessibility,transport,mejorar la accesibilidad; garantizar la accesibilidad; plena accesibilidad; problemas de accesibilidad
+la guía turística,tourist guide,travel,seguir la guía turística; consultar la guía turística; guía turística impresa; guía turística interactiva
+la tasa turística,tourist tax,travel,pagar la tasa turística; incluir la tasa turística; exención de tasa turística
+el suplemento,surcharge,travel,cobrar un suplemento; aplicar un suplemento; suplemento por mascota; suplemento de temporada
+la ocupación,occupancy,travel,plena ocupación; nivel de ocupación; alta ocupación; previsión de ocupación
+el check-out,check-out,travel,realizar el check-out; retrasar el check-out; check-out exprés
+la cancelación,cancellation,transport,notificar la cancelación; evitar la cancelación; cancelación de vuelo; cancelación por mal tiempo
+el cinturón de seguridad,seat belt,transport,abrochar el cinturón de seguridad; desabrochar el cinturón de seguridad; uso obligatorio del cinturón de seguridad
+la señal de tráfico,traffic sign,transport,respetar la señal de tráfico; ignorar la señal de tráfico; señal de tráfico vertical
+la rotonda,roundabout,transport,entrar en la rotonda; tomar la salida de la rotonda; ceder el paso en la rotonda
+el semáforo,traffic light,transport,respetar el semáforo; saltarse el semáforo; semáforo en rojo; semáforo inteligente
+el paso de peatones,crosswalk,transport,cruzar por el paso de peatones; atropellar en el paso de peatones; paso de peatones elevado
+la acera,sidewalk,transport,caminar por la acera; invadir la acera; acera estrecha; acera peatonal
+la calzada,roadway,transport,cruzar la calzada; invadir la calzada; calzada mojada; calzada principal
+el aparcamiento,parking,transport,buscar aparcamiento; encontrar aparcamiento; aparcamiento subterráneo; aparcamiento público
+el parquímetro,parking meter,transport,pagar el parquímetro; ticket del parquímetro; parquímetro averiado
+la autovía,highway,transport,incorporarse a la autovía; salir de la autovía; autovía congestionada; autovía de peaje
+el peaje,toll,transport,pagar el peaje; evitar el peaje; cabina de peaje; peaje electrónico
+el taller,repair shop,transport,llevar al taller; recoger del taller; taller mecánico; taller oficial
+la grúa,tow truck,transport,llamar a la grúa; llevarse el coche la grúa; servicio de grúa
+el peatón,pedestrian,transport,prioridad del peatón; seguridad del peatón; atropello de peatón
+el ciclista,cyclist,transport,respetar al ciclista; seguridad del ciclista; grupo de ciclistas
+el transporte de mercancías,freight transport,transport,gestionar el transporte de mercancías; contratar el transporte de mercancías; organizar el transporte de mercancías; supervisar el transporte de mercancías
+la periferia,outskirts,transport,vivir en la periferia; transporte a la periferia; zona de la periferia
+el núcleo urbano,city center,transport,acceder al núcleo urbano; descongestionar el núcleo urbano; núcleo urbano histórico
+el mobiliario urbano,street furniture,transport,dañar el mobiliario urbano; instalar mobiliario urbano; mantenimiento del mobiliario urbano
+el visado,visa,travel,solicitar el visado; tramitar el visado; denegar el visado; obtener el visado
+la sobreventa,overbooking,travel,sufrir sobreventa; evitar la sobreventa; gestionar la sobreventa; reclamar por sobreventa
+la confluencia,confluence/junction,transport,la confluencia de calles; llegar a la confluencia; una confluencia peligrosa; la confluencia de rutas
+la despensa,pantry,food,llenar la despensa; organizar la despensa; vaciar la despensa
+la guarnición,side dish,food,acompañar con una guarnición; servir una guarnición; elegir la guarnición
+el condimento,seasoning/condiment,food,añadir el condimento; rectificar el condimento; un condimento natural
+el sofrito,sautéed base,food,preparar el sofrito; dorar el sofrito; la base del sofrito
+el comensal,diner/guest,food,atender a los comensales; el número de comensales; un comensal habitual
+la ración,portion,food,servir una ración; pedir una ración; una ración generosa
+el maridaje,pairing (wine/food),food,sugerir un maridaje; el maridaje perfecto; disfrutar del maridaje
+el tentempié,snack/bite,food,tomar un tentempié; un tentempié ligero; preparar un tentempié
+la elaboración,preparation/crafting,food,la elaboración casera; supervisar la elaboración; el proceso de elaboración
+el aderezo,dressing/seasoning,food,mezclar el aderezo; aliñar con aderezo; el aderezo de la ensalada
+la cocción,cooking/doneness,food,controlar la cocción; el tiempo de cocción; una cocción lenta
+el utensilio,utensilio,food,guardar los utensilios; limpiar los utensilios; los utensilios de cocina
+la legumbre,legume,food,cocinar legumbres; el consumo de legumbres; una dieta rica en legumbres
+el lácteo,dairy product,food,evitar los lácteos; el consumo de lácteos; los productos lácteos
+el embutido,cured meat,food,cortar el embutido; una tabla de embutidos; la calidad del embutido
+el obsequio,gift/present,shopping,recibir un obsequio; comprar un obsequio; un obsequio especial
+el escaparate,shop window,shopping,mirar el escaparate; decorar el escaparate; los productos del escaparate
+la rebaja,discount/sale,shopping,aplicar una rebaja; aprovechar las rebajas; una rebaja sustancial
+el ticket,receipt,shopping,guardar el ticket; solicitar el ticket; el ticket de compra
+el probador,fitting room,shopping,entrar al probador; salir del probador; la zona de probadores
+la talla,size,shopping,probarse una talla; pedir otra talla; la talla correcta
+el envoltorio,packaging/wrapper,shopping,quitar el envoltorio; el envoltorio de regalo; un envoltorio ecológico
+la devolución,return/refund,shopping,gestionar una devolución; solicitar la devolución; el plazo de devolución
+la liquidación,clearance,shopping,la época de liquidación; la liquidación final; anunciar la liquidación
+el artículo,item/article,shopping,seleccionar un artículo; el precio del artículo; devolver un artículo
+la ganga,bargain,shopping,encontrar una ganga; una auténtica ganga; buscar gangas
+el catálogo,catalog,shopping,consultar el catálogo; actualizar el catálogo; las novedades del catálogo
+el consumidor,consumer,shopping,la protección del consumidor; el comportamiento del consumidor; el consumidor final
+el tejido,fabric/textile,clothing,la calidad del tejido; un tejido resistente; elegir el tejido
+la prenda,garment,clothing,probarse una prenda; una prenda de vestir; colgar la prenda
+el accesorio,accessory,clothing,combinar accesorios; lucir un accesorio; los accesorios de moda
+la confección,tailoring/making,clothing,la confección de la prenda; una confección artesanal; el taller de confección
+la percha,hanger,clothing,colgar en la percha; la percha de madera; vaciar la percha
+el dobladillo,hem,clothing,hacer el dobladillo; ajustar el dobladillo; el dobladillo del pantalón
+la cremallera,zipper,clothing,subir la cremallera; bajar la cremallera; la cremallera atascada
+el estampado,print/pattern,clothing,un estampado floral; el diseño del estampado; combinar con el estampado
+el tinte,dye,clothing,el tinte natural; aplicar el tinte; la solidez del tinte
+la etiqueta,label,clothing,leer la etiqueta; cortar la etiqueta; la etiqueta del precio
+la tendencia,trend,clothing,seguir la tendencia; una nueva tendencia; la tendencia actual
+el armario,closet/wardrobe,clothing,ordenar el armario; renovar el armario; el fondo de armario
+la lavandería,laundry (place),errands,llevar a la lavandería; la ropa de la lavandería; el servicio de lavandería
+el recado,errand,errands,hacer un recado; salir a hacer recados; un recado urgente
+la cita,appointment,errands,pedir una cita; anular una cita; la cita médica; una cita previa
+la fotocopia,photocopy,errands,sacar una fotocopia; la fotocopia compulsada; la fotocopia del documento
+la mensajería,courier service,errands,enviar por mensajería; el servicio de mensajería; el paquete de mensajería
+la espera,wait,errands,la larga espera; el tiempo de espera; la zona de espera
+la documentación,documentation,errands,preparar la documentación; la documentación necesaria; la falta de documentación
+el envío,shipment,errands,confirmar el envío; el coste del envío; el seguimiento del envío
+el domicilio,home/address,errands,la entrega a domicilio; el cambio de domicilio; el domicilio fiscal
+la ventanilla,window/teller,errands,atender en la ventanilla; la ventanilla única; la cola de la ventanilla
+la incidencia,incident/issue,errands,reportar una incidencia; resolver la incidencia; una incidencia técnica
+la reclamación,complaint,errands,poner una reclamación; el formulario de reclamación; la hoja de reclamaciones
+la resolución,resolution,errands,la resolución del conflicto; la rápida resolución; el plazo de resolución
+el requisito,requirement,errands,cumplir los requisitos; los requisitos previos; los requisitos indispensables
+la autenticación,authentication,errands,el proceso de autenticación; la doble autenticación; la clave de autenticación
+el comprobante,receipt/proof,errands,guardar el comprobante; presentar el comprobante; el comprobante de pago
+la validez,validity,errands,la validez legal; comprobar la validez; la fecha de validez
+la prórroga,extension,errands,solicitar una prórroga; conceder una prórroga; el plazo de la prórroga
+el volante,flyer/document,errands,el volante de empadronamiento; el volante médico; recoger el volante
+la notificación,notification,errands,recibir una notificación; la notificación oficial; la notificación electrónica
+el vencimiento,expiration,errands,la fecha de vencimiento; el vencimiento del plazo; el vencimiento de la deuda
+la copia,copy,errands,hacer una copia; la copia de seguridad; una copia compulsada
+la burocracia,bureaucracy,errands,la lentitud de la burocracia; evitar la burocracia; el peso de la burocracia
+el asesoramiento,advice/consulting,errands,recibir asesoramiento; el asesoramiento legal; el asesoramiento técnico
+la asistencia,assistance,errands,la asistencia técnica; solicitar asistencia; la asistencia al cliente
+el soporte,support,errands,el servicio de soporte; el soporte técnico; el soporte al usuario
+la clave,key/code,errands,la clave de acceso; olvidar la clave; la clave secreta
+la privacidad,privacy,errands,la política de privacidad; garantizar la privacidad; la privacidad de los datos
+la renovación,renewal,errands,la renovación del contrato; la renovación del permiso; la renovación anual
+la caducidad,expiration,errands,la fecha de caducidad; comprobar la caducidad; evitar la caducidad
+el justificante,proof/receipt,errands,el justificante de pago; el justificante médico; entregar el justificante
+la aclaración,clarification,errands,pedir una aclaración; la aclaración necesaria; la aclaración de dudas
+la modificación,modification,errands,la modificación del contrato; solicitar una modificación; la modificación de datos
+la rectificación,correction,errands,la rectificación de errores; solicitar la rectificación; la rectificación de datos
+el turno,turn/shift,errands,esperar el turno; perder el turno; el turno de espera
+la acreditación,accreditation,errands,la acreditación oficial; solicitar la acreditación; la acreditación necesaria
+la demora,delay,errands,la demora en el trámite; evitar la demora; la demora de entrega
+el plazo,deadline,errands,el plazo legal; el plazo de presentación; el plazo de entrega
+el registro,registry/record,errands,el registro civil; el registro mercantil; la inscripción en el registro
+la fecha de caducidad,expiry date,food,verificar la fecha de caducidad; ampliar la fecha de caducidad; superar la fecha de caducidad
+el valor nutricional,nutritional value,food,analizar el valor nutricional; mejorar el valor nutricional; conservar el valor nutricional
+la dieta equilibrada,balanced diet,food,seguir una dieta equilibrada; mantener una dieta equilibrada; diseñar una dieta equilibrada
+el producto fresco,fresh product,food,seleccionar el producto fresco; comprar el producto fresco; conservar el producto fresco
+el empaquetado,packaging,food,reducir el empaquetado; diseñar el empaquetado; desechar el empaquetado
+el precio unitario,unit price,food,comparar el precio unitario; calcular el precio unitario; fijar el precio unitario
+la lista de la compra,shopping list,food,elaborar la lista de la compra; revisar la lista de la compra; olvidar la lista de la compra
+el producto de temporada,seasonal product,food,consumir el producto de temporada; buscar el producto de temporada; ofrecer el producto de temporada
+la cocción al vapor,steaming,food,controlar la cocción al vapor; dominar la cocción al vapor; preferir la cocción al vapor
+el utensilio de cocina,kitchen utensil,food,limpiar el utensilio de cocina; guardar el utensilio de cocina; renovar el utensilio de cocina
+la intensidad del fuego,heat intensity,food,ajustar la intensidad del fuego; regular la intensidad del fuego; vigilar la intensidad del fuego
+la receta tradicional,traditional recipe,food,seguir la receta tradicional; rescatar la receta tradicional; adaptar la receta tradicional
+la textura,texture,food,lograr la textura; mejorar la textura; apreciar la textura
+el toque final,final touch,food,dar el toque final; añadir el toque final; cuidar el toque final
+el ingrediente estrella,star ingredient,food,destacar el ingrediente estrella; elegir el ingrediente estrella; potenciar el ingrediente estrella
+el punto de sal,salt level,food,corregir el punto de sal; ajustar el punto de sal; controlar el punto de sal
+la talla estándar,standard size,clothing,buscar la talla estándar; encontrar la talla estándar; definir la talla estándar
+el estilo personal,personal style,clothing,definir el estilo personal; mantener el estilo personal; expresar el estilo personal
+la fibra natural,natural fiber,clothing,preferir la fibra natural; lavar la fibra natural; teñir la fibra natural
+el diseño exclusivo,exclusive design,clothing,lanzar el diseño exclusivo; valorar el diseño exclusivo; adquirir el diseño exclusivo
+la oferta especial,special offer,shopping,aprovechar la oferta especial; lanzar la oferta especial; consultar la oferta especial
+el gasto imprevisto,unexpected expense,shopping,cubrir el gasto imprevisto; reducir el gasto imprevisto; evitar el gasto imprevisto
+la política de devoluciones,return policy,shopping,conocer la política de devoluciones; aplicar la política de devoluciones; revisar la política de devoluciones
+la compra impulsiva,impulse buying,shopping,evitar la compra impulsiva; controlar la compra impulsiva; arrepentirse de la compra impulsiva
+el método de pago,payment method,shopping,elegir el método de pago; validar el método de pago; cambiar el método de pago
+la relación calidad-precio,value for money,shopping,evaluar la relación calidad-precio; garantizar la relación calidad-precio; destacar la relación calidad-precio
+el presupuesto mensual,monthly budget,shopping,ajustarse al presupuesto mensual; elaborar el presupuesto mensual; superar el presupuesto mensual
+la jerarquía,hierarchy,community,respetar la jerarquía; alterar la jerarquía; establecer una jerarquía; escalar la jerarquía
+la autonomía,autonomy,work,ganar autonomía; perder autonomía; fomentar la autonomía; la autonomía personal
+la perspectiva,perspective,social,cambiar de perspectiva; ampliar la perspectiva; ofrecer una perspectiva; la perspectiva global
+el prejuicio,prejudice,social,superar un prejuicio; combatir un prejuicio; eliminar un prejuicio; el prejuicio social
+la cohesión,cohesion,community,fortalecer la cohesión; lograr la cohesión; fomentar la cohesión; la cohesión social
+la transparencia,transparency,community,garantizar la transparencia; fomentar la transparencia; exigir transparencia; la transparencia informativa
+la vocación,vocation,work,descubrir la vocación; seguir la vocación; carecer de vocación; profesionalizar la vocación
+la expectativa,expectation,family,crear una expectativa; cumplir una expectativa; superar una expectativa; rebajar la expectativa
+la delegación,delegation,work,facilitar la delegación; mejorar la delegación; fomentar la delegación; la delegación de tareas
+la trayectoria,trajectory/career path,work,seguir una trayectoria; consolidar una trayectoria; cambiar la trayectoria; la trayectoria profesional
+la repercusión,repercussion,social,analizar la repercusión; medir la repercusión; evitar la repercusión; la repercusión social
+la afinidad,affinity,family,sentir afinidad; descubrir afinidad; perder afinidad; la afinidad cultural
+la discreción,discretion,social,mantener la discreción; exigir discreción; valorar la discreción; la discreción absoluta
+el dinamismo,dynamism,community,fomentar el dinamismo; perder el dinamismo; aumentar el dinamismo; el dinamismo social
+el criterio,criterion/judgment,admin,aplicar un criterio; cambiar de criterio; establecer un criterio; el criterio técnico
+la redundancia,redundancy,tech,evitar la redundancia; eliminar la redundancia; detectar la redundancia; la redundancia de datos
+la fiabilidad,reliability,tech,garantizar la fiabilidad; comprobar la fiabilidad; mejorar la fiabilidad; la fiabilidad del sistema
+la coherencia,coherence,social,mantener la coherencia; perder la coherencia; exigir coherencia; la coherencia interna
+la flexibilidad,flexibility,work,fomentar la flexibilidad; exigir flexibilidad; aumentar la flexibilidad; la flexibilidad horaria
+el rigor,rigor/accuracy,education,aplicar rigor; mantener el rigor; exigir rigor; el rigor científico
+la actitud,attitude,family,cambiar de actitud; mantener la actitud; mejorar la actitud; la actitud positiva
+la supervisión,supervision,work,mantener la supervisión; delegar la supervisión; realizar la supervisión; la supervisión constante
+la equidad,equity,social,promover la equidad; garantizar la equidad; luchar por la equidad; la equidad de género
+la integridad,integrity,family,demostrar integridad; mantener la integridad; cuestionar la integridad; la integridad moral
+la honestidad,honesty,family,valorar la honestidad; demostrar honestidad; exigir honestidad; la honestidad brutal
+la lealtad,loyalty,family,mantener la lealtad; jurar lealtad; demostrar lealtad; la lealtad incondicional
+la prudencia,prudence,social,actuar con prudencia; exigir prudencia; aconsejar prudencia; la prudencia necesaria
+la paciencia,patience,family,perder la paciencia; armarse de paciencia; pedir paciencia; la paciencia infinita
+la gratitud,gratitude,family,expresar gratitud; mostrar gratitud; sentir gratitud; la gratitud eterna
+la humildad,humility,social,demostrar humildad; mantener la humildad; perder la humildad; la humildad absoluta
+la ambición,ambition,work,fomentar la ambición; limitar la ambición; demostrar ambición; la ambición profesional
+la curiosidad,curiosity,education,despertar la curiosidad; saciar la curiosidad; fomentar la curiosidad; la curiosidad intelectual
+la creatividad,creativity,work,estimular la creatividad; desarrollar la creatividad; fomentar la creatividad; la creatividad innata
+la determinación,determination,work,mostrar determinación; perder la determinación; fortalecer la determinación; la determinación absoluta
+la disciplina,discipline,education,mantener la disciplina; imponer la disciplina; fomentar la disciplina; la disciplina férrea
+la madurez,maturity,family,alcanzar la madurez; demostrar madurez; perder la madurez; la madurez emocional
+la estabilidad,stability,money,mantener la estabilidad; garantizar la estabilidad; lograr la estabilidad; la estabilidad económica
+la confianza,trust,family,ganar la confianza; perder la confianza; depositar la confianza; la confianza ciega
+la posibilidad,possibility,admin,barajar una posibilidad; descartar una posibilidad; contemplar una posibilidad; la posibilidad remota
+la ventaja,advantage,social,obtener una ventaja; perder una ventaja; buscar una ventaja; la ventaja competitiva
+la desventaja,disadvantage,social,compensar la desventaja; sufrir la desventaja; minimizar la desventaja; la desventaja evidente
+la dificultad,difficulty,work,superar una dificultad; encontrar una dificultad; afrontar una dificultad; la dificultad técnica
+la facilidad,ease,work,tener facilidad; perder la facilidad; ganar facilidad; la facilidad pasmosa
+la cantidad,quantity,money,aumentar la cantidad; reducir la cantidad; ajustar la cantidad; la cantidad excesiva
+la medida,measure/size,admin,tomar una medida; aplicar una medida; evaluar una medida; la medida preventiva
+la consecuencia,consequence,social,asumir la consecuencia; evitar la consecuencia; medir la consecuencia; la consecuencia directa
+la intención,intention,family,manifestar la intención; cambiar la intención; ocultar la intención; la intención clara
+la sugerencia,suggestion,work,hacer una sugerencia; aceptar una sugerencia; rechazar una sugerencia; la sugerencia constructiva
+la propuesta,proposal,work,presentar una propuesta; aprobar una propuesta; rechazar una propuesta; la propuesta formal
+la alternativa,alternative,work,buscar una alternativa; ofrecer una alternativa; descartar una alternativa; la alternativa viable
+la duda,doubt,family,plantear una duda; resolver una duda; disipar una duda; la duda razonable
+la explicación,explanation,education,dar una explicación; solicitar una explicación; aceptar una explicación; la explicación detallada
+la justificación,justification,legal,presentar una justificación; exigir una justificación; aceptar una justificación; la justificación válida
+la destreza,skill/dexterity,work,mostrar destreza; adquirir destreza; perder destreza; la destreza manual
+la técnica,technique,work,mejorar la técnica; dominar la técnica; aprender una técnica; la técnica avanzada
+la práctica,practice,work,poner en práctica; ganar práctica; abandonar la práctica; la práctica habitual
+el aprendizaje,learning,education,fomentar el aprendizaje; acelerar el aprendizaje; facilitar el aprendizaje; el aprendizaje continuo
+el impacto,impact,social,causar un impacto; medir un impacto; reducir el impacto; el impacto positivo
+el malentendido,misunderstanding,family,aclarar un malentendido; evitar un malentendido; surgir un malentendido; provocar un malentendido
+el propósito,purpose/goal,work,cumplir el propósito; definir el propósito; un propósito firme; con el propósito de
+la cobertura,coverage,tech,ampliar la cobertura; perder la cobertura; una cobertura total; una cobertura deficiente
+el desahucio,eviction,housing,evitar el desahucio; frenar el desahucio; sufrir un desahucio; notificar el desahucio
+la hipoteca,mortgage,money,pedir la hipoteca; pagar la hipoteca; amortizar la hipoteca; refinanciar la hipoteca
+el currículum,resume/CV,work,enviar el currículum; actualizar el currículum; destacar en el currículum; revisar el currículum
+la jubilación,retirement,work,planificar la jubilación; anticipar la jubilación; disfrutar la jubilación; gestionar la jubilación
+el empadronamiento,municipal registration,community,solicitar el empadronamiento; acreditar el empadronamiento; tramitar el empadronamiento
+la custodia,custody,legal,pedir la custodia; otorgar la custodia; compartir la custodia; perder la custodia
+la herencia,inheritance,family,recibir la herencia; aceptar la herencia; repartir la herencia; renunciar a la herencia
+la subvención,grant/subsidy,admin,solicitar la subvención; obtener la subvención; gestionar la subvención; denegar la subvención
+el alta,registration/discharge,health,recibir el alta; tramitar el alta; solicitar el alta; firmar el alta
+la baja,leave of absence,health,coger la baja; tramitar la baja; recibir la baja; prolongar la baja
+la póliza,insurance policy,money,contratar la póliza; renovar la póliza; cancelar la póliza; revisar la póliza
+la cuota,fee/installment,money,pagar la cuota; abonar la cuota; retrasarse en la cuota; domiciliar la cuota
+el pasivo,liability,money,asumir el pasivo; reducir el pasivo; liquidar el pasivo; controlar el pasivo
+el organigrama,organizational chart,work,diseñar el organigrama; modificar el organigrama; seguir el organigrama
+la sinergia,synergy,work,crear sinergias; buscar sinergias; aprovechar sinergias; fomentar sinergias
+la querella,lawsuit,legal,presentar una querella; interponer una querella; retirar una querella; admitir una querella
+la fianza,bail/deposit,legal,pagar la fianza; depositar la fianza; recuperar la fianza; exigir la fianza
+la impugnación,challenge/objection,legal,presentar la impugnación; admitir la impugnación; rechazar la impugnación; formalizar la impugnación
+la discrepancia,discrepancy,family,expresar una discrepancia; resolver una discrepancia; surgir una discrepancia; evitar una discrepancia
+la confidencialidad,confidentiality,work,garantizar la confidencialidad; mantener la confidencialidad; romper la confidencialidad; exigir la confidencialidad
+la urbanización,residential development,housing,planificar la urbanización; construir la urbanización; gestionar la urbanización
+la asertividad,assertiveness,family,practicar la asertividad; demostrar la asertividad; mejorar la asertividad; aprender la asertividad
+la procrastinación,procrastination,work,evitar la procrastinación; combatir la procrastinación; reducir la procrastinación
+el vertido,spill/discharge,environment,limpiar el vertido; contener el vertido; denunciar el vertido; evitar el vertido
+el socorro,relief/aid,emergency,pedir socorro; prestar socorro; acudir en socorro; enviar socorro
+el peligro inminente,imminent danger,safety,advertir del peligro inminente; evitar el peligro inminente; enfrentar el peligro inminente
+el dispositivo de emergencia,emergency response unit,emergency,activar el dispositivo de emergencia; coordinar el dispositivo de emergencia; desplegar el dispositivo de emergencia; preparar el dispositivo de emergencia
+la alerta meteorológica,weather alert,weather,emitir la alerta meteorológica; activar la alerta meteorológica; seguir la alerta meteorológica
+la salida de emergencia,emergency exit,safety,señalizar la salida de emergencia; bloquear la salida de emergencia; despejar la salida de emergencia
+el estado de alarma,state of alarm,emergency,decretar el estado de alarma; prorrogar el estado de alarma; levantar el estado de alarma
+la emisión de gases,gas emissions,environment,limitar la emisión de gases; reducir la emisión de gases; controlar la emisión de gases
+la zona de exclusión,exclusion zone,safety,delimitar la zona de exclusión; respetar la zona de exclusión; ampliar la zona de exclusión
+la previsión meteorológica,weather forecast,weather,consultar la previsión meteorológica; confirmar la previsión meteorológica; acertar la previsión meteorológica
+la asistencia sanitaria,healthcare assistance,emergency,brindar asistencia sanitaria; requerir asistencia sanitaria; coordinar la asistencia sanitaria
+la cuota de mercado,market share,money,aumentar la cuota de mercado; mantener la cuota de mercado; perder la cuota de mercado
+la insolvencia,insolvency,legal,declarar la insolvencia; evitar la insolvencia; superar la insolvencia
+el fenómeno adverso,adverse phenomenon,weather,prevenir el fenómeno adverso; soportar el fenómeno adverso; observar el fenómeno adverso
+la medida de seguridad,security measure,safety,reforzar la medida de seguridad; implementar la medida de seguridad; saltarse la medida de seguridad
+el operativo de rescate,rescue operation,emergency,lanzar el operativo de rescate; dirigir el operativo de rescate; finalizar el operativo de rescate
+la biodiversidad,biodiversity,environment,proteger la biodiversidad; preservar la biodiversidad; amenazar la biodiversidad
+la racha de viento,wind gust,weather,soportar la racha de viento; medir la racha de viento; protegerse de la racha de viento
+el recurso legal,legal appeal/recourse,legal,interponer el recurso legal; admitir el recurso legal; desestimar el recurso legal
+la borrasca,storm/low pressure,weather,capear la borrasca; esquivar la borrasca; prever la borrasca
+el extintor,fire extinguisher,safety,usar el extintor; recargar el extintor; revisar el extintor; activar el extintor
+el aviso de socorro,distress signal,emergency,enviar el aviso de socorro; recibir el aviso de socorro; ignorar el aviso de socorro
+el ecosistema,ecosystem,environment,alterar el ecosistema; restaurar el ecosistema; proteger el ecosistema
+la sentencia judicial,court ruling,legal,dictar la sentencia judicial; cumplir la sentencia judicial; recurrir la sentencia judicial
+el frente frío,cold front,weather,atravesar el frente frío; predecir el frente frío; sufrir el frente frío
+el centro de mando,command center,emergency,establecer el centro de mando; dirigir el centro de mando; evacuar el centro de mando
+el marco legal,legal framework,legal,establecer el marco legal; definir el marco legal; operar bajo el marco legal
+la alerta naranja,orange alert,weather,activar la alerta naranja; elevar la alerta naranja; cancelar la alerta naranja
+el protocolo de actuación,action protocol,safety,seguir el protocolo de actuación; actualizar el protocolo de actuación; diseñar el protocolo de actuación
+la precipitación,precipitation,weather,registrar la precipitación; evitar la precipitación; medir la precipitación
+el servicio de urgencias,emergency service,emergency,llamar al servicio de urgencias; saturar el servicio de urgencias; gestionar el servicio de urgencias
+la política ambiental,environmental policy,environment,aplicar la política ambiental; revisar la política ambiental; incumplir la política ambiental
+el testimonio,testimony,legal,prestar el testimonio; valorar el testimonio; contradecir el testimonio; ocultar el testimonio
+la humedad relativa,relative humidity,weather,medir la humedad relativa; controlar la humedad relativa; aumentar la humedad relativa
+la inspección técnica,technical inspection,safety,pasar la inspección técnica; superar la inspección técnica; realizar la inspección técnica
+la catástrofe natural,natural disaster,emergency,prevenir la catástrofe natural; sobrevivir a la catástrofe natural; gestionar la catástrofe natural
+la ola de calor,heat wave,weather,soportar la ola de calor; evitar la ola de calor; prever la ola de calor
+el plan de emergencia,emergency plan,emergency,ejecutar el plan de emergencia; probar el plan de emergencia; modificar el plan de emergencia
+el desecho tóxico,toxic waste,environment,tratar el desecho tóxico; eliminar el desecho tóxico; almacenar el desecho tóxico
+el contrato vinculante,binding contract,legal,firmar el contrato vinculante; romper el contrato vinculante; redactar el contrato vinculante
+la presión atmosférica,atmospheric pressure,weather,medir la presión atmosférica; notar la presión atmosférica; registrar la presión atmosférica
+la salida de incendios,fire exit,safety,mantener la salida de incendios; bloquear la salida de incendios; utilizar la salida de incendios
+la situación de emergencia,emergency situation,emergency,declarar la situación de emergencia; controlar la situación de emergencia; gestionar la situación de emergencia
+el pleito,lawsuit/dispute,legal,ganar el pleito; perder el pleito; iniciar el pleito; resolver el pleito
+el pronóstico,forecast,weather,acertar el pronóstico; fallar el pronóstico; actualizar el pronóstico
+la norma de seguridad,safety standard,safety,cumplir la norma de seguridad; violar la norma de seguridad; actualizar la norma de seguridad
+la señal de socorro,distress signal,emergency,emitir la señal de socorro; captar la señal de socorro; responder a la señal de socorro
+el parque natural,natural park,environment,visitar el parque natural; proteger el parque natural; gestionar el parque natural
+la carga de la prueba,burden of proof,legal,soportar la carga de la prueba; invertir la carga de la prueba; valorar la carga de la prueba
+el anticiclón,anticyclone,weather,formar el anticiclón; bloquear el anticiclón; predecir el anticiclón
+el casco de seguridad,safety helmet,safety,llevar el casco de seguridad; exigir el casco de seguridad; homologar el casco de seguridad
+la vía de evacuación,evacuation route,emergency,señalizar la vía de evacuación; bloquear la vía de evacuación; despejar la vía de evacuación
+la contaminación acústica,noise pollution,environment,reducir la contaminación acústica; medir la contaminación acústica; denunciar la contaminación acústica
+la responsabilidad civil,civil liability,legal,asumir la responsabilidad civil; reclamar la responsabilidad civil; asegurar la responsabilidad civil
+la helada,frost,weather,sufrir la helada; prever la helada; evitar la helada
+la protección individual,individual protection,safety,usar la protección individual; dotar de protección individual; verificar la protección individual
+la alerta roja,red alert,emergency,activar la alerta roja; elevar la alerta roja; mantener la alerta roja
+la reserva de la biosfera,biosphere reserve,environment,declarar la reserva de la biosfera; visitar la reserva de la biosfera; proteger la reserva de la biosfera
+la nubosidad,cloudiness,weather,aumentar la nubosidad; observar la nubosidad; predecir la nubosidad
+el chaleco reflectante,reflective vest,safety,ponerse el chaleco reflectante; exigir el chaleco reflectante; comprar el chaleco reflectante
+el equipo de salvamento,rescue team,emergency,movilizar el equipo de salvamento; dirigir el equipo de salvamento; coordinar el equipo de salvamento
+la eficiencia energética,energy efficiency,environment,mejorar la eficiencia energética; medir la eficiencia energética; fomentar la eficiencia energética
+el abogado defensor,defense attorney,legal,contratar al abogado defensor; consultar al abogado defensor; escuchar al abogado defensor
+la temperatura ambiente,ambient temperature,weather,controlar la temperatura ambiente; medir la temperatura ambiente; estabilizar la temperatura ambiente
+la señal de advertencia,warning sign,safety,colocar la señal de advertencia; ignorar la señal de advertencia; respetar la señal de advertencia
+la brigada de emergencia,emergency brigade,emergency,formar la brigada de emergencia; movilizar la brigada de emergencia; liderar la brigada de emergencia
+el combustible fósil,fossil fuel,environment,eliminar el combustible fósil; sustituir el combustible fósil; quemar el combustible fósil
+la citación judicial,court summons,legal,recibir la citación judicial; ignorar la citación judicial; responder a la citación judicial
+la tormenta eléctrica,thunderstorm,weather,desatar la tormenta eléctrica; evitar la tormenta eléctrica; observar la tormenta eléctrica
+la máscara de gas,gas mask,safety,colocarse la máscara de gas; fabricar la máscara de gas; verificar la máscara de gas
+el plan de evacuación,evacuation plan,emergency,diseñar el plan de evacuación; practicar el plan de evacuación; seguir el plan de evacuación
+el impacto ecológico,ecological impact,environment,minimizar el impacto ecológico; evaluar el impacto ecológico; analizar el impacto ecológico
+la exención de responsabilidad,disclaimer/waiver,legal,firmar la exención de responsabilidad; incluir la exención de responsabilidad; aplicar la exención de responsabilidad
+la cota de nieve,snow level,weather,bajar la cota de nieve; subir la cota de nieve; predecir la cota de nieve
+la barandilla,railing,safety,instalar la barandilla; reparar la barandilla; apoyarse en la barandilla
+el protocolo de emergencia,emergency protocol,emergency,activar el protocolo de emergencia; seguir el protocolo de emergencia; revisar el protocolo de emergencia
+el derecho penal,criminal law,legal,estudiar el derecho penal; aplicar el derecho penal; reformar el derecho penal
+el temporal,storm/gale,weather,capear el temporal; sufrir el temporal; prever el temporal
+la zona de seguridad,safety zone,safety,delimitar la zona de seguridad; entrar en la zona de seguridad; asegurar la zona de seguridad
+la unidad de cuidados intensivos,intensive care unit,emergency,ingresar en la unidad de cuidados intensivos; gestionar la unidad de cuidados intensivos; ampliar la unidad de cuidados intensivos
+la orden judicial,court order,legal,ejecutar la orden judicial; cumplir la orden judicial; revocar la orden judicial
+el boletín meteorológico,weather bulletin,weather,publicar el boletín meteorológico; seguir el boletín meteorológico; analizar el boletín meteorológico
+el manual de seguridad,safety manual,safety,leer el manual de seguridad; seguir el manual de seguridad; actualizar el manual de seguridad
+el equipo médico de emergencia,emergency medical team,emergency,llamar al equipo médico de emergencia; coordinar al equipo médico de emergencia; esperar al equipo médico de emergencia
+la radiación,radiation,environment,medir la radiación; emitir radiación; exponerse a la radiación; bloquear la radiación
+la racha,gust/streak,weather,soportar una racha; registrar una racha; alcanzar una racha; predecir una racha
+la catástrofe,catastrophe,emergency,evitar la catástrofe; prever la catástrofe; desencadenar la catástrofe; superar la catástrofe
+el desecho,waste,environment,gestionar el desecho; reciclar el desecho; eliminar el desecho; acumular el desecho
+el casco,helmet,safety,ponerse el casco; llevar el casco; quitarse el casco; homologar el casco
+el chaleco,vest,safety,llevar el chaleco; ponerse el chaleco; homologar el chaleco; suministrar el chaleco
+la tormenta,storm,weather,desatarse la tormenta; soportar la tormenta; prever la tormenta; capear la tormenta
+la máscara,mask,safety,ajustar la máscara; quitarse la máscara; ponerse la máscara; filtrar con la máscara
+la cota,level/altitude,weather,alcanzar la cota; superar la cota; bajar la cota; establecer la cota
+el ciberataque,cyberattack,tech,sufrir un ciberataque; prevenir un ciberataque; detectar un ciberataque; investigar un ciberataque
+la encriptación,encryption,tech,reforzar la encriptación; implementar la encriptación; romper la encriptación; asegurar mediante encriptación
+el flujo,flow/cash flow,money,gestionar el flujo; aumentar el flujo; controlar el flujo; interrumpir el flujo
+el desperfecto,damage/flaw,repairs,detectar un desperfecto; reparar un desperfecto; notificar un desperfecto; evaluar un desperfecto
+el civismo,civility,community,demostrar civismo; fomentar el civismo; carecer de civismo; promover el civismo
+el desenlace,outcome/ending,media,prever el desenlace; evitar el desenlace; conocer el desenlace; precipitar el desenlace
+la disyuntiva,dilemma,admin,plantear una disyuntiva; enfrentar una disyuntiva; resolver una disyuntiva; ante la disyuntiva
+la controversia,controversia,media,suscitar controversia; generar controversia; evitar la controversia; alimentar la controversia
+la cautela,caution,safety,actuar con cautela; recomendar cautela; pedir cautela; mantener la cautela
+la inmediatez,immediacy,tech,exigir inmediatez; valorar la inmediatez; perder la inmediatez; buscar la inmediatez
+la credibilidad,credibility,media,ganar credibilidad; perder credibilidad; cuestionar la credibilidad; mantener la credibilidad
+la susceptibilidad,susceptibility,emotion,evitar susceptibilidades; herir susceptibilidades; mostrar susceptibilidad; reducir la susceptibilidad
+la rigurosidad,rigor,education,aplicar rigurosidad; exigir rigurosidad; valorar la rigurosidad; perder rigurosidad
+la escalabilidad,scalability,tech,analizar la escalabilidad; mejorar la escalabilidad; probar la escalabilidad; limitar la escalabilidad
+la reticencia,reluctance,emotion,mostrar reticencia; vencer la reticencia; notar la reticencia; superar la reticencia
+la diversificación,diversification,money,fomentar la diversificación; impulsar la diversificación; analizar la diversificación; evitar la diversificación
+la obsolescencia,obsolescence,tech,evitar la obsolescencia; acelerar la obsolescencia; combatir la obsolescencia; gestionar la obsolescencia
+la interrupción,interruption,tech,evitar interrupciones; sufrir interrupciones; causar interrupciones; minimizar interrupciones
+la desinformación,misinformation,media,combatir la desinformación; evitar la desinformación; propagar la desinformación; frenar la desinformación
+la adaptabilidad,adaptability,work,demostrar adaptabilidad; fomentar la adaptabilidad; mejorar la adaptabilidad; exigir adaptabilidad
+la alerta,alert,safety,emitir una alerta; activar la alerta; recibir una alerta; cancelar la alerta
+la emisión,emission,environment,reducir las emisiones; controlar las emisiones; limitar las emisiones; medir las emisiones
+el operativo,operation,safety,dirigir el operativo; coordinar el operativo; desplegar el operativo; finalizar el operativo
+el auxilio,aid/help,safety,prestar auxilio; solicitar auxilio; acudir en auxilio; denegar el auxilio
+la norma,norm/standard,community,cumplir la norma; aplicar la norma; saltarse la norma; establecer la norma
+la carga,burden/load,work,asumir la carga; reducir la carga; soportar la carga; compartir la carga
+la vía,path/way,transport,despejar la vía; bloquear la vía; seguir la vía; habilitar la vía
+la citación,summons,legal,recibir una citación; enviar una citación; ignorar una citación; atender la citación
+la convicción,conviction,emotion,mantener la convicción; expresar la convicción; perder la convicción; mostrar convicción
+el consentimiento,consent,legal,prestar el consentimiento; revocar el consentimiento; otorgar el consentimiento; obtener el consentimiento
+el recargo,surcharge,money,aplicar un recargo; pagar un recargo; evitar el recargo; justificar el recargo
+la interlocución,dialogue/liaison,community,facilitar la interlocución; mantener la interlocución; fomentar la interlocución; establecer la interlocución
+la implementación,implementation,tech,completar la implementación; retrasar la implementación; supervisar la implementación; facilitar la implementación
+la arquitectura,architecture/structure,tech,diseñar la arquitectura; modificar la arquitectura; revisar la arquitectura; definir la arquitectura
+la latencia,latency,tech,reducir la latencia; optimizar la latencia; medir la latencia; minimizar la latencia
+la compatibilidad,compatibility,tech,garantizar la compatibilidad; verificar la compatibilidad; mejorar la compatibilidad; asegurar la compatibilidad
+la configuración,settings/configuration,tech,restablecer la configuración; modificar la configuración; guardar la configuración; ajustar la configuración
+la migración,migration,tech,ejecutar la migración; planificar la migración; supervisar la migración; completar la migración
+la conectividad,connectivity,tech,mejorar la conectividad; ampliar la conectividad; restablecer la conectividad; asegurar la conectividad
+la sintomatología,symptoms,health,presentar sintomatología; observar sintomatología; tratar la sintomatología; evaluar la sintomatología
+la convalecencia,convalescence,health,durante la convalecencia; acortar la convalecencia; pasar la convalecencia; cuidar durante la convalecencia
+la remuneración,remuneration,work,negociar la remuneración; aumentar la remuneración; percibir la remuneración; ajustar la remuneración
+la promoción,promotion,work,conseguir una promoción; merecer una promoción; ofrecer una promoción; solicitar una promoción
+la logística,logistics,transport,gestionar la logística; organizar la logística; optimizar la logística; coordinar la logística
+la difusión,broadcasting/diffusion,media,asegurar la difusión; facilitar la difusión; limitar la difusión; fomentar la difusión
+la censura,censorship,media,evitar la censura; denunciar la censura; aplicar la censura; combatir la censura
+la objetividad,objectivity,media,mantener la objetividad; perder la objetividad; garantizar la objetividad; cuestionar la objetividad
+la saturación,saturation/overload,work,evitar la saturación; provocar la saturación; sufrir la saturación; gestionar la saturación
+el desplazamiento,commute/displacement,transport,realizar un desplazamiento; evitar el desplazamiento; facilitar el desplazamiento; sufrir un desplazamiento
+la transición,transition,work,facilitar la transición; gestionar la transición; completar la transición; iniciar la transición
+la escasez,scarcity,environment,combatir la escasez; provocar la escasez; sufrir la escasez; paliar la escasez
+la exclusión,exclusion,community,provocar la exclusión; evitar la exclusión; denunciar la exclusión; fomentar la exclusión
+la intermitencia,intermittency,tech,detectar la intermitencia; sufrir intermitencia; corregir la intermitencia; evitar la intermitencia
+el reclamo,complaint/claim,work,presentar un reclamo; atender un reclamo; desestimar un reclamo; justificar un reclamo
+la directriz,directive/guideline,admin,impartir una directriz; seguir una directriz; ignorar una directriz; revisar una directriz
+el excedente,surplus,money,generar un excedente; gestionar un excedente; reinvertir el excedente; reducir el excedente
+la fluctuación,fluctuation,work,observar una fluctuación; controlar una fluctuación; sufrir una fluctuación; prever una fluctuación
+la deslocalización,outsourcing/offshoring,work,provocar la deslocalización; frenar la deslocalización; analizar la deslocalización; evitar la deslocalización
+la enmienda,amendment,legal,presentar una enmienda; aprobar una enmienda; rechazar una enmienda; redactar una enmienda
+la facturación,turnover/invoicing,work,aumentar la facturación; controlar la facturación; analizar la facturación; mejorar la facturación
+la remisión,referral/remission,health,solicitar una remisión; recibir una remisión; gestionar la remisión
+el facultativo,physician,health,consultar al facultativo; criterio del facultativo; asistencia del facultativo
+la analítica,blood test,health,solicitar una analítica; resultados de la analítica; revisar la analítica
+la sedación,sedation,health,aplicar la sedación; bajo sedación; profunda sedación
+la intervención,surgery/intervention,health,programar la intervención; riesgo de la intervención; éxito de la intervención
+el alta médica,discharge,health,recibir el alta médica; tramitar el alta médica; firmar el alta médica
+la baja laboral,sick leave,health,solicitar la baja laboral; tramitar la baja laboral; periodo de baja laboral
+la farmacología,pharmacology,health,estudio de la farmacología; base de la farmacología; aplicación de la farmacología
+el principio activo,active ingredient,health,concentración del principio activo; efecto del principio activo; dosis del principio activo
+la posología,dosage instructions,health,seguir la posología; ajustar la posología; incumplimiento de la posología
+el prospecto,leaflet,health,leer el prospecto; instrucciones del prospecto; advertencias del prospecto
+la contraindicación,contraindication,health,evitar la contraindicación; advertir la contraindicación; riesgo de contraindicación
+la dosis,dosage,health,ajustar la dosis; exceder la dosis; pauta de dosis
+el lote,batch,health,verificación del lote; caducidad del lote; seguridad del lote
+la fecha de consumo,expiry date,health,verificar la fecha de consumo; controlar la fecha de consumo; comprobar la fecha de consumo; exceder la fecha de consumo
+el efecto secundario,side effect,health,notificar el efecto secundario; riesgo de efecto secundario; mitigar el efecto secundario
+la prima,insurance premium,health,abonar la prima; aumento de la prima; impago de la prima
+la franquicia,deductible,health,aplicar la franquicia; exención de franquicia; pago de la franquicia
+el beneficiario,beneficiary,health,designar al beneficiario; derechos del beneficiario; cambio de beneficiario
+la carencia,waiting period,health,periodo de carencia; exención de carencia; normativa de carencia
+el perito,adjuster,health,informe del perito; visita del perito; dictamen del perito
+el equipamiento,equipment,health,adquirir el equipamiento; mantenimiento del equipamiento; renovación del equipamiento
+el instrumental,instruments,health,esterilizar el instrumental; uso de instrumental; reposición de instrumental
+el desfibrilador,defibrillator,health,manejo del desfibrilador; revisión del desfibrilador; uso de desfibrilador
+la camilla,stretcher,health,traslado en camilla; limpieza de la camilla; ajuste de la camilla
+la sonda,probe/catheter,health,colocación de la sonda; esterilización de la sonda; uso de sonda
+el monitor,monitor,health,configurar el monitor; lectura del monitor; alarma del monitor
+el respirador,ventilator,health,asistencia con respirador; ajuste del respirador; fallo del respirador
+la jeringuilla,syringe,health,precisión de la jeringuilla; desecho de la jeringuilla; uso de jeringuilla
+el vendaje,bandage,health,aplicar el vendaje; cambio de vendaje; fijación del vendaje
+la férula,splint,health,colocar la férula; ajuste de la férula; revisión de la férula
+el glucómetro,glucometer,health,calibrar el glucómetro; uso del glucómetro; lectura del glucómetro
+el ecógrafo,ultrasound machine,health,manejo del ecógrafo; resultados del ecógrafo; mantenimiento del ecógrafo
+la gasa,gauze,health,esterilizar la gasa; uso de gasa; caja de gasas
+el esfigmomanómetro,blood pressure monitor,health,usar el esfigmomanómetro; calibrar el esfigmomanómetro; verificar el esfigmomanómetro; leer el esfigmomanómetro
+el gotero,IV drip,health,ajustar el gotero; velocidad del gotero; cambio de gotero
+la prótesis,prosthesis,health,ajuste de la prótesis; colocación de la prótesis; material de la prótesis
+la silla de ruedas,wheelchair,health,uso de silla de ruedas; mantenimiento de la silla de ruedas; alquiler de silla de ruedas
+la muleta,crutch,health,uso de muleta; ajuste de la muleta; reposición de muleta
+la tirita,adhesive bandage,health,aplicar la tirita; caja de tiritas; uso de tirita
+el algodón,cotton wool,health,esterilizar el algodón; uso de algodón; paquete de algodón
+la mascarilla,mask,health,uso de mascarilla; desecho de la mascarilla; tipo de mascarilla
+el guante,glove,health,uso de guantes; desecho de guantes; látex de guante
+la bata,medical gown,health,uso de bata; esterilización de la bata; talla de bata
+el tensiómetro,blood pressure cuff,health,calibrar el tensiómetro; uso del tensiómetro; lectura del tensiómetro
+el termómetro,thermometer,health,lectura del termómetro; calibración del termómetro; precisión del termómetro
+el inquilinato,tenancy,housing,régimen de inquilinato; ley de inquilinato; derechos de inquilinato
+la habitabilidad,habitability,housing,condiciones de habitabilidad; certificado de habitabilidad; garantizar la habitabilidad
+el arrendador,lessor/landlord,housing,notificar al arrendador; obligaciones del arrendador; figura del arrendador
+el avalista,guarantor,housing,exigir un avalista; figura del avalista; responder como avalista
+la mensualidad,monthly rent payment,housing,abonar la mensualidad; retraso en la mensualidad; impago de la mensualidad
+el inquilino,tenant,housing,perfil del inquilino; selección del inquilino; responsabilidad del inquilino
+el arrendamiento,lease agreement,housing,contrato de arrendamiento; prórroga del arrendamiento; duración del arrendamiento
+la filtración,leak/seepage,repairs,detectar una filtración; filtración de agua; reparar la filtración
+el fontanero,plumber,repairs,llamar al fontanero; consulta con el fontanero; intervención del fontanero
+el electricista,electrician,repairs,asistencia del electricista; avisar al electricista; factura del electricista
+el repuesto,spare part,repairs,buscar el repuesto; falta de repuesto; pieza de repuesto
+la mano de obra,labor,repairs,coste de mano de obra; precio de mano de obra; profesional de mano de obra
+la reparación,repair,repairs,garantía de reparación; urgencia de reparación; plazo de reparación
+el contador,meter,utilities,lectura del contador; avería del contador; precinto del contador
+la potencia,power capacity,utilities,contratar la potencia; aumentar la potencia; límite de potencia
+la compañía,utility company,utilities,cambiar de compañía; contrato con la compañía; atención de la compañía
+el consumo,consumption,utilities,ahorro de consumo; exceso de consumo; medición del consumo
+el electrodoméstico,appliance,housing,eficiencia del electrodoméstico; garantía del electrodoméstico; avería del electrodoméstico
+el frigorífico,refrigerator,housing,termostato del frigorífico; limpieza del frigorífico; descongelar el frigorífico
+la lavadora,washing machine,housing,filtro de la lavadora; ciclo de la lavadora; carga de la lavadora
+el lavavajillas,dishwasher,housing,uso del lavavajillas; pastilla del lavavajillas; avería del lavavajillas
+la vitrocerámica,ceramic hob,housing,limpieza de la vitrocerámica; superficie de la vitrocerámica; bloqueo de la vitrocerámica
+el microondas,microwave,housing,potencia del microondas; interior del microondas; avería del microondas
+el extractor,extractor hood,housing,filtro del extractor; ruido del extractor; potencia del extractor
+el termo,water heater,housing,termo eléctrico; avería del termo; instalación del termo
+la tasa,municipal tax/fee,admin,pago de la tasa; tasa de basuras; exención de tasa
+la recogida,collection,admin,recogida de residuos; horario de recogida; servicio de recogida
+el alcantarillado,sewer system,admin,mantenimiento del alcantarillado; atasco en el alcantarillado; red de alcantarillado
+la luminaria,street light,admin,reparar la luminaria; fallo en la luminaria; reposición de la luminaria
+el padrón,municipal register,admin,certificado de padrón; gestión del padrón; inscripción en el padrón
+el catastro,land registry,admin,valor del catastro; datos del catastro; consulta al catastro
+el mobiliario,furniture,housing,inventario del mobiliario; estado del mobiliario; deterioro del mobiliario
+la calefacción,heating,utilities,instalación de calefacción; avería de la calefacción; encender la calefacción
+el desagüe,drain,repairs,atasco del desagüe; limpieza del desagüe; obstrucción del desagüe
+la vivienda,dwelling/housing,housing,estado de la vivienda; alquiler de vivienda; inspección de la vivienda
+el activo intangible,intangible asset,money,valorar el activo intangible; proteger el activo intangible; registrar el activo intangible; amortizar el activo intangible
+la partida presupuestaria,budget line item,money,asignar una partida presupuestaria; modificar la partida presupuestaria; aprobar la partida presupuestaria; ejecutar la partida presupuestaria
+el devengo,accrual,money,la fecha de devengo; el momento del devengo; impuesto de devengo
+la auditoría interna,internal audit,legal,superar la auditoría interna; realizar la auditoría interna; programar la auditoría interna; encargar la auditoría interna
+el cumplimiento normativo,regulatory compliance,legal,garantizar el cumplimiento normativo; asegurar el cumplimiento normativo; verificar el cumplimiento normativo; auditar el cumplimiento normativo
+la diligencia debida,due diligence,legal,ejecutar la diligencia debida; realizar la diligencia debida; completar la diligencia debida; iniciar la diligencia debida
+la sanción administrativa,administrative penalty,legal,imponer una sanción administrativa; recurrir la sanción administrativa; pagar la sanción administrativa; evitar la sanción administrativa
+la cláusula penal,penal clause,work,incluir una cláusula penal; ejecutar la cláusula penal; redactar una cláusula penal; negociar una cláusula penal
+el anexo contractual,contractual annex,work,adjuntar el anexo contractual; revisar el anexo contractual; firmar el anexo contractual; redactar el anexo contractual
+el vicio oculto,latent defect,work,reclamar por vicio oculto; detectar un vicio oculto; denunciar un vicio oculto; probar un vicio oculto
+la rescisión,rescission/termination,work,la rescisión unilateral; solicitar la rescisión; causa de rescisión
+la subcontratación,subcontracting,work,gestionar la subcontratación; autorizar la subcontratación; limitar la subcontratación; prohibir la subcontratación
+el absentismo,absenteeism,work,reducir el absentismo; el índice de absentismo; causas del absentismo
+el clima laboral,workplace environment,work,mejorar el clima laboral; medir el clima laboral; evaluar el clima laboral; fomentar un buen clima laboral
+el incentivo salarial,salary incentive,work,establecer un incentivo salarial; recibir el incentivo salarial; ofrecer un incentivo salarial; aprobar el incentivo salarial
+la capacitación,training/skill development,work,la capacitación continua; plan de capacitación; recibir capacitación; impartir capacitación; completar la capacitación
+la retención del talento,talent retention,work,estrategias de retención del talento; fomentar la retención del talento; mejorar la retención del talento; priorizar la retención del talento
+la trazabilidad,traceability,work,garantizar la trazabilidad; sistema de trazabilidad; asegurar la trazabilidad; controlar la trazabilidad; verificar la trazabilidad
+el stock de seguridad,safety stock,work,gestionar el stock de seguridad; calcular el stock de seguridad; mantener el stock de seguridad; ajustar el stock de seguridad
+la cadena de suministro,supply chain,work,optimizar la cadena de suministro; fallos en la cadena de suministro; gestionar la cadena de suministro; integrar la cadena de suministro
+la logística inversa,reverse logistics,work,implementar la logística inversa; costes de logística inversa; gestionar la logística inversa; planificar la logística inversa
+el proveedor logístico,logistics provider,work,contratar al proveedor logístico; evaluar al proveedor logístico; cambiar de proveedor logístico; negociar con el proveedor logístico
+el centro de distribución,distribution center,work,gestionar el centro de distribución; ubicación del centro de distribución; operar el centro de distribución; ampliar el centro de distribución
+la satisfacción del cliente,customer satisfaction,work,medir la satisfacción del cliente; mejorar la satisfacción del cliente; garantizar la satisfacción del cliente; niveles de satisfacción del cliente
+la fidelización,customer loyalty,work,estrategias de fidelización; mejorar la fidelización; fomentar la fidelización; programas de fidelización; lograr la fidelización
+el servicio postventa,after-sales service,work,el departamento de servicio postventa; calidad del servicio postventa; ofrecer servicio postventa; mejorar el servicio postventa
+el protocolo de atención,customer service protocol,work,seguir el protocolo de atención; actualizar el protocolo de atención; definir el protocolo de atención; cumplir el protocolo de atención
+el embudo de conversión,conversion funnel,money,analizar el embudo de conversión; optimizar el embudo de conversión; medir el embudo de conversión; mejorar el embudo de conversión
+la liquidez,liquidity,money,mejorar la liquidez; problemas de liquidez; ratio de liquidez
+el pasivo circulante,current liabilities,money,gestionar el pasivo circulante; reducir el pasivo circulante; analizar el pasivo circulante; controlar el pasivo circulante
+el balance de situación,balance sheet,money,presentar el balance de situación; auditar el balance de situación; revisar el balance de situación; aprobar el balance de situación
+el margen de beneficio,profit margin,money,ajustar el margen de beneficio; reducir el margen de beneficio; aumentar el margen de beneficio; calcular el margen de beneficio
+el contrato mercantil,commercial contract,work,redactar el contrato mercantil; validez del contrato mercantil; firmar el contrato mercantil; rescindir el contrato mercantil
+el mandato,mandate/power of attorney,work,otorgar un mandato; cumplir el mandato; revocar el mandato; aceptar el mandato
+la responsabilidad solidaria,joint liability,work,asumir la responsabilidad solidaria; exención de responsabilidad solidaria; declarar la responsabilidad solidaria; determinar la responsabilidad solidaria
+el incumplimiento,breach/non-compliance,work,el incumplimiento contractual; notificar el incumplimiento; penalizar el incumplimiento
+el preaviso,advance notice,work,el periodo de preaviso; cumplir con el preaviso; sin preaviso
+la auditoría externa,external audit,legal,realizar la auditoría externa; informe de auditoría externa; superar la auditoría externa; contratar una auditoría externa
+la transparencia corporativa,corporate transparency,legal,fomentar la transparencia corporativa; política de transparencia corporativa; garantizar la transparencia corporativa; promover la transparencia corporativa
+la seguridad laboral,workplace safety,work,garantizar la seguridad laboral; normas de seguridad laboral; cumplir la seguridad laboral; mejorar la seguridad laboral
+el equipo multidisciplinar,multidisciplinary team,work,formar un equipo multidisciplinar; trabajar en equipo multidisciplinar; coordinar un equipo multidisciplinar; liderar un equipo multidisciplinar
+la carga de trabajo,workload,work,gestionar la carga de trabajo; excesiva carga de trabajo; equilibrar la carga de trabajo; reducir la carga de trabajo
+el inventario,inventory,work,realizar el inventario; rotación del inventario; control del inventario
+el almacén automatizado,automated warehouse,work,gestionar el almacén automatizado; diseño del almacén automatizado; operar el almacén automatizado; modernizar el almacén automatizado
+el transporte multimodal,multimodal transport,work,contratar transporte multimodal; ventajas del transporte multimodal; organizar transporte multimodal; utilizar transporte multimodal
+la última milla,last mile,work,la distribución de última milla; optimizar la última milla; gestionar la última milla; costes de la última milla
+el tiempo de entrega,delivery time,work,reducir el tiempo de entrega; cumplir el tiempo de entrega; mejorar el tiempo de entrega; controlar el tiempo de entrega
+el punto de venta,point of sale,work,gestionar el punto de venta; estrategia en el punto de venta; visitar el punto de venta; abrir un punto de venta
+la atención personalizada,personalized service,work,ofrecer atención personalizada; valorar la atención personalizada; garantizar atención personalizada; mejorar la atención personalizada
+el buzón de sugerencias,suggestion box,work,habilitar el buzón de sugerencias; revisar el buzón de sugerencias; implementar el buzón de sugerencias; gestionar el buzón de sugerencias
+el plan estratégico,strategic plan,work,elaborar el plan estratégico; ejecutar el plan estratégico; revisar el plan estratégico; definir el plan estratégico
+la ventaja competitiva,competitive advantage,money,mantener la ventaja competitiva; crear una ventaja competitiva; perder la ventaja competitiva; desarrollar una ventaja competitiva
+el mercado objetivo,target market,money,definir el mercado objetivo; analizar el mercado objetivo; identificar el mercado objetivo; estudiar el mercado objetivo
+el cortafuegos,firewall,tech,configurar el cortafuegos; gestionar el cortafuegos; brecha en el cortafuegos; robustez del cortafuegos
+el malware,malware,tech,eliminar el malware; detectar el malware; infección por malware; propagación de malware
+la suplantación,spoofing/impersonation,tech,evitar la suplantación; técnica de suplantación; alerta de suplantación; intento de suplantación
+el phishing,phishing,tech,campaña de phishing; caer en el phishing; denunciar el phishing; protección frente al phishing
+el ciberdelito,cybercrime,tech,combatir el ciberdelito; índice de ciberdelito; prevención del ciberdelito; denuncia de ciberdelito
+el respaldo,backup/support,tech,crear el respaldo; gestionar el respaldo; frecuencia del respaldo; integridad del respaldo
+el metadato,metadata,tech,extraer el metadato; gestión de metadatos; análisis de metadatos; revisión de metadatos
+la sincronización,synchronization,tech,configurar la sincronización; error de sincronización; pausar la sincronización; estado de sincronización
+el directorio,directory,tech,acceder al directorio; estructura del directorio; ruta del directorio; permisos de directorio
+la persistencia,persistence,tech,garantizar la persistencia; error de persistencia; mecanismo de persistencia; tiempo de persistencia
+la credencial,credential,tech,proteger la credencial; robo de credencial; validar la credencial; gestión de credenciales
+la sesión,session,tech,cerrar la sesión; tiempo de sesión; caducidad de la sesión; gestión de sesiones
+el administrador,administrator,tech,privilegios de administrador; rol de administrador; acceso de administrador; gestión de administradores
+la suscripción,subscription,tech,gestionar la suscripción; cancelar la suscripción; renovación de la suscripción; coste de suscripción
+la verificación,verification,tech,proceso de verificación; método de verificación; código de verificación; pasos de verificación
+el periférico,peripheral,tech,conectar el periférico; compatibilidad del periférico; gestión de periféricos; instalación del periférico
+el firmware,firmware,tech,actualizar el firmware; versión del firmware; fallo de firmware; parche de firmware
+el sensor,sensor,tech,calibrar el sensor; datos del sensor; precisión del sensor; lectura del sensor
+la API,API,tech,integrar la API; documentación de la API; uso de la API; autenticación de la API
+la interoperabilidad,interoperability,tech,garantizar la interoperabilidad; estándares de interoperabilidad; retos de interoperabilidad; nivel de interoperabilidad
+el rastreo,tracking,tech,bloquear el rastreo; cookies de rastreo; evitar el rastreo; política de rastreo
+el anonimato,anonymity,tech,garantizar el anonimato; herramienta de anonimato; preservar el anonimato; nivel de anonimato
+la supresión,deletion/suppression,tech,derecho de supresión; solicitud de supresión; gestión de supresión; proceso de supresión
+el parche,patch,tech,aplicar el parche; lanzamiento del parche; gestión de parches; vulnerabilidad del parche
+la residencia,residency,travel,solicitar la residencia; conceder la residencia; renovar la residencia; acreditar la residencia
+la deportación,deportation,travel,evitar la deportación; ordenar la deportación; ejecutar la deportación
+la nacionalidad,nationality,travel,adquirir la nacionalidad; tramitar la nacionalidad; denegar la nacionalidad; obtener la nacionalidad
+el salvoconducto,safe-conduct pass,travel,expedir el salvoconducto; portar el salvoconducto; validar el salvoconducto
+el asilo,asylum,travel,solicitar el asilo; conceder el asilo; denegar el asilo; tramitar el asilo
+la repatriación,repatriation,travel,facilitar la repatriación; coordinar la repatriación; gestionar la repatriación
+la convalidación,validation,travel,tramitar la convalidación; gestionar la convalidación; obtener la convalidación
+el overbooking,overbooking,travel,reclamar por overbooking; denunciar el overbooking; gestionar el overbooking
+la masificación,overcrowding,travel,evitar la masificación; gestionar la masificación; sufrir la masificación
+el abono,transport pass,transport,recargar el abono; validar el abono; adquirir el abono
+la intermodalidad,intermodality,transport,fomentar la intermodalidad; gestionar la intermodalidad; promover la intermodalidad; mejorar la intermodalidad
+el convoy,convoy/train set,transport,formar el convoy; revisar el convoy; retrasar el convoy
+el andén,platform,transport,acceder al andén; despejar el andén; vigilar el andén
+la terminal,terminal,transport,transitar la terminal; evacuar la terminal; bloquear la terminal
+la gratuidad,free of charge status,transport,aplicar la gratuidad; reclamar la gratuidad; aprobar la gratuidad; defender la gratuidad
+la electrificación,electrification,transport,completar la electrificación; supervisar la electrificación; impulsar la electrificación; financiar la electrificación
+el aforo,capacity,travel,limitar el aforo; controlar el aforo; superar el aforo
+el rescate,rescue,emergency,coordinar el rescate; ejecutar el rescate; solicitar el rescate
+la contención,containment,emergency,asegurar la contención; gestionar la contención; lograr la contención; mantener la contención
+la corresponsabilidad,shared responsibility,family,fomentar la corresponsabilidad; asumir la corresponsabilidad; pactar la corresponsabilidad
+el cuidado paliativo,palliative care,family,recibir el cuidado paliativo; gestionar el cuidado paliativo; administrar el cuidado paliativo
+la tutela,guardianship,community,ejercer la tutela; asumir la tutela; revocar la tutela
+el entorno asistencial,care environment,family,mejorar el entorno asistencial; adaptar el entorno asistencial; supervisar el entorno asistencial
+el trámite burocrático,bureaucratic procedure,education,agilizar el trámite burocrático; evitar el trámite burocrático; cumplir el trámite burocrático
+la ayuda a domicilio,home help,family,solicitar la ayuda a domicilio; contratar la ayuda a domicilio; prestar la ayuda a domicilio
+la cohesión social,social cohesion,community,reforzar la cohesión social; favorecer la cohesión social; proteger la cohesión social
+la dependencia,dependency,family,declarar la dependencia; valorar la dependencia; reconocer la dependencia
+la jornada partida,split shift,family,cumplir la jornada partida; reducir la jornada partida; negociar la jornada partida
+el expediente académico,academic record,education,revisar el expediente académico; actualizar el expediente académico; solicitar el expediente académico
+la prestación asistencial,welfare benefit,family,cobrar la prestación asistencial; tramitar la prestación asistencial; denegar la prestación asistencial
+la gobernanza,governance,community,mejorar la gobernanza; aplicar la gobernanza; democratizar la gobernanza
+el conflicto de intereses,conflict of interest,community,detectar el conflicto de intereses; evitar el conflicto de intereses; denunciar el conflicto de intereses
+el protocolo educativo,educational protocol,education,diseñar el protocolo educativo; seguir el protocolo educativo; aplicar el protocolo educativo
+el tejido asociativo,associative fabric,community,fortalecer el tejido asociativo; dinamizar el tejido asociativo; ampliar el tejido asociativo
+la carga asistencial,care burden,family,asumir la carga asistencial; reducir la carga asistencial; gestionar la carga asistencial
+la flexibilidad laboral,work flexibility,family,exigir la flexibilidad laboral; negociar la flexibilidad laboral; implantar la flexibilidad laboral
+la polarización,polarization,community,combatir la polarización; frenar la polarización; reducir la polarización
+la normativa interna,internal regulations,education,cumplir la normativa interna; modificar la normativa interna; redactar la normativa interna
+el centro de día,day center,family,acudir al centro de día; financiar el centro de día; gestionar el centro de día
+la equidad social,social equity,community,promover la equidad social; defender la equidad social; garantizar la equidad social
+el permiso parental,parental leave,family,solicitar el permiso parental; ampliar el permiso parental; disfrutar el permiso parental
+la crispación,tension/rancor,community,rebajar la crispación; evitar la crispación; alimentar la crispación
+la gestión administrativa,administrative management,education,agilizar la gestión administrativa; externalizar la gestión administrativa; simplificar la gestión administrativa
+la red de apoyo,support network,community,crear la red de apoyo; consolidar la red de apoyo; activar la red de apoyo
+el recurso sociosanitario,social-health resource,family,acceder al recurso sociosanitario; asignar el recurso sociosanitario; ampliar el recurso sociosanitario
+la crianza,child-rearing,family,favorecer la crianza; dificultar la crianza; compartir la crianza
+el proceso de matriculación,enrollment process,education,iniciar el proceso de matriculación; completar el proceso de matriculación; supervisar el proceso de matriculación
+la participación ciudadana,citizen participation,community,fomentar la participación ciudadana; incentivar la participación ciudadana; limitar la participación ciudadana
+el envejecimiento activo,active aging,family,promover el envejecimiento activo; facilitar el envejecimiento activo; fomentar el envejecimiento activo
+el pacto de convivencia,coexistence agreement,community,firmar el pacto de convivencia; respetar el pacto de convivencia; violar el pacto de convivencia
+la dotación presupuestaria,budgetary allocation,community,aumentar la dotación presupuestaria; recortar la dotación presupuestaria; asignar la dotación presupuestaria
+el rol familiar,family role,family,asumir el rol familiar; cuestionar el rol familiar; redefinir el rol familiar
+la discordancia,disagreement,community,manifestar la discordancia; resolver la discordancia; evitar la discordancia
+la certificación oficial,official certification,education,obtener la certificación oficial; validar la certificación oficial; presentar la certificación oficial
+la infraestructura social,social infrastructure,community,desarrollar la infraestructura social; invertir en la infraestructura social; mantener la infraestructura social
+la autonomía personal,personal autonomy,family,fomentar la autonomía personal; recuperar la autonomía personal; potenciar la autonomía personal
+la responsabilidad compartida,shared responsibility,family,fomentar la responsabilidad compartida; asumir la responsabilidad compartida; reclamar la responsabilidad compartida
+la confrontación,confrontation,community,evitar la confrontación; provocar la confrontación; mediar en la confrontación
+la tasa de matriculación,enrollment rate,education,aumentar la tasa de matriculación; analizar la tasa de matriculación; controlar la tasa de matriculación
+la ayuda técnica,technical aid,family,solicitar la ayuda técnica; obtener la ayuda técnica; subvencionar la ayuda técnica
+la carga de cuidados,care burden,family,aliviar la carga de cuidados; repartir la carga de cuidados; asumir la carga de cuidados
+la desavenencia,disagreement,community,superar la desavenencia; causar la desavenencia; arreglar la desavenencia
+el calendario escolar,school calendar,education,aprobar el calendario escolar; modificar el calendario escolar; cumplir el calendario escolar
+la entidad sin ánimo de lucro,non-profit organization,community,colaborar con la entidad sin ánimo de lucro; registrar la entidad sin ánimo de lucro; subvencionar la entidad sin ánimo de lucro
+el deterioro cognitivo,cognitive decline,family,detectar el deterioro cognitivo; tratar el deterioro cognitivo; frenar el deterioro cognitivo
+la delegación de tareas,delegation of tasks,family,facilitar la delegación de tareas; aprender la delegación de tareas; fomentar la delegación de tareas
+la ruptura del diálogo,breakdown of dialogue,community,provocar la ruptura del diálogo; evitar la ruptura del diálogo; lamentar la ruptura del diálogo
+la acreditación académica,academic accreditation,education,conseguir la acreditación académica; renovar la acreditación académica; verificar la acreditación académica
+el ayuntamiento,city council,community,presionar al ayuntamiento; acudir al ayuntamiento; gestionar con el ayuntamiento
+la asistencia domiciliaria,home care,family,contratar la asistencia domiciliaria; supervisar la asistencia domiciliaria; recibir la asistencia domiciliaria
+el malestar social,social unrest,community,expresar el malestar social; calmar el malestar social; canalizar el malestar social
+el claustro,faculty/staff meeting,education,convocar el claustro; presidir el claustro; asistir al claustro
+la subvención pública,public subsidy,community,solicitar la subvención pública; recibir la subvención pública; gestionar la subvención pública
+la calidad asistencial,quality of care,family,mejorar la calidad asistencial; controlar la calidad asistencial; garantizar la calidad asistencial
+el permiso de paternidad,paternity leave,family,solicitar el permiso de paternidad; disfrutar el permiso de paternidad; ampliar el permiso de paternidad
+el clima de hostilidad,hostile climate,community,generar el clima de hostilidad; reducir el clima de hostilidad; detectar el clima de hostilidad
+el órgano colegiado,collegiate body,education,constituir el órgano colegiado; disolver el órgano colegiado; convocar el órgano colegiado
+la dependencia severa,severe dependency,family,diagnosticar la dependencia severa; atender la dependencia severa; financiar la dependencia severa
+la carga familiar,family burden,family,aliviar la carga familiar; soportar la carga familiar; repartir la carga familiar
+la calima,haze/dust storm,environment,sufrir la calima; exceso de calima; aviso por calima
+el desprendimiento,landslide/detachment,environment,riesgo de desprendimiento; provocar un desprendimiento; evitar el desprendimiento
+el vertido incontrolado,uncontrolled spill,environment,limpiar el vertido incontrolado; denunciar el vertido incontrolado; gestionar el vertido incontrolado
+la escorrentía,runoff,environment,controlar la escorrentía; aumentar la escorrentía; peligro por escorrentía
+el anegamiento,flooding/waterlogging,environment,sufrir el anegamiento; riesgo de anegamiento; evacuar por anegamiento
+la insolación,sunstroke,safety,prevenir la insolación; tratar la insolación; riesgo de insolación grave
+el descalabro ambiental,environmental collapse,environment,evitar el descalabro ambiental; denunciar el descalabro ambiental; frenar el descalabro ambiental; advertir del descalabro ambiental
+la negligencia temeraria,reckless negligence,legal,acusado de negligencia temeraria; probar la negligencia temeraria; cometer negligencia temeraria; sentenciado por negligencia temeraria
+el siniestro total,total loss,safety,declarar el siniestro total; peritar el siniestro total; indemnización por siniestro total
+la polución atmosférica,air pollution,environment,reducir la polución atmosférica; índice de polución atmosférica; combatir la polución atmosférica; medir la polución atmosférica
+la tormenta de granizo,hailstorm,environment,daños por tormenta de granizo; alerta de tormenta de granizo; sufrir una tormenta de granizo; prevenir daños por tormenta de granizo
+el deslizamiento de tierras,landslide,environment,alerta de deslizamiento de tierras; zona de deslizamiento de tierras; provocar un deslizamiento de tierras; evacuar por deslizamiento de tierras
+la carga contaminante,pollutant load,environment,medir la carga contaminante; reducir la carga contaminante; limitar la carga contaminante; controlar la carga contaminante
+el socavón,sinkhole,environment,aparecer un socavón; rellenar el socavón; seguridad ante el socavón
+la cláusula de exclusión,exclusion clause,safety,aplicar la cláusula de exclusión; revisar la cláusula de exclusión; incluir una cláusula de exclusión; invocar la cláusula de exclusión
+el peritaje forense,forensic appraisal,legal,solicitar el peritaje forense; resultado del peritaje forense; realizar el peritaje forense; presentar el peritaje forense
+la negligencia profesional,professional negligence,legal,demanda por negligencia profesional; probar la negligencia profesional; incurrir en negligencia profesional; denunciar la negligencia profesional
+la indemnización por daños,damages compensation,safety,reclamar la indemnización por daños; cobrar la indemnización por daños; pagar la indemnización por daños; calcular la indemnización por daños
+el impacto ambiental negativo,negative environmental impact,environment,mitigar el impacto ambiental negativo; evaluar el impacto ambiental negativo; reducir el impacto ambiental negativo; evitar el impacto ambiental negativo
+la lluvia torrencial,torrential rain,environment,aviso de lluvia torrencial; daños por lluvia torrencial; soportar lluvia torrencial; prevenir daños por lluvia torrencial
+el riesgo de desastre,disaster risk,safety,evaluar el riesgo de desastre; gestionar el riesgo de desastre; reducir el riesgo de desastre; prevenir el riesgo de desastre
+la responsabilidad patrimonial,patrimonial liability,legal,reclamar la responsabilidad patrimonial; sentencia de responsabilidad patrimonial; exigir responsabilidad patrimonial; asumir la responsabilidad patrimonial
+la zona de afectación,affected area,safety,acotar la zona de afectación; evacuar la zona de afectación; delimitar la zona de afectación; acceder a la zona de afectación
+el fraude al seguro,insurance fraud,safety,investigar el fraude al seguro; denunciar el fraude al seguro; cometer fraude al seguro; evitar el fraude al seguro
+la radiación ultravioleta,ultraviolet radiation,environment,índice de radiación ultravioleta; protección contra la radiación ultravioleta; exposición a la radiación ultravioleta; medir la radiación ultravioleta
+el perito judicial,court expert,legal,designar al perito judicial; informe del perito judicial; consultar al perito judicial; testimonio del perito judicial
+la riada,flash flood,environment,caudal de la riada; evacuar por la riada; daños de la riada
+el delito ecológico,environmental crime,legal,condena por delito ecológico; perseguir el delito ecológico; cometer un delito ecológico; investigar un delito ecológico
+la póliza de cobertura,coverage policy,safety,ampliar la póliza de cobertura; vigencia de la póliza de cobertura; contratar la póliza de cobertura; cancelar la póliza de cobertura
+el viento racheado,gusty wind,environment,precaución ante el viento racheado; daños por viento racheado; soportar viento racheado; avisar de viento racheado
+la alerta de inundación,flood warning,safety,activar la alerta de inundación; seguir la alerta de inundación; emitir la alerta de inundación; cancelar la alerta de inundación
+el daño irreversible,irreversible damage,environment,causar el daño irreversible; evitar el daño irreversible; reparar el daño irreversible; constatar el daño irreversible
+la eximente de responsabilidad,exculpation,legal,alegar la eximente de responsabilidad; aceptar la eximente de responsabilidad; invocar la eximente de responsabilidad; probar la eximente de responsabilidad
+el siniestro laboral,work accident,safety,notificar el siniestro laboral; investigar el siniestro laboral; sufrir un siniestro laboral; declarar el siniestro laboral
+la erosión del suelo,soil erosion,environment,combatir la erosión del suelo; avanzada erosión del suelo; prevenir la erosión del suelo; frenar la erosión del suelo
+la tormenta de arena,sandstorm,environment,afectado por la tormenta de arena; alerta de tormenta de arena; sufrir una tormenta de arena; visibilidad en la tormenta de arena
+la negligencia médica,medical malpractice,legal,demanda por negligencia médica; probar la negligencia médica; incurrir en negligencia médica; denunciar la negligencia médica
+el valor venal,market value,safety,calcular el valor venal; peritaje del valor venal; determinar el valor venal; ajustar el valor venal
+la contaminación de acuíferos,aquifer contamination,environment,detectar la contaminación de acuíferos; evitar la contaminación de acuíferos; combatir la contaminación de acuíferos; niveles de contaminación de acuíferos
+el riesgo de incendio,fire hazard,environment,prevenir el riesgo de incendio; alto riesgo de incendio; reducir el riesgo de incendio; advertir el riesgo de incendio
+la cobertura total,full coverage,safety,contratar la cobertura total; ofrecer la cobertura total; ampliar la cobertura total; incluir la cobertura total
+la descarga eléctrica,electric discharge,safety,sufrir una descarga eléctrica; peligro de descarga eléctrica; evitar la descarga eléctrica; causar una descarga eléctrica
+la negligencia administrativa,administrative negligence,legal,sanción por negligencia administrativa; reclamar por negligencia administrativa; denunciar la negligencia administrativa; incurrir en negligencia administrativa
+la escasez de agua,water scarcity,environment,gestionar la escasez de agua; sufrir la escasez de agua; combatir la escasez de agua; crisis por escasez de agua
+la tempestad,tempest,environment,sufrir la tempestad; daños por la tempestad; desatarse la tempestad; prepararse para la tempestad
+la indemnización por fallecimiento,death benefit,safety,solicitar la indemnización por fallecimiento; cobrar la indemnización por fallecimiento; pago de la indemnización por fallecimiento; tramitar la indemnización por fallecimiento
+el delito de lesiones,assault/injury crime,legal,imputado por delito de lesiones; pena por delito de lesiones; cometer un delito de lesiones; acusado de delito de lesiones
+la degradación del entorno,environmental degradation,environment,frenar la degradación del entorno; proceso de degradación del entorno; evitar la degradación del entorno; causar la degradación del entorno
+la alerta de tsunami,tsunami warning,safety,difundir la alerta de tsunami; emitir la alerta de tsunami; evacuación por alerta de tsunami; activar la alerta de tsunami
+el perito de seguros,insurance adjuster,safety,informe del perito de seguros; visita del perito de seguros; llamar al perito de seguros; dictamen del perito de seguros
+la tormenta de nieve,snowstorm,environment,quedar atrapado por la tormenta de nieve; alerta de tormenta de nieve; sobrevivir a la tormenta de nieve; prepararse para la tormenta de nieve
+la negligencia grave,gross negligence,legal,sentencia por negligencia grave; acusado de negligencia grave; declarar negligencia grave; probar la negligencia grave
+la carga contaminante total,total pollutant load,environment,reducir la carga contaminante total; exceso de carga contaminante total; medir la carga contaminante total; limitar la carga contaminante total
+el riesgo de colapso,collapse risk,safety,advertir el riesgo de colapso; zona de riesgo de colapso; evitar el riesgo de colapso; evaluar el riesgo de colapso
+la prima de seguro,insurance premium,safety,pagar la prima de seguro; aumento de la prima de seguro; calcular la prima de seguro; reducir la prima de seguro
+el aliño,dressing,food,preparar un aliño; un aliño ligero; añadir el aliño; un aliño cítrico
+la sartén,pan,food,una sartén antiadherente; calentar la sartén; una sartén profunda; el fondo de la sartén
+el escabeche,marinade/pickle,food,preparar un escabeche; dejar en escabeche; un escabeche suave; el sabor del escabeche
+el emplatado,plating,food,cuidar el emplatado; un emplatado elegante; el estilo de emplatado; la técnica de emplatado
+el colador,colander/strainer,food,usar el colador; un colador fino; pasar por el colador; limpiar el colador
+la espumadera,skimmer,food,retirar con la espumadera; una espumadera metálica; usar la espumadera; la malla de la espumadera
+el rallador,grater,food,un rallador de acero; pasar por el rallador; el filo del rallador; un rallador manual
+el mortero,mortar,food,machacar en el mortero; un mortero de piedra; limpiar el mortero; el uso del mortero
+la cacerola,casserole/pot,food,una cacerola grande; el fondo de la cacerola; tapar la cacerola; una cacerola de barro
+el batidor,whisk,food,usar el batidor; un batidor manual; el mango del batidor; un batidor de varillas
+el pelador,peeler,food,un pelador ergonómico; el filo del pelador; usar el pelador; un pelador de vegetales
+la báscula,kitchen scale,food,pesar en la báscula; una báscula digital; la precisión de la báscula; calibrar la báscula
+el envase,container/packaging,food,abrir el envase; un envase hermético; el material del envase; desechar el envase
+el etiquetado,labeling,food,leer el etiquetado; un etiquetado claro; cumplir el etiquetado; el contenido del etiquetado
+el alérgeno,allergen,food,detectar un alérgeno; libre de alérgenos; la presencia de alérgenos; informar sobre alérgenos
+la intolerancia,intolerance,food,una intolerancia alimentaria; sufrir una intolerancia; el diagnóstico de intolerancia; gestionar la intolerancia
+el conservante,preservative,food,sin conservantes artificiales; añadir conservantes; el uso de conservantes; evitar los conservantes
+el aditivo,additive,food,un aditivo alimentario; la dosis del aditivo; el efecto del aditivo; evitar los aditivos
+la denominación de origen,designation of origin,food,con denominación de origen; certificar la denominación de origen; el sello de denominación de origen; la calidad de la denominación de origen
+el producto gourmet,gourmet product,food,comprar productos gourmet; una selección de productos gourmet; la gama de productos gourmet; el precio del producto gourmet
+la cata,tasting,food,organizar una cata; participar en una cata; la cata de vinos; una cata a ciegas
+la fermentación,fermentation,food,el proceso de fermentación; la duración de la fermentación; favorecer la fermentación; una fermentación natural
+el horneado,baking,food,el tiempo de horneado; un horneado perfecto; controlar el horneado; el resultado del horneado
+el adobo,marinade/rub,food,preparar el adobo; dejar macerar en el adobo; el sabor del adobo; un adobo especiado
+el rehogado,sautéing,food,un rehogado suave; el tiempo de rehogado; el punto de rehogado; un rehogado homogéneo
+el escaldado,blanching,food,hacer un escaldado; el proceso de escaldado; tras el escaldado; un escaldado rápido
+el despiece,butchery/cutting,food,el despiece de la carne; el método de despiece; la calidad del despiece; realizar el despiece
+el marinado,marinating,food,un marinado profundo; el tiempo de marinado; un marinado de cítricos; el éxito del marinado
+la emulsión,emulsion,food,lograr una emulsión; una emulsión estable; la técnica de emulsión; separar la emulsión
+el espesante,thickener,food,añadir un espesante; el uso de espesantes; un espesante natural; la textura del espesante
+el puré,mash/puree,food,una textura de puré; pasar a puré; un puré cremoso; el punto del puré
+el vapor,steam,food,cocinar al vapor; la intensidad del vapor; el aroma del vapor; la cocción al vapor
+la olla,pot,food,una olla a presión; la capacidad de la olla; el fondo de la olla; tapar la olla
+la tabla,cutting board,food,la tabla de cortar; limpiar la tabla; una tabla de madera; la superficie de la tabla
+el recipiente,container,food,un recipiente hermético; el contenido del recipiente; vaciar el recipiente; un recipiente de vidrio
+el proveedor,supplier,food,el proveedor local; la confianza del proveedor; seleccionar un proveedor; la calidad del proveedor
+el stock,stock/inventory,food,gestionar el stock; el nivel de stock; la rotación de stock; controlar el stock
+la queja,complaint,food,presentar una queja; la causa de la queja; atender la queja; la resolución de la queja
+la higiene,hygiene,food,la higiene alimentaria; la norma de higiene; el control de higiene; la falta de higiene
+el manipulador,handler,food,el manipulador de alimentos; el carné de manipulador; la formación del manipulador; la responsabilidad del manipulador
+la frescura,freshness,food,la frescura del producto; comprobar la frescura; la garantía de frescura; la pérdida de frescura
+el aroma,aroma,food,un aroma penetrante; el aroma de las especias; apreciar el aroma; la intensidad del aroma
+la presentación,presentation,food,la presentación impecable; la técnica de presentación; la importancia de la presentación; el estilo de presentación
+la porción,portion,food,la porción generosa; el tamaño de la porción; controlar la porción; servir una porción
+el salteado,stir-fry,food,salteado rápido; punto de salteado; salteado de setas; técnica de salteado
+el aliáceo,allium/garlicky,food,sabor aliáceo; toque aliáceo; familia de los aliáceos; perfil aliáceo
+la pinza,dart,clothing,hacer una pinza; coser la pinza; marcar la pinza; abrir la pinza
+la entretela,interlining,clothing,aplicar la entretela; reforzar con entretela; fijar la entretela; elegir la entretela
+el pespunte,topstitch,clothing,hacer un pespunte; reforzar el pespunte; disimular el pespunte; rematar el pespunte
+la sisa,armhole,clothing,ajustar la sisa; entallar la sisa; medir la sisa; ampliar la sisa
+el forro,lining,clothing,poner un forro; sustituir el forro; rasgar el forro; descoser el forro
+la solapa,lapel,clothing,planchar la solapa; ensanchar la solapa; marcar la solapa; estructurar la solapa
+el ojal,buttonhole,clothing,abrir el ojal; rematar el ojal; reforzar el ojal; coser el ojal
+la hombrera,shoulder pad,clothing,colocar la hombrera; quitar la hombrera; ajustar la hombrera; fijar la hombrera
+la hechura,cut/shape,clothing,modificar la hechura; revisar la hechura; definir la hechura; mejorar la hechura
+la horma,shoe last,clothing,adaptar a la horma; ensanchar la horma; forzar la horma; elegir la horma
+el tacón,heel,clothing,cambiar el tacón; reparar el tacón; rebajar el tacón; tapar el tacón
+la suela,sole,clothing,pegar la suela; cambiar la suela; desgastar la suela; reforzar la suela
+el empeine,instep/upper,clothing,ajustar el empeine; ensanchar el empeine; proteger el empeine; limpiar el empeine
+el cordón,shoelace,clothing,atar el cordón; tensar el cordón; sustituir el cordón; anudar el cordón
+el suavizante,fabric softener,clothing,añadir el suavizante; dosificar el suavizante; usar el suavizante; elegir el suavizante
+la secadora,tumble dryer,clothing,vaciar la secadora; limpiar la secadora; utilizar la secadora; obstruir la secadora
+la lejía,bleach,clothing,aplicar la lejía; diluir la lejía; evitar la lejía; usar la lejía
+el detergente,detergent,clothing,medir el detergente; verter el detergente; elegir el detergente; dosificar el detergente
+la colada,laundry load,clothing,hacer la colada; tender la colada; clasificar la colada; recoger la colada
+el tendedero,drying rack,clothing,desplegar el tendedero; cargar el tendedero; colocar el tendedero; vaciar el tendedero
+la tintorería,dry cleaner,clothing,llevar a la tintorería; recoger de la tintorería; gestionar la tintorería; recomendar la tintorería
+la mancha,stain,clothing,quitar la mancha; tratar la mancha; disimular la mancha; prevenir la mancha
+el descosido,rip/unstitched,clothing,arreglar el descosido; reparar el descosido; disimular el descosido; revisar el descosido
+el remiendo,patch,clothing,hacer un remiendo; poner un remiendo; disimular el remiendo; reforzar el remiendo
+el talle,waistline,clothing,ajustar el talle; marcar el talle; entallar el talle; subir el talle
+la holgura,looseness/ease,clothing,dar holgura; ajustar la holgura; medir la holgura; reducir la holgura
+la arruga,wrinkle,clothing,eliminar la arruga; planchar la arruga; evitar la arruga; marcar la arruga
+la fibra,fiber,clothing,tratar la fibra; dañar la fibra; teñir la fibra; mezclar la fibra
+la seda,silk,clothing,lavar la seda; cuidar la seda; proteger la seda; planchar la seda
+el lino,linen,clothing,planchar el lino; arrugar el lino; tratar el lino; limpiar el lino
+la lana,wool,clothing,lavar la lana; encoger la lana; cepillar la lana; airear la lana
+el poliéster,polyester,clothing,lavar el poliéster; planchar el poliéster; tratar el poliéster; teñir el poliéster
+el terciopelo,velvet,clothing,cepillar el terciopelo; limpiar el terciopelo; cuidar el terciopelo; planchar el terciopelo
+el encaje,lace,clothing,coser el encaje; aplicar el encaje; rematar el encaje; lavar el encaje
+el cuero,leather,clothing,hidratar el cuero; limpiar el cuero; pulir el cuero; proteger el cuero
+el ante,suede,clothing,cepillar el ante; limpiar el ante; proteger el ante; impermeabilizar el ante
+el bordado,embroidery,clothing,hacer el bordado; rematar el bordado; limpiar el bordado; lucir el bordado
+el reembolso,refund,clothing,solicitar el reembolso; tramitar el reembolso; recibir el reembolso; denegar el reembolso
+el vale,voucher/credit,clothing,canjear el vale; emitir el vale; caducar el vale; aceptar el vale
+el maniquí,mannequin,clothing,vestir el maniquí; colocar el maniquí; renovar el maniquí; exhibir en el maniquí
+el surtido,assortment,clothing,ampliar el surtido; renovar el surtido; gestionar el surtido; presentar el surtido
+el patrón,pattern/template,clothing,diseñar el patrón; calcar el patrón; modificar el patrón; ajustar el patrón
+la costura,seam/sewing,clothing,abrir la costura; reforzar la costura; rematar la costura; coser la costura
+el hilo,thread,clothing,enhebrar el hilo; cortar el hilo; elegir el hilo; romper el hilo
+la aguja,needle,clothing,enhebrar la aguja; elegir la aguja; cambiar la aguja; perder la aguja
+el dedal,thimble,clothing,usar el dedal; perder el dedal; elegir el dedal; buscar el dedal
+la tijera,scissors,clothing,afilar la tijera; usar la tijera; guardar la tijera; limpiar la tijera
+la tiza,tailor's chalk,clothing,marcar con tiza; borrar la tiza; elegir la tiza; usar la tiza
+el alfiler,pin,clothing,clavar el alfiler; perder el alfiler; recoger el alfiler; usar el alfiler
+la hebilla,buckle,clothing,abrochar la hebilla; ajustar la hebilla; reparar la hebilla; soltar la hebilla
+el corchete,hook and eye,clothing,coser el corchete; abrochar el corchete; sustituir el corchete; ajustar el corchete
+el velcro,velcro,clothing,pegar el velcro; despegar el velcro; limpiar el velcro; sustituir el velcro
+el lazo,ribbon/bow,clothing,atar el lazo; deshacer el lazo; ajustar el lazo; colocar el lazo
+la anamnesis,medical history,health,realizar la anamnesis; completar la anamnesis; detallar la anamnesis
+el cuadro clínico,clinical presentation,health,presentar el cuadro clínico; evaluar el cuadro clínico; complicar el cuadro clínico
+la cefalea,headache,health,padecer una cefalea; mitigar la cefalea; describir la cefalea
+la erupción,rash,health,presentar una erupción; observar la erupción; extenderse la erupción
+la interconsulta,referral,health,solicitar una interconsulta; gestionar la interconsulta; derivar a interconsulta
+el seguimiento,follow-up,health,realizar el seguimiento; garantizar el seguimiento; programar el seguimiento
+el ingreso,hospital admission,health,tramitar el ingreso; programar el ingreso; recibir el ingreso
+el alta voluntaria,self-discharge,health,firmar el alta voluntaria; solicitar el alta voluntaria; tramitar el alta voluntaria
+el copago,co-payment,health,abonar el copago; eximir del copago; ajustar el copago
+el baremo,scale/fee schedule,health,aplicar el baremo; consultar el baremo; modificar el baremo
+la dosificación,dosing,health,ajustar la dosificación; controlar la dosificación; reducir la dosificación
+el efecto adverso,adverse effect,health,notificar el efecto adverso; sufrir el efecto adverso; evitar el efecto adverso
+la biopsia,biopsy,health,realizar la biopsia; analizar la biopsia; programar la biopsia
+la ecografía,ultrasound,health,practicar la ecografía; solicitar la ecografía; interpretar la ecografía
+la resonancia,MRI,health,realizar una resonancia; programar la resonancia; analizar la resonancia
+el parte médico,medical report,health,firmar el parte médico; solicitar el parte médico; rellenar el parte médico
+la mutua,insurance carrier,health,contactar con la mutua; notificar a la mutua; consultar la mutua
+el triaje,triage,health,realizar el triaje; pasar el triaje; gestionar el triaje
+la urgencia hospitalaria,hospital emergency,health,acudir a urgencias; gestionar la urgencia; atender la urgencia
+la especialidad,specialty,health,elegir la especialidad; cursar la especialidad; ejercer la especialidad
+la radiografía,X-ray,health,hacer una radiografía; interpretar la radiografía; solicitar la radiografía
+la cronicidad,chronicity,health,tratar la cronicidad; gestionar la cronicidad; índice de cronicidad
+la profilaxis,prophylaxis,health,aplicar profilaxis; riesgo de profilaxis; necesidad de profilaxis
+la derivación,referral,health,solicitar derivación; gestionar derivación; espera de derivación
+la hospitalización,hospitalization,health,requerir hospitalización; duración de la hospitalización; proceso de hospitalización
+la inmunización,immunization,health,completar inmunización; calendario de inmunización; registro de inmunización
+el extravío,loss/misplacement,travel,denunciar el extravío; reclamar por el extravío; prevenir el extravío
+la denegación,denial/refusal,travel,la denegación del embarque; la denegación de visado; recurrir una denegación
+la reubicación,relocation/rebooking,travel,gestionar la reubicación; solicitar una reubicación; la reubicación inmediata
+el traslado,transfer,travel,coordinar el traslado; el traslado privado; el punto de traslado
+la restricción,restriction,travel,imponer una restricción; levantar una restricción; la restricción sanitaria
+la compensación,compensation/reimbursement,travel,la compensación económica; recibir una compensación; la oferta de compensación
+el seguro,insurance,travel,contratar un seguro; la cobertura del seguro; el parte del seguro
+la identificación,identification,travel,exhibir la identificación; la identificación oficial; la verificación de la identificación
+el sobrecoste,extra cost,travel,evitar el sobrecoste; asumir el sobrecoste; el sobrecoste imprevisto
+la disponibilidad,availability,travel,consultar la disponibilidad; la disponibilidad limitada; la confirmación de disponibilidad
+la limpieza,cleaning,travel,el servicio de limpieza; la limpieza profunda; la deficiencia en la limpieza
+la climatización,climate control,travel,ajustar la climatización; la avería de la climatización; el sistema de climatización
+el depósito,deposit/storage,travel,el depósito de equipaje; el depósito de seguridad; el depósito de llaves
+el robo,theft,travel,el robo en la habitación; la denuncia por robo; la prevención del robo
+la dotación,endowment/equipment,travel,la dotación de recursos; la dotación presupuestaria; la falta de dotación
+la declaración,declaration,travel,presentar la declaración; omisión en la declaración; firmar la declaración; veracidad de la declaración
+la disposición,disposition/provision,travel,estar a disposición; cumplir la disposición; sujeto a disposición; cambio de disposición
+la ratificación,ratification,travel,confirmar la ratificación; necesitar la ratificación; proceso de ratificación; documento de ratificación
+la autenticidad,authenticity,travel,verificar la autenticidad; dudar de la autenticidad; garantizar la autenticidad; prueba de autenticidad
+el requerimiento,requirement,travel,cumplir el requerimiento; notificar el requerimiento; plazo del requerimiento; atender el requerimiento
+la formalidad,formality,travel,cumplir la formalidad; exigir la formalidad; evitar la formalidad; exceso de formalidad
+la penalización,penalty,travel,aplicar la penalización; evitar la penalización; reclamar la penalización; sufrir la penalización
+la acomodación,accommodation,travel,gestionar la acomodación; confirmar la acomodación; solicitar la acomodación; asignar la acomodación
+el billete,ticket,travel,validar el billete; anular el billete; canjear el billete; imprimir el billete
+el percance,mishap,travel,sufrir el percance; notificar el percance; evitar el percance; gestionar el percance
+la tarjeta de transporte,transport card,transport,recargar la tarjeta de transporte; extraviar la tarjeta de transporte; validar la tarjeta de transporte; bonificar la tarjeta de transporte
+el abono mensual,monthly pass,transport,tramitar el abono mensual; renovar el abono mensual; cancelar el abono mensual; subvencionar el abono mensual
+el convoy ferroviario,rail convoy,transport,detener el convoy ferroviario; descarrilar el convoy ferroviario; inspeccionar el convoy ferroviario; composición del convoy ferroviario
+la terminal de carga,freight terminal,transport,gestionar la terminal de carga; colapso en la terminal de carga; automatizar la terminal de carga; ampliación de la terminal de carga
+el aforo permitido,permitted capacity,transport,superar el aforo permitido; controlar el aforo permitido; reducir el aforo permitido; exceder el aforo permitido
+la electrificación ferroviaria,rail electrification,transport,proyectos de electrificación ferroviaria; extender la electrificación ferroviaria; coste de la electrificación ferroviaria; fases de la electrificación ferroviaria
+el andén de pasajeros,passenger platform,transport,acceder al andén de pasajeros; despejar el andén de pasajeros; ampliar el andén de pasajeros; señalizar el andén de pasajeros
+la gratuidad del servicio,service free of charge,transport,aplicar la gratuidad del servicio; limitar la gratuidad del servicio; financiar la gratuidad del servicio; evaluar la gratuidad del servicio
+la ficha técnica,data sheet,transport,consultar la ficha técnica; actualizar la ficha técnica; cumplimentar la ficha técnica; omisión en la ficha técnica
+el permiso de circulación,driving permit,transport,solicitar el permiso de circulación; suspender el permiso de circulación; validez del permiso de circulación; renovación del permiso de circulación
+el documento de identidad,ID document,transport,exhibir el documento de identidad; verificar el documento de identidad; extravío del documento de identidad; fotocopia del documento de identidad
+el seguro obligatorio,mandatory insurance,transport,suscribir el seguro obligatorio; incumplir el seguro obligatorio; cobertura del seguro obligatorio; prima del seguro obligatorio
+el parte amistoso,accident report,transport,rellenar el parte amistoso; firmar el parte amistoso; entregar el parte amistoso; discrepancia en el parte amistoso
+el atasco circulatorio,traffic jam,transport,sortear el atasco circulatorio; evitar el atasco circulatorio; desviar el atasco circulatorio; retención en el atasco circulatorio
+el carril bus,bus lane,transport,invadir el carril bus; sanción por el carril bus; acceso al carril bus; señalizar el carril bus
+el estacionamiento regulado,regulated parking,transport,gestionar el estacionamiento regulado; tarifa del estacionamiento regulado; ampliar el estacionamiento regulado; infringir el estacionamiento regulado
+el vado permanente,permanent curb cut,transport,solicitar el vado permanente; señalizar el vado permanente; respetar el vado permanente; renovar el vado permanente
+la plaza de movilidad reducida,disabled parking space,transport,bloquear la plaza de movilidad reducida; respetar la plaza de movilidad reducida; señalizar la plaza de movilidad reducida; habilitar la plaza de movilidad reducida
+la grúa municipal,tow truck,transport,retirada por la grúa municipal; llamar a la grúa municipal; custodia de la grúa municipal; tasa de la grúa municipal
+el navegador,GPS/navigator,transport,programar el navegador; actualizar el navegador; fallo del navegador; seguir el navegador
+la ruta alternativa,alternative route,transport,trazar la ruta alternativa; desviar por la ruta alternativa; conocer la ruta alternativa; optimizar la ruta alternativa
+el punto kilométrico,mile marker,transport,localizar el punto kilométrico; accidente en el punto kilométrico; referencia del punto kilométrico; señalizar el punto kilométrico
+la cartografía digital,digital cartography,transport,desarrollar la cartografía digital; precisión de la cartografía digital; actualizar la cartografía digital; uso de la cartografía digital
+el desvío provisional,temporary detour,transport,indicar el desvío provisional; señalizar el desvío provisional; respetar el desvío provisional; finalizar el desvío provisional
+el sistema de posicionamiento,positioning system,transport,calibrar el sistema de posicionamiento; fallo del sistema de posicionamiento; precisión del sistema de posicionamiento; gestionar el sistema de posicionamiento
+el albarán,delivery note,transport,firmar el albarán; revisar el albarán; confeccionar el albarán; pérdida del albarán
+la carga útil,payload,transport,exceder la carga útil; verificar la carga útil; limitar la carga útil; distribuir la carga útil
+la mercancía peligrosa,hazardous goods,transport,transportar mercancía peligrosa; etiquetar mercancía peligrosa; protocolo de mercancía peligrosa; riesgo de mercancía peligrosa
+el contenedor marítimo,shipping container,transport,estibar el contenedor marítimo; precintar el contenedor marítimo; alquilar el contenedor marítimo; gestionar el contenedor marítimo
+el palé,pallet,transport,cargar el palé; apilar el palé; daños en el palé; dimensiones del palé
+el transitario,freight forwarder,transport,contratar al transitario; gestión del transitario; instrucciones del transitario; pagos al transitario
+el arancel,tariff,transport,pagar el arancel; exención del arancel; revisar el arancel; incremento del arancel
+la estiba,stowage,transport,realizar la estiba; problemas de estiba; seguridad en la estiba; supervisar la estiba
+el manifiesto de carga,cargo manifest,transport,elaborar el manifiesto de carga; revisar el manifiesto de carga; entregar el manifiesto de carga; errores en el manifiesto de carga
+la flota de vehículos,vehicle fleet,transport,renovar la flota de vehículos; gestionar la flota de vehículos; mantenimiento de la flota de vehículos; seguro de la flota de vehículos
+el tacógrafo,tachograph,transport,instalar el tacógrafo; manipular el tacógrafo; revisar el tacógrafo; datos del tacógrafo
+el descanso obligatorio,mandatory rest,transport,respetar el descanso obligatorio; incumplir el descanso obligatorio; controlar el descanso obligatorio; garantizar el descanso obligatorio
+la infracción grave,serious offense,transport,cometer una infracción grave; sanción por infracción grave; reincidencia en infracción grave; notificar una infracción grave
+la retirada del permiso,license suspension,transport,notificar la retirada del permiso; recurso contra la retirada del permiso; causa de retirada del permiso; duración de la retirada del permiso
+el punto de recarga,charging point,transport,instalar el punto de recarga; localizar el punto de recarga; avería en el punto de recarga; uso del punto de recarga
+la autonomía del vehículo,vehicle range,transport,ampliar la autonomía del vehículo; limitar la autonomía del vehículo; verificar la autonomía del vehículo; calcular la autonomía del vehículo
+la placa de matrícula,license plate,transport,duplicar la placa de matrícula; limpiar la placa de matrícula; robo de la placa de matrícula; falsificar la placa de matrícula
+el airbag,airbag,transport,desplegar el airbag; fallo del airbag; revisión del airbag; activación del airbag
+el retrovisor,rearview mirror,transport,ajustar el retrovisor; golpear el retrovisor; romper el retrovisor; limpiar el retrovisor
+el intermitente,turn signal,transport,señalizar con el intermitente; fallo del intermitente; olvidar el intermitente; activar el intermitente
+el neumático,tire,transport,cambiar el neumático; presión del neumático; desgaste del neumático; pinchazo en el neumático
+la frenada de emergencia,emergency braking,transport,realizar la frenada de emergencia; sistema de frenada de emergencia; peligro por frenada de emergencia; respuesta tras frenada de emergencia
+la distancia de seguridad,safe distance,transport,mantener la distancia de seguridad; respetar la distancia de seguridad; reducir la distancia de seguridad; incumplir la distancia de seguridad
+la señal de stop,stop sign,transport,respetar la señal de stop; ignorar la señal de stop; visibilidad de la señal de stop; multa por la señal de stop
+el límite de velocidad,speed limit,transport,exceder el límite de velocidad; respetar el límite de velocidad; reducir el límite de velocidad; multa por el límite de velocidad
+la vía rápida,expressway,transport,acceder a la vía rápida; circular por la vía rápida; peaje de la vía rápida; salida de la vía rápida
+el arcén,shoulder,transport,detenerse en el arcén; circular por el arcén; obstáculo en el arcén; limpiar el arcén
+la mediana,median strip,transport,saltar la mediana; reparar la mediana; colisión con la mediana; señalizar la mediana
+el túnel,tunnel,transport,iluminación del túnel; atasco en el túnel; salida del túnel; seguridad en el túnel
+el radar,speed camera,transport,detectar el radar; evitar el radar; multa del radar; ubicación del radar
+la emancipación,emancipation,family,lograr la emancipación; retrasar la emancipación; fomentar la emancipación
+la brecha generacional,generation gap,family,superar la brecha generacional; agudizar la brecha generacional; marcar la brecha generacional
+el cuidado compartido,shared care,family,ejercer el cuidado compartido; establecer el cuidado compartido; abogar por el cuidado compartido
+la tutela legal,legal guardianship,family,solicitar la tutela legal; asumir la tutela legal; revocar la tutela legal
+el parentesco,kinship,family,acreditar el parentesco; reconocer el parentesco; demostrar el parentesco
+la carga mental,mental load,family,soportar la carga mental; aliviar la carga mental; gestionar la carga mental
+la disfunción familiar,family dysfunction,family,detectar la disfunción familiar; ocultar la disfunción familiar; tratar la disfunción familiar
+la custodia compartida,joint custody,family,solicitar la custodia compartida; otorgar la custodia compartida; establecer la custodia compartida
+la sobreprotección,overprotection,family,evitar la sobreprotección; combatir la sobreprotección; ejercer la sobreprotección
+la dependencia afectiva,emotional dependency,family,superar la dependencia afectiva; sufrir la dependencia afectiva; identificar la dependencia afectiva
+el conflicto intergeneracional,intergenerational conflict,family,gestionar el conflicto intergeneracional; mediar en el conflicto intergeneracional; evitar el conflicto intergeneracional
+la mediación familiar,family mediation,family,solicitar la mediación familiar; acudir a la mediación familiar; iniciar la mediación familiar
+la responsabilidad parental,parental responsibility,family,asumir la responsabilidad parental; delegar la responsabilidad parental; incumplir la responsabilidad parental
+el vínculo afectivo,emotional bond,family,fortalecer el vínculo afectivo; crear el vínculo afectivo; romper el vínculo afectivo
+la delegación de funciones,delegation of tasks,family,proponer la delegación de funciones; organizar la delegación de funciones; aceptar la delegación de funciones
+el apoyo emocional,emotional support,family,brindar el apoyo emocional; solicitar el apoyo emocional; necesitar el apoyo emocional
+la jerarquía familiar,family hierarchy,family,cuestionar la jerarquía familiar; mantener la jerarquía familiar; respetar la jerarquía familiar
+el régimen de visitas,visitation schedule,family,establecer el régimen de visitas; incumplir el régimen de visitas; modificar el régimen de visitas
+la emancipación temprana,early emancipation,family,fomentar la emancipación temprana; evitar la emancipación temprana; analizar la emancipación temprana
+el cuidado diurno,day care,family,contratar el cuidado diurno; organizar el cuidado diurno; gestionar el cuidado diurno
+la conciliación laboral,work-family balance,family,exigir la conciliación laboral; garantizar la conciliación laboral; limitar la conciliación laboral
+el distanciamiento,estrangement,family,sufrir el distanciamiento; provocar el distanciamiento; reparar el distanciamiento
+la crianza respetuosa,respectful parenting,family,practicar la crianza respetuosa; promover la crianza respetuosa; adoptar la crianza respetuosa
+el lazo consanguíneo,blood tie,family,demostrar el lazo consanguíneo; reconocer el lazo consanguíneo; valorar el lazo consanguíneo
+el desahogo,emotional release,family,necesitar el desahogo; permitir el desahogo; buscar el desahogo
+la crisis de pareja,couple crisis,family,superar la crisis de pareja; afrontar la crisis de pareja; gestionar la crisis de pareja
+el apoyo logístico,logistical support,family,brindar el apoyo logístico; requerir el apoyo logístico; organizar el apoyo logístico
+la ruptura matrimonial,marital breakdown,family,anunciar la ruptura matrimonial; gestionar la ruptura matrimonial; evitar la ruptura matrimonial
+la flexibilidad horaria,flexible scheduling,family,solicitar la flexibilidad horaria; negociar la flexibilidad horaria; conceder la flexibilidad horaria
+el bienestar emocional,emotional well-being,family,proteger el bienestar emocional; priorizar el bienestar emocional; garantizar el bienestar emocional
+la comunicación asertiva,assertive communication,family,fomentar la comunicación asertiva; practicar la comunicación asertiva; mejorar la comunicación asertiva
+la resolución de conflictos,conflict resolution,family,facilitar la resolución de conflictos; aprender la resolución de conflictos; aplicar la resolución de conflictos
+el apoyo mutuo,mutual support,family,fomentar el apoyo mutuo; brindar el apoyo mutuo; fortalecer el apoyo mutuo
+la toma de decisiones,decision making,family,participar en la toma de decisiones; compartir la toma de decisiones; agilizar la toma de decisiones
+la corresponsabilidad doméstica,shared household responsibility,family,exigir la corresponsabilidad doméstica; fomentar la corresponsabilidad doméstica; asumir la corresponsabilidad doméstica
+la gestión del tiempo,time management,family,mejorar la gestión del tiempo; optimizar la gestión del tiempo; desarrollar la gestión del tiempo
+el diálogo abierto,open dialogue,family,mantener el diálogo abierto; fomentar el diálogo abierto; iniciar el diálogo abierto
+la corresponsabilidad parental,shared parental responsibility,family,asumir la corresponsabilidad parental; ejercer la corresponsabilidad parental; exigir la corresponsabilidad parental
+el acuerdo mutuo,mutual agreement,family,llegar al acuerdo mutuo; firmar el acuerdo mutuo; respetar el acuerdo mutuo
+la mediación externa,external mediation,family,solicitar la mediación externa; contratar la mediación externa; aceptar la mediación externa
+el apoyo asistencial,care support,family,brindar el apoyo asistencial; recibir el apoyo asistencial; gestionar el apoyo asistencial
+la planificación familiar,family planning,family,discutir la planificación familiar; organizar la planificación familiar; revisar la planificación familiar
+el respeto mutuo,mutual respect,family,fomentar el respeto mutuo; mantener el respeto mutuo; exigir el respeto mutuo
+la adaptación,adaptation,family,facilitar la adaptación; superar la adaptación; gestionar la adaptación
+la gestión de crisis,crisis management,family,aplicar la gestión de crisis; aprender la gestión de crisis; mejorar la gestión de crisis
+la negociación,negotiation,family,iniciar la negociación; facilitar la negociación; cerrar la negociación
+la matriculación,enrollment,education,formalizar la matriculación; abrir la matriculación; completar la matriculación; gestionar la matriculación
+la asignatura,subject,education,cursar la asignatura; aprobar la asignatura; suspender la asignatura; impartir la asignatura
+la convocatoria,call/announcement,education,publicar la convocatoria; abrir la convocatoria; cerrar la convocatoria; superar la convocatoria
+la evaluación,evaluation,education,superar la evaluación; realizar la evaluación; completar la evaluación; revisar la evaluación
+la calificación,grade/mark,education,obtener la calificación; revisar la calificación; impugnar la calificación; publicar la calificación
+la becaria,scholarship holder,education,contratar a la becaria; formar a la becaria; evaluar a la becaria; supervisar a la becaria
+el aula,classroom,education,habilitar el aula; reservar el aula; limpiar el aula; acondicionar el aula
+la materia,subject matter,education,impartir la materia; estudiar la materia; dominar la materia; revisar la materia
+el alumnado,student body,education,representar al alumnado; atender al alumnado; motivar al alumnado; evaluar al alumnado
+el cupo,quota,education,limitar el cupo; ampliar el cupo; cubrir el cupo; gestionar el cupo
+el periodo,period/term,education,iniciar el periodo; finalizar el periodo; prorrogar el periodo; establecer el periodo
+la secretaría,registrar's office,education,acudir a la secretaría; llamar a la secretaría; gestionar en la secretaría; contactar con la secretaría
+la plaza,spot/position,education,solicitar la plaza; obtener la plaza; perder la plaza; reservar la plaza
+la acreditación oficial,official accreditation,education,obtener la acreditación oficial; renovar la acreditación oficial; presentar la acreditación oficial; verificar la acreditación oficial
+el material didáctico,didactic material,education,elaborar el material didáctico; actualizar el material didáctico; distribuir el material didáctico; seleccionar el material didáctico
+el soporte bibliográfico,bibliographic support,education,consultar el soporte bibliográfico; ampliar el soporte bibliográfico; actualizar el soporte bibliográfico; revisar el soporte bibliográfico
+el repositorio digital,digital repository,education,acceder al repositorio digital; alimentar el repositorio digital; gestionar el repositorio digital; consultar el repositorio digital
+la guía docente,teaching guide,education,redactar la guía docente; publicar la guía docente; seguir la guía docente; modificar la guía docente
+la plataforma virtual,virtual platform,education,acceder a la plataforma virtual; gestionar la plataforma virtual; actualizar la plataforma virtual; integrar la plataforma virtual
+el software educativo,educational software,education,instalar el software educativo; utilizar el software educativo; evaluar el software educativo; licenciar el software educativo
+el manual de usuario,user manual,education,consultar el manual de usuario; redactar el manual de usuario; distribuir el manual de usuario; actualizar el manual de usuario
+la base documental,documentary base,education,ampliar la base documental; revisar la base documental; organizar la base documental; gestionar la base documental
+el acceso remoto,remote access,education,configurar el acceso remoto; facilitar el acceso remoto; restringir el acceso remoto; probar el acceso remoto
+el entorno virtual,virtual environment,education,crear el entorno virtual; gestionar el entorno virtual; acceder al entorno virtual; dinamizar el entorno virtual
+la licencia de uso,usage license,education,adquirir la licencia de uso; renovar la licencia de uso; incumplir la licencia de uso; gestionar la licencia de uso
+el formato descargable,downloadable format,education,ofrecer el formato descargable; habilitar el formato descargable; optimizar el formato descargable; verificar el formato descargable
+la retroalimentación,feedback,education,ofrecer la retroalimentación; recibir la retroalimentación; analizar la retroalimentación; incorporar la retroalimentación
+la evaluación continua,continuous assessment,education,realizar la evaluación continua; aplicar la evaluación continua; seguir la evaluación continua; superar la evaluación continua
+el criterio de calificación,grading criterion,education,establecer el criterio de calificación; explicar el criterio de calificación; modificar el criterio de calificación; aplicar el criterio de calificación
+la rúbrica de evaluación,evaluation rubric,education,diseñar la rúbrica de evaluación; aplicar la rúbrica de evaluación; consultar la rúbrica de evaluación; ajustar la rúbrica de evaluación
+el informe de progreso,progress report,education,emitir el informe de progreso; enviar el informe de progreso; revisar el informe de progreso; analizar el informe de progreso
+la tutoría personalizada,personalized tutoring,education,solicitar la tutoría personalizada; ofrecer la tutoría personalizada; realizar la tutoría personalizada; agendar la tutoría personalizada
+el cuestionario de satisfacción,satisfaction survey,education,rellenar el cuestionario de satisfacción; analizar el cuestionario de satisfacción; distribuir el cuestionario de satisfacción; diseñar el cuestionario de satisfacción
+el plazo de solicitud,application deadline,education,respetar el plazo de solicitud; ampliar el plazo de solicitud; cerrar el plazo de solicitud; incumplir el plazo de solicitud
+la instancia oficial,official application form,education,presentar la instancia oficial; rellenar la instancia oficial; tramitar la instancia oficial; denegar la instancia oficial
+la documentación adjunta,attached documentation,education,revisar la documentación adjunta; presentar la documentación adjunta; verificar la documentación adjunta; completar la documentación adjunta
+el requisito de acceso,admission requirement,education,cumplir el requisito de acceso; justificar el requisito de acceso; eximir el requisito de acceso; verificar el requisito de acceso
+la carta de motivación,motivation letter,education,redactar la carta de motivación; presentar la carta de motivación; evaluar la carta de motivación; adjuntar la carta de motivación
+el certificado de notas,grade transcript,education,solicitar el certificado de notas; legalizar el certificado de notas; traducir el certificado de notas; presentar el certificado de notas
+el título habilitante,qualifying degree,education,obtener el título habilitante; presentar el título habilitante; homologar el título habilitante; validar el título habilitante
+la acreditación de méritos,merit accreditation,education,presentar la acreditación de méritos; valorar la acreditación de méritos; verificar la acreditación de méritos; adjuntar la acreditación de méritos
+la resolución de admisión,admission decision,education,notificar la resolución de admisión; recibir la resolución de admisión; impugnar la resolución de admisión; acatar la resolución de admisión
+la matrícula de honor,honors distinction,education,obtener la matrícula de honor; conceder la matrícula de honor; reclamar la matrícula de honor; registrar la matrícula de honor
+el registro de asistencia,attendance record,education,firmar el registro de asistencia; controlar el registro de asistencia; actualizar el registro de asistencia; revisar el registro de asistencia
+el canon,the royalty/fee,media,abonar el canon; devengar el canon; exigir el canon; recaudar el canon
+la sinopsis,the synopsis,media,redactar la sinopsis; leer la sinopsis; acortar la sinopsis; revisar la sinopsis
+el metraje,the footage/footage length,media,revisar el metraje; exceder el metraje; montar el metraje; seleccionar el metraje
+el estreno,the premiere,media,programar el estreno; posponer el estreno; promocionar el estreno; asistir al estreno
+el largometraje,the feature film,media,proyectar el largometraje; financiar el largometraje; producir el largometraje; distribuir el largometraje
+la reseña,the review,media,publicar la reseña; escribir la reseña; valorar la reseña; citar la reseña
+el patrocinio,the sponsorship,media,negociar el patrocinio; buscar el patrocinio; rechazar el patrocinio; gestionar el patrocinio
+el tiraje,the print run,media,aumentar el tiraje; limitar el tiraje; agotar el tiraje; supervisar el tiraje
+la cabecera,the publication header/masthead,media,renovar la cabecera; diseñar la cabecera; gestionar la cabecera; imprimir la cabecera
+el audiolibro,the audiobook,media,grabar el audiolibro; editar el audiolibro; comercializar el audiolibro; escuchar el audiolibro
+el algoritmo,the algorithm,media,ajustar el algoritmo; modificar el algoritmo; aplicar el algoritmo; entrenar el algoritmo
+el alcance,the reach,media,maximizar el alcance; medir el alcance; reducir el alcance; analizar el alcance
+la crónica,the chronicle,media,redactar la crónica; publicar la crónica; enviar la crónica; revisar la crónica
+la posproducción,the post-production,media,finalizar la posproducción; supervisar la posproducción; iniciar la posproducción; financiar la posproducción
+el tráiler,the trailer,media,estrenar el tráiler; montar el tráiler; difundir el tráiler; analizar el tráiler
+el editorial,the editorial,media,escribir el editorial; difundir el editorial; firmar el editorial; discutir el editorial
+la distribución,the distribution,media,gestionar la distribución; mejorar la distribución; asegurar la distribución; ampliar la distribución
+el copyright,the copyright,media,gestionar el copyright; registrar el copyright; vulnerar el copyright; proteger el copyright
+la métrica,the metric,media,analizar la métrica; evaluar la métrica; interpretar la métrica; mejorar la métrica
+la viralidad,the virality,media,fomentar la viralidad; analizar la viralidad; alcanzar la viralidad; medir la viralidad
+la mención,the mention,media,realizar una mención; evitar la mención; agradecer la mención; analizar la mención
+la interactividad,the interactivity,media,fomentar la interactividad; mejorar la interactividad; evaluar la interactividad; limitar la interactividad
+el periodista,the journalist,media,contratar al periodista; acreditar al periodista; formar al periodista; despedir al periodista
+el patrocinador,the sponsor,media,buscar al patrocinador; negociar con el patrocinador; perder al patrocinador; convencer al patrocinador
+el guionista,the screenwriter,media,contratar al guionista; pagar al guionista; premiar al guionista; exigir al guionista
+el documental,the documentary,media,rodar el documental; financiar el documental; proyectar el documental; editar el documental
+la tirada,the print run,media,aumentar la tirada; reducir la tirada; agotar la tirada; imprimir la tirada
+la edición,the edition,media,preparar la edición; revisar la edición; lanzar la edición; cancelar la edición
+el arquetipo,archetype,media,reforzar el arquetipo; subvertir el arquetipo; encarnar el arquetipo; el arquetipo narrativo
+la convergencia,convergence,media,la convergencia digital; promover la convergencia; la convergencia de medios; el proceso de convergencia
+la disrupción,disruption,media,causar una disrupción; la disrupción tecnológica; la disrupción del mercado; liderar la disrupción
+la narrativa,narrative,media,construir la narrativa; la narrativa transmedia; la narrativa audiovisual; desarrollar la narrativa
+la hegemonía,hegemony,media,cuestionar la hegemonía; la hegemonía cultural; mantener la hegemonía; romper la hegemonía
+el target,target audience,media,definir el target; el target demográfico; segmentar el target; alcanzar el target
+el engagement,engagement,media,medir el engagement; fomentar el engagement; el alto engagement; la métrica de engagement
+el streaming,streaming,media,la plataforma de streaming; el servicio de streaming; la emisión en streaming; consumir streaming
+el suscriptor,subscriber,media,captar al suscriptor; la base de suscriptores; el suscriptor premium; fidelizar al suscriptor
+la primicia,scoop,media,dar la primicia; la búsqueda de la primicia; la veracidad de la primicia; la primicia informativa
+la tertulia,talk show/discussion,media,la tertulia política; participar en la tertulia; el formato de tertulia; la tertulia radiofónica
+el lector,reader,media,el perfil del lector; la fidelización del lector; el lector habitual; la comunidad de lectores
+el inquilino moroso,delinquent tenant,housing,desalojar al inquilino moroso; denunciar al inquilino moroso; perfil de inquilino moroso
+la cédula de habitabilidad,occupancy certificate,housing,obtener la cédula de habitabilidad; renovar la cédula; carencia de cédula
+la derrama,extraordinary fee,housing,aprobar una derrama; pagar la derrama; derrama extraordinaria; derrama urgente
+la plaza de garaje,parking space,housing,alquilar plaza de garaje; plaza de garaje privada; vender plaza de garaje
+la comunidad de propietarios,homeowners association,housing,reunión de la comunidad; estatutos de la comunidad; cuota de la comunidad
+el acta de la reunión,meeting minutes,housing,leer el acta; aprobar el acta; firmar el acta; impugnar el acta
+la junta de vecinos,neighbors meeting,housing,convocar la junta; asistir a la junta; acuerdos de la junta
+la normativa comunitaria,building regulations,housing,incumplir la normativa; adaptarse a la normativa; vigencia de la normativa
+el administrador de fincas,property manager,housing,gestión del administrador; designar al administrador; queja al administrador
+la derrama extraordinaria,extraordinary assessment,housing,liquidar la derrama; imponer una derrama; derrama por reforma
+la zona común,common area,housing,mantenimiento de zonas comunes; uso de zonas comunes; limpieza de zonas comunes
+la humedad por condensación,condensation damp,housing,tratar la humedad; detectar la humedad; problemas de humedad
+la filtración de agua,water leak,housing,reparar la filtración; origen de la filtración; daños por filtración
+el puente térmico,thermal bridge,housing,eliminar el puente térmico; aislar el puente térmico; efectos del puente térmico
+la reforma integral,full renovation,housing,presupuesto de reforma; licencia de reforma; ejecutar la reforma
+el aislamiento acústico,sound insulation,housing,instalar aislamiento; mejorar el aislamiento; deficiencia de aislamiento
+la certificación energética,energy certificate,housing,emitir la certificación; registrar la certificación; obligatoriedad de la certificación
+el suministro eléctrico,power supply,housing,dar de alta el suministro; corte de suministro; rehabilitar el suministro
+el boletín eléctrico,electrical certificate,housing,presentar el boletín; renovar el boletín; validez del boletín
+la potencia contratada,contracted power,housing,aumentar la potencia; ajustar la potencia; exceso de potencia
+el contador inteligente,smart meter,housing,lectura del contador; avería del contador; sustitución del contador
+la factura de luz,electricity bill,housing,abonar la factura; reclamar la factura; impago de la factura
+la compañía suministradora,utility company,housing,cambiar de compañía; contratar con la compañía; reclamación a la compañía
+la revisión de la caldera,boiler inspection,housing,pasar la revisión; certificado de revisión; calendario de revisión
+el mantenimiento preventivo,preventive maintenance,housing,plan de mantenimiento; coste de mantenimiento; contrato de mantenimiento
+el embornal,drainage inlet,housing,limpiar el embornal; obstrucción del embornal; rejilla del embornal
+la arqueta,manhole,housing,inspeccionar la arqueta; atasco en la arqueta; limpieza de arquetas
+la cornisa,cornice,housing,reparar la cornisa; desprendimiento de cornisa; revisión de la cornisa
+la grieta,crack,housing,tapar la grieta; reparar la grieta; grieta estructural; fisura en la pared
+la fisura,fissure,housing,observar la fisura; rellenar la fisura; fisura en el techo
+el moho,mold,housing,eliminar el moho; aparición de moho; tratar el moho
+el extractor de humos,range hood,housing,limpiar el extractor; avería del extractor; instalar extractor
+el detector de humos,smoke detector,housing,instalar detector; fallo del detector; batería del detector
+la cerradura de seguridad,security lock,housing,cambiar la cerradura; forzar la cerradura; instalar cerradura
+el interruptor diferencial,residual current device,housing,saltar el diferencial; reponer el diferencial; fallo del diferencial
+el termo eléctrico,electric water heater,housing,instalar termo; avería del termo; limpieza del termo
+la placa de inducción,induction hob,housing,instalar placa; avería en la placa; limpieza de la placa
+el horno empotrable,built-in oven,housing,instalar horno; avería del horno; limpieza del horno
+la grifería,faucets,housing,cambiar la grifería; avería en la grifería; limpiar la grifería
+el videoportero,video intercom,housing,instalar videoportero; avería del videoportero; reparar videoportero
+la antena comunitaria,communal antenna,housing,ajustar la antena; reparar la antena; señal de antena
+el repetidor de señal,signal booster,housing,instalar repetidor; configurar el repetidor; fallo del repetidor
+el portero automático,intercom,housing,reparar portero; avería en el portero; instalar portero
+la puerta blindada,reinforced door,housing,instalar puerta; reparar puerta; cerradura de puerta blindada
+el contador de agua,water meter,housing,lectura del contador; avería en el contador; cambio de contador
+la tasa de basuras,garbage tax,housing,abonar la tasa; exención de la tasa; reclamar la tasa
+el contrato de alquiler,lease agreement,housing,firmar el contrato; rescindir el contrato; prorrogar el contrato
+el anexo al contrato,contract annex,housing,firmar el anexo; añadir el anexo; validez del anexo
+la cláusula contractual,contract clause,housing,incluir cláusula; abusividad de la cláusula; incumplir cláusula
+el inventario de muebles,furniture inventory,housing,realizar el inventario; firmar el inventario; daños en el inventario
+la fianza legal,legal deposit,housing,exigir la fianza; devolver la fianza; depósito de la fianza
+el seguro de hogar,home insurance,housing,contratar seguro; parte de siniestro; cobertura del seguro
+la póliza de seguro,insurance policy,housing,leer la póliza; renovar la póliza; exclusiones de la póliza
+el parte de siniestro,accident report,housing,presentar parte; tramitar parte; denegar el parte
+el lixiviado,leachate,environment,gestionar el lixiviado; tratar el lixiviado; contención del lixiviado; filtración de lixiviado
+la filtración por condensación,condensation leakage,housing,reparar la filtración por condensación; prevenir la filtración por condensación; sufrir una filtración por condensación; tratar la filtración por condensación
+el atestado,police report,transport,redactar el atestado policial; firmar el atestado detallado; impugnar el atestado oficial; tramitar el atestado circulatorio
+el material compostable,compostable material,food,utilizar material compostable; certificar material compostable; desechar material compostable; sustituir por material compostable
+la intolerancia alimentaria,food intolerance,food,diagnosticar intolerancia alimentaria; padecer intolerancia alimentaria; gestionar intolerancia alimentaria; etiquetar intolerancia alimentaria

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-431",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser + past participle (passive voice)",
+    "prompt_en": "Say: The court order is usually executed by the police.",
+    "expected_es": "La orden judicial suele ser ejecutada por la policía.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "orden judicial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('es'), natural construction, agreement ('ejecutada'), preposition ('por'), and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' for passive voice, and ensure the past participle agrees with the subject in gender and number."
+  },
+  {
+    "id": "ser-usage-432",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser + past participle (passive voice)",
+    "prompt_en": "Say: The biopsy was performed by a specialized medical team yesterday.",
+    "expected_es": "La biopsia fue realizada por un equipo médico especializado ayer.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "biopsia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue'), natural construction, agreement ('realizada'), preposition ('por'), and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite for a completed passive action, ensuring participle agreement."
+  },
+  {
+    "id": "ser-usage-433",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser + past participle (passive voice)",
+    "prompt_en": "Say: The traceability of all components will be guaranteed by our new system.",
+    "expected_es": "La trazabilidad de todos los componentes será garantizada por nuestro nuevo sistema.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "trazabilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('será'), natural construction, agreement ('garantizada'), preposition ('por'), and target vocabulary/collocation.",
+    "correction_hint": "For passive voice in the future, use 'será' and ensure the past participle agrees with the subject."
+  },
+  {
+    "id": "ser-usage-434",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Haber + sido + past participle (passive voice)",
+    "prompt_en": "Say: The currency exchange has been successfully processed by the bank.",
+    "expected_es": "El cambio de divisas ha sido procesado con éxito por el banco.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "cambio de divisas"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('ha sido'), natural construction, agreement ('procesado'), preposition ('por'), and target vocabulary/collocation.",
+    "correction_hint": "The present perfect passive voice uses 'haber' + 'sido' + past participle, which must agree with the subject."
+  },
+  {
+    "id": "ser-usage-435",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser + past participle (passive voice)",
+    "prompt_en": "Say: The inheritance would be distributed fairly by the lawyer, if there were no disputes.",
+    "expected_es": "La herencia sería repartida equitativamente por el abogado, si no hubiera disputas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "herencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('sería'), natural construction, agreement ('repartida'), preposition ('por'), and target vocabulary/collocation.",
+    "correction_hint": "Use 'sería' for conditional passive voice, ensuring the participle agrees with the subject."
+  },
+  {
+    "id": "ser-usage-436",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Ser + past participle (passive voice)",
+    "prompt_en": "Say: It is essential that the public subsidy be managed transparently by the city council.",
+    "expected_es": "Es esencial que la subvención pública sea gestionada con transparencia por el ayuntamiento.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "subvención pública"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('sea'), natural construction, agreement ('gestionada'), preposition ('por'), and target vocabulary/collocation.",
+    "correction_hint": "For passive voice in the subjunctive, use the subjunctive form of 'ser' and ensure the past participle agrees with the subject."
+  },
+  {
+    "id": "ser-usage-437",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser + past participle (passive voice)",
+    "prompt_en": "Say: The broken street light was repaired by the municipal crew last night.",
+    "expected_es": "La luminaria averiada fue reparada por el equipo municipal anoche.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "luminaria"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue'), natural construction, agreement ('reparada'), preposition ('por'), and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite for passive voice, with the participle agreeing with the subject."
+  },
+  {
+    "id": "ser-usage-438",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser + past participle (passive voice)",
+    "prompt_en": "Say: The firewall is constantly updated by the IT department for maximum security.",
+    "expected_es": "El cortafuegos es actualizado constantemente por el departamento de TI para máxima seguridad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "cortafuegos"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('es'), natural construction, agreement ('actualizado'), preposition ('por'), and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' for present passive voice, ensuring the past participle agrees with the subject."
+  },
+  {
+    "id": "ser-usage-439",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser + past participle (passive voice)",
+    "prompt_en": "Say: All scholarship holders will be evaluated by their respective mentors at the end of the program.",
+    "expected_es": "Todas las becarias serán evaluadas por sus respectivos mentores al finalizar el programa.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "becaria"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('serán'), natural construction, agreement ('evaluadas'), preposition ('por'), and target vocabulary/collocation.",
+    "correction_hint": "For future passive voice, use 'serán' and ensure the past participle agrees in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-440",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Pluperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Haber + sido + past participle (passive voice)",
+    "prompt_en": "Say: The document's issuance had already been delayed several times by bureaucratic issues.",
+    "expected_es": "La expedición del documento ya había sido retrasada varias veces por problemas burocráticos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "expedición"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('había sido'), natural construction, agreement ('retrasada'), preposition ('por'), and target vocabulary/collocation.",
+    "correction_hint": "The pluperfect passive voice uses 'haber' in the imperfect ('había') + 'sido' + past participle, agreeing with the subject."
+  }
+]

@@ -1,0 +1,191 @@
+[
+  {
+    "id": "ser-usage-111",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed evaluation (judgment)",
+    "prompt_en": "Say: The patrimonial liability for the damages was definitively confirmed after the expert assessment.",
+    "expected_es": "La responsabilidad patrimonial por los daños fue confirmada definitivamente tras el peritaje.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "responsabilidad patrimonial",
+      "peritaje"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue confirmada' for passive voice and past judgment), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' in the preterite for a completed evaluation or judgment in the past. The passive voice requires 'ser + participle'."
+  },
+  {
+    "id": "ser-usage-112",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event/cause identification",
+    "prompt_en": "Say: The direct cause of the broken commitment was the sudden outsourcing of operations.",
+    "expected_es": "La causa directa del compromiso roto fue la deslocalización repentina de las operaciones.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "compromiso",
+      "deslocalización"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue' for cause identification), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' in the preterite to identify the cause or origin of a past event."
+  },
+  {
+    "id": "ser-usage-113",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "one-off role/identity",
+    "prompt_en": "Say: For three years, she was the legal guardian of her younger siblings before they reached adulthood.",
+    "expected_es": "Durante tres años, ella fue la tutora legal de sus hermanos menores antes de que alcanzaran la mayoría de edad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "tutela legal"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue' for a specific past role), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' in the preterite to describe a temporary or one-off role or identity in the past, even if it lasted for a bounded period."
+  },
+  {
+    "id": "ser-usage-114",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice",
+    "prompt_en": "Say: The safety alert was issued immediately after the affected area was identified by the authorities.",
+    "expected_es": "La alerta de seguridad fue emitida inmediatamente después de que la zona de afectación fuera identificada por las autoridades.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "alerta",
+      "zona de afectación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue emitida' for passive voice), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser + participle' in the preterite ('fue emitida') for actions completed in the past where the focus is on the action received, not the doer."
+  },
+  {
+    "id": "ser-usage-115",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed event time/place",
+    "prompt_en": "Say: The official premiere of the new platform was in the digital environment last month, not a physical venue.",
+    "expected_es": "El estreno oficial de la nueva plataforma fue en el entorno digital el mes pasado, no en un lugar físico.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "estreno",
+      "entorno digital"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue' for event time/place), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' in the preterite to state the time or place where a specific, completed event occurred."
+  },
+  {
+    "id": "ser-usage-116",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed evaluation",
+    "prompt_en": "Say: It was not an easy dilemma, but her resilience was key to overcoming it.",
+    "expected_es": "No fue una disyuntiva fácil, pero su resiliencia fue clave para superarla.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "disyuntiva",
+      "resiliencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue' for past evaluation), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' in the preterite for a completed evaluation or characteristic of a past situation."
+  },
+  {
+    "id": "ser-usage-117",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event/cause identification",
+    "prompt_en": "Say: The main obstacle to a transparent information flow was the constant threat of cybercrime.",
+    "expected_es": "El principal obstáculo para un flujo de información transparente fue la constante amenaza del ciberdelito.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "flujo de información",
+      "ciberdelito"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue' for cause identification), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' in the preterite to identify what constituted the main obstacle or cause in a past situation."
+  },
+  {
+    "id": "ser-usage-118",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "one-off purpose/role",
+    "prompt_en": "Say: That outdated material was only for the initial elaboration of the course, not for the final version.",
+    "expected_es": "Ese material desactualizado fue solo para la elaboración inicial del curso, no para la versión final.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "material didáctico",
+      "elaboración"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue' for a specific past purpose), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' in the preterite to indicate the specific, past purpose or role of something."
+  },
+  {
+    "id": "ser-usage-119",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice",
+    "prompt_en": "Say: The railway electrification projects were approved once all the necessary licenses were granted.",
+    "expected_es": "Los proyectos de electrificación ferroviaria fueron aprobados una vez que se otorgaron todas las licencias necesarias.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "electrificación ferroviaria",
+      "licencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fueron aprobados' for passive voice), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser + participle' in the preterite ('fueron aprobados') for actions completed in the past where the focus is on the action received by the subject."
+  },
+  {
+    "id": "ser-usage-120",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed event time/place",
+    "prompt_en": "Say: The meeting to review the sick leave breakdown was in the main office last Tuesday.",
+    "expected_es": "La reunión para revisar el desglose de la baja laboral fue en la oficina principal el martes pasado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "baja laboral",
+      "desglose"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form ('fue' for event time/place), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fue' in the preterite to state the specific time or place where a completed event occurred."
+  }
+]

@@ -1,0 +1,192 @@
+[
+  {
+    "id": "ser-usage-421",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser passive voice (by agent)",
+    "prompt_en": "Say: The lawsuit was filed by the legal firm yesterday afternoon.",
+    "expected_es": "La demanda fue presentada por el bufete de abogados ayer por la tarde.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "demanda",
+      "presentar una demanda"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (fue), natural construction (fue presentada por), agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite tense for passive voice with an agent, 'fue presentada por'."
+  },
+  {
+    "id": "ser-usage-422",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser passive voice (by agent)",
+    "prompt_en": "Say: The delivery deadline will be extended by the management due to unforeseen complications.",
+    "expected_es": "El plazo de entrega será ampliado por la dirección debido a complicaciones imprevistas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "plazo de entrega",
+      "ampliar el plazo de entrega"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (será), natural construction (será ampliado por), agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the future tense for passive voice with an agent, 'será ampliado por'."
+  },
+  {
+    "id": "ser-usage-423",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser passive voice (by agent)",
+    "prompt_en": "Say: The insurance premium has been significantly increased by the company this year.",
+    "expected_es": "La prima del seguro ha sido aumentada significativamente por la compañía este año.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "prima",
+      "aumento de la prima"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (ha sido), natural construction (ha sido aumentada por), agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'haber' + 'ser' in the past participle for the present perfect passive voice, 'ha sido aumentada por'."
+  },
+  {
+    "id": "ser-usage-424",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser passive voice (by agent)",
+    "prompt_en": "Say: The residential development is managed by a new consortium.",
+    "expected_es": "La urbanización es gestionada por un nuevo consorcio.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "urbanización",
+      "gestionar la urbanización"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (es), natural construction (es gestionada por), agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the present tense for passive voice with an agent, 'es gestionada por'."
+  },
+  {
+    "id": "ser-usage-425",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser passive voice (by agent)",
+    "prompt_en": "Say: The excessive workload has been reduced by implementing new software.",
+    "expected_es": "La carga de trabajo excesiva ha sido reducida mediante la implementación de nuevo software.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "carga de trabajo",
+      "reducir la carga de trabajo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (ha sido), natural construction (ha sido reducida mediante/por), agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'haber' + 'ser' in the past participle for the present perfect passive voice, 'ha sido reducida'."
+  },
+  {
+    "id": "ser-usage-426",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser passive voice (by agent)",
+    "prompt_en": "Say: The detailed police report was drawn up by the officers at the scene of the accident.",
+    "expected_es": "El atestado detallado fue redactado por los agentes en el lugar del accidente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "atestado",
+      "redactar el atestado policial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (fue), natural construction (fue redactado por), agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite tense for passive voice with an agent, 'fue redactado por'."
+  },
+  {
+    "id": "ser-usage-427",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser passive voice (by agent)",
+    "prompt_en": "Say: The legal guardianship will be assumed by the grandparents after the hearing.",
+    "expected_es": "La tutela legal será asumida por los abuelos después de la audiencia.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "tutela legal",
+      "asumir la tutela legal"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (será), natural construction (será asumida por), agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the future tense for passive voice with an agent, 'será asumida por'."
+  },
+  {
+    "id": "ser-usage-428",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser passive voice (by agent) with modal",
+    "prompt_en": "Say: The occupational hazard must be evaluated periodically by the safety committee.",
+    "expected_es": "El riesgo laboral debe ser evaluado periódicamente por el comité de seguridad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "riesgo laboral",
+      "evaluar el riesgo laboral"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (debe ser), natural construction (debe ser evaluado por), agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'deber' + 'ser' + past participle for 'must be' in passive voice, 'debe ser evaluado por'."
+  },
+  {
+    "id": "ser-usage-429",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser passive voice (by agent)",
+    "prompt_en": "Say: Digital literacy is promoted by various government programs.",
+    "expected_es": "La alfabetización digital es fomentada por diversos programas gubernamentales.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "alfabetización digital",
+      "fomentar la alfabetización digital"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (es), natural construction (es fomentada por), agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the present tense for passive voice with an agent, 'es fomentada por'."
+  },
+  {
+    "id": "ser-usage-430",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ser passive voice (by agent) with modal",
+    "prompt_en": "Say: The grade transcript must be legalized by an official notary before submission.",
+    "expected_es": "El certificado de notas debe ser legalizado por un notario oficial antes de su presentación.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "certificado de notas",
+      "legalizar el certificado de notas"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (debe ser), natural construction (debe ser legalizado por), agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'deber' + 'ser' + past participle for 'must be' in passive voice, 'debe ser legalizado por'."
+  }
+]

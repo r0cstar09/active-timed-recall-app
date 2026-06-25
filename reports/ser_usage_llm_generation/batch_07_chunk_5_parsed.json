@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-341",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "ser + adjective + infinitive clause (recommendation)",
+    "prompt_en": "Say: \"Filling out this form would be essential to process your request quickly.\"",
+    "expected_es": "Rellenar este formulario sería esencial para tramitar su solicitud rápidamente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "formulario"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sería' for a conditional evaluation or recommendation. 'Esencial' describes a characteristic or necessity."
+  },
+  {
+    "id": "ser-usage-342",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "ser + noun phrase (prediction of future role)",
+    "prompt_en": "Say: \"Adapting to new technologies will certainly be the key to success for the company.\"",
+    "expected_es": "Adaptarse a las nuevas tecnologías será sin duda la clave del éxito para la empresa.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la clave del éxito"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'será' for a prediction about a future state or role, especially with defining characteristics like 'la clave del éxito'."
+  },
+  {
+    "id": "ser-usage-343",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "ser + noun phrase (polite evaluation)",
+    "prompt_en": "Say: \"Prioritizing your mental well-being would be a crucial step towards a healthier life.\"",
+    "expected_es": "Priorizar su bienestar mental sería un paso crucial hacia una vida más sana.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el bienestar"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sería' to express a polite suggestion or a conditional evaluation of something's nature."
+  },
+  {
+    "id": "ser-usage-344",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "ser + prepositional phrase (future location)",
+    "prompt_en": "Say: \"The main staging area for the rescue operation will be near the affected village.\"",
+    "expected_es": "El área principal para el operativo de rescate será cerca del pueblo afectado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el operativo de rescate"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'será' to indicate the future location of an event or entity, defining where it will take place."
+  },
+  {
+    "id": "ser-usage-345",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "ser + noun phrase (polite evaluation)",
+    "prompt_en": "Say: \"Managing the eviction of a delinquent tenant would be a very complex legal process.\"",
+    "expected_es": "Gestionar el desalojo del inquilino moroso sería un proceso legal muy complejo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el inquilino moroso"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sería' for a conditional assessment of the nature or complexity of something."
+  },
+  {
+    "id": "ser-usage-346",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "ser + prepositional phrase (future time/location)",
+    "prompt_en": "Say: \"Check-in will be available at the reception starting at 3 PM.\"",
+    "expected_es": "El registro de entrada será en la recepción a partir de las 3 de la tarde.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la recepción"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'será' to indicate the time or location of a future event."
+  },
+  {
+    "id": "ser-usage-347",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "ser + adjective (polite evaluation)",
+    "prompt_en": "Say: \"The long-term aftereffects of the accident would be quite significant for his recovery.\"",
+    "expected_es": "Las secuelas a largo plazo del accidente serían bastante significativas para su recuperación.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la secuela"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'serían' for a conditional evaluation of the nature or impact of something, agreeing with the plural subject 'las secuelas'."
+  },
+  {
+    "id": "ser-usage-348",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "ser + noun phrase (prediction of future role/priority)",
+    "prompt_en": "Say: \"Reducing our carbon footprint will be a top priority for the company next year.\"",
+    "expected_es": "Reducir nuestra huella de carbono será una prioridad máxima para la empresa el próximo año.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la huella de carbono"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'será' for a prediction about what something will be (its identity or role) in the future."
+  },
+  {
+    "id": "ser-usage-349",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Conditional",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "ser + noun phrase (recommendation)",
+    "prompt_en": "Say: \"Reporting administrative negligence would be the appropriate first step in this situation.\"",
+    "expected_es": "Denunciar la negligencia administrativa sería el primer paso adecuado en esta situación.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la negligencia administrativa"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'sería' for a conditional recommendation or to state what something would be in a hypothetical scenario."
+  },
+  {
+    "id": "ser-usage-350",
+    "verb": "ser",
+    "batch": 7,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "ser + noun phrase (prediction of future responsibility)",
+    "prompt_en": "Say: \"User credentials will be everyone's responsibility under the new security protocol.\"",
+    "expected_es": "Las credenciales de los usuarios serán responsabilidad de todos bajo el nuevo protocolo de seguridad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la credencial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'serán' (plural future) to predict the future state or assignment of responsibility for plural subjects like 'las credenciales'."
+  }
+]

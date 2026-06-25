@@ -1,0 +1,192 @@
+[
+  {
+    "id": "ser-usage-161",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past ongoing role/characteristic",
+    "prompt_en": "Say: Before retirement, he was always the court expert who demonstrated great adaptability.",
+    "expected_es": "Antes de jubilarse, él siempre era el perito judicial que demostraba gran adaptabilidad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "perito judicial",
+      "adaptabilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (era), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect tense to describe a past, habitual role or inherent characteristic. 'Era' is the correct form."
+  },
+  {
+    "id": "ser-usage-162",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past habitual description/custom",
+    "prompt_en": "Say: In that village, it was a very old custom to maintain a strict family hierarchy.",
+    "expected_es": "En aquel pueblo, era una costumbre muy antigua mantener una jerarquía familiar estricta.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "costumbre",
+      "jerarquía familiar"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (era), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect tense to describe a past custom or an inherent characteristic. 'Era' is the correct form."
+  },
+  {
+    "id": "ser-usage-163",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past habitual process description",
+    "prompt_en": "Say: The issuance of the new document was always a very complex procedure.",
+    "expected_es": "La expedición del nuevo documento siempre era un trámite muy complejo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "expedición",
+      "trámite"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (era), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect to describe the habitual nature or a defining characteristic of a past event or process. 'Era' is the correct form."
+  },
+  {
+    "id": "ser-usage-164",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past material/origin",
+    "prompt_en": "Say: The old passenger platform was originally made of compressed gravel.",
+    "expected_es": "El antiguo andén de pasajeros era originalmente de grava compactada.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "andén de pasajeros",
+      "grava"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (era), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect to indicate the material something was made of. 'Era' is the correct form."
+  },
+  {
+    "id": "ser-usage-165",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past definition/inherent characteristic",
+    "prompt_en": "Say: In that project, it was clear that following the protocol was a shared responsibility for everyone.",
+    "expected_es": "En ese proyecto, era evidente que seguir el protocolo era una responsabilidad compartida para todos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "protocolo",
+      "responsabilidad compartida"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (era), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect to define or describe an inherent characteristic or a general truth in the past. 'Era' is the correct form."
+  },
+  {
+    "id": "ser-usage-166",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past inherent characteristic/definition",
+    "prompt_en": "Say: Before, the lack of a constant supply was a significant occupational hazard.",
+    "expected_es": "Antes, la falta de un suministro constante era un riesgo laboral significativo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "suministro",
+      "riesgo laboral"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (era), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect to describe a past inherent characteristic or a defining condition. 'Era' is the correct form."
+  },
+  {
+    "id": "ser-usage-167",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past definition/characteristic",
+    "prompt_en": "Say: For those positions, digital literacy was not yet an essential part of continuous training.",
+    "expected_es": "Para esos puestos, la alfabetización digital aún no era una parte esencial de la formación continua.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "alfabetización digital",
+      "formación continua"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (era), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect to define what something was or was not as a characteristic in the past. 'Era' is the correct form."
+  },
+  {
+    "id": "ser-usage-168",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past identification/definition",
+    "prompt_en": "Say: The warranty was the only document that was required for any return.",
+    "expected_es": "La garantía era el único documento que se exigía para cualquier devolución.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "garantía",
+      "devolución"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (era), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect to identify or define something in the past. 'Era' is the correct form."
+  },
+  {
+    "id": "ser-usage-169",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past cause/identification",
+    "prompt_en": "Say: The old electrical installation was the cause of the monitor's constant failures.",
+    "expected_es": "La antigua instalación eléctrica era la causa de los fallos constantes del monitor.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "instalación eléctrica",
+      "monitor"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (era), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect to indicate a cause or to identify something in the past. 'Era' is the correct form."
+  },
+  {
+    "id": "ser-usage-170",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past inherent description/characteristic",
+    "prompt_en": "Say: In those years, remote access was a significant vulnerability to cybercrime.",
+    "expected_es": "En esos años, el acceso remoto era una vulnerabilidad significativa para el ciberdelito.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "acceso remoto",
+      "ciberdelito"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (era), natural construction, agreement, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the imperfect to describe an inherent characteristic or a general condition that existed in the past. 'Era' is the correct form."
+  }
+]

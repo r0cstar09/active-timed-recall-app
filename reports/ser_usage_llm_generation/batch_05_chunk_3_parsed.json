@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-221",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal expression + que + ser (subjunctive)",
+    "prompt_en": "Say: It is essential that the traceability of the product is guaranteed throughout the supply chain.",
+    "expected_es": "Es fundamental que la trazabilidad del producto sea garantizada en toda la cadena de suministro.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la trazabilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Ser is used for inherent qualities or requirements, and the subjunctive mood is needed after expressions of importance like 'es fundamental que'."
+  },
+  {
+    "id": "ser-usage-222",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal expression + que + ser (subjunctive)",
+    "prompt_en": "Say: It is necessary that all the requirements for the visa application are clearly stated.",
+    "expected_es": "Es necesario que todos los requisitos para la solicitud de visado sean establecidos claramente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el requisito"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Ser describes a characteristic or requirement, and the subjunctive is used after impersonal expressions of necessity such as 'es necesario que'."
+  },
+  {
+    "id": "ser-usage-223",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal expression of probability + que + ser (subjunctive)",
+    "prompt_en": "Say: It is probable that the cause of the legal action is professional negligence.",
+    "expected_es": "Es probable que la causa de la acción legal sea negligencia profesional.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la negligencia profesional"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Ser is used to define the cause, and the subjunctive follows 'es probable que' when there is an element of doubt or possibility."
+  },
+  {
+    "id": "ser-usage-224",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal expression of doubt + que + ser (subjunctive)",
+    "prompt_en": "Say: It is doubtful that the reliability of the new system is sufficient for critical operations.",
+    "expected_es": "Es dudoso que la fiabilidad del nuevo sistema sea suficiente para operaciones críticas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la fiabilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Ser describes an inherent quality (reliability), and the subjunctive is required after expressions of doubt like 'es dudoso que'."
+  },
+  {
+    "id": "ser-usage-225",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Volition/preference + que + ser (subjunctive)",
+    "prompt_en": "Say: We prefer that the guarantor is a person with a stable financial situation.",
+    "expected_es": "Preferimos que el avalista sea una persona con una situación financiera estable.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el avalista"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Ser is used to identify the characteristic or role of the guarantor, and the subjunctive is triggered by the expression of preference ('preferimos que')."
+  },
+  {
+    "id": "ser-usage-226",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Request/desire for location + que + ser (subjunctive)",
+    "prompt_en": "Say: They have asked that the meeting point is somewhere easily accessible by public transport.",
+    "expected_es": "Han pedido que el punto de encuentro sea un lugar de fácil acceso en transporte público.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el punto de encuentro"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Ser is used to define the location, and the subjunctive is used because the location is not yet fixed and is subject to a request/desire ('han pedido que')."
+  },
+  {
+    "id": "ser-usage-227",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal expression + que + ser (passive subjunctive)",
+    "prompt_en": "Say: It is important that the progress report is submitted before the end of the week.",
+    "expected_es": "Es importante que el informe de progreso sea entregado antes del fin de semana.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el informe de progreso"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Ser is used in the passive voice to describe when the report is submitted, and the subjunctive is required after 'es importante que'."
+  },
+  {
+    "id": "ser-usage-228",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal expression + que + ser (passive subjunctive)",
+    "prompt_en": "Say: It is crucial that the identity of the witness is protected to ensure their safety.",
+    "expected_es": "Es crucial que la identidad del testigo sea protegida para garantizar su seguridad.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la identidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Ser is used to define the characteristic of being protected, and the subjunctive is required after expressions of importance/necessity like 'es crucial que'."
+  },
+  {
+    "id": "ser-usage-229",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal expression of possibility + que + ser (subjunctive)",
+    "prompt_en": "Say: It's possible that the source of the dampness is a leak in the roof.",
+    "expected_es": "Es posible que la fuente de la humedad sea una fuga en el tejado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la humedad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Ser identifies the source, and the subjunctive follows 'es posible que' to express a possibility or hypothesis."
+  },
+  {
+    "id": "ser-usage-230",
+    "verb": "ser",
+    "batch": 5,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Volition/demand + que + ser (subjunctive)",
+    "prompt_en": "Say: We demand that social equity is a central pillar of all new policies.",
+    "expected_es": "Exigimos que la equidad social sea un pilar central de todas las nuevas políticas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la equidad social"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Ser is used to define the role/characteristic of social equity, and the subjunctive is triggered by the verb of demanding ('exigimos que')."
+  }
+]

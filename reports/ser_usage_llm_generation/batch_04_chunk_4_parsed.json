@@ -1,0 +1,184 @@
+[
+  {
+    "id": "ser-usage-181",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past professional identity/focus",
+    "prompt_en": "Say: Before becoming CEO, her professional trajectory was very focused on sustainable development.",
+    "expected_es": "Antes de ser CEO, su trayectoria profesional era muy enfocada en el desarrollo sostenible.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "trayectoria",
+      "desarrollo sostenible"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use SER (era) for inherent qualities, professional identity, or a persistent focus in the past, not ESTAR for temporary states."
+  },
+  {
+    "id": "ser-usage-182",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Habitual/inherent characteristic in the past",
+    "prompt_en": "Say: One of the main difficulties of that project was always the coordination between international teams.",
+    "expected_es": "Una de las principales dificultades de aquel proyecto siempre era la coordinación entre equipos internacionales.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "dificultad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use SER (era) to describe an inherent or defining characteristic of something in the past, not ESTAR for a temporary condition."
+  },
+  {
+    "id": "ser-usage-183",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past origin/provenance",
+    "prompt_en": "Say: Most of the heritage objects in that museum were originally from pre-Columbian cultures.",
+    "expected_es": "La mayoría de los objetos del patrimonio en aquel museo eran originarios de culturas precolombinas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "patrimonio"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use SER (eran) to express the origin or provenance of objects in the past."
+  },
+  {
+    "id": "ser-usage-184",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past inherent nature/classification",
+    "prompt_en": "Say: The justification for the committee's decision was always political, not technical.",
+    "expected_es": "La justificación de la decisión del comité siempre era política, no técnica.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "justificación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use SER (era) to classify or define the inherent nature of something in the past."
+  },
+  {
+    "id": "ser-usage-185",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past inherent characteristic/quality",
+    "prompt_en": "Say: During that decade, her influence on the city's associative fabric was undeniable.",
+    "expected_es": "Durante aquella década, su influencia en el tejido asociativo de la ciudad era innegable.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "influencia",
+      "tejido asociativo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use SER (era) to describe an inherent characteristic or quality, even when referring to a past period."
+  },
+  {
+    "id": "ser-usage-186",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past possession",
+    "prompt_en": "Say: That shower screen was hers, but she left it when she moved out.",
+    "expected_es": "Esa mampara era suya, pero la dejó cuando se mudó.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "mampara"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use SER (era) to indicate possession in the past."
+  },
+  {
+    "id": "ser-usage-187",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past inherent quality/classification",
+    "prompt_en": "Say: The veracity of the report's conclusions was always a subject of intense debate.",
+    "expected_es": "La veracidad de las conclusiones del informe siempre era un tema de intenso debate.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "veracidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use SER (era) to describe an inherent quality or classification of something in the past."
+  },
+  {
+    "id": "ser-usage-188",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past date/time of event",
+    "prompt_en": "Say: The deadline for the scholarship application call was initially next Friday.",
+    "expected_es": "El plazo para la convocatoria de becas era inicialmente el próximo viernes.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "convocatoria"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use SER (era) to express dates or times in the past when describing what something was."
+  },
+  {
+    "id": "ser-usage-189",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past inherent characteristic/impact",
+    "prompt_en": "Say: The social repercussion of such measures was consistently significant.",
+    "expected_es": "La repercusión social de tales medidas era constantemente significativa.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "repercusión"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use SER (era) to describe a permanent or inherent characteristic, such as the nature of an impact or consequence, in the past."
+  },
+  {
+    "id": "ser-usage-190",
+    "verb": "ser",
+    "batch": 4,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Past inherent description/classification",
+    "prompt_en": "Say: The main problem in the region was the constant water scarcity.",
+    "expected_es": "El problema principal en la región era la constante escasez de agua.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "escasez de agua"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use SER (era) to define or describe what something fundamentally was in the past."
+  }
+]

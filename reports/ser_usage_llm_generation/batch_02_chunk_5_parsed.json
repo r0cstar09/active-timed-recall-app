@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-091",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition",
+    "prompt_en": "Say: Cybersecurity is the practice of protecting systems, networks, and programs from digital attacks.",
+    "expected_es": "La ciberseguridad es la práctica de proteger sistemas, redes y programas de ataques digitales.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "ciberseguridad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to define what 'ciberseguridad' is (an inherent quality/definition)."
+  },
+  {
+    "id": "ser-usage-092",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ownership/belonging (ser de)",
+    "prompt_en": "Say: This vehicle fleet is part of the municipal assets and needs constant maintenance.",
+    "expected_es": "Esta flota de vehículos es del ayuntamiento y necesita mantenimiento constante.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "flota de vehículos"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER + 'de' is used to indicate ownership or belonging."
+  },
+  {
+    "id": "ser-usage-093",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Authorship (ser de)",
+    "prompt_en": "Say: This important finding is from the university's research team, not an independent group.",
+    "expected_es": "Este hallazgo importante es del equipo de investigación de la universidad, no de un grupo independiente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "hallazgo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER + 'de' indicates authorship or origin."
+  },
+  {
+    "id": "ser-usage-094",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ideological/organizational affiliation",
+    "prompt_en": "Say: Our architectural approach is truly avant-garde in the field of sustainable urban development.",
+    "expected_es": "Nuestro enfoque arquitectónico es de verdadera vanguardia en el ámbito del desarrollo urbano sostenible.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "vanguardia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER + 'de' + noun can indicate an affiliation or characteristic belonging to a movement or style."
+  },
+  {
+    "id": "ser-usage-095",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Cleft emphasis (lo que... es...)",
+    "prompt_en": "Say: What truly concerns me is the uncertainty surrounding the project's long-term viability.",
+    "expected_es": "Lo que realmente me preocupa es la incertidumbre sobre la viabilidad a largo plazo del proyecto.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "incertidumbre"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The 'lo que... es...' structure (cleft sentence) is used to emphasize the subject."
+  },
+  {
+    "id": "ser-usage-096",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Impersonal evaluation (es clave que...)",
+    "prompt_en": "Say: It is key that the safety zone is clearly delimited before any operations begin.",
+    "expected_es": "Es clave que la zona de seguridad esté claramente delimitada antes de que comience cualquier operación.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "zona de seguridad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation. Note the subjunctive in the 'que' clause.",
+    "correction_hint": "SER is used in impersonal evaluations, often followed by 'que' + subjunctive to express necessity or importance."
+  },
+  {
+    "id": "ser-usage-097",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition",
+    "prompt_en": "Say: A repercussion is essentially the consequence or indirect effect of an action or event.",
+    "expected_es": "Una repercusión es esencialmente la consecuencia o el efecto indirecto de una acción o evento.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "repercusión"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to provide a definition."
+  },
+  {
+    "id": "ser-usage-098",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ownership/belonging (ser de)",
+    "prompt_en": "Say: This specific toolbox is for the general maintenance department, not personal use.",
+    "expected_es": "Esta caja de herramientas específica es del departamento de mantenimiento general, no para uso personal.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "caja de herramientas"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER + 'de' indicates belonging or purpose for an entity."
+  },
+  {
+    "id": "ser-usage-099",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ideological/organizational affiliation",
+    "prompt_en": "Say: The appealing party is also a member of the environmental protection organization.",
+    "expected_es": "La parte recurrente es también de la organización de protección ambiental.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "recurso"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER + 'de' + noun can indicate membership or affiliation with an organization."
+  },
+  {
+    "id": "ser-usage-100",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Cleft emphasis (lo que... es...)",
+    "prompt_en": "Say: What we need to define first is the exact purpose of this urgent meeting.",
+    "expected_es": "Lo que necesitamos definir primero es el propósito exacto de esta reunión urgente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "propósito"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The 'lo que... es...' structure (cleft sentence) is used to emphasize the element that follows 'es'."
+  }
+]

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-081",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definitions",
+    "prompt_en": "Say: The regulatory framework is the basis for ensuring compliance in all operations.",
+    "expected_es": "La normativa es la base para asegurar el cumplimiento en todas las operaciones.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la normativa"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to define what 'la normativa' is inherently."
+  },
+  {
+    "id": "ser-usage-082",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Ownership/Belonging (ser de)",
+    "prompt_en": "Say: This cultural legacy is from the indigenous communities of the region.",
+    "expected_es": "Este legado cultural es de las comunidades indígenas de la región.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el legado"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser de' to express origin or belonging."
+  },
+  {
+    "id": "ser-usage-083",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Authorship (ser de)",
+    "prompt_en": "Say: All the didactic material for the advanced course is from our publishing house.",
+    "expected_es": "Todo el material didáctico para el curso avanzado es de nuestra editorial.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el material didáctico"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "'Ser de' is used to indicate authorship or origin of creation."
+  },
+  {
+    "id": "ser-usage-084",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Affiliation",
+    "prompt_en": "Say: Our organization is a strong supporter of accelerating the energy transition.",
+    "expected_es": "Nuestra organización es una firme partidaria de acelerar la transición energética.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la transición energética"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to express affiliation or being a proponent of an idea/movement."
+  },
+  {
+    "id": "ser-usage-085",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Cleft Emphasis (lo que... es...)",
+    "prompt_en": "Say: What is truly vital for data integrity is its persistence across reboots.",
+    "expected_es": "Lo que es verdaderamente vital para la integridad de los datos es su persistencia a través de los reinicios.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la persistencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The 'lo que... es...' construction emphasizes a particular element, using SER for the definition."
+  },
+  {
+    "id": "ser-usage-086",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "mixed",
+    "difficulty": "C1",
+    "construction": "Impersonal Evaluation (es clave que)",
+    "prompt_en": "Say: It is crucial that emotional well-being be guaranteed for all employees in times of crisis.",
+    "expected_es": "Es clave que el bienestar emocional sea garantizado para todos los empleados en tiempos de crisis.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el bienestar emocional"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form (indicative for 'es clave', subjunctive for 'sea'), natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Impersonal evaluations with 'es clave que' require the subjunctive mood for the subsequent verb."
+  },
+  {
+    "id": "ser-usage-087",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definitions (abstract)",
+    "prompt_en": "Say: Sustainability is the fundamental pillar for the long-term success of any project.",
+    "expected_es": "La sostenibilidad es el pilar fundamental para el éxito a largo plazo de cualquier proyecto.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la sostenibilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to define the intrinsic nature of 'la sostenibilidad'."
+  },
+  {
+    "id": "ser-usage-088",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Origin (ser de)",
+    "prompt_en": "Say: This summons is from the municipal court, so we must respond promptly.",
+    "expected_es": "Esta citación es del juzgado municipal, así que debemos responder con prontitud.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la citación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "'Ser de' indicates the origin or source of something."
+  },
+  {
+    "id": "ser-usage-089",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Cleft Emphasis (lo que... es...)",
+    "prompt_en": "Say: What is most frustrating about this process is the slowness of the bureaucracy.",
+    "expected_es": "Lo que es más frustrante de este proceso es la lentitud de la burocracia.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la burocracia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The 'lo que... es...' structure draws attention to a specific characteristic or issue, using SER."
+  },
+  {
+    "id": "ser-usage-090",
+    "verb": "ser",
+    "batch": 2,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Impersonal Evaluation (es esencial)",
+    "prompt_en": "Say: It is essential to obtain an official certificate before traveling internationally.",
+    "expected_es": "Es esencial obtener un certificado oficial antes de viajar internacionalmente.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el certificado"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "'Es esencial' is an impersonal evaluation indicating necessity, often followed by an infinitive."
+  }
+]

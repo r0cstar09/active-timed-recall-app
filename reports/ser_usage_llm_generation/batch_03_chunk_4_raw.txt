@@ -1,0 +1,191 @@
+```json
+[
+  {
+    "id": "ser-usage-131",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed evaluation (quality)",
+    "prompt_en": "Say: It was an extremely imprudent decision to store the flammable material next to the electrical panel.",
+    "expected_es": "Fue una decisión extremadamente imprudente almacenar el material inflamable junto al cuadro eléctrico.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el material inflamable",
+      "la prudencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite ('fue') for a completed evaluation or characteristic of a past event."
+  },
+  {
+    "id": "ser-usage-132",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event/cause identification",
+    "prompt_en": "Say: The actual cause of the persistent water leak was the complete obstruction of the drain.",
+    "expected_es": "La causa real de la persistente fuga de agua fue la obstrucción completa del desagüe.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el desagüe",
+      "la obstrucción"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite ('fue') to identify the cause or origin of a past event."
+  },
+  {
+    "id": "ser-usage-133",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "one-off role/purpose",
+    "prompt_en": "Say: During the project's critical phase, she was the key person for fostering team autonomy.",
+    "expected_es": "Durante la fase crítica del proyecto, ella fue la persona clave para fomentar la autonomía del equipo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la autonomía"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite ('fue') to describe a specific, completed role or purpose in the past."
+  },
+  {
+    "id": "ser-usage-134",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice",
+    "prompt_en": "Say: The new lease agreement was finally signed by all parties just before the deadline.",
+    "expected_es": "El nuevo contrato de arrendamiento fue finalmente firmado por todas las partes justo antes de la fecha límite.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el arrendamiento"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite ('fue') with a past participle for a completed passive action."
+  },
+  {
+    "id": "ser-usage-135",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed event time/place",
+    "prompt_en": "Say: The final verification of identification for boarding was at the very last minute at gate C12.",
+    "expected_es": "La verificación final de la identificación para el embarque fue en el último minuto en la puerta C12.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el embarque",
+      "la identificación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite ('fue') to state the specific time or location of a completed event."
+  },
+  {
+    "id": "ser-usage-136",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed evaluation (characteristic)",
+    "prompt_en": "Say: The technical explanation about the scalability of the enterprise solution was incredibly thorough.",
+    "expected_es": "La explicación técnica sobre la escalabilidad de la solución empresarial fue increíblemente exhaustiva.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la escalabilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite ('fue') to describe a completed, inherent characteristic or evaluation of something."
+  },
+  {
+    "id": "ser-usage-137",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event's defining characteristic",
+    "prompt_en": "Say: The judicial ruling concerning the unfair competition lawsuit was absolutely definitive and without appeal.",
+    "expected_es": "La sentencia judicial sobre la demanda de competencia desleal fue absolutamente definitiva e inapelable.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la sentencia judicial",
+      "la demanda",
+      "la competencia desleal"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite ('fue') to state a defining, completed characteristic of a past event or decision."
+  },
+  {
+    "id": "ser-usage-138",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "purpose of a past event",
+    "prompt_en": "Say: The primary objective of the meeting was to meticulously review all the required documentation for the application.",
+    "expected_es": "El objetivo principal de la reunión fue revisar meticulosamente toda la documentación requerida para la instancia.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la instancia",
+      "la documentación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite ('fue') to state the specific purpose or objective of a completed past event."
+  },
+  {
+    "id": "ser-usage-139",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "bounded passive voice",
+    "prompt_en": "Say: The entire administrative file was finally archived last month after the final resolution was issued.",
+    "expected_es": "Todo el expediente administrativo fue finalmente archivado el mes pasado después de emitirse la resolución final.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el expediente"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite ('fue') with a past participle for a completed passive action."
+  },
+  {
+    "id": "ser-usage-140",
+    "verb": "ser",
+    "batch": 3,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "completed event location",
+    "prompt_en": "Say: The initial coordination of healthcare assistance for the mass casualty incident was at the main entrance of the emergency service.",
+    "expected_es": "La coordinación inicial de la asistencia sanitaria para el incidente de víctimas múltiples fue en la entrada principal del servicio de urgencias.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la asistencia sanitaria",
+      "el servicio de urgencias"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' in the preterite ('fue') to specify the location where a completed event took place."
+  }
+]
+```

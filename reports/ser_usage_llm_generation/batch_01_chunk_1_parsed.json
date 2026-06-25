@@ -1,0 +1,188 @@
+[
+  {
+    "id": "ser-usage-001",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "identity/classification",
+    "prompt_en": "Say: This appeal is a crucial legal resource for challenging the administrative decision.",
+    "expected_es": "Este recurso es una herramienta legal crucial para impugnar la decisión administrativa.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el recurso"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to classify or identify what 'el recurso' is."
+  },
+  {
+    "id": "ser-usage-002",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "profession/role",
+    "prompt_en": "Say: My cousin is an insurance adjuster, so he understands the report on the technical fault very well.",
+    "expected_es": "Mi primo es perito de seguros, así que entiende muy bien el informe sobre la avería técnica.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el perito de seguros",
+      "la avería técnica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to indicate a profession or role. Note the omission of the indefinite article before professions."
+  },
+  {
+    "id": "ser-usage-003",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "origin/source",
+    "prompt_en": "Say: This type of encryption is from a high-security protocol developed for financial transactions.",
+    "expected_es": "Este tipo de cifrado es de un protocolo de alta seguridad desarrollado para transacciones financieras.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el cifrado"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER + 'de' is used to express origin or source."
+  },
+  {
+    "id": "ser-usage-004",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "material",
+    "prompt_en": "Say: The sandpaper is made of silicon carbide, which is ideal for sanding hard surfaces during the renovation.",
+    "expected_es": "El papel de lija es de carburo de silicio, ideal para lijar superficies duras durante la reforma.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el papel de lija",
+      "la reforma"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER + 'de' is used to indicate the material something is made of."
+  },
+  {
+    "id": "ser-usage-005",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "inherent description",
+    "prompt_en": "Say: The frustration is understandable given the unexpected delay in the implementation of the new system.",
+    "expected_es": "La frustración es comprensible dado el retraso inesperado en la implementación del nuevo sistema.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la frustración",
+      "la implementación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to describe inherent or fundamental characteristics, such as how 'frustration' is perceived."
+  },
+  {
+    "id": "ser-usage-006",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event time/date",
+    "prompt_en": "Say: The premiere of the documentary about the financial crisis is next Friday at the cultural center.",
+    "expected_es": "El estreno del documental sobre la crisis financiera es el próximo viernes en el centro cultural.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el estreno",
+      "la crisis financiera"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to indicate the time or date of an event."
+  },
+  {
+    "id": "ser-usage-007",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "inherent description/value judgment",
+    "prompt_en": "Say: The value for money is truly exceptional for this new induction hob.",
+    "expected_es": "La relación calidad-precio es verdaderamente excepcional para esta nueva placa de inducción.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la relación calidad-precio",
+      "la placa de inducción"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to describe inherent qualities or to make a value judgment."
+  },
+  {
+    "id": "ser-usage-008",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "classification/identity",
+    "prompt_en": "Say: Risk prevention is a mandatory requirement for all employees in this company.",
+    "expected_es": "La prevención de riesgos es un requerimiento obligatorio para todos los empleados de esta empresa.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la prevención de riesgos",
+      "el requerimiento"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to classify or identify the subject, describing what it is inherently."
+  },
+  {
+    "id": "ser-usage-009",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "event time/date",
+    "prompt_en": "Say: My retirement is in two years, and I'm already planning my trip.",
+    "expected_es": "Mi jubilación es dentro de dos años, y ya estoy planificando mi viaje.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la jubilación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to indicate the time or date of an event, even if it's in the future."
+  },
+  {
+    "id": "ser-usage-010",
+    "verb": "ser",
+    "batch": 1,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "inherent description/cause-effect",
+    "prompt_en": "Say: The social unrest is a direct consequence of inadequate public policies.",
+    "expected_es": "El malestar social es una consecuencia directa de políticas públicas inadecuadas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el malestar social"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to describe an inherent characteristic or a relationship of cause and effect."
+  }
+]

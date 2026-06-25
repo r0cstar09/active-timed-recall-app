@@ -1,0 +1,62 @@
+spanish,english,domain,collocations,reason
+el archivo adjunto,attachment,tech,abrir el archivo adjunto; descargar el archivo adjunto; enviar el archivo adjunto; revisar el archivo adjunto,too basic/low-value for C1 level (compound noun phrase)
+el usuario,user,tech,crear un usuario; validar un usuario; bloquear un usuario; gestionar un usuario,too basic/low-value for C1 level
+la recaída,relapse,health,sufrir una recaída; evitar una recaída; prevenir la recaída; evitar una recaída,duplicate-like filler (identical to 205's own collocations and redundant with 205's concept)
+el enchufe hembra,wall socket,utilities,conectar al enchufe hembra; cambiar el enchufe hembra; proteger el enchufe hembra,too obscure/low-value (technical jargon for a specific type of socket is not C1-level general vocabulary)
+el grifo monomando,single-lever faucet,utilities,instalar el grifo monomando; cerrar el grifo monomando; ajustar el grifo monomando,too obscure/low-value (highly specific hardware terminology)
+el taladro percutor,hammer drill,tools,manejar el taladro percutor; usar el taladro percutor; alquilar el taladro percutor,too obscure/low-value (highly specific tool terminology)
+la lija,sandpaper,tools,pasar la lija; comprar la lija; aplicar la lija; usar la lija,too obscure/low-value (highly specific tool terminology)
+el listón,lath/batten,materials,cortar el listón; clavar el listón; medir el listón; lijar el listón,too obscure/low-value (highly specific construction material)
+la masilla,putty/filler,materials,aplicar la masilla; alisar con masilla; cubrir con masilla; dejar secar la masilla,too obscure/low-value (highly specific construction material)
+el barniz,varnish,materials,aplicar el barniz; extender el barniz; dejar secar el barniz; comprar el barniz,too obscure/low-value (highly specific construction material)
+el metro,tape measure,tools,usar el metro; medir con el metro; estirar el metro,duplicate-like filler (already have 311 la cinta métrica)
+el diferencial,residual-current device,utilities,saltar el diferencial; activar el diferencial; revisar el diferencial,duplicate-like filler (already have 245 el disyuntor
+el interruptor magnetotérmico,circuit breaker,utilities,saltar el interruptor magnetotérmico; rearmar el interruptor magnetotérmico; cambiar el interruptor magnetotérmico; instalar el interruptor magnetotérmico,too obscure/low-value (technical synonym for 245/284
+la recurrencia,recurrence,transport,frecuente recurrencia; evitar la recurrencia; alta recurrencia; recurrencia del problema,"too abstract/low-value for verb drills; ""recurrencia"" is rarely used in natural spoken Spanish compared to ""frecuencia"" or ""repetición""."
+el radio urbano,urban radius,transport,dentro del radio urbano; fuera del radio urbano; delimitación del radio urbano,"too obscure/low-value; ""radio urbano"" is technical jargon rarely used in daily life."
+la viabilidad,feasibility,admin,estudiar la viabilidad; garantizar la viabilidad; comprobar la viabilidad; un proyecto de viabilidad,"too abstract/low-value; ""viabilidad"" is a noun that doesn't lend itself to the practical"
+la prenda de vestir,garment,clothing,probarse la prenda de vestir; elegir la prenda de vestir; cuidar la prenda de vestir,duplicate-like filler (already covered by 482)
+la calidad del tejido,fabric quality,clothing,evaluar la calidad del tejido; comprobar la calidad del tejido; garantizar la calidad del tejido,duplicate-like filler (already covered by 481)
+la tendencia actual,current trend,clothing,seguir la tendencia actual; ignorar la tendencia actual; marcar la tendencia actual,duplicate-like filler (already covered by 491)
+el fondo de armario,wardrobe essentials,clothing,completar el fondo de armario; organizar el fondo de armario; renovar el fondo de armario,duplicate-like filler (already covered by 492)
+el primer auxilio,first aid,emergency,aplicar el primer auxilio; aprender el primer auxilio; recibir el primer auxilio,"collocations unnatural; ""primeros auxilios"" is the standard plural form"
+el vertedero,landfill,environment,clausurar el vertedero; controlar el vertedero; limpiar el vertero,"typo in collocations; ""limpiar el vertero"" contains a spelling error (should be ""vertedero"")."
+la cánula,cannula,health,inserción de la cánula; tamaño de la cánula; desechable cánula,collocations unnatural (desechable cánula is grammatically incorrect; should be cánula desechable)
+el ancho,bandwidth,devices,ancho de banda; gestión del ancho; optimizar el ancho; límite de ancho,"The term ""ancho"" is incomplete/incorrect in this context; it should be ""ancho de banda"" to be natural."
+la huelga,strike,travel disruptions,convocar la huelga; secundar la huelga; desconvocar la huelga; afectar la huelga,The collocations provided (e.g.
+el metropolitano,subway,transport,ampliar el metropolitano; gestionar el metropolitano; modernizar el metropolitano; usar el metropolitano,"The term ""metropolitano"" is rarely used as a standalone noun for ""subway"" in modern Spanish; ""metro"" is the standard."
+el pasaje,passengers,travel disruptions,reubicar el pasaje; informar al pasaje; gestionar el pasaje,"The term ""pasaje"" in this context is a collective noun that functions as a filler; it lacks the specific utility of the other C1-level nouns."
+el tejido social,social fabric,community,tejer el tejido social; fortalecer el tejido social; dañar el tejido social,"The collocation ""tejer el tejido social"" is a redundant"
+el percherón,coat rack,clothing,colgar en el percherón; llenar el percherón; vaciar el percherón; organizar el percherón,"The word is ""perchero"" (coat rack); ""percherón"" is a breed of horse (Percheron)."
+el estante,shelf,clothing,organizar el estante; limpiar el estante; reponer el estante; vaciar el estante,Too basic/low-value for C1 vocabulary drills.
+el perchero,rack,clothing,colgar en el perchero; llenar el perchero; vaciar el perchero; organizar el perchero,Too basic/low-value for C1 vocabulary drills.
+la organización,organization,family,mejorar la organización; facilitar la organización; optimizar la organización,too generic/low-value for C1 vocabulary
+la comunicación,communication,family,mejorar la comunicación; fomentar la comunicación; facilitar la comunicación,too generic/low-value for C1 vocabulary
+la coordinación,coordination,family,mejorar la coordinación; facilitar la coordinación; optimizar la coordinación,too generic/low-value for C1 vocabulary
+el entendimiento,understanding,family,lograr el entendimiento; buscar el entendimiento; fomentar el entendimiento,too generic/low-value for C1 vocabulary
+la tolerancia,tolerance,family,practicar la tolerancia; fomentar la tolerancia; demostrar la tolerancia,too generic/low-value for C1 vocabulary
+la solidaridad,solidarity,family,fomentar la solidaridad; demostrar la solidaridad; practicar la solidaridad,too generic/low-value for C1 vocabulary
+la cercanía,closeness,family,fomentar la cercanía; mantener la cercanía; valorar la cercanía,too generic/low-value for C1 vocabulary
+la unidad,unity,family,mantener la unidad; fortalecer la unidad; preservar la unidad,too generic/low-value for C1 vocabulary
+la armonía,harmony,family,mantener la armonía; fomentar la armonía; buscar la armonía,too generic/low-value for C1 vocabulary
+la comprensión,comprehension,family,demostrar la comprensión; fomentar la comprensión; practicar la comprensión,too generic/low-value for C1 vocabulary
+la convocatoria oficial,official call (exam/grant),education,publicar la convocatoria oficial; abrir la convocatoria oficial; cerrar la convocatoria oficial; acudir a la convocatoria oficial,duplicate-like filler (near-identical to 1366)
+el cupo de plazas,quota of places,education,ampliar el cupo de plazas; cubrir el cupo de plazas; limitar el cupo de plazas; gestionar el cupo de plazas,duplicate-like filler (near-identical to 1373)
+el periodo lectivo,academic term,education,iniciar el periodo lectivo; finalizar el periodo lectivo; interrumpir el periodo lectivo; evaluar el periodo lectivo,duplicate-like filler (near-identical to 1374)
+la secretaría académica,academic registrar's office,education,acudir a la secretaría académica; contactar con la secretaría académica; gestionar en la secretaría académica; dirigirse a la secretaría académica,duplicate-like filler (near-identical to 1375)
+la plaza vacante,vacant position/place,education,solicitar la plaza vacante; cubrir la plaza vacante; ofertar la plaza vacante; adjudicar la plaza vacante,duplicate-like filler (near-identical to 1376)
+el contenido,the content,media,crear el contenido; moderar el contenido; filtrar el contenido; distribuir el contenido,too generic/low-value for C1 vocabulary
+el residuo sólido,solid waste,environment,gestionar; reciclar; acumular; separar,collocations are single verbs (not phrases) and lack context
+la economía circular,circular economy,environment,fomentar; aplicar; sostenible; modelo productivo,collocations are single verbs/adjectives (not phrases)
+el envase retornable,returnable packaging,environment,fomentar; reutilizar; reducir residuos; incentivar,collocations are single verbs (not phrases)
+el punto limpio,recycling center,environment,depositar; acudir a; gestionar; residuos especiales,collocations are single verbs (not phrases)
+la recogida selectiva,selective waste collection,environment,fomentar; implementar; mejorar; tasa de reciclaje,collocations are single verbs (not phrases)
+la materia orgánica,organic matter,environment,compostar; separar; degradable; residuo,collocations are single verbs (not phrases)
+el desperdicio alimentario,food waste,environment,reducir; combatir; evitar; gestión responsable,collocations are single verbs (not phrases)
+el material compostable,compostable material,environment,degradar; utilizar; residuo orgánico; biodegradable,collocations are single verbs (not phrases)
+el vertedero autorizado,authorized landfill,environment,gestionar; clausurar; residuos urbanos; control,collocations are single verbs (not phrases)
+la recuperación de materiales,material recovery,environment,fomentar; proceso de; eficiente; reciclaje,collocations are single verbs (not phrases)
+la incineración controlada,controlled incineration,environment,gestionar; reducir volumen; emisiones; tóxicas,collocations are single verbs (not phrases)
+la política medioambiental,environmental policy,environment,implementar; cumplir; estricta; normativa,collocations are single verbs (not phrases)
+la sensibilización ambiental,environmental awareness,environment,fomentar; campaña de; impacto social; concienciar,collocations are single verbs (not phrases)
+la calidad del aire,air quality,environment,monitorear; mejorar; índice de; alerta sanitaria,collocations are single verbs (not phrases)

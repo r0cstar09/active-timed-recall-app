@@ -1,0 +1,184 @@
+[
+  {
+    "id": "ser-usage-271",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "si + imperfect subjunctive (hypothetical)",
+    "prompt_en": "Say: If the internal audit were negative, the repercussions would be significant for the company.",
+    "expected_es": "Si la auditoría interna fuera negativa, las repercusiones serían significativas para la empresa.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "auditoría interna",
+      "repercusión"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use the imperfect subjunctive 'fuera' for hypothetical conditions after 'si' in a type 2 conditional sentence."
+  },
+  {
+    "id": "ser-usage-272",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "si + imperfect subjunctive (counterfactual)",
+    "prompt_en": "Say: If the grant were for a larger amount, we wouldn't have this financial problem.",
+    "expected_es": "Si la subvención fuera por un importe mayor, no tendríamos este problema financiero.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "subvención"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The imperfect subjunctive 'fuera' is required after 'si' to express a condition contrary to fact."
+  },
+  {
+    "id": "ser-usage-273",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "como si + imperfect subjunctive",
+    "prompt_en": "Say: He always talks about his workload as if it were the only one that mattered in the department.",
+    "expected_es": "Siempre habla de su carga de trabajo como si fuera la única que importara en el departamento.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "carga de trabajo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "'Como si' always triggers the imperfect subjunctive or pluperfect subjunctive in Spanish."
+  },
+  {
+    "id": "ser-usage-274",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "aunque + imperfect subjunctive",
+    "prompt_en": "Say: They decided to denounce the unfair competition, even if it were a very long and complicated process.",
+    "expected_es": "Decidieron denunciar la competencia desleal, aunque fuera un proceso muy largo y complicado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "competencia desleal"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "'Aunque' followed by the imperfect subjunctive implies a concession to something hypothetical or contrary to expectation."
+  },
+  {
+    "id": "ser-usage-275",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "no porque + imperfect subjunctive",
+    "prompt_en": "Say: They requested the termination of the contract, not because it was the only viable option, but for ethical reasons.",
+    "expected_es": "Solicitaron la rescisión del contrato, no porque fuera la única opción viable, sino por razones éticas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "rescisión"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "When 'no porque' explains a negated cause or a cause that is merely hypothesized, the subjunctive is used."
+  },
+  {
+    "id": "ser-usage-276",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "si + imperfect subjunctive (hypothetical)",
+    "prompt_en": "Say: If storing flammable material were a greater risk, the emergency protocol would need to be updated.",
+    "expected_es": "Si almacenar material inflamable fuera un riesgo mayor, el protocolo de emergencia debería actualizarse.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "material inflamable",
+      "protocolo de emergencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fuera' after 'si' to express a hypothetical condition about the nature or characteristic of something."
+  },
+  {
+    "id": "ser-usage-277",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "como si + imperfect subjunctive",
+    "prompt_en": "Say: The student presented the project as if the evaluation were a mere formality, but it was crucial.",
+    "expected_es": "El estudiante presentó el proyecto como si la evaluación fuera una mera formalidad, pero era crucial.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "evaluación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The construction 'como si' always takes the subjunctive mood, here in its imperfect form to refer to a past event or ongoing hypothetical situation."
+  },
+  {
+    "id": "ser-usage-278",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "aunque + imperfect subjunctive",
+    "prompt_en": "Say: She would dedicate herself to that medical specialty, even if it were incredibly demanding and required many sacrifices.",
+    "expected_es": "Ella se dedicaría a esa especialidad médica, aunque fuera increíblemente exigente y requiriera muchos sacrificios.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "especialidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "When 'aunque' introduces a hypothetical or unrealized obstacle, the imperfect subjunctive is used."
+  },
+  {
+    "id": "ser-usage-279",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "si + imperfect subjunctive (plural counterfactual)",
+    "prompt_en": "Say: If the new peripherals were not compatible with our systems, their purchase would be useless.",
+    "expected_es": "Si los nuevos periféricos no fueran compatibles con nuestros sistemas, su compra sería inútil.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "periférico"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The plural imperfect subjunctive 'fueran' is used after 'si' for a hypothetical condition involving multiple subjects."
+  },
+  {
+    "id": "ser-usage-280",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "no porque + imperfect subjunctive (plural)",
+    "prompt_en": "Say: They didn't overcome the disagreements quickly, not because they were trivial, but because their roots were deep.",
+    "expected_es": "No superaron las desavenencias rápidamente, no porque fueran triviales, sino porque sus raíces eran profundas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "desavenencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The imperfect subjunctive 'fueran' is used after 'no porque' to indicate that the stated reason is not the real or intended one."
+  }
+]

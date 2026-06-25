@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ser-usage-441",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice (fue + participio)",
+    "prompt_en": "Say: The internal audit was carried out by an external firm last month.",
+    "expected_es": "La auditoría interna fue realizada por una empresa externa el mes pasado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "auditoría interna"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' + past participle for passive voice, agreeing in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-442",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice (será + participio)",
+    "prompt_en": "Say: The commercial contract will be rescinded by mutual agreement of both parties.",
+    "expected_es": "El contrato mercantil será rescindido por mutuo acuerdo de ambas partes.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "contrato mercantil"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' + past participle for passive voice, agreeing in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-443",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice (es + participio)",
+    "prompt_en": "Say: Full accessibility is guaranteed by law in all public transport.",
+    "expected_es": "La plena accesibilidad es garantizada por ley en todo el transporte público.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "accesibilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' + past participle for passive voice, agreeing in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-444",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice (ha sido + participio)",
+    "prompt_en": "Say: The security operation has been coordinated by the national police since early morning.",
+    "expected_es": "El operativo de seguridad ha sido coordinado por la policía nacional desde primera hora de la mañana.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "operativo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' + past participle for passive voice, agreeing in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-445",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice (es + participio)",
+    "prompt_en": "Say: The satisfaction survey is distributed to all students by the administration at the end of each course.",
+    "expected_es": "El cuestionario de satisfacción es distribuido a todos los estudiantes por la administración al final de cada curso.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "cuestionario de satisfacción"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' + past participle for passive voice, agreeing in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-446",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice (fue + participio)",
+    "prompt_en": "Say: The environmental crime was thoroughly investigated by specialized agents.",
+    "expected_es": "El delito ecológico fue investigado a fondo por agentes especializados.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "delito ecológico"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' + past participle for passive voice, agreeing in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-447",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice (será + participio)",
+    "prompt_en": "Say: The damages compensation will be paid by the insurance company within thirty days.",
+    "expected_es": "La indemnización por daños será pagada por la compañía de seguros en un plazo de treinta días.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "indemnización por daños"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' + past participle for passive voice, agreeing in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-448",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present Perfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice (ha sido + participio)",
+    "prompt_en": "Say: The water leak has been detected and repaired by the maintenance team.",
+    "expected_es": "La filtración de agua ha sido detectada y reparada por el equipo de mantenimiento.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "filtración"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' + past participle for passive voice, agreeing in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-449",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice (es + participio)",
+    "prompt_en": "Say: Social cohesion is continuously reinforced by public institutions through various community programs.",
+    "expected_es": "La cohesión social es continuamente reforzada por las instituciones públicas a través de diversos programas comunitarios.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "cohesión social"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' + past participle for passive voice, agreeing in gender and number with the subject."
+  },
+  {
+    "id": "ser-usage-450",
+    "verb": "ser",
+    "batch": 9,
+    "batch_size": 50,
+    "tense": "Preterite",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive voice (fue + participio)",
+    "prompt_en": "Say: The unexpected expense was covered by the emergency fund without major issues.",
+    "expected_es": "El gasto imprevisto fue cubierto por el fondo de emergencia sin mayores problemas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "gasto imprevisto"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'ser' + past participle for passive voice, agreeing in gender and number with the subject."
+  }
+]

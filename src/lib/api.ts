@@ -210,6 +210,8 @@ export type StudyGradeItem = {
   pattern_ids?: string[];
   verb_ids?: string[];
   slots?: Record<string, unknown>;
+  usage_focus?: string;
+  target_vocabulary?: string[];
 };
 
 export type StudyGradeRequest = {
@@ -432,6 +434,33 @@ export type CreateVerbRequest = {
   add_to_daily_rotation?: boolean;
 };
 
+export type VerbUsagePrompt = {
+  id: string;
+  verb: string;
+  batch: number;
+  batch_size: number;
+  tense: string;
+  mood: string;
+  difficulty: string;
+  construction: string;
+  prompt_en: string;
+  expected_es?: string;
+  acceptable_answer_pattern?: string | null;
+  target_vocabulary?: string[];
+  grading_notes?: string;
+  correction_hint?: string;
+};
+
+export type VerbUsageBankBatch = {
+  verb: string;
+  batch: number;
+  batch_size: number;
+  total_batches: number;
+  total_prompts: number;
+  status?: string;
+  prompts: VerbUsagePrompt[];
+};
+
 export const api = {
   // ── Sessions / grading (real contract) ───────────────────────────────────
   async createSession(mode: SessionMode = "review", size = 10): Promise<Session> {
@@ -589,6 +618,10 @@ export const api = {
   },
   addVerb(payload: CreateVerbRequest): Promise<VerbCatalogEntry> {
     return requestJson<VerbCatalogEntry>("/api/study/verbs", "POST", payload);
+  },
+  getVerbUsageBank(verb: string, batch = 1): Promise<VerbUsageBankBatch> {
+    const params = new URLSearchParams({ verb, batch: String(batch) });
+    return request<VerbUsageBankBatch>(`/api/study/verb-usage-bank?${params.toString()}`);
   },
   promoteLessonMiss(missId: number): Promise<{ phrase_id: number; already_promoted: boolean }> {
     return requestJson<{ phrase_id: number; already_promoted: boolean }>("/api/study/promote-lesson-miss", "POST", { miss_id: missId });

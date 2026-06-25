@@ -1,0 +1,186 @@
+[
+  {
+    "id": "ser-usage-291",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "si + imperfect subjunctive (counterfactual)",
+    "prompt_en": "Say: If the burden of proof were on the prosecution, the trial would be much fairer.",
+    "expected_es": "Si la carga de la prueba fuera de la fiscalía, el juicio sería mucho más justo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la carga de la prueba"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'fuera' for the imperfect subjunctive of 'ser' in a hypothetical 'si' clause (If it were...)."
+  },
+  {
+    "id": "ser-usage-292",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "como si + imperfect subjunctive (unreal comparison)",
+    "prompt_en": "Say: He walked as if he weren't experiencing any dizziness, despite his pale face.",
+    "expected_es": "Caminaba como si no fuera el mareo lo que le afectaba, a pesar de su rostro pálido.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el mareo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "After 'como si' (as if), the imperfect subjunctive 'fuera' is used to express an unreal or hypothetical comparison."
+  },
+  {
+    "id": "ser-usage-293",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "aunque + imperfect subjunctive (concession, hypothetical)",
+    "prompt_en": "Say: Even if the claim were completely unjustified, the company should still address it promptly.",
+    "expected_es": "Aunque el reclamo fuera totalmente injustificado, la empresa debería abordarlo con prontitud.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el reclamo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use the imperfect subjunctive 'fuera' after 'aunque' when expressing a hypothetical or counterfactual concession."
+  },
+  {
+    "id": "ser-usage-294",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "no porque + imperfect subjunctive (reason for non-action, counterfactual)",
+    "prompt_en": "Say: We didn't take the expressway, not because it was a longer route, but because of the heavy traffic.",
+    "expected_es": "No tomamos la vía rápida, no porque fuera una ruta más larga, sino por el tráfico denso.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la vía rápida"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The construction 'no porque + subjunctive' is used to deny a hypothetical or untrue reason. 'Fuera' is the correct imperfect subjunctive form here."
+  },
+  {
+    "id": "ser-usage-295",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "si + imperfect subjunctive (hypothetical condition)",
+    "prompt_en": "Say: If the tax system were truly focused on sustainability, many companies would change their practices.",
+    "expected_es": "Si la fiscalidad fuera realmente enfocada en la sostenibilidad, muchas empresas cambiarían sus prácticas.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la fiscalidad",
+      "la sostenibilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "For hypothetical 'if' clauses referring to the present or future, use the imperfect subjunctive 'fuera'."
+  },
+  {
+    "id": "ser-usage-296",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "como si + imperfect subjunctive (unreal comparison)",
+    "prompt_en": "Say: He spoke about the economy as if job insecurity were not a real problem for most citizens.",
+    "expected_es": "Hablaba de la economía como si la precariedad laboral no fuera un problema real para la mayoría de los ciudadanos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la precariedad laboral"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "The phrase 'como si' (as if) always requires the subjunctive mood, specifically the imperfect subjunctive 'fuera' for hypothetical comparisons."
+  },
+  {
+    "id": "ser-usage-297",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "si + imperfect subjunctive (counterfactual past condition)",
+    "prompt_en": "Say: If that data breach were just a known vulnerability, it would have been much easier to fix.",
+    "expected_es": "Si esa brecha de datos fuera solo una vulnerabilidad conocida, habría sido mucho más fácil de solucionar.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la brecha",
+      "la vulnerabilidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "In counterfactual 'si' clauses referring to a past situation, the imperfect subjunctive 'fuera' is used, often paired with the conditional perfect in the main clause."
+  },
+  {
+    "id": "ser-usage-298",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "aunque + imperfect subjunctive (concession, hypothetical)",
+    "prompt_en": "Say: Even if his legacy were solely one of technological disruption, its impact on society is undeniable.",
+    "expected_es": "Aunque su legado fuera únicamente el de la disrupción tecnológica, su impacto en la sociedad es innegable.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el legado",
+      "la disrupción"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "When 'aunque' introduces a hypothetical or unreal situation, the imperfect subjunctive 'fuera' is required."
+  },
+  {
+    "id": "ser-usage-299",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "si + imperfect subjunctive (counterfactual condition)",
+    "prompt_en": "Say: If living in coexistence were always seen as a disadvantage, community building would be impossible.",
+    "expected_es": "Si la convivencia fuera siempre percibida como una desventaja, la construcción de comunidad sería imposible.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la convivencia",
+      "la desventaja"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "For a hypothetical 'si' clause describing a condition that is contrary to fact or unlikely, use the imperfect subjunctive 'fuera'."
+  },
+  {
+    "id": "ser-usage-300",
+    "verb": "ser",
+    "batch": 6,
+    "batch_size": 50,
+    "tense": "Imperfect Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "no porque + imperfect subjunctive (reason for non-action, counterfactual)",
+    "prompt_en": "Say: I didn't submit the form, not because it was too complicated, but because I missed the deadline.",
+    "expected_es": "No presenté el formulario, no porque fuera demasiado complicado, sino porque se me pasó el plazo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el formulario"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "Use 'no porque + imperfect subjunctive' ('fuera') to state that something was *not* the reason for an action, implying a hypothetical or denied cause."
+  }
+]

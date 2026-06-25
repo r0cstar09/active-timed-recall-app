@@ -1,0 +1,185 @@
+[
+  {
+    "id": "ser-usage-461",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Definition/Identity",
+    "prompt_en": "Say: Patrimonial liability is a legal concept that establishes the obligation of public administrations to compensate for damages.",
+    "expected_es": "La responsabilidad patrimonial es un concepto jurídico que establece la obligación de las administraciones públicas de indemnizar por daños.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la responsabilidad patrimonial"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to define what 'patrimonial liability' is."
+  },
+  {
+    "id": "ser-usage-462",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Future",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Passive Voice",
+    "prompt_en": "Say: We hope that the audit will be carried out with complete transparency and rigor.",
+    "expected_es": "Esperamos que la auditoría sea realizada con total transparencia y rigor.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la auditoría",
+      "la transparencia"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used here to form the passive voice, indicating that the audit 'is carried out'."
+  },
+  {
+    "id": "ser-usage-463",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Characteristic/Identity",
+    "prompt_en": "Say: The chronicity of certain diseases is a major challenge for the public health system.",
+    "expected_es": "La cronicidad de ciertas enfermedades es un reto importante para el sistema de salud pública.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la cronicidad"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to describe an inherent characteristic or identity of 'chronicity'."
+  },
+  {
+    "id": "ser-usage-464",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Event Time",
+    "prompt_en": "Say: The notification of the eviction is for next Tuesday, according to the lawyer.",
+    "expected_es": "La notificación del desahucio es para el próximo martes, según el abogado.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el desahucio",
+      "el abogado defensor"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to indicate the time or date of an event."
+  },
+  {
+    "id": "ser-usage-465",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal Expression + Subjunctive",
+    "prompt_en": "Say: It is crucial that the labor market be inclusive for all social groups.",
+    "expected_es": "Es crucial que el mercado laboral sea inclusivo para todos los grupos sociales.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el mercado laboral"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used in the subjunctive mood after an impersonal expression ('Es crucial que') expressing necessity or opinion."
+  },
+  {
+    "id": "ser-usage-466",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Material",
+    "prompt_en": "Say: The acera in front of the building is made of a special non-slip material.",
+    "expected_es": "La acera frente al edificio es de un material antideslizante especial.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la acera"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to indicate the material something is made of."
+  },
+  {
+    "id": "ser-usage-467",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Purpose/Identity",
+    "prompt_en": "Say: This checking account is exclusively for the family's shared expenses.",
+    "expected_es": "Esta cuenta corriente es exclusivamente para los gastos compartidos de la familia.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la cuenta corriente"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to express the purpose or intended use of something."
+  },
+  {
+    "id": "ser-usage-468",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Imperfect",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Characteristic/General Truth",
+    "prompt_en": "Say: Mutual respect was always a non-negotiable principle among the team members.",
+    "expected_es": "El respeto mutuo siempre fue un principio innegociable entre los miembros del equipo.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "el respeto mutuo"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used in the imperfect to describe a characteristic or general truth that held true in the past."
+  },
+  {
+    "id": "ser-usage-469",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present Subjunctive",
+    "mood": "subjunctive",
+    "difficulty": "C1",
+    "construction": "Impersonal Expression + Passive Voice",
+    "prompt_en": "Say: It's important that the affected area be evacuated immediately to prevent further risks.",
+    "expected_es": "Es importante que la zona de afectación sea evacuada de inmediato para prevenir más riesgos.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la zona de afectación"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used in the subjunctive mood after an impersonal expression ('Es importante que') and to form the passive voice."
+  },
+  {
+    "id": "ser-usage-470",
+    "verb": "ser",
+    "batch": 10,
+    "batch_size": 50,
+    "tense": "Present",
+    "mood": "indicative/conditional",
+    "difficulty": "C1",
+    "construction": "Cause/Characteristic",
+    "prompt_en": "Say: The obsolescence of the old systems is the main cause of the technical fault.",
+    "expected_es": "La obsolescencia de los sistemas antiguos es la causa principal de la avería técnica.",
+    "acceptable_answer_pattern": null,
+    "target_vocabulary": [
+      "la obsolescencia",
+      "la avería técnica"
+    ],
+    "grading_notes": "Grade for SER usage: correct ser form, natural construction, agreement, prepositions, and target vocabulary/collocation.",
+    "correction_hint": "SER is used to indicate the cause of something or to describe an inherent characteristic."
+  }
+]
