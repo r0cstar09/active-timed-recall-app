@@ -1,0 +1,194 @@
+{
+  "output": "/home/rootadmin/active-timed-recall-app/src/data/generated/c1_verb_usage_banks.json",
+  "total_prompts": 500,
+  "duplicate_prompt_en": 0,
+  "duplicate_expected_es": 0,
+  "batch_counts": [
+    [
+      1,
+      50
+    ],
+    [
+      2,
+      50
+    ],
+    [
+      3,
+      50
+    ],
+    [
+      4,
+      50
+    ],
+    [
+      5,
+      50
+    ],
+    [
+      6,
+      50
+    ],
+    [
+      7,
+      50
+    ],
+    [
+      8,
+      50
+    ],
+    [
+      9,
+      50
+    ],
+    [
+      10,
+      50
+    ]
+  ],
+  "level_counts": [
+    [
+      "easy",
+      200
+    ],
+    [
+      "medium",
+      150
+    ],
+    [
+      "past",
+      75
+    ],
+    [
+      "advanced_intro",
+      75
+    ]
+  ],
+  "tense_counts": [
+    [
+      "Present",
+      350
+    ],
+    [
+      "Preterite",
+      40
+    ],
+    [
+      "Present Subjunctive",
+      28
+    ],
+    [
+      "Imperfect",
+      24
+    ],
+    [
+      "Present Perfect",
+      18
+    ],
+    [
+      "Imperfect Subjunctive",
+      14
+    ],
+    [
+      "Future",
+      13
+    ],
+    [
+      "Conditional",
+      13
+    ]
+  ],
+  "spanish_word_count_avg": 5.9,
+  "spanish_word_count_max": 10,
+  "first_15": [
+    {
+      "id": "ser-usage-001",
+      "prompt_en": "Say: I am a student.",
+      "expected_es": "Soy estudiante.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-002",
+      "prompt_en": "Say: I am Tony.",
+      "expected_es": "Soy Tony.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-003",
+      "prompt_en": "Say: You are a teacher.",
+      "expected_es": "Eres maestro.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-004",
+      "prompt_en": "Say: Ana is a doctor.",
+      "expected_es": "Ana es doctora.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-005",
+      "prompt_en": "Say: Ana is a teacher.",
+      "expected_es": "Ana es maestra.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-006",
+      "prompt_en": "Say: Ana is a nurse.",
+      "expected_es": "Ana es enfermera.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-007",
+      "prompt_en": "Say: Luis is a doctor.",
+      "expected_es": "Luis es doctor.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-008",
+      "prompt_en": "Say: Ana is a mechanic.",
+      "expected_es": "Ana es mecánica.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-009",
+      "prompt_en": "Say: Luis is a teacher.",
+      "expected_es": "Luis es maestro.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-010",
+      "prompt_en": "Say: Ana is a driver.",
+      "expected_es": "Ana es conductora.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-011",
+      "prompt_en": "Say: Luis is a nurse.",
+      "expected_es": "Luis es enfermero.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-012",
+      "prompt_en": "Say: Marta is a doctor.",
+      "expected_es": "Marta es doctora.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-013",
+      "prompt_en": "Say: Ana is a cook.",
+      "expected_es": "Ana es cocinera.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-014",
+      "prompt_en": "Say: Luis is a mechanic.",
+      "expected_es": "Luis es mecánico.",
+      "level": "easy"
+    },
+    {
+      "id": "ser-usage-015",
+      "prompt_en": "Say: Marta is a teacher.",
+      "expected_es": "Marta es maestra.",
+      "level": "easy"
+    }
+  ]
+}
