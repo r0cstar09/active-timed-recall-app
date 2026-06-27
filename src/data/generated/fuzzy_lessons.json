@@ -35100,148 +35100,239 @@
     {
       "id": "lesson-11",
       "number": 11,
-      "title": "Spanish Bridge 11: Connector logic for adult sentences",
-      "difficulty": "B1-B2",
-      "patternId": "BRIDGE_CONNECTOR_LOGIC_11",
+      "title": "Spanish Daily Lesson 11: Demonstrative Adjectives and Pronouns Drill",
+      "difficulty": "A1-A2",
+      "patternId": "DEMONSTRATIVES_ADJECTIVES_PRONOUNS_11",
       "tags": [
         "spanish",
-        "writing",
-        "b2-c1-bridge",
-        "opinion-limits",
-        "paragraph-control"
+        "daily-lesson",
+        "writing-drills",
+        "demonstratives",
+        "demonstrative-adjectives",
+        "demonstrative-pronouns",
+        "este-ese-aquel",
+        "esto-eso",
+        "time-references",
+        "adult-learners"
       ],
       "sourceFiles": [
-        "generated/c1-writing-curriculum-v2"
+        "custom/lesson-11-demonstrative-adjectives-pronouns-drill"
       ],
-      "targetPattern": "Opinion with limits and conditions",
-      "englishTrap": "C1-ish writing avoids absolute claims unless they are defended.",
-      "spanishLogic": "State a view, then qualify it with scope, exception, or condition.",
+      "targetPattern": "Use demonstrative adjectives and pronouns (este/ese/aquel + gender/number forms, plus esto/eso) to point to specific objects, unknown concepts, and time references naturally.",
+      "englishTrap": "English lets this/that/these/those stay almost unchanged; Spanish forces distance plus gender plus number, and uses esto/eso only for unknown things or whole ideas.",
+      "spanishLogic": "With a noun, use agreeing demonstrative adjectives: este libro, esa mesa, aquellos edificios. Without a noun, use demonstrative pronouns that still remember the hidden noun: quiero este, prefiero esa. For unknown things or ideas, use esto/eso. For time references, use este/ese/aquel naturally: esta semana, ese día, en aquel entonces.",
       "formula": [
-        "Notice the grammatical choice and name the function",
-        "Rewrite literal English into natural Spanish",
-        "Diagnose one grammar issue and one style/register issue",
-        "Build a paragraph with topic → support → nuance → recommendation",
-        "Transfer meaning from English without copying English syntax"
+        "Adjective near speaker: este/esta/estos/estas + noun",
+        "Adjective normal that/near listener: ese/esa/esos/esas + noun",
+        "Adjective far away/distant: aquel/aquella/aquellos/aquellas + noun",
+        "Pronoun with known hidden noun: este/esta/estos/estas, ese/esa/esos/esas, aquel/aquella/aquellos/aquellas",
+        "Neuter for unknown thing or whole idea: esto / eso",
+        "Time references: esta semana, ese día, en ese momento, en aquel entonces"
       ],
       "naturalExamples": [
-        "No diría que sea la única solución, pero sí una medida razonable.",
-        "Además, conviene matizar la idea.",
-        "No se trata solo de ser correcto, sino de sonar natural.",
-        "La decisión depende del contexto y de la información disponible."
+        "Quiero esta mesa.",
+        "No quiero ese libro; quiero este.",
+        "Aquellos edificios están lejos.",
+        "¿Qué es esto?",
+        "No entiendo eso.",
+        "Esta semana trabajo mucho.",
+        "En aquel entonces, vivía en otra ciudad."
       ],
       "sections": {
         "controlled": {
-          "title": "Concept & noticing",
-          "instructions": "Train the grammar decision before writing long paragraphs.",
+          "title": "Adjective forms: demonstrative + noun",
+          "instructions": "Fill the blank with the correct demonstrative adjective. Every answer must agree with the noun in gender and number.",
           "prompts": [
-            "[111 · Noticing] In a fitness context, write 2 Spanish sentences about an inconsistent habit. Sentence 1 should be plain and grammatical. Sentence 2 should explicitly use: Opinion with limits and conditions. Then add one sentence explaining why the mood/tense/connector choice is correct.",
-            "[111 · Noticing] In a shopping context, write 2 Spanish sentences about a defective product. Sentence 1 should be plain and grammatical. Sentence 2 should explicitly use: Opinion with limits and conditions. Then add one sentence explaining why the mood/tense/connector choice is correct.",
-            "[111 · Noticing] In a immigration context, write 2 Spanish sentences about a missing document. Sentence 1 should be plain and grammatical. Sentence 2 should explicitly use: Opinion with limits and conditions. Then add one sentence explaining why the mood/tense/connector choice is correct.",
-            "[111 · Noticing] In a banking context, write 2 Spanish sentences about an unexpected fee. Sentence 1 should be plain and grammatical. Sentence 2 should explicitly use: Opinion with limits and conditions. Then add one sentence explaining why the mood/tense/connector choice is correct.",
-            "[111 · Noticing] In a restaurant context, write 2 Spanish sentences about a poor service experience. Sentence 1 should be plain and grammatical. Sentence 2 should explicitly use: Opinion with limits and conditions. Then add one sentence explaining why the mood/tense/connector choice is correct.",
-            "[111 · Noticing] In a transport context, write 2 Spanish sentences about an unreliable route. Sentence 1 should be plain and grammatical. Sentence 2 should explicitly use: Opinion with limits and conditions. Then add one sentence explaining why the mood/tense/connector choice is correct."
+            "this book = ___ libro",
+            "this table = ___ mesa",
+            "these books = ___ libros",
+            "these tables = ___ mesas",
+            "that car = ___ carro",
+            "that house = ___ casa",
+            "those cars = ___ carros",
+            "those houses = ___ casas",
+            "that building over there = ___ edificio",
+            "that mountain over there = ___ montaña",
+            "those buildings over there = ___ edificios",
+            "those mountains over there = ___ montañas",
+            "this week = ___ semana",
+            "that day = ___ día",
+            "that moment = ___ momento",
+            "back then / in that distant time = en ___ entonces"
           ],
           "answers": [
-            "Model path: No diría que sea la única solución, pero sí una medida razonable. Then explain the speaker stance/function, not just the translation. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Model path: No diría que sea la única solución, pero sí una medida razonable. Then explain the speaker stance/function, not just the translation. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Model path: No diría que sea la única solución, pero sí una medida razonable. Then explain the speaker stance/function, not just the translation. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Model path: No diría que sea la única solución, pero sí una medida razonable. Then explain the speaker stance/function, not just the translation. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Model path: No diría que sea la única solución, pero sí una medida razonable. Then explain the speaker stance/function, not just the translation. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Model path: No diría que sea la única solución, pero sí una medida razonable. Then explain the speaker stance/function, not just the translation. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax."
+            "este libro",
+            "esta mesa",
+            "estos libros",
+            "estas mesas",
+            "ese carro",
+            "esa casa",
+            "esos carros",
+            "esas casas",
+            "aquel edificio",
+            "aquella montaña",
+            "aquellos edificios",
+            "aquellas montañas",
+            "esta semana",
+            "ese día",
+            "ese momento",
+            "en aquel entonces"
           ]
         },
         "mutation": {
-          "title": "Rewrite & upgrade",
-          "instructions": "Turn weak literal drafts into adult Spanish.",
+          "title": "Pronoun forms: this one / that one / those ones",
+          "instructions": "Use the demonstrative pronoun only. The hidden noun in parentheses controls gender and number.",
           "prompts": [
-            "[111 · Rewrite] Upgrade this literal draft into natural adult Spanish for a fitness situation: 'I think that an inconsistent habit is a thing that is important because people need it and it is good.' Use Opinion with limits and conditions and one connector such as 'además'.",
-            "[111 · Rewrite] Upgrade this literal draft into natural adult Spanish for a shopping situation: 'I think that a defective product is a thing that is important because people need it and it is good.' Use Opinion with limits and conditions and one connector such as 'además'.",
-            "[111 · Rewrite] Upgrade this literal draft into natural adult Spanish for a immigration situation: 'I think that a missing document is a thing that is important because people need it and it is good.' Use Opinion with limits and conditions and one connector such as 'además'.",
-            "[111 · Rewrite] Upgrade this literal draft into natural adult Spanish for a banking situation: 'I think that an unexpected fee is a thing that is important because people need it and it is good.' Use Opinion with limits and conditions and one connector such as 'además'.",
-            "[111 · Rewrite] Upgrade this literal draft into natural adult Spanish for a restaurant situation: 'I think that a poor service experience is a thing that is important because people need it and it is good.' Use Opinion with limits and conditions and one connector such as 'además'.",
-            "[111 · Rewrite] Upgrade this literal draft into natural adult Spanish for a transport situation: 'I think that an unreliable route is a thing that is important because people need it and it is good.' Use Opinion with limits and conditions and one connector such as 'además'.",
-            "[111 · Rewrite] Upgrade this literal draft into natural adult Spanish for a education situation: 'I think that a confusing assignment is a thing that is important because people need it and it is good.' Use Opinion with limits and conditions and one connector such as 'además'.",
-            "[111 · Rewrite] Upgrade this literal draft into natural adult Spanish for a security situation: 'I think that a small incident is a thing that is important because people need it and it is good.' Use Opinion with limits and conditions and one connector such as 'además'."
+            "I want this one. (el libro)",
+            "I want this one. (la mesa)",
+            "I want these ones. (los zapatos)",
+            "I want these ones. (las llaves)",
+            "I prefer that one. (el carro)",
+            "I prefer that one. (la opción)",
+            "I prefer those ones. (los planes)",
+            "I prefer those ones. (las casas)",
+            "I do not want that one over there. (el edificio)",
+            "I do not want that one over there. (la silla)",
+            "I do not want those ones over there. (los documentos)",
+            "I do not want those ones over there. (las maletas)"
           ],
           "answers": [
-            "One good direction: 'Considero que un hábito irregular es relevante, además, conviene analizarlo con más cuidado antes de decidir.' Adapt as needed. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "One good direction: 'Considero que un producto defectuoso es relevante, además, conviene analizarlo con más cuidado antes de decidir.' Adapt as needed. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "One good direction: 'Considero que un documento pendiente es relevante, además, conviene analizarlo con más cuidado antes de decidir.' Adapt as needed. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "One good direction: 'Considero que un cargo inesperado es relevante, además, conviene analizarlo con más cuidado antes de decidir.' Adapt as needed. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "One good direction: 'Considero que una mala experiencia de servicio es relevante, además, conviene analizarlo con más cuidado antes de decidir.' Adapt as needed. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "One good direction: 'Considero que una ruta poco fiable es relevante, además, conviene analizarlo con más cuidado antes de decidir.' Adapt as needed. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "One good direction: 'Considero que una tarea confusa es relevante, además, conviene analizarlo con más cuidado antes de decidir.' Adapt as needed. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "One good direction: 'Considero que un incidente menor es relevante, además, conviene analizarlo con más cuidado antes de decidir.' Adapt as needed. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax."
+            "Quiero este.",
+            "Quiero esta.",
+            "Quiero estos.",
+            "Quiero estas.",
+            "Prefiero ese.",
+            "Prefiero esa.",
+            "Prefiero esos.",
+            "Prefiero esas.",
+            "No quiero aquel.",
+            "No quiero aquella.",
+            "No quiero aquellos.",
+            "No quiero aquellas."
           ]
         },
         "contrast": {
-          "title": "Error diagnosis",
-          "instructions": "Find the problem, explain it briefly, then rewrite.",
+          "title": "Esto/eso vs este/ese",
+          "instructions": "Choose the natural Spanish form. If there is a noun or hidden noun, do not use esto/eso. If the thing is unknown or it is a whole idea, use esto/eso.",
           "prompts": [
-            "[111 · Diagnose] In this fitness example, identify at least two problems in the weak sentence and rewrite it. Weak: Creo que un hábito irregular es importante pero sin embargo la gente necesita hacer una decisión rápido.",
-            "[111 · Diagnose] In this shopping example, identify at least two problems in the weak sentence and rewrite it. Weak: Creo que un producto defectuoso es importante pero sin embargo la gente necesita hacer una decisión rápido.",
-            "[111 · Diagnose] In this immigration example, identify at least two problems in the weak sentence and rewrite it. Weak: Creo que un documento pendiente es importante pero sin embargo la gente necesita hacer una decisión rápido.",
-            "[111 · Diagnose] In this banking example, identify at least two problems in the weak sentence and rewrite it. Weak: Creo que un cargo inesperado es importante pero sin embargo la gente necesita hacer una decisión rápido.",
-            "[111 · Diagnose] In this restaurant example, identify at least two problems in the weak sentence and rewrite it. Weak: Creo que una mala experiencia de servicio es importante pero sin embargo la gente necesita hacer una decisión rápido.",
-            "[111 · Diagnose] In this transport example, identify at least two problems in the weak sentence and rewrite it. Weak: Creo que una ruta poco fiable es importante pero sin embargo la gente necesita hacer una decisión rápido."
+            "Unknown object: What is this?",
+            "Unknown object: What is that?",
+            "Whole idea: I do not understand this.",
+            "Whole idea: I do not understand that.",
+            "Known masculine object: I do not understand this one. (el mensaje)",
+            "Known feminine object: I do not understand this one. (la explicación)",
+            "With noun: this message",
+            "With noun: that explanation",
+            "Whole topic: I want to talk about this.",
+            "Whole topic: I do not want to talk about that.",
+            "Known plural masculine: I want those ones. (los documentos)",
+            "Known plural feminine: I want those ones. (las llaves)"
           ],
           "answers": [
-            "Better: Creo que un hábito irregular es importante; sin embargo, conviene tomar la decisión con calma. Problems: connector stacking/punctuation, Englishy 'hacer una decisión', vague logic, and register. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Better: Creo que un producto defectuoso es importante; sin embargo, conviene tomar la decisión con calma. Problems: connector stacking/punctuation, Englishy 'hacer una decisión', vague logic, and register. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Better: Creo que un documento pendiente es importante; sin embargo, conviene tomar la decisión con calma. Problems: connector stacking/punctuation, Englishy 'hacer una decisión', vague logic, and register. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Better: Creo que un cargo inesperado es importante; sin embargo, conviene tomar la decisión con calma. Problems: connector stacking/punctuation, Englishy 'hacer una decisión', vague logic, and register. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Better: Creo que una mala experiencia de servicio es importante; sin embargo, conviene tomar la decisión con calma. Problems: connector stacking/punctuation, Englishy 'hacer una decisión', vague logic, and register. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Better: Creo que una ruta poco fiable es importante; sin embargo, conviene tomar la decisión con calma. Problems: connector stacking/punctuation, Englishy 'hacer una decisión', vague logic, and register. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax."
+            "¿Qué es esto?",
+            "¿Qué es eso?",
+            "No entiendo esto.",
+            "No entiendo eso.",
+            "No entiendo este.",
+            "No entiendo esta.",
+            "este mensaje",
+            "esa explicación",
+            "Quiero hablar de esto.",
+            "No quiero hablar de eso.",
+            "Quiero esos.",
+            "Quiero esas."
           ]
         },
         "writing": {
-          "title": "Paragraph task",
-          "instructions": "Open-ended paragraph writing. The LLM grader should judge clarity, grammar, register, and C1 trajectory.",
+          "title": "Tiny natural sentences",
+          "instructions": "Write short, easy Spanish sentences. The only goal is to use the demonstrative adjective or pronoun correctly.",
           "prompts": [
-            "[111 · Paragraph] Write 90-120 words in Spanish about an unexpected fee in a banking situation. Include: topic sentence, one concrete detail, Opinion with limits and conditions, one concession or limitation, and a final practical recommendation. Avoid translating English sentence order.",
-            "[111 · Paragraph] Write 90-120 words in Spanish about a poor service experience in a restaurant situation. Include: topic sentence, one concrete detail, Opinion with limits and conditions, one concession or limitation, and a final practical recommendation. Avoid translating English sentence order.",
-            "[111 · Paragraph] Write 90-120 words in Spanish about an unreliable route in a transport situation. Include: topic sentence, one concrete detail, Opinion with limits and conditions, one concession or limitation, and a final practical recommendation. Avoid translating English sentence order.",
-            "[111 · Paragraph] Write 90-120 words in Spanish about a confusing assignment in a education situation. Include: topic sentence, one concrete detail, Opinion with limits and conditions, one concession or limitation, and a final practical recommendation. Avoid translating English sentence order.",
-            "[111 · Paragraph] Write 90-120 words in Spanish about a small incident in a security situation. Include: topic sentence, one concrete detail, Opinion with limits and conditions, one concession or limitation, and a final practical recommendation. Avoid translating English sentence order."
-          ],
-          "answers": []
-        },
-        "reverse": {
-          "title": "Translation & transfer",
-          "instructions": "Translate meaning naturally without copying English structure.",
-          "prompts": [
-            "[111 · Transfer] Translate into natural Spanish, not word-for-word: In the security situation, a small incident may seem simple, but it will not be useful unless an analyst explains the limits clearly.",
-            "[111 · Transfer] Translate into natural Spanish, not word-for-word: In the planning situation, a risky plan may seem simple, but it will not be useful unless a coordinator explains the limits clearly.",
-            "[111 · Transfer] Translate into natural Spanish, not word-for-word: In the work situation, a missed deadline may seem simple, but it will not be useful unless a manager explains the limits clearly.",
-            "[111 · Transfer] Translate into natural Spanish, not word-for-word: In the family situation, a difficult decision may seem simple, but it will not be useful unless a relative explains the limits clearly.",
-            "[111 · Transfer] Translate into natural Spanish, not word-for-word: In the travel situation, a delayed trip may seem simple, but it will not be useful unless a passenger explains the limits clearly.",
-            "[111 · Transfer] Translate into natural Spanish, not word-for-word: In the health situation, a change in routine may seem simple, but it will not be useful unless a doctor explains the limits clearly."
+            "This apartment is better.",
+            "That room is small.",
+            "Those buildings over there are expensive.",
+            "This job is important.",
+            "That week was difficult.",
+            "This week is better.",
+            "At that moment, I did not understand.",
+            "Back then, everything was different.",
+            "I want this table, not that one. (la mesa)",
+            "I prefer that plan, not this one. (el plan)",
+            "I do not understand this.",
+            "I want to talk about that."
           ],
           "answers": [
-            "Possible answer: En la situación de security, un incidente menor puede parecer sencillo, pero no será útil a menos que una analista explique los límites con claridad. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Possible answer: En la situación de planning, un plan arriesgado puede parecer sencillo, pero no será útil a menos que un coordinador explique los límites con claridad. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Possible answer: En la situación de work, un plazo incumplido puede parecer sencillo, pero no será útil a menos que un jefe explique los límites con claridad. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Possible answer: En la situación de family, una decisión difícil puede parecer sencillo, pero no será útil a menos que un familiar explique los límites con claridad. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Possible answer: En la situación de travel, un viaje retrasado puede parecer sencillo, pero no será útil a menos que un pasajero explique los límites con claridad. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax.",
-            "Possible answer: En la situación de health, un cambio de rutina puede parecer sencillo, pero no será útil a menos que una médica explique los límites con claridad. Rubric: natural Spanish, target structure used correctly, clear logic, appropriate register, and no literal English syntax."
+            "Este apartamento es mejor.",
+            "Esa habitación es pequeña.",
+            "Aquellos edificios son caros.",
+            "Este trabajo es importante.",
+            "Esa semana fue difícil.",
+            "Esta semana es mejor.",
+            "En ese momento, no entendí.",
+            "En aquel entonces, todo era diferente.",
+            "Quiero esta mesa, no esa.",
+            "Prefiero ese plan, no este.",
+            "No entiendo esto.",
+            "Quiero hablar de eso."
+          ]
+        },
+        "reverse": {
+          "title": "Mixed automatic recall",
+          "instructions": "Translate quickly. Keep it simple. Track: noun present, hidden noun, unknown concept, or time reference.",
+          "prompts": [
+            "This one works. (el teléfono)",
+            "This one works. (la computadora)",
+            "Those are mine. (los zapatos)",
+            "Those are mine. (las llaves)",
+            "What does this mean? unknown idea",
+            "That does not matter. idea",
+            "This month is busy.",
+            "That year was hard.",
+            "Back then, I worked downtown.",
+            "I remember that day.",
+            "These are the ones I need. (los documentos)",
+            "These are the ones I need. (las opciones)"
+          ],
+          "answers": [
+            "Este funciona.",
+            "Esta funciona.",
+            "Esos son míos.",
+            "Esas son mías.",
+            "¿Qué significa esto?",
+            "Eso no importa.",
+            "Este mes está ocupado.",
+            "Ese año fue difícil.",
+            "En aquel entonces, trabajaba en el centro.",
+            "Recuerdo ese día.",
+            "Estos son los que necesito.",
+            "Estas son las que necesito."
           ]
         }
       },
       "commonErrors": [
         {
-          "mistake": "Choosing subjunctive/indicative by English translation only.",
-          "why_it_happens": "English hides speaker stance.",
-          "correct_spanish": "Choose by function: fact, doubt, purpose, future condition, evaluation, or non-specific reference."
+          "mistake": "Using esto/eso before nouns.",
+          "why_it_happens": "English uses this/that before nouns and for ideas, but Spanish splits them.",
+          "correct_spanish": "Use este libro / esta mesa, not esto libro / eso mesa."
         },
         {
-          "mistake": "Overusing pero/porque/y.",
-          "why_it_happens": "The logic is left implicit.",
-          "correct_spanish": "Use connectors that match the relationship: sin embargo, por lo tanto, de hecho, no obstante."
+          "mistake": "Forgetting gender and number with demonstrative adjectives.",
+          "why_it_happens": "English demonstratives do not mark masculine/feminine.",
+          "correct_spanish": "este libro, esta casa, estos días, estas semanas."
         },
         {
-          "mistake": "Writing correct but childish sentences.",
-          "why_it_happens": "The sentence has grammar but no register control.",
-          "correct_spanish": "Add precision, soften overclaims, and connect ideas."
+          "mistake": "Forgetting the hidden noun with pronouns.",
+          "why_it_happens": "The noun disappears in English: this one / that one.",
+          "correct_spanish": "el libro → este; la mesa → esta; los zapatos → estos; las llaves → estas."
+        },
+        {
+          "mistake": "Using aquel constantly for normal 'that'.",
+          "why_it_happens": "English 'that' does not show distance clearly.",
+          "correct_spanish": "Use ese/esa for normal that; reserve aquel/aquella for over there, distant memory, or 'back then'."
+        },
+        {
+          "mistake": "Literal time references.",
+          "why_it_happens": "English phrases like 'at that time' are translated word by word.",
+          "correct_spanish": "Use natural chunks: esta semana, ese día, en ese momento, en aquel entonces."
         }
       ]
     },
