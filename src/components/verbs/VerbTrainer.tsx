@@ -96,7 +96,7 @@ export default function VerbTrainer() {
   const hiddenPassedCount = rows.length - visibleRows.length;
   const currentProgress = verb ? verbProgress[verb.verb] : undefined;
   const isIrregular = (verb?.category ?? "").toLowerCase().includes("irregular");
-  const requiredPasses = currentProgress?.required_full_passes ?? (isIrregular ? 7 : 2);
+  const requiredPasses = currentProgress?.required_full_passes ?? (isIrregular ? 7 : 1);
   const fullPassCount = currentProgress?.full_pass_count ?? 0;
   const verbComplete = Boolean(currentProgress?.completed);
 
@@ -200,7 +200,14 @@ export default function VerbTrainer() {
     const submitted = visibleRows
       .map(({ row, idx }) => ({ row, key: rowKey(row, idx), answer: answers[rowKey(row, idx)] ?? "" }))
       .filter((item) => item.answer.trim());
-    if (!submitted.length) return;
+    if (!submitted.length) {
+      setError(
+        visibleRows.length === 0
+          ? "Nothing was submitted because every prompt for this verb is already sealed as passed. If you want to redo it, use reset first."
+          : "Nothing was submitted because no open prompt has an answer typed."
+      );
+      return;
+    }
     setGrading(true);
     setError(null);
     setGrade(null);
@@ -219,6 +226,9 @@ export default function VerbTrainer() {
           user_answer: answer,
         })),
       });
+      if ((response.saved_attempt_count ?? response.items?.length ?? 0) !== submitted.length) {
+        throw new Error(`Backend saved ${response.saved_attempt_count ?? 0}/${submitted.length} submitted attempts. Try again; if this repeats, stop and tell Hermes.`);
+      }
       setGrade(response);
       setPromptProgress((prev) => {
         const next = { ...prev };
@@ -264,7 +274,14 @@ export default function VerbTrainer() {
     const submitted = usageDrills
       .map((drill) => ({ drill, answer: usageAnswers[drill.id] ?? "" }))
       .filter((item) => item.answer.trim());
-    if (!submitted.length) return;
+    if (!submitted.length) {
+      setError(
+        usageDrills.length === 0
+          ? "Nothing was submitted because there are no usage prompts loaded for this verb/batch."
+          : "Nothing was submitted because no usage prompt has an answer typed."
+      );
+      return;
+    }
     setUsageGrading(true);
     setError(null);
     setUsageGrade(null);
@@ -295,6 +312,9 @@ export default function VerbTrainer() {
           target_vocabulary: drill.target_vocabulary,
         })),
       });
+      if ((response.saved_attempt_count ?? response.items?.length ?? 0) !== submitted.length) {
+        throw new Error(`Backend saved ${response.saved_attempt_count ?? 0}/${submitted.length} submitted usage attempts. Try again; if this repeats, stop and tell Hermes.`);
+      }
       setUsageGrade(response);
       setUsageAnswers((prev) => {
         const next = { ...prev };

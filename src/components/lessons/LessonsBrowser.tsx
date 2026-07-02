@@ -173,7 +173,14 @@ export default function LessonsBrowser() {
       .map((prompt, idx) => ({ prompt, idx, answer: responses[idx] ?? "" }))
       .filter((item) => !passedPromptKeys.has(promptKey(sectionName, item.prompt)))
       .filter((item) => item.answer.trim());
-    if (!submitted.length) return;
+    if (!submitted.length) {
+      setError(
+        visiblePrompts.length === 0
+          ? "Nothing was submitted because every prompt in this section is already sealed as passed. If you want to redo it, reset the module first."
+          : "Nothing was submitted because no open prompt has an answer typed."
+      );
+      return;
+    }
     setGrading(true);
     setError(null);
     setGrade(null);
@@ -209,6 +216,9 @@ export default function LessonsBrowser() {
           };
         }),
       });
+      if ((response.saved_attempt_count ?? response.items?.length ?? 0) !== submitted.length) {
+        throw new Error(`Backend saved ${response.saved_attempt_count ?? 0}/${submitted.length} submitted lesson attempts. Try again; if this repeats, stop and tell Hermes.`);
+      }
       setGrade(response);
       const passed = (response.items ?? []).filter((item) => item.result === "pass").length;
       const partial = (response.items ?? []).filter((item) => item.result === "partial").length;

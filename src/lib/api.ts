@@ -320,6 +320,8 @@ export type StudyGradeResponse = {
   exercise_type: string;
   model: string;
   items: StudyGradeResultItem[];
+  saved_attempt_count?: number;
+  attempt_ids?: number[];
   progress?: StudyProgress | null;
   pattern_unlocks?: PatternCatalogEntry[];
   summary: string;
