@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type LessonPromptProgress, type StudyGradeResponse } from "../../lib/api";
 
 type LessonSection = {
@@ -65,6 +65,7 @@ export default function LessonsBrowser() {
   const [grading, setGrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [grade, setGrade] = useState<StudyGradeResponse | null>(null);
+  const autoSubmitSignature = useRef<string>("");
   const [lessonProgress, setLessonProgress] = useState<Record<string, { total_prompts: number; passed_prompts: number; completed: number }>>({});
   const [promptProgress, setPromptProgress] = useState<Record<string, LessonPromptProgress>>({});
   const [promoting, setPromoting] = useState<Record<number, string>>({});
@@ -321,6 +322,23 @@ export default function LessonsBrowser() {
     return map;
   }, [grade]);
 
+  const filledSignature = useMemo(
+    () => visiblePrompts.map(({ idx }) => `${idx}:${responses[idx] ?? ""}`).join("||"),
+    [visiblePrompts, responses],
+  );
+
+  useEffect(() => {
+    if (!lesson || !section || grading || error) return;
+    if (visiblePrompts.length === 0 || filled !== visiblePrompts.length) return;
+    const signature = `${lesson.id}:${sectionName}:${filledSignature}`;
+    if (!filledSignature || autoSubmitSignature.current === signature) return;
+    autoSubmitSignature.current = signature;
+    const timer = window.setTimeout(() => {
+      submit().catch((err) => setError(err instanceof Error ? err.message : String(err)));
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [lesson?.id, sectionName, filled, visiblePrompts.length, filledSignature, grading, error]);
+
   if (catalogLoading) {
     return (
       <div className="card notebook-card stack center">
@@ -417,7 +435,7 @@ export default function LessonsBrowser() {
             </div>
             <div className="row between small faint">
               <span>{filled}/{visiblePrompts.length} open responses filled</span>
-              <span>{hiddenPassedCount ? `${hiddenPassedCount} correct answers banked` : "LLM graded by backend"}</span>
+              <span>{hiddenPassedCount ? `${hiddenPassedCount} correct answers banked` : "Backend graded and synced across devices"}</span>
             </div>
             {celebration && (
               <div className={celebration.failed === 0 && celebration.partial === 0 ? "lesson-win-banner all-clear" : "lesson-win-banner"}>
@@ -483,7 +501,7 @@ export default function LessonsBrowser() {
               </div>
             )}
             <button className="btn btn-primary btn-block" type="button" disabled={grading || filled === 0 || visiblePrompts.length === 0} onClick={submit}>
-              {grading ? "Grading…" : "Check answers and seal correct prompts"}
+              {grading ? "Grading…" : filled === visiblePrompts.length && visiblePrompts.length > 0 ? "Auto-saving filled answers…" : "Check answers and seal correct prompts"}
             </button>
             <button className="btn btn-block" type="button" onClick={() => setShowAnswers((v) => !v)}>
               {showAnswers ? "Hide answers" : "Reveal answer key"}

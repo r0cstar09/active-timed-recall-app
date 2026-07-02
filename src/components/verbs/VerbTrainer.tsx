@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type StudyGradeResponse, type VerbCatalog, type VerbCatalogAssignment, type VerbProgress, type VerbPromptProgress, type LessonPromptProgress, type VerbUsagePrompt } from "../../lib/api";
 
 type Assignment = VerbCatalogAssignment;
@@ -39,6 +39,8 @@ export default function VerbTrainer() {
   const [grading, setGrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [grade, setGrade] = useState<StudyGradeResponse | null>(null);
+  const autoSubmitSignature = useRef<string>("");
+  const autoSubmitUsageSignature = useRef<string>("");
   const [usageAnswers, setUsageAnswers] = useState<Record<string, string>>({});
   const [usageGrade, setUsageGrade] = useState<StudyGradeResponse | null>(null);
   const [usageGrading, setUsageGrading] = useState(false);
@@ -395,6 +397,39 @@ export default function VerbTrainer() {
     }
     return map;
   }, [usageGrade]);
+
+  const filledSignature = useMemo(
+    () => visibleRows.map(({ row, idx }) => `${rowKey(row, idx)}:${answers[rowKey(row, idx)] ?? ""}`).join("||"),
+    [visibleRows, answers],
+  );
+  const filledUsageSignature = useMemo(
+    () => usageDrills.map((drill) => `${drill.id}:${usageAnswers[drill.id] ?? ""}`).join("||"),
+    [usageDrills, usageAnswers],
+  );
+
+  useEffect(() => {
+    if (!verb || grading || error) return;
+    if (visibleRows.length === 0 || filled !== visibleRows.length) return;
+    const signature = `${verb.verb}:conjugation:${filledSignature}`;
+    if (!filledSignature || autoSubmitSignature.current === signature) return;
+    autoSubmitSignature.current = signature;
+    const timer = window.setTimeout(() => {
+      submit().catch((err) => setError(err instanceof Error ? err.message : String(err)));
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [verb?.verb, filled, visibleRows.length, filledSignature, grading, error]);
+
+  useEffect(() => {
+    if (!verb || usageGrading || error) return;
+    if (usageDrills.length === 0 || filledUsage !== usageDrills.length) return;
+    const signature = `${verb.verb}:usage:${activeUsageBatch}:${filledUsageSignature}`;
+    if (!filledUsageSignature || autoSubmitUsageSignature.current === signature) return;
+    autoSubmitUsageSignature.current = signature;
+    const timer = window.setTimeout(() => {
+      submitUsage().catch((err) => setError(err instanceof Error ? err.message : String(err)));
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [verb?.verb, activeUsageBatch, filledUsage, usageDrills.length, filledUsageSignature, usageGrading, error]);
 
   async function addVerb(e: { preventDefault(): void }) {
     e.preventDefault();
