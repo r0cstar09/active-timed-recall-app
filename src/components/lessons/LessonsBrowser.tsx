@@ -36,6 +36,34 @@ const sectionLabels: Record<string, string> = {
   reverse: "Reverse expression",
 };
 
+function draftKey(lessonId: string, section: string) {
+  return `spanish-lesson-draft:${lessonId}:${section}`;
+}
+
+function readDraft(lessonId: string, section: string): Record<number, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(draftKey(lessonId, section));
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.entries(parsed)
+        .map(([key, value]) => [Number(key), typeof value === "string" ? value : ""] as const)
+        .filter(([key, value]) => Number.isFinite(key) && value.trim()),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function writeDraft(lessonId: string, section: string, responses: Record<number, string>) {
+  if (typeof window === "undefined") return;
+  const trimmed = Object.fromEntries(Object.entries(responses).filter(([, value]) => value.trim()));
+  const key = draftKey(lessonId, section);
+  if (Object.keys(trimmed).length) window.localStorage.setItem(key, JSON.stringify(trimmed));
+  else window.localStorage.removeItem(key);
+}
+
 function resultClass(result?: string) {
   if (result === "pass") return "alert alert-ok";
   if (result === "partial") return "alert";
@@ -149,9 +177,9 @@ export default function LessonsBrowser() {
     refreshPromptProgress(lesson.id).catch(() => undefined);
   }, [lesson?.id]);
 
-  function resetWork() {
+  function resetWork(options: { clearResponses?: boolean } = {}) {
     setShowAnswers(false);
-    setResponses({});
+    if (options.clearResponses ?? true) setResponses({});
     setGrade(null);
     setCelebration(null);
     setError(null);
@@ -159,11 +187,23 @@ export default function LessonsBrowser() {
 
   function pickLesson(id: string) {
     setLessonId(id);
-    resetWork();
+    resetWork({ clearResponses: false });
   }
 
+  useEffect(() => {
+    if (!lesson?.id || !sectionName) return;
+    setResponses(readDraft(lesson.id, sectionName));
+    setGrade(null);
+    setCelebration(null);
+    setError(null);
+  }, [lesson?.id, sectionName]);
+
   function setResponse(idx: number, value: string) {
-    setResponses((prev) => ({ ...prev, [idx]: value }));
+    setResponses((prev) => {
+      const next = { ...prev, [idx]: value };
+      if (lesson?.id) writeDraft(lesson.id, sectionName, next);
+      return next;
+    });
     setGrade(null);
     setError(null);
   }
@@ -249,6 +289,7 @@ export default function LessonsBrowser() {
         for (const item of response.items ?? []) {
           if (item.result === "pass" && item.client_id != null) delete next[Number(item.client_id)];
         }
+        writeDraft(lesson.id, sectionName, next);
         return next;
       });
       if (response.progress?.lesson_id) {
@@ -281,6 +322,9 @@ export default function LessonsBrowser() {
         }
         return next;
       });
+      if (typeof window !== "undefined") {
+        for (const name of sectionOrder) window.localStorage.removeItem(draftKey(lesson.id, name));
+      }
       resetWork();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -314,6 +358,24 @@ export default function LessonsBrowser() {
   const filled = visiblePrompts.filter(({ idx }) => responses[idx]?.trim()).length;
   const sectionTotal = section?.prompts?.length ?? 0;
   const sectionPassedPct = sectionTotal ? Math.round((hiddenPassedCount / sectionTotal) * 100) : 0;
+  const sectionStats = useMemo(
+    () => sectionOrder
+      .filter((name) => lesson?.sections?.[name]?.prompts?.length)
+      .map((name) => {
+        const prompts = lesson?.sections?.[name]?.prompts ?? [];
+        const passed = prompts.filter((prompt) => passedPromptKeys.has(promptKey(name, prompt))).length;
+        return {
+          name,
+          label: lesson?.sections?.[name]?.title ?? sectionLabels[name],
+          total: prompts.length,
+          passed,
+          remaining: prompts.length - passed,
+        };
+      }),
+    [lesson, passedPromptKeys],
+  );
+  const remainingLessonPrompts = Math.max(0, progressTotal - (currentProgress?.passed_prompts ?? 0));
+  const nextIncompleteSection = sectionStats.find((s) => s.remaining > 0)?.name;
   const gradeByIndex = useMemo(() => {
     const map = new Map<number, NonNullable<StudyGradeResponse["items"]>[number]>();
     for (const item of grade?.items ?? []) {
@@ -378,12 +440,18 @@ export default function LessonsBrowser() {
             <div className={lessonComplete ? "alert alert-ok" : "alert"}>
               <div className="row between wrap">
                 <span><strong>Module progress:</strong> {currentProgress?.passed_prompts ?? 0}/{progressTotal || 0} prompts passed</span>
-                <span>{lessonComplete ? "Complete" : "Incomplete"}</span>
+                <span>{lessonComplete ? "Complete" : `${remainingLessonPrompts} left`}</span>
               </div>
               <button className="btn btn-small" type="button" disabled={resetting} onClick={resetModuleProgress}>
                 {resetting ? "Resetting…" : "Mark incomplete / reset module"}
               </button>
             </div>
+            {!lessonComplete && sectionStats.length > 1 && (
+              <div className="alert">
+                <strong>Lesson sections remaining:</strong>{" "}
+                {sectionStats.map((s) => `${s.label}: ${s.passed}/${s.total}`).join(" · ")}
+              </div>
+            )}
             {lesson.spanishLogic && <div className="alert"><strong>Spanish logic:</strong> {lesson.spanishLogic}</div>}
             {lesson.englishTrap && <div className="alert"><strong>English trap:</strong> {lesson.englishTrap}</div>}
             {!!lesson.formula?.length && (
@@ -403,7 +471,7 @@ export default function LessonsBrowser() {
           <div className="card stack lesson-drill-card">
             <label className="field">
               <span>Drill section</span>
-              <select className="input" value={sectionName} onChange={(e) => { setSectionName(e.target.value); resetWork(); }}>
+              <select className="input" value={sectionName} onChange={(e) => { setSectionName(e.target.value); resetWork({ clearResponses: false }); }}>
                 {sectionOrder
                   .filter((name) => lesson.sections?.[name]?.prompts?.length)
                   .map((name) => <option key={name} value={name}>{lesson.sections?.[name]?.title ?? sectionLabels[name]}</option>)}
@@ -430,8 +498,23 @@ export default function LessonsBrowser() {
             <div className="stack">
               {visiblePrompts.length === 0 && (
                 <div className="lesson-complete-callout">
-                  <strong>Section stamped.</strong>
-                  <span>Every prompt here is sealed. Move sections or reset the module if you want a fresh run.</span>
+                  <strong>{lessonComplete ? "Lesson stamped." : "Section stamped."}</strong>
+                  {lessonComplete ? (
+                    <span>Every prompt in this lesson is sealed and saved.</span>
+                  ) : (
+                    <>
+                      <span>This section is saved, but the lesson is not complete yet: {remainingLessonPrompts} prompt{remainingLessonPrompts === 1 ? "" : "s"} remain across the other sections.</span>
+                      {nextIncompleteSection && nextIncompleteSection !== sectionName && (
+                        <button
+                          className="btn btn-small"
+                          type="button"
+                          onClick={() => { setSectionName(nextIncompleteSection); resetWork({ clearResponses: false }); }}
+                        >
+                          Continue next unfinished section
+                        </button>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
               {visiblePrompts.map(({ prompt, idx }) => {
@@ -485,7 +568,7 @@ export default function LessonsBrowser() {
               </div>
             )}
             <button className="btn btn-primary btn-block" type="button" disabled={grading || filled === 0 || visiblePrompts.length === 0} onClick={submit}>
-              {grading ? "Grading…" : filled === visiblePrompts.length && visiblePrompts.length > 0 ? "Grade filled answers" : "Check answers and seal correct prompts"}
+              {grading ? "Grading and saving…" : filled === visiblePrompts.length && visiblePrompts.length > 0 ? "Grade and save filled answers" : "Grade, save, and seal correct prompts"}
             </button>
             <button className="btn btn-block" type="button" onClick={() => setShowAnswers((v) => !v)}>
               {showAnswers ? "Hide answers" : "Reveal answer key"}
