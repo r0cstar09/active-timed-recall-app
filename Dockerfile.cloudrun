@@ -1,0 +1,15 @@
+FROM node:20-slim AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+ARG PUBLIC_API_BASE_URL="https://tonys-alienware-1.tail85fe36.ts.net"
+ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
+RUN npm run build
+
+FROM node:20-slim AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/dist ./dist
+COPY cloudrun-static-server.mjs ./cloudrun-static-server.mjs
+CMD ["node", "cloudrun-static-server.mjs"]
