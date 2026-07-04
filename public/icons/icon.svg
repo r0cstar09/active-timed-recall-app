@@ -1,27 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Spanish recall app icon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Spanish Recall cyber app icon">
   <defs>
-    <linearGradient id="sunset" x1="16" y1="14" x2="112" y2="116" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#f6c85f"/>
-      <stop offset=".36" stop-color="#e86f3a"/>
-      <stop offset=".68" stop-color="#c13f6f"/>
-      <stop offset="1" stop-color="#1d4e89"/>
-    </linearGradient>
-    <linearGradient id="sea" x1="24" y1="104" x2="108" y2="32" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#00a0b0"/>
-      <stop offset="1" stop-color="#4f8a5b"/>
-    </linearGradient>
-    <pattern id="tile" width="26" height="26" patternUnits="userSpaceOnUse">
-      <path d="M13 2c4 6 8 9 11 11-3 2-7 6-11 11C9 19 6 15 2 13 6 11 9 8 13 2Z" fill="none" stroke="#fff8ea" stroke-width="1.25" opacity=".28"/>
-    </pattern>
+    <radialGradient id="g" cx="50%" cy="36%" r="72%"><stop offset="0" stop-color="#ffa956" stop-opacity=".42"/><stop offset=".55" stop-color="#120f1c"/><stop offset="1" stop-color="#000"/></radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="7"/></filter>
   </defs>
-  <rect width="128" height="128" rx="32" fill="#21111b"/>
-  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#sunset)"/>
-  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#tile)"/>
-  <circle cx="88" cy="34" r="18" fill="#f6c85f" opacity=".94"/>
-  <path d="M19 91c21-10 34-11 50-2 14 8 25 9 40 1v21H19Z" fill="url(#sea)" opacity=".92"/>
-  <path d="M34 74c0-22 14-38 33-38 17 0 28 12 28 27 0 21-18 32-38 28-4 8-10 14-19 17 3-8 4-14 2-20-4-3-6-8-6-14Z" fill="#fff8ea" opacity=".96"/>
-  <path d="M59 52a9 9 0 0 1 18 0v20a9 9 0 0 1-18 0V52Z" fill="#21111b"/>
-  <path d="M48 67c0 12 8 21 20 21s20-9 20-21M68 88v12M56 100h24" fill="none" stroke="#21111b" stroke-width="5.5" stroke-linecap="round"/>
-  <circle cx="31" cy="35" r="5" fill="#00a0b0"/>
-  <circle cx="103" cy="78" r="5" fill="#c13f6f"/>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <rect x="34" y="34" width="444" height="444" rx="88" fill="none" stroke="#68daff" stroke-width="4" opacity=".34"/>
+  <path d="M74 104 H160 M352 104 H438 M74 408 H160 M352 408 H438" stroke="#ffa956" stroke-width="8" stroke-linecap="round" opacity=".7"/>
+  <g opacity=".96">
+        <path d="M120 154 H392 M120 256 H392 M120 358 H392 M154 120 V392 M256 120 V392 M358 120 V392" stroke="#68daff" stroke-width="7" opacity=".42"/>
+        <circle cx="154" cy="154" r="18" fill="#c75b39"/><circle cx="256" cy="256" r="18" fill="#ffa956"/><circle cx="358" cy="358" r="18" fill="#c75b39"/>
+        <path d="M154 154 C208 98 304 98 358 154 C304 218 208 218 154 154 Z" fill="none" stroke="#ffa956" stroke-width="10" opacity=".82"/>
+        <path d="M142 358 C202 302 314 302 374 358" fill="none" stroke="#c75b39" stroke-width="11" stroke-linecap="round"/>
+        </g>
+  <circle cx="256" cy="256" r="72" fill="#120f1c" opacity=".82"/>
+  <circle cx="256" cy="256" r="72" fill="none" stroke="#ffa956" stroke-width="4" opacity=".85"/>
+  <text x="256" y="285" text-anchor="middle" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" font-size="92" font-weight="900" fill="#f6ead4" letter-spacing="-4">Ñ</text>
 </svg>

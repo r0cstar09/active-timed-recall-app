@@ -1,1 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#f6ead4"/><circle cx="32" cy="32" r="24" fill="#c75b39"/><path d="M24 16v24a8 8 0 0 0 16 0V16" fill="none" stroke="#fffaf0" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="34" r="7" fill="#e8a33d"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Spanish Recall cyber app icon">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="36%" r="72%"><stop offset="0" stop-color="#ffa956" stop-opacity=".42"/><stop offset=".55" stop-color="#120f1c"/><stop offset="1" stop-color="#000"/></radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="7"/></filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <rect x="34" y="34" width="444" height="444" rx="88" fill="none" stroke="#68daff" stroke-width="4" opacity=".34"/>
+  <path d="M74 104 H160 M352 104 H438 M74 408 H160 M352 408 H438" stroke="#ffa956" stroke-width="8" stroke-linecap="round" opacity=".7"/>
+  <g opacity=".96">
+        <path d="M120 154 H392 M120 256 H392 M120 358 H392 M154 120 V392 M256 120 V392 M358 120 V392" stroke="#68daff" stroke-width="7" opacity=".42"/>
+        <circle cx="154" cy="154" r="18" fill="#c75b39"/><circle cx="256" cy="256" r="18" fill="#ffa956"/><circle cx="358" cy="358" r="18" fill="#c75b39"/>
+        <path d="M154 154 C208 98 304 98 358 154 C304 218 208 218 154 154 Z" fill="none" stroke="#ffa956" stroke-width="10" opacity=".82"/>
+        <path d="M142 358 C202 302 314 302 374 358" fill="none" stroke="#c75b39" stroke-width="11" stroke-linecap="round"/>
+        </g>
+  <circle cx="256" cy="256" r="72" fill="#120f1c" opacity=".82"/>
+  <circle cx="256" cy="256" r="72" fill="none" stroke="#ffa956" stroke-width="4" opacity=".85"/>
+  <text x="256" y="285" text-anchor="middle" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" font-size="92" font-weight="900" fill="#f6ead4" letter-spacing="-4">Ñ</text>
+</svg>
