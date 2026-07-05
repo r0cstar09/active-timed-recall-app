@@ -174,7 +174,37 @@ p { margin: 0 0 1em; text-wrap: pretty; }
 
 .main {
   flex: 1;
-  padding: 8px 18px calc(var(--nav-h) + var(--safe-bottom) + 28px);
+  padding: 0 18px calc(var(--nav-h) + 24px + var(--safe-bottom));
+}
+
+.recall-command-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 18px 14px;
+}
+.recall-command-strip a {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'icon title' 'icon deck';
+  gap: 0 8px;
+  align-items: center;
+  padding: 12px 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 18px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--paper) 90%, white 10%), color-mix(in srgb, var(--paper-warm) 82%, var(--saffron) 18%));
+  box-shadow: var(--shadow-soft), inset 0 1px 0 color-mix(in srgb, white 58%, transparent);
+  color: var(--text);
+}
+.recall-command-strip a:hover { transform: translateY(-2px); border-color: var(--terracotta); }
+.recall-command-strip span { grid-area: icon; color: var(--terracotta); font-weight: 900; }
+.recall-command-strip strong { grid-area: title; font-size: 0.86rem; line-height: 1; }
+.recall-command-strip em { grid-area: deck; font-size: 0.62rem; color: var(--text-faint); font-style: normal; letter-spacing: 0.08em; text-transform: uppercase; }
+
+@media (max-width: 480px) {
+  .recall-command-strip { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .recall-command-strip a { min-width: 10.5rem; scroll-snap-align: start; }
 }
 
 /* Bottom tab nav ───────────────────────────────────────────────────────── */

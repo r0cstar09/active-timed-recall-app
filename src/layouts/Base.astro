@@ -75,6 +75,14 @@ const {
         </div>
       </header>
 
+      {!hideNav && (
+        <section class="recall-command-strip" aria-label="Spanish recall shortcuts">
+          <a href="/session"><span>⏱</span><strong>Session</strong><em>timed recall</em></a>
+          <a href="/misses"><span>✦</span><strong>Misses</strong><em>FSRS queue</em></a>
+          <a href="/lessons"><span>80</span><strong>Lessons</strong><em>pattern bank</em></a>
+        </section>
+      )}
+
       <main class="main">
         <slot />
       </main>
