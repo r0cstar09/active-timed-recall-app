@@ -57,6 +57,7 @@ export default function VerbTrainer() {
   const [usageBank, setUsageBank] = useState<VerbUsagePrompt[]>([]);
   const [usageLoading, setUsageLoading] = useState(false);
   const [usagePromptProgress, setUsagePromptProgress] = useState<Record<string, LessonPromptProgress>>({});
+  const [roundStartedAt, setRoundStartedAt] = useState<Record<string, string>>({});
 
   const verb = useMemo(
     () => data.verbs.find((v) => v.verb === verbName) ?? data.verbs[0],
@@ -86,10 +87,24 @@ export default function VerbTrainer() {
 
   const rows = useMemo(() => verb?.assignments ?? [], [verb]);
   const usageDrills = usageBank;
-  const passedPromptKeys = useMemo(
-    () => new Set(Object.entries(promptProgress).filter(([, p]) => p.status === "pass").map(([key]) => key)),
-    [promptProgress],
-  );
+  const passedPromptKeys = useMemo(() => {
+    const activeVerb = verb?.verb;
+    const roundStart = activeVerb ? roundStartedAt[activeVerb] : undefined;
+    const roundStartMs = roundStart ? Date.parse(roundStart) : 0;
+    return new Set(
+      Object.entries(promptProgress)
+        .filter(([, p]) => {
+          if (p.status !== "pass") return false;
+          if (!activeVerb || !roundStart) return true;
+          // Starting another round must not require a destructive backend reset.
+          // Old prompt seals from the previous full-grid pass are ignored; only
+          // passes recorded after the new round started hide rows again.
+          const updatedMs = p.updated_at ? Date.parse(p.updated_at) : 0;
+          return Number.isFinite(updatedMs) && updatedMs >= roundStartMs;
+        })
+        .map(([key]) => key),
+    );
+  }, [promptProgress, roundStartedAt, verb?.verb]);
   const visibleRows = useMemo(
     () => verb ? rows.map((row, idx) => ({ row, idx })).filter(({ row }) => !passedPromptKeys.has(progressKey(verb.verb, row))) : [],
     [rows, passedPromptKeys, verb?.verb],
@@ -100,6 +115,8 @@ export default function VerbTrainer() {
   const requiredPasses = currentProgress?.required_full_passes ?? (isIrregular ? 7 : 1);
   const fullPassCount = currentProgress?.full_pass_count ?? 0;
   const verbComplete = Boolean(currentProgress?.completed);
+  const conjugationRoundSealed = rows.length > 0 && visibleRows.length === 0;
+  const needsAnotherConjugationRound = conjugationRoundSealed && !verbComplete;
 
   useEffect(() => {
     let cancelled = false;
@@ -244,6 +261,7 @@ export default function VerbTrainer() {
               status: "pass",
               last_result: item.result,
               last_attempt_id: item.attempt_id,
+              updated_at: new Date().toISOString(),
             };
           }
         }
@@ -365,6 +383,11 @@ export default function VerbTrainer() {
     try {
       const progress = await api.resetVerbProgress(verb.verb);
       setVerbProgress((prev) => ({ ...prev, [verb.verb]: progress }));
+      setRoundStartedAt((prev) => {
+        const next = { ...prev };
+        delete next[verb.verb];
+        return next;
+      });
       setPromptProgress((prev) => {
         const next = { ...prev };
         for (const key of Object.keys(next)) {
@@ -378,6 +401,14 @@ export default function VerbTrainer() {
     } finally {
       setResetting(false);
     }
+  }
+
+  function startNextConjugationRound() {
+    if (!verb) return;
+    setRoundStartedAt((prev) => ({ ...prev, [verb.verb]: new Date().toISOString() }));
+    setAnswers({});
+    setGrade(null);
+    setError(null);
   }
 
   const filled = visibleRows.filter(({ row, idx }) => normalize(answers[rowKey(row, idx)] ?? "")).length;
@@ -514,8 +545,11 @@ export default function VerbTrainer() {
             </span>
             <span>{verbComplete ? "Complete" : "Incomplete"}</span>
           </div>
+          <p className="muted small" style={{ margin: "0.5rem 0" }}>
+            Reset is destructive. Use “Start next round” below after a perfect grid; reset only if you want to erase this verb’s pass count.
+          </p>
           <button className="btn btn-small" type="button" disabled={resetting || !verb} onClick={resetVerb}>
-            {resetting ? "Resetting…" : "Mark incomplete / reset verb"}
+            {resetting ? "Resetting…" : `Hard reset to 0/${requiredPasses}`}
           </button>
         </div>
 
@@ -601,8 +635,21 @@ export default function VerbTrainer() {
           Submit sends your answers to the backend LLM grader. Misses are saved for targeted review.
         </p>
         <div className="stack">
-          {visibleRows.length === 0 && (
-            <div className="alert alert-ok">All visible verb prompts are complete. Reset the verb to bring them back.</div>
+          {conjugationRoundSealed && (
+            <div className="alert alert-ok">
+              {needsAnotherConjugationRound ? (
+                <>
+                  Perfect round saved: {fullPassCount}/{requiredPasses}. Start the next round to keep building this verb without erasing progress.
+                  <div style={{ marginTop: "0.75rem" }}>
+                    <button className="btn btn-primary" type="button" onClick={startNextConjugationRound}>
+                      Start next round
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>All visible verb prompts are complete. This verb is mastered.</>
+              )}
+            </div>
           )}
           {visibleRows.map(({ row, idx }) => {
             const key = rowKey(row, idx);
