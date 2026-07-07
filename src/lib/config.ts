@@ -16,32 +16,65 @@ const STORAGE_KEY = "atr.apiBaseUrl";
 const TAILNET_API_BASE_URL = "https://tonys-alienware-1.tail85fe36.ts.net";
 
 /**
- * Public HA fallback (Cloudflare LB: VPS primary -> GCP fallback). Used
- * automatically only when the built-in tailnet default is unreachable —
- * explicit overrides and same-origin setups are never failed over.
- * Fallback data lags the Alienware primary by the sync interval (~15 min),
- * and progress written while failed over is reconciled when Alienware returns.
+ * HA base chain, probed in order when the built-in tailnet default applies:
+ *   1. Tailnet primary — direct to the Alienware, fastest at home.
+ *   2. Cloudflare Tunnel to the SAME Alienware backend — reachable from
+ *      anywhere, still the write-primary / source of truth.
+ *   3. Cloudflare LB (VPS primary -> GCP fallback) — only when the Alienware
+ *      itself is down. Data lags by the sync interval, and progress written
+ *      here is reconciled when the Alienware returns.
+ * Explicit overrides and same-origin setups are never failed over.
  */
-const FALLBACK_API_BASE_URL = "https://api-spanish.tonymuzo.dev";
+const PUBLIC_ALIENWARE_BASE_URL = "https://alienware-spanish.tonymuzo.dev";
+const HA_FALLBACK_BASE_URL = "https://api-spanish.tonymuzo.dev";
 
-let failoverActive = false;
+const BASE_CACHE_KEY = "atr.activeApiBase";
+const BASE_CACHE_TTL_MS = 3 * 60 * 1000;
 
-/** True while requests are routed to the public fallback base. */
+let activeBase: string | null = null;
+
+/** Candidate bases in probe order; single-element when failover is disabled. */
+export function getBaseCandidates(): string[] {
+  const preferred = getPreferredApiBaseUrl();
+  if (preferred !== TAILNET_API_BASE_URL) return [preferred];
+  return [TAILNET_API_BASE_URL, PUBLIC_ALIENWARE_BASE_URL, HA_FALLBACK_BASE_URL];
+}
+
+/** True while requests are routed somewhere other than the preferred base. */
 export function isUsingFallbackBase(): boolean {
-  return failoverActive;
+  return activeBase !== null && activeBase !== getPreferredApiBaseUrl();
 }
 
-/** Switch routing to (or back from) the public fallback base. */
-export function setFailoverActive(active: boolean): void {
-  failoverActive = active;
+/** Route requests to the given base (null = preferred) and remember it briefly. */
+export function setActiveBase(base: string | null): void {
+  activeBase = base;
+  if (typeof localStorage === "undefined") return;
+  if (base) {
+    localStorage.setItem(BASE_CACHE_KEY, JSON.stringify({ base, ts: Date.now() }));
+  } else {
+    localStorage.removeItem(BASE_CACHE_KEY);
+  }
 }
 
-/**
- * The fallback base to try when the preferred base is unreachable, or null
- * when automatic failover does not apply (override/env/same-origin setups).
- */
-export function getFallbackApiBaseUrl(): string | null {
-  return getPreferredApiBaseUrl() === TAILNET_API_BASE_URL ? FALLBACK_API_BASE_URL : null;
+/** Recently confirmed base from a prior page load, if still fresh and valid. */
+export function getCachedActiveBase(): string | null {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(BASE_CACHE_KEY);
+    if (!raw) return null;
+    const { base, ts } = JSON.parse(raw) as { base?: unknown; ts?: unknown };
+    if (
+      typeof base === "string" &&
+      typeof ts === "number" &&
+      getBaseCandidates().includes(base) &&
+      Date.now() - ts < BASE_CACHE_TTL_MS
+    ) {
+      return base;
+    }
+  } catch {
+    /* ignore corrupt cache */
+  }
+  return null;
 }
 
 const ENV_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? "").trim();
@@ -96,8 +129,8 @@ function getPreferredApiBaseUrl(): string {
  */
 export function getApiBaseUrl(): string {
   const preferred = getPreferredApiBaseUrl();
-  if (failoverActive && preferred === TAILNET_API_BASE_URL) {
-    return FALLBACK_API_BASE_URL;
+  if (activeBase && preferred === TAILNET_API_BASE_URL) {
+    return activeBase;
   }
   return preferred;
 }
