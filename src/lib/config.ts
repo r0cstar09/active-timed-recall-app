@@ -15,6 +15,35 @@
 const STORAGE_KEY = "atr.apiBaseUrl";
 const TAILNET_API_BASE_URL = "https://tonys-alienware-1.tail85fe36.ts.net";
 
+/**
+ * Public HA fallback (Cloudflare LB: VPS primary -> GCP fallback). Used
+ * automatically only when the built-in tailnet default is unreachable —
+ * explicit overrides and same-origin setups are never failed over.
+ * Fallback data lags the Alienware primary by the sync interval (~15 min),
+ * and progress written while failed over is reconciled when Alienware returns.
+ */
+const FALLBACK_API_BASE_URL = "https://api-spanish.tonymuzo.dev";
+
+let failoverActive = false;
+
+/** True while requests are routed to the public fallback base. */
+export function isUsingFallbackBase(): boolean {
+  return failoverActive;
+}
+
+/** Switch routing to (or back from) the public fallback base. */
+export function setFailoverActive(active: boolean): void {
+  failoverActive = active;
+}
+
+/**
+ * The fallback base to try when the preferred base is unreachable, or null
+ * when automatic failover does not apply (override/env/same-origin setups).
+ */
+export function getFallbackApiBaseUrl(): string | null {
+  return getPreferredApiBaseUrl() === TAILNET_API_BASE_URL ? FALLBACK_API_BASE_URL : null;
+}
+
 const ENV_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? "").trim();
 
 /**
@@ -49,12 +78,8 @@ export function setApiBaseOverride(url: string | null): void {
   }
 }
 
-/**
- * The effective base URL used for all API + media requests.
- * Returns "" (empty string) when same-origin should be used, in which case
- * callers build same-origin-relative URLs like `/api/...`.
- */
-export function getApiBaseUrl(): string {
+/** The preferred base URL before any automatic failover is applied. */
+function getPreferredApiBaseUrl(): string {
   const override = getApiBaseOverride();
   if (override) return override;
   if (ENV_BASE_URL) return stripTrailingSlash(ENV_BASE_URL);
@@ -62,6 +87,19 @@ export function getApiBaseUrl(): string {
     return TAILNET_API_BASE_URL;
   }
   return ""; // same-origin for local preview or a future co-hosted deployment
+}
+
+/**
+ * The effective base URL used for all API + media requests.
+ * Returns "" (empty string) when same-origin should be used, in which case
+ * callers build same-origin-relative URLs like `/api/...`.
+ */
+export function getApiBaseUrl(): string {
+  const preferred = getPreferredApiBaseUrl();
+  if (failoverActive && preferred === TAILNET_API_BASE_URL) {
+    return FALLBACK_API_BASE_URL;
+  }
+  return preferred;
 }
 
 /** The configured env default, exposed for display in Settings. */

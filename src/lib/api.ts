@@ -33,7 +33,13 @@
  *   GET    /api/ingest/:jobId                               -> IngestJob
  */
 
-import { getApiBaseUrl, resolveUrl } from "./config";
+import {
+  getApiBaseUrl,
+  getFallbackApiBaseUrl,
+  isUsingFallbackBase,
+  resolveUrl,
+  setFailoverActive,
+} from "./config";
 import type {
   Card,
   GradeResponse,
@@ -64,6 +70,33 @@ function url(path: string): string {
   const base = getApiBaseUrl();
   const p = path.startsWith("/") ? path : `/${path}`;
   return `${base}${p}`;
+}
+
+/**
+ * One-time (per page session) health probe of the preferred base. When the
+ * tailnet primary is unreachable within the probe window, all subsequent
+ * requests are routed to the public HA fallback (Cloudflare LB -> VPS/GCP).
+ * When the primary is healthy this adds a single cheap /health call and
+ * changes nothing else.
+ */
+let baseSelection: Promise<void> | null = null;
+
+function ensureBaseSelected(): Promise<void> {
+  if (!baseSelection) {
+    baseSelection = (async () => {
+      const fallback = getFallbackApiBaseUrl();
+      if (!fallback) return; // override/env/same-origin: never auto-failover
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/health`, {
+          signal: AbortSignal.timeout(4000),
+        });
+        if (!res.ok) throw new Error(`health ${res.status}`);
+      } catch {
+        setFailoverActive(true);
+      }
+    })();
+  }
+  return baseSelection;
 }
 
 function extractFirstJsonValue(text: string): unknown {
@@ -124,6 +157,7 @@ async function readJsonBody(res: Response): Promise<unknown> {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  await ensureBaseSelected();
   let res: Response;
   try {
     res = await fetch(url(path), {
@@ -131,12 +165,33 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       headers: { Accept: "application/json", ...(init?.headers ?? {}) },
     });
   } catch (err) {
-    throw new ApiError(
-      `Network error reaching backend. Check Tailscale connectivity and the API base URL in Settings. (${
-        err instanceof Error ? err.message : String(err)
-      })`,
-      0,
-    );
+    // Mid-session failover: if the primary drops after the initial probe,
+    // switch to the public fallback and retry this request once.
+    const fallback = getFallbackApiBaseUrl();
+    if (fallback && !isUsingFallbackBase()) {
+      setFailoverActive(true);
+      try {
+        res = await fetch(url(path), {
+          ...init,
+          headers: { Accept: "application/json", ...(init?.headers ?? {}) },
+        });
+      } catch (retryErr) {
+        setFailoverActive(false);
+        throw new ApiError(
+          `Network error reaching backend and fallback. Check Tailscale connectivity and the API base URL in Settings. (${
+            retryErr instanceof Error ? retryErr.message : String(retryErr)
+          })`,
+          0,
+        );
+      }
+    } else {
+      throw new ApiError(
+        `Network error reaching backend. Check Tailscale connectivity and the API base URL in Settings. (${
+          err instanceof Error ? err.message : String(err)
+        })`,
+        0,
+      );
+    }
   }
 
   if (!res.ok) {
