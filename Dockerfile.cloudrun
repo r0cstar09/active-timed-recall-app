@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-ARG PUBLIC_API_BASE_URL="https://tonys-alienware-1.tail85fe36.ts.net"
+ARG PUBLIC_API_BASE_URL="https://api-spanish.tonymuzo.dev"
 ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 RUN npm run build
 
