@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, pollJob } from "../lib/api";
-import { RECALL_SECONDS } from "../lib/config";
+import { MAX_RECALL_SECONDS, RECALL_SECONDS } from "../lib/config";
 import type { Session, SessionItem, SessionMode } from "../lib/types";
 import { Recorder, isRecordingSupported } from "../lib/recorder";
 import {
@@ -67,7 +67,9 @@ function promptText(item: SessionItem): string {
 }
 
 function itemForDuration(item?: SessionItem): number {
-  return item?.scheduling?.time_limit_seconds || RECALL_SECONDS;
+  // Clamp to the hard ceiling: the backend enforces this too, but the countdown
+  // must never show a 30s+ window even against a stale/legacy backend value.
+  return Math.min(item?.scheduling?.time_limit_seconds || RECALL_SECONDS, MAX_RECALL_SECONDS);
 }
 
 export default function RecallSession() {
@@ -911,7 +913,8 @@ function Summary({
               </div>
             </div>
             <div className="small faint">
-              {summary.partial} partial · {summary.overtime_count} overtime ·{" "}
+              {summary.partial} partial · {summary.overtime_count} overtime
+              {summary.unclear ? ` · ${summary.unclear} unclear (retryable)` : ""} ·{" "}
               {summary.total} total
             </div>
           </>
@@ -943,22 +946,24 @@ function Summary({
 
       {items.map((it) => {
         const userUrl = it.recording_audio_url || recordings.get(it.sprint_item_id);
+        const unclear = it.error_type === "transcription_unclear";
         const cls =
           it.result === "pass"
             ? "pill-good"
-            : it.result === "partial"
+            : it.result === "partial" || unclear
               ? "pill-warn"
               : "pill-bad";
         return (
           <div className="card stack" key={it.sprint_item_id}>
             <div className="row between">
               <span className={`pill ${cls}`}>
-                {it.result ?? "pending"}
-                {it.score != null ? ` · ${Math.round(it.score)}` : ""}
+                {unclear ? "unclear · retry" : (it.result ?? "pending")}
+                {!unclear && it.score != null ? ` · ${Math.round(it.score)}` : ""}
               </span>
               <span className="small faint">
-                {it.fsrs_rating ? `FSRS ${it.fsrs_rating}` : ""}
-                {it.timed_out ? " · ⏱ overtime" : ""}
+                {it.fsrs_rating && !unclear ? `FSRS ${it.fsrs_rating}` : ""}
+                {unclear ? "not counted against you" : ""}
+                {it.timed_out ? " · ⏱ timed out" : it.over_time ? " · ⏱ over time" : ""}
               </span>
             </div>
 

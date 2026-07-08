@@ -54,7 +54,11 @@ export interface SessionItem {
   user_transcript_segment?: string;
   fsrs_rating?: FsrsRating;
   timed_out?: boolean;
+  /** Server-measured: recording ran past the per-item answer window. */
+  over_time?: boolean;
   response_seconds?: number;
+  /** ASR diagnostics persisted by the backend (model, probs, paths). */
+  asr?: Record<string, unknown> | null;
 }
 
 export interface SessionSummary {
@@ -62,6 +66,8 @@ export interface SessionSummary {
   passed: number;
   failed: number;
   partial: number;
+  /** Items graded transcription_unclear (retryable, no FSRS effect). */
+  unclear?: number;
   score: number;
   overtime_count: number;
 }

@@ -90,6 +90,18 @@ export const RECALL_SECONDS =
     ? ENV_RECALL_SECONDS
     : 8;
 
+/**
+ * Hard ceiling for any per-item recall window (seconds). The backend clamps
+ * server-side too; this client clamp guarantees the countdown can never show a
+ * 30s+ window even against a stale backend. Override with
+ * PUBLIC_MAX_RECALL_SECONDS at build time (named opt-out).
+ */
+const ENV_MAX_RECALL_SECONDS = Number(import.meta.env.PUBLIC_MAX_RECALL_SECONDS ?? "");
+export const MAX_RECALL_SECONDS =
+  Number.isFinite(ENV_MAX_RECALL_SECONDS) && ENV_MAX_RECALL_SECONDS > 0
+    ? ENV_MAX_RECALL_SECONDS
+    : 15;
+
 function stripTrailingSlash(url: string): string {
   return url.replace(/\/+$/, "");
 }
