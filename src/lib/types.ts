@@ -59,6 +59,19 @@ export interface SessionItem {
   response_seconds?: number;
   /** ASR diagnostics persisted by the backend (model, probs, paths). */
   asr?: Record<string, unknown> | null;
+  /** 1 for the original attempt; >1 for inline re-record attempts. */
+  attempt_number?: number;
+  retry_of_item_id?: number | null;
+}
+
+/** Returned by POST /api/sessions/:sid/items/:iid/retry. */
+export interface RetryItemResponse {
+  ok: boolean;
+  sprint_item_id: number;
+  position: number;
+  attempt_number: number;
+  time_limit_seconds: number;
+  existing: boolean;
 }
 
 export interface SessionSummary {

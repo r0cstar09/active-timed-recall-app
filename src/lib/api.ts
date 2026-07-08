@@ -46,6 +46,7 @@ import type {
   Job,
   RecordingMeta,
   RecordingResponse,
+  RetryItemResponse,
   Session,
   SessionItem,
   SessionMode,
@@ -578,6 +579,24 @@ export const api = {
   gradeSession(sessionId: number | string): Promise<GradeResponse> {
     return requestJson<GradeResponse>(
       `/api/sessions/${encodeURIComponent(String(sessionId))}/grade`,
+      "POST",
+      {},
+    );
+  },
+
+  /** Stage an inline re-record attempt for a transcription_unclear item. */
+  retryItem(sessionId: number | string, itemId: number | string): Promise<RetryItemResponse> {
+    return requestJson<RetryItemResponse>(
+      `/api/sessions/${encodeURIComponent(String(sessionId))}/items/${encodeURIComponent(String(itemId))}/retry`,
+      "POST",
+      {},
+    );
+  },
+
+  /** Queue grading for one (retry) item; idempotent server-side. */
+  gradeItem(sessionId: number | string, itemId: number | string): Promise<GradeResponse> {
+    return requestJson<GradeResponse>(
+      `/api/sessions/${encodeURIComponent(String(sessionId))}/items/${encodeURIComponent(String(itemId))}/grade`,
       "POST",
       {},
     );

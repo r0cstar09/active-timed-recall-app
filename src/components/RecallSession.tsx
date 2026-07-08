@@ -584,7 +584,16 @@ export default function RecallSession() {
 
   // ── render: SUMMARY ───────────────────────────────────────────────────────
   if (phase === "summary") {
-    return <Summary graded={graded} recordings={recordingsRef.current} />;
+    return (
+      <Summary
+        graded={graded}
+        recordings={recordingsRef.current}
+        onRefresh={(g) => {
+          setGraded(g);
+          saveLastGraded(g);
+        }}
+      />
+    );
   }
 
   // ── render: GRADING ───────────────────────────────────────────────────────
@@ -823,13 +832,170 @@ export default function RecallSession() {
   );
 }
 
+// ── Inline re-record for transcription_unclear items ───────────────────────
+type RetryPhase = "idle" | "arming" | "recording" | "uploading" | "grading" | "error";
+
+function RetryRecorder({
+  sessionId,
+  item,
+  onDone,
+}: {
+  sessionId: number;
+  item: SessionItem;
+  onDone: (fresh: Session) => void;
+}) {
+  const [phase, setPhase] = useState<RetryPhase>("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [secs, setSecs] = useState(0);
+  const recRef = useRef<Recorder | null>(null);
+  const targetRef = useRef<{ id: number; limit: number } | null>(null);
+  const shownAtRef = useRef(0);
+  const deadlineRef = useRef(0);
+  const finishingRef = useRef(false);
+  const pendingRef = useRef<{ blob: Blob; mimeType: string; filename: string; answeredAtMs: number; timedOut: boolean } | null>(null);
+
+  useEffect(() => () => recRef.current?.dispose(), []);
+
+  // countdown + auto-stop at the limit (recording stops automatically)
+  useEffect(() => {
+    if (phase !== "recording") return;
+    const id = setInterval(() => {
+      const left = Math.max(0, deadlineRef.current - Date.now());
+      setSecs(Math.ceil(left / 1000));
+      if (left <= 0) void finish(true);
+    }, 200);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  async function begin() {
+    setError(null);
+    setPhase("arming");
+    try {
+      const retry = await api.retryItem(sessionId, item.sprint_item_id);
+      const limit = Math.min(retry.time_limit_seconds || MAX_RECALL_SECONDS, MAX_RECALL_SECONDS);
+      targetRef.current = { id: retry.sprint_item_id, limit };
+      if (!recRef.current) recRef.current = new Recorder();
+      await recRef.current.init();
+      recRef.current.start();
+      finishingRef.current = false;
+      pendingRef.current = null;
+      shownAtRef.current = Date.now();
+      deadlineRef.current = shownAtRef.current + limit * 1000;
+      setSecs(limit);
+      setPhase("recording");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : `Microphone unavailable: ${err instanceof Error ? err.message : String(err)}`);
+      setPhase("error");
+    }
+  }
+
+  async function finish(timedOut: boolean) {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    setPhase("uploading");
+    try {
+      const rec = await recRef.current!.stop();
+      if (!rec || rec.blob.size === 0) throw new Error("No audio was captured — try again.");
+      pendingRef.current = { blob: rec.blob, mimeType: rec.mimeType, filename: rec.filename, answeredAtMs: Date.now(), timedOut };
+      await uploadAndGrade();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+      setPhase("error");
+      finishingRef.current = false;
+    }
+  }
+
+  // Upload retry preserves the captured Blob: tapping retry re-sends it.
+  async function uploadAndGrade() {
+    const pending = pendingRef.current;
+    const target = targetRef.current;
+    if (!pending || !target) return;
+    setPhase("uploading");
+    setError(null);
+    try {
+      await api.uploadRecording(sessionId, target.id, pending.blob, {
+        mimeType: pending.mimeType,
+        promptShownAt: new Date(shownAtRef.current).toISOString(),
+        answeredAt: new Date(pending.answeredAtMs).toISOString(),
+        responseSeconds: Math.round(((pending.answeredAtMs - shownAtRef.current) / 1000) * 10) / 10,
+        timedOut: pending.timedOut,
+        filename: pending.filename,
+      });
+      setPhase("grading");
+      const { job_id } = await api.gradeItem(sessionId, target.id);
+      await pollJob(job_id);
+      const fresh = await api.getSession(sessionId);
+      recRef.current?.dispose();
+      recRef.current = null;
+      onDone(fresh);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+      setPhase("error");
+      finishingRef.current = false;
+    }
+  }
+
+  if (phase === "idle") {
+    return (
+      <button className="btn btn-primary btn-block" onClick={() => void begin()}>
+        Re-record now
+      </button>
+    );
+  }
+  if (phase === "arming") {
+    return <p className="small faint" style={{ margin: 0 }}>Getting the microphone ready…</p>;
+  }
+  if (phase === "recording") {
+    return (
+      <div className="stack" style={{ gap: 8 }}>
+        <div className="row between">
+          <span className="small" style={{ color: "var(--rioja)", fontWeight: 800 }}>
+            ● recording — say it now
+          </span>
+          <span className="small" style={{ fontWeight: 800 }}>{secs}s</span>
+        </div>
+        {item.spanish && (
+          <div style={{ fontWeight: 600 }}>{item.spanish}</div>
+        )}
+        <button className="btn btn-primary btn-block" onClick={() => void finish(false)}>
+          Done — grade it
+        </button>
+      </div>
+    );
+  }
+  if (phase === "uploading" || phase === "grading") {
+    return (
+      <p className="small faint" style={{ margin: 0 }}>
+        {phase === "uploading" ? "Uploading…" : "Grading your retry…"}
+      </p>
+    );
+  }
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
+      {pendingRef.current ? (
+        <button className="btn btn-primary btn-block" onClick={() => void uploadAndGrade()}>
+          Retry upload
+        </button>
+      ) : (
+        <button className="btn btn-block" onClick={() => void begin()}>
+          Try again
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Summary view ────────────────────────────────────────────────────────────
 function Summary({
   graded,
   recordings,
+  onRefresh,
 }: {
   graded: Session | null;
   recordings: Map<number, string>;
+  onRefresh?: (fresh: Session) => void;
 }) {
   const summary = graded?.summary;
   const items = graded?.items ?? [];
@@ -990,6 +1156,14 @@ function Summary({
 
             <AudioPlayer src={it.source_audio_url} label="Native audio" />
             {userUrl && <AudioPlayer src={userUrl} label="Your recording" />}
+
+            {unclear && graded?.session_id && onRefresh && (
+              <RetryRecorder
+                sessionId={graded.session_id}
+                item={it}
+                onDone={onRefresh}
+              />
+            )}
           </div>
         );
       })}
