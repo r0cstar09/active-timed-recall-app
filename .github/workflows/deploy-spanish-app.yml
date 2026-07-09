@@ -1,0 +1,99 @@
+name: Deploy Spanish App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: spanish-app-deploy
+  cancel-in-progress: true
+
+env:
+  PROJECT_ID: hermes-ai-agent-497702
+  REGION: us-east1
+  SERVICE: spanish-app
+  IMAGE: us-east1-docker.pkg.dev/hermes-ai-agent-497702/tonymuzo-apps/app:${{ github.sha }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+
+      - name: Verify fixed public API and timer bundle contract
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          cfg = Path('src/lib/config.ts').read_text()
+          rec = Path('src/components/RecallSession.tsx').read_text()
+          docker = Path('Dockerfile.cloudrun').read_text()
+          dist = ''.join(p.read_text(errors='ignore') for p in Path('dist/_astro').glob('*.js'))
+          assert 'https://api-spanish.tonymuzo.dev' in cfg
+          assert 'export const RECALL_SECONDS = 15;' in cfg
+          assert 'export const MAX_RECALL_SECONDS = 15;' in cfg
+          assert 'return Math.min(RECALL_SECONDS, MAX_RECALL_SECONDS);' in rec
+          assert 'https://api-spanish.tonymuzo.dev' in docker
+          assert 'https://api-spanish.tonymuzo.dev' in dist
+          print('Spanish app routing/timer contract verified')
+          PY
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Artifact Registry auth
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build container
+        run: docker build -f Dockerfile.cloudrun -t "${IMAGE}" .
+
+      - name: Push container
+        run: docker push "${IMAGE}"
+
+      - name: Deploy Cloud Run
+        run: |
+          gcloud run deploy "${SERVICE}" \
+            --region "${REGION}" \
+            --image "${IMAGE}" \
+            --platform managed \
+            --quiet
+
+      - name: Smoke check public URL
+        run: |
+          for i in {1..24}; do
+            code=$(curl -L -s -A 'Mozilla/5.0 GitHubActionsSmoke' -o /tmp/spanish.html -w '%{http_code}' https://spanish-app.tonymuzo.dev/session/ || true)
+            if [ "$code" = "200" ]; then
+              if grep -q '/_astro/' /tmp/spanish.html; then
+                echo "spanish-app.tonymuzo.dev verified"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "Smoke check failed"
+          head -c 500 /tmp/spanish.html || true
+          exit 1
