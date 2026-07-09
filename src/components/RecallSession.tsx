@@ -67,9 +67,10 @@ function promptText(item: SessionItem): string {
 }
 
 function itemForDuration(item?: SessionItem): number {
-  // Clamp to the hard ceiling: the backend enforces this too, but the countdown
-  // must never show a 30s+ window even against a stale/legacy backend value.
-  return Math.min(item?.scheduling?.time_limit_seconds || RECALL_SECONDS, MAX_RECALL_SECONDS);
+  // Timed recall is fixed at 15s. Ignore adaptive/server legacy values so the
+  // UI never deviates between review/practice/misses/redo sessions.
+  void item;
+  return Math.min(RECALL_SECONDS, MAX_RECALL_SECONDS);
 }
 
 export default function RecallSession() {

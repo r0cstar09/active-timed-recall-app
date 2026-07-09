@@ -51,27 +51,17 @@ export function getCachedActiveBase(): string | null {
 const ENV_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? "").trim();
 
 /**
- * Recall countdown length (seconds) per item. SessionItems don't carry a
- * per-item limit, so this is the global timed-recall window. Override with
- * PUBLIC_RECALL_SECONDS at build time if needed.
+ * Recall countdown length (seconds) per item. Every timed recall session runs
+ * exactly 15s; do not make this adaptive or environment-dependent.
  */
-const ENV_RECALL_SECONDS = Number(import.meta.env.PUBLIC_RECALL_SECONDS ?? "");
-export const RECALL_SECONDS =
-  Number.isFinite(ENV_RECALL_SECONDS) && ENV_RECALL_SECONDS > 0
-    ? ENV_RECALL_SECONDS
-    : 8;
+export const RECALL_SECONDS = 15;
 
 /**
  * Hard ceiling for any per-item recall window (seconds). The backend clamps
  * server-side too; this client clamp guarantees the countdown can never show a
- * 30s+ window even against a stale backend. Override with
- * PUBLIC_MAX_RECALL_SECONDS at build time (named opt-out).
+ * 30s+ window even against a stale backend.
  */
-const ENV_MAX_RECALL_SECONDS = Number(import.meta.env.PUBLIC_MAX_RECALL_SECONDS ?? "");
-export const MAX_RECALL_SECONDS =
-  Number.isFinite(ENV_MAX_RECALL_SECONDS) && ENV_MAX_RECALL_SECONDS > 0
-    ? ENV_MAX_RECALL_SECONDS
-    : 15;
+export const MAX_RECALL_SECONDS = 15;
 
 function stripTrailingSlash(url: string): string {
   return url.replace(/\/+$/, "");
