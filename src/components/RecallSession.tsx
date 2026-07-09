@@ -874,7 +874,8 @@ function RetryRecorder({
     setPhase("arming");
     try {
       const retry = await api.retryItem(sessionId, item.sprint_item_id);
-      const limit = Math.min(retry.time_limit_seconds || MAX_RECALL_SECONDS, MAX_RECALL_SECONDS);
+      // Retry/re-record uses the same fixed 15s contract as the main recall flow.
+      const limit = Math.min(RECALL_SECONDS, MAX_RECALL_SECONDS);
       targetRef.current = { id: retry.sprint_item_id, limit };
       if (!recRef.current) recRef.current = new Recorder();
       await recRef.current.init();

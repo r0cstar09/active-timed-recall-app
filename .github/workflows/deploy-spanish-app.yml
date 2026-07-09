@@ -52,6 +52,8 @@ jobs:
           assert 'return Math.min(RECALL_SECONDS, MAX_RECALL_SECONDS);' in rec
           assert 'https://api-spanish.tonymuzo.dev' in docker
           assert 'https://api-spanish.tonymuzo.dev' in dist
+          assert 'time_limit_seconds||' not in dist
+          assert 'time_limit_seconds ||' not in dist
           print('Spanish app routing/timer contract verified')
           PY
 
