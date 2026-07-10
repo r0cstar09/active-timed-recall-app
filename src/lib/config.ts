@@ -20,10 +20,14 @@ const STORAGE_KEY = "atr.apiBaseUrl";
 const API_LB_BASE_URL = "https://api-spanish.tonymuzo.dev";
 
 /** Retired write targets: silently dropped if found in a saved override. */
-const RETIRED_BASES = new Set([
-  "https://tonys-alienware-1.tail85fe36.ts.net",
-  "https://alienware-spanish.tonymuzo.dev",
-]);
+function isRetiredBase(value: string): boolean {
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    return host.includes("alienware") || host.endsWith(".tail85fe36.ts.net");
+  } catch {
+    return true;
+  }
+}
 
 const BASE_CACHE_KEY = "atr.activeApiBase";
 
@@ -72,7 +76,7 @@ export function getApiBaseOverride(): string | null {
   if (typeof localStorage === "undefined") return null;
   const v = localStorage.getItem(STORAGE_KEY);
   const clean = v && v.trim() ? stripTrailingSlash(v.trim()) : null;
-  if (clean && RETIRED_BASES.has(clean)) {
+  if (clean && isRetiredBase(clean)) {
     // Old Alienware targets are retired write paths; never resurrect them.
     localStorage.removeItem(STORAGE_KEY);
     return null;
