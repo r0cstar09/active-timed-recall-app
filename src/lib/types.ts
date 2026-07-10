@@ -64,6 +64,26 @@ export interface SessionItem {
   retry_of_item_id?: number | null;
 }
 
+export interface WordAlignmentOperation {
+  op: "match" | "accent" | "delete" | "substitute" | "insert";
+  expected?: string;
+  heard?: string;
+  expected_index?: number;
+  heard_index?: number;
+}
+
+export interface ActiveRecallV2Evidence {
+  decision: "deterministic" | "fallback";
+  reason?: string;
+  grader?: string;
+  word_feedback?: WordAlignmentOperation[];
+  missing_words?: string[];
+  substitutions?: Array<{ expected: string; heard: string }>;
+  insertions?: string[];
+  similarity?: number;
+  wer?: number;
+}
+
 /** Returned by POST /api/sessions/:sid/items/:iid/retry. */
 export interface RetryItemResponse {
   ok: boolean;
@@ -98,6 +118,9 @@ export interface Session {
 /** Returned by POST /api/sessions/:id/recording. */
 export interface RecordingResponse {
   recording_id: number;
+  sprint_item_id?: number;
+  grading_job_id?: number | null;
+  grading_status?: "queued" | "deferred";
 }
 
 /** Returned by POST /api/sessions/:id/grade. */
