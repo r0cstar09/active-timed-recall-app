@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, pollJob } from "../lib/api";
 import { MAX_RECALL_SECONDS, RECALL_SECONDS } from "../lib/config";
-import type { ActiveRecallV2Evidence, Session, SessionItem, SessionMode } from "../lib/types";
+import type { ActiveRecallV2Evidence, Session, SessionItem, SessionMode, WordAlignmentOperation } from "../lib/types";
 import { Recorder, isRecordingSupported } from "../lib/recorder";
 import {
   clearSession,
@@ -822,7 +822,7 @@ export default function RecallSession() {
 
         {uploadedRef.current.length > 0 && (
           <div className="small faint" aria-live="polite">
-            {uploadedRef.current.length} previous answer{uploadedRef.current.length === 1 ? "" : "s"} grading in the background
+            {uploadedRef.current.length} {uploadedRef.current.length === 1 ? "answer" : "answers"} uploaded · grading continues in the background.
           </div>
         )}
 
@@ -1121,7 +1121,13 @@ function Summary({
       {items.map((it) => {
         const userUrl = it.recording_audio_url || recordings.get(it.sprint_item_id);
         const unclear = it.error_type === "transcription_unclear";
-        const alignment = it.asr?.active_recall_v2 as ActiveRecallV2Evidence | undefined;
+        const alignment = (it.asr?.active_recall_v2 as ActiveRecallV2Evidence | undefined);
+        const wordFeedback = Array.isArray(alignment?.word_feedback)
+          ? alignment.word_feedback.filter(
+              (word): word is WordAlignmentOperation =>
+                Boolean(word && typeof word === "object" && typeof word.op === "string"),
+            )
+          : [];
         const cls =
           it.result === "pass"
             ? "pill-good"
@@ -1159,16 +1165,16 @@ function Summary({
               </div>
             )}
 
-            {alignment?.word_feedback && alignment.word_feedback.length > 0 && (
+            {wordFeedback.length > 0 && (
               <div className="stack" style={{ gap: 8 }}>
                 <div className="small faint">Word check</div>
                 <div className="row" style={{ gap: 6, flexWrap: "wrap", justifyContent: "flex-start" }}>
-                  {alignment.word_feedback.map((word, wordIndex) => {
+                  {wordFeedback.map((word, wordIndex) => {
                     const label = word.op === "insert"
-                      ? `+ ${word.heard}`
+                      ? `+ ${word.heard ?? ""}`
                       : word.op === "substitute"
                         ? `${word.heard} → ${word.expected}`
-                        : word.expected || word.heard || "";
+                        : `${word.expected || word.heard || "word"}${word.op === "accent" ? " · accent" : ""}`;
                     const color = word.op === "match"
                       ? "var(--good)"
                       : word.op === "accent"
