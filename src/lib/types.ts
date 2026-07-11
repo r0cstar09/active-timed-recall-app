@@ -130,11 +130,31 @@ export interface GradeResponse {
 
 export type JobState = "queued" | "processing" | "complete" | "failed";
 
+export interface PipelineProgressData {
+  pipeline: "ingestion" | "grading" | string;
+  stage: string;
+  stage_index: number;
+  stage_count: number;
+  percent: number;
+  current?: number;
+  total?: number;
+  unit?: string;
+  rate?: number;
+  rate_unit?: string;
+  eta_seconds?: number;
+  message?: string;
+  updated_at?: string;
+}
+
 export interface Job {
   job_id: number;
   status: JobState;
   result: unknown | null;
   error_message: string | null;
+  progress?: PipelineProgressData | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  updated_at?: string | null;
 }
 
 export function isJobComplete(j: Job): boolean {
@@ -204,6 +224,12 @@ export interface IngestJob {
   status: IngestStatus | string;
   error_message?: string | null;
   phrases?: Phrase[];
+  source_url?: string;
+  progress?: PipelineProgressData | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
 }
 
 export function isIngestComplete(job: IngestJob): boolean {

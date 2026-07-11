@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../lib/api";
 import type { IngestJob } from "../lib/types";
 import { isIngestComplete, isIngestFailed } from "../lib/types";
+import PipelineProgress from "./PipelineProgress";
+
+const INGEST_STORAGE_KEY = "atr.ingest.active";
+const INGEST_TTL_MS = 24 * 60 * 60 * 1000;
 
 const YT_RE =
   /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/|embed\/)|youtu\.be\/)[\w-]{6,}/i;
@@ -28,7 +32,37 @@ export default function IngestForm() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    let alive = true;
+    void (async () => {
+      try {
+        const raw = localStorage.getItem(INGEST_STORAGE_KEY);
+        let saved: { jobId: number; createdAt: number } | null = raw ? JSON.parse(raw) : null;
+        if (saved && Date.now() - saved.createdAt > INGEST_TTL_MS) {
+          localStorage.removeItem(INGEST_STORAGE_KEY);
+          saved = null;
+        }
+        if (saved) {
+          const restored = await api.getIngest(saved.jobId);
+          if (!alive) return;
+          setJob(restored);
+          setBusy(!TERMINAL_STATUSES.has(restored.status));
+          if (!TERMINAL_STATUSES.has(restored.status)) startPolling(restored.job_id);
+          return;
+        }
+        const recent = await api.getRecentIngests(10);
+        const active = recent.find((candidate) => !TERMINAL_STATUSES.has(candidate.status));
+        if (alive && active) {
+          setJob(active);
+          setBusy(true);
+          localStorage.setItem(INGEST_STORAGE_KEY, JSON.stringify({ jobId: active.job_id, createdAt: Date.now() }));
+          startPolling(active.job_id);
+        }
+      } catch {
+        localStorage.removeItem(INGEST_STORAGE_KEY);
+      }
+    })();
     return () => {
+      alive = false;
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
@@ -49,6 +83,21 @@ export default function IngestForm() {
     return false;
   }
 
+  function startPolling(jobId: number) {
+    stopPolling();
+    pollRef.current = setInterval(async () => {
+      try {
+        const next = await api.getIngest(jobId);
+        setJob(next);
+        finishIfTerminal(next);
+      } catch (err) {
+        // Polling is only observation. The durable server job keeps running;
+        // retain its id so navigation/refresh can reconnect later.
+        setError(err instanceof ApiError ? err.message : String(err));
+      }
+    }, 1000);
+  }
+
   async function submit(e: { preventDefault(): void }) {
     e.preventDefault();
     setError(null);
@@ -62,19 +111,9 @@ export default function IngestForm() {
     try {
       const created = await api.createIngest(trimmed);
       setJob(created);
+      localStorage.setItem(INGEST_STORAGE_KEY, JSON.stringify({ jobId: created.job_id, createdAt: Date.now() }));
       if (finishIfTerminal(created)) return;
-
-      pollRef.current = setInterval(async () => {
-        try {
-          const next = await api.getIngest(created.job_id);
-          setJob(next);
-          finishIfTerminal(next);
-        } catch (err) {
-          stopPolling();
-          setBusy(false);
-          setError(err instanceof ApiError ? err.message : String(err));
-        }
-      }, 2500);
+      startPolling(created.job_id);
     } catch (err) {
       setBusy(false);
       setError(err instanceof ApiError ? err.message : String(err));
@@ -107,6 +146,7 @@ export default function IngestForm() {
 
   function reset() {
     stopPolling();
+    localStorage.removeItem(INGEST_STORAGE_KEY);
     setJob(null);
     setUrlValue("");
     setError(null);
@@ -191,12 +231,7 @@ export default function IngestForm() {
           </div>
 
           {!done && !failed && (
-            <div className="row">
-              <div className="spinner spinner-sm" aria-hidden="true" />
-              <span className="small faint">
-                Extracting transcript, selecting sentences, downloading audio, and slicing clips…
-              </span>
-            </div>
+            <PipelineProgress progress={job.progress} fallbackStatus={job.status} />
           )}
 
           {done && (
@@ -227,8 +262,11 @@ export default function IngestForm() {
           )}
 
           {failed && (
-            <div className="small" style={{ color: "var(--bad)" }}>
-              Ingestion failed{job.error_message ? `: ${job.error_message}` : ". Try a different video."}
+            <div className="stack">
+              <PipelineProgress progress={job.progress} fallbackStatus={job.status} />
+              <div className="small" style={{ color: "var(--bad)" }}>
+                Ingestion failed{job.error_message ? `: ${job.error_message}` : ". Try a different video."}
+              </div>
             </div>
           )}
 

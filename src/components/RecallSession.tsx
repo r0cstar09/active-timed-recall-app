@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, pollJob } from "../lib/api";
 import { MAX_RECALL_SECONDS, RECALL_SECONDS } from "../lib/config";
-import type { ActiveRecallV2Evidence, Session, SessionItem, SessionMode, WordAlignmentOperation } from "../lib/types";
+import type { ActiveRecallV2Evidence, Job, Session, SessionItem, SessionMode, WordAlignmentOperation } from "../lib/types";
+import PipelineProgress from "./PipelineProgress";
 import { Recorder, isRecordingSupported } from "../lib/recorder";
 import {
   clearSession,
@@ -84,6 +85,7 @@ export default function RecallSession() {
   const [deadline, setDeadline] = useState<number | null>(null);
   const [durationMs, setDurationMs] = useState<number | null>(null);
   const [graded, setGraded] = useState<Session | null>(null);
+  const [gradingJob, setGradingJob] = useState<Job | null>(null);
   const [sessionMode, setSessionMode] = useState<SessionMode>("review");
   const [noisyMode, setNoisyMode] = useState(false);
   const [micLevels, setMicLevels] = useState<number[]>(Array.from({ length: WAVE_BARS }, () => 0.35));
@@ -126,7 +128,19 @@ export default function RecallSession() {
   useEffect(() => {
     const mode = modeFromUrl();
     setSessionMode(mode);
-    if (status === "idle") setResumable(loadSession());
+    if (status !== "idle") return;
+    const saved = loadSession();
+    if (saved?.phase === "grading" && saved.jobId != null) {
+      sessionIdRef.current = saved.sessionId;
+      uploadedRef.current = saved.uploadedItemIds ?? [];
+      setItems(saved.items);
+      setIndex(saved.index);
+      setPhase("grading");
+      setStatus("active");
+      void runGrading(saved.sessionId, saved.jobId);
+    } else {
+      setResumable(saved);
+    }
   }, [status]);
 
   // ── countdown tick + auto-resync on visibility/refocus ───────────────────
@@ -475,7 +489,7 @@ export default function RecallSession() {
   async function runGrading(sessionId: number, jobId: string | number) {
     setPhase("grading");
     try {
-      await pollJob(jobId);
+      await pollJob(jobId, { timeoutMs: 15 * 60_000, onUpdate: setGradingJob });
       const gradedSession = await api.getSession(sessionId);
       setGraded(gradedSession);
       saveLastGraded(gradedSession);
@@ -600,17 +614,20 @@ export default function RecallSession() {
   // ── render: GRADING ───────────────────────────────────────────────────────
   if (phase === "grading") {
     return (
-      <div className="card stack center" style={{ padding: 36 }}>
-        <div className="spinner" aria-hidden="true" />
-        <p className="muted">Grading your answers…</p>
+      <div className="card stack" style={{ padding: 36 }}>
+        <div className="spanish-kicker">grading pipeline</div>
+        <PipelineProgress progress={gradingJob?.progress} fallbackStatus={gradingJob?.status || "processing"} />
         {error && (
           <>
             <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
             <button
               className="btn btn-block"
-              onClick={() => runGrading(sessionIdRef.current, loadSession()?.jobId ?? 0)}
+              onClick={() => {
+                const saved = loadSession();
+                if (saved?.jobId != null) void runGrading(saved.sessionId, saved.jobId);
+              }}
             >
-              Retry grading
+              Reconnect to grading
             </button>
           </>
         )}

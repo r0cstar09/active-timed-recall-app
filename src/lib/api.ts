@@ -748,6 +748,10 @@ export const api = {
   getIngest(jobId: number | string): Promise<IngestJob> {
     return request<IngestJob>(`/api/ingest/${encodeURIComponent(String(jobId))}`);
   },
+  async getRecentIngests(limit = 10): Promise<IngestJob[]> {
+    const res = await request<{ jobs?: IngestJob[] }>(`/api/ingest/recent?limit=${encodeURIComponent(String(limit))}`);
+    return Array.isArray(res.jobs) ? res.jobs : [];
+  },
 
   // Backward-compatible names used by older UI code.
   createSource(sourceUrl: string): Promise<IngestJob> {
