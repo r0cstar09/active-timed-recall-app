@@ -187,6 +187,11 @@ export default function PatternDrills() {
                             <span className={drill.sealed ? "pill pill-good" : "pill"}>{drill.sealed ? "sealed" : drill.verb_id || "open"}</span>
                           </div>
                           {drill.grading_notes && <span className="small faint">{drill.grading_notes}</span>}
+                          {drill.audio_url ? (
+                            <audio controls preload="none" src={drill.audio_url} aria-label={`Spanish audio for ${drill.prompt_en}`} />
+                          ) : drill.audio_status === "failed" ? (
+                            <span className="small faint">Audio is being repaired; the drill is still available.</span>
+                          ) : null}
                         </div>
                         <textarea
                           className="input"

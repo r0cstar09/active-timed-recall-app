@@ -350,6 +350,10 @@ export type PatternDrill = {
   grading_notes?: string | null;
   difficulty: string;
   sealed?: boolean;
+  audio_path?: string | null;
+  audio_url?: string | null;
+  audio_status?: "pending" | "ready" | "failed" | string;
+  audio_error?: string | null;
 };
 
 export type PatternPack = {
@@ -729,7 +733,13 @@ export const api = {
     const obj = res && typeof res === "object" ? res as Record<string, unknown> : {};
     return {
       patterns: toArray<PatternCatalogEntry>(obj.patterns, ["items", "data", "results"]),
-      packs: toArray<PatternPack>(obj.packs, ["items", "data", "results"]),
+      packs: toArray<PatternPack>(obj.packs, ["items", "data", "results"]).map((pack) => ({
+        ...pack,
+        drills: (pack.drills ?? []).map((drill) => ({
+          ...drill,
+          audio_url: drill.audio_path ? resolveUrl(`/api/audio/source/${drill.audio_path}`) : null,
+        })),
+      })),
     };
   },
   async listPatternPacks(patternId?: string): Promise<PatternPack[]> {
