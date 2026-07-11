@@ -821,6 +821,30 @@ body {
 .brand::after {
   content: "sabor lab";
   color: var(--magenta);
+  white-space: nowrap;
+}
+
+.mode-toggle {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--terracotta);
+}
+
+@media (max-width: 360px) {
+  .app-header { gap: 8px; }
+  .brand { gap: 8px; }
+  .brand::after {
+    padding-left: 8px;
+    font-size: 0.58rem;
+    letter-spacing: 0.075em;
+  }
+  .theme-toggle { min-width: 0; padding-inline: 11px; }
+  .session-launch-card { padding: 16px; }
+  .session-launch-card.stack > * + * { margin-top: 8px; }
+  .session-launch-card .spanish-phrase { font-size: 2.2rem !important; }
+  .session-launch-card > .muted { line-height: 1.35; }
+  .session-launch-card > .alert { padding: 12px; }
 }
 
 .hero-showpiece {

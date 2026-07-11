@@ -540,7 +540,7 @@ export default function RecallSession() {
             </button>
           </div>
         ) : (
-          <div className="card hero-card stack center">
+          <div className="card hero-card stack center session-launch-card">
             <span className="pill">{modeLabel(sessionMode)}</span>
             <div className="spanish-phrase" style={{ fontSize: "2.6rem" }}>¿Listo?</div>
             <p className="muted">
@@ -560,6 +560,7 @@ export default function RecallSession() {
                   <span className="small faint">Train / cafe / background voices. Uses stronger server-side audio cleanup before transcription.</span>
                 </span>
                 <input
+                  className="mode-toggle"
                   type="checkbox"
                   checked={noisyMode}
                   onChange={(event) => setNoisyMode(event.currentTarget.checked)}
