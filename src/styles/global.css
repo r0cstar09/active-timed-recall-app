@@ -203,8 +203,20 @@ p { margin: 0 0 1em; text-wrap: pretty; }
 .recall-command-strip em { grid-area: deck; font-size: 0.62rem; color: var(--text-faint); font-style: normal; letter-spacing: 0.08em; text-transform: uppercase; }
 
 @media (max-width: 480px) {
-  .recall-command-strip { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
-  .recall-command-strip a { min-width: 10.5rem; scroll-snap-align: start; }
+  .recall-command-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    overflow: visible;
+  }
+  .recall-command-strip a {
+    min-width: 0;
+    padding: 11px 8px;
+    border-radius: 16px;
+    gap: 0 6px;
+  }
+  .recall-command-strip strong { font-size: 0.78rem; }
+  .recall-command-strip em { font-size: 0.55rem; letter-spacing: 0.055em; }
 }
 
 /* Bottom tab nav ───────────────────────────────────────────────────────── */
