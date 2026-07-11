@@ -354,6 +354,7 @@ export type PatternDrill = {
   audio_url?: string | null;
   audio_status?: "pending" | "ready" | "failed" | string;
   audio_error?: string | null;
+  promoted_phrase_id?: number | null;
 };
 
 export type PatternPack = {

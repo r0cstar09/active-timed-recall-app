@@ -18,6 +18,7 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
   const requestVersionRef = useRef(0);
+  const jobStorageKey = `sentence-pack-job:${sourceType}:${sourceId}`;
 
   const loadPacks = useCallback(async () => {
     if (!sourceId || !complete) {
@@ -37,11 +38,16 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
     loadPacks().catch((err) => {
       if (requestVersionRef.current === requestVersion) setError(err instanceof Error ? err.message : String(err));
     });
+    const savedJobId = Number(window.sessionStorage.getItem(jobStorageKey));
+    if (complete && Number.isInteger(savedJobId) && savedJobId > 0) {
+      setBusy(true);
+      void poll(savedJobId, requestVersion);
+    }
     return () => {
       requestVersionRef.current += 1;
       if (pollRef.current != null) window.clearTimeout(pollRef.current);
     };
-  }, [loadPacks]);
+  }, [loadPacks, jobStorageKey, complete]);
 
   async function poll(jobId: number, requestVersion: number) {
     try {
@@ -49,6 +55,7 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
       if (requestVersionRef.current !== requestVersion) return;
       setJob(next);
       if (next.status === "completed") {
+        window.sessionStorage.removeItem(jobStorageKey);
         setBusy(false);
         setMessage(next.progress_message || "Hermes sentence pack ready.");
         await loadPacks();
@@ -56,6 +63,7 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
         return;
       }
       if (next.status === "failed") {
+        window.sessionStorage.removeItem(jobStorageKey);
         setBusy(false);
         setError(next.error || "Hermes generation failed.");
         return;
@@ -78,6 +86,7 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
       const next = await api.generateSentencePack({ source_type: sourceType, source_id: sourceId, context, count: 10 });
       if (requestVersionRef.current !== requestVersion) return;
       setJob(next);
+      window.sessionStorage.setItem(jobStorageKey, String(next.id));
       await poll(next.id, requestVersion);
     } catch (err) {
       if (requestVersionRef.current !== requestVersion) return;
@@ -129,8 +138,8 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
           <progress value={job.progress_current} max={Math.max(job.progress_total, 1)} style={{ width: "100%" }} />
         </div>
       ) : null}
-      {message ? <div className="notice success">{message}</div> : null}
-      {error ? <div className="notice error">{error}</div> : null}
+      {message ? <div className="alert alert-ok" role="status">{message}</div> : null}
+      {error ? <div className="alert alert-error" role="alert">{error}</div> : null}
 
       {packs.map((pack) => {
         const promoted = pack.items.filter((item) => item.promoted_phrase_id).length;

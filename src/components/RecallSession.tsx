@@ -980,9 +980,6 @@ function RetryRecorder({
           </span>
           <span className="small" style={{ fontWeight: 800 }}>{secs}s</span>
         </div>
-        {item.spanish && (
-          <div style={{ fontWeight: 600 }}>{item.spanish}</div>
-        )}
         <button className="btn btn-primary btn-block" onClick={() => void finish(false)}>
           Done — grade it
         </button>
