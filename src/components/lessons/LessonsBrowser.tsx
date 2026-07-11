@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, type LessonPromptProgress, type StudyGradeResponse } from "../../lib/api";
+import LessonSentencePacks from "./LessonSentencePacks";
 
 type LessonSection = {
   title?: string;
@@ -574,6 +575,21 @@ export default function LessonsBrowser() {
               {showAnswers ? "Hide answers" : "Reveal answer key"}
             </button>
           </div>
+
+          <LessonSentencePacks
+            sourceType="lesson"
+            sourceId={lesson.id}
+            complete={lessonComplete}
+            context={{
+              title: lesson.title,
+              difficulty: lesson.difficulty,
+              tags: lesson.tags,
+              targetPattern: lesson.targetPattern,
+              spanishLogic: lesson.spanishLogic,
+              formula: lesson.formula,
+              naturalExamples: lesson.naturalExamples,
+            }}
+          />
 
           {!!lesson.commonErrors?.length && (
             <div className="card stack">

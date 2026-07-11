@@ -538,6 +538,53 @@ export type VerbUsageBankBatch = {
   prompts: VerbUsagePrompt[];
 };
 
+export type SentencePackItem = {
+  id: number;
+  pack_id: number;
+  prompt_en: string;
+  expected_es: string;
+  coaching_note?: string | null;
+  audio_path?: string | null;
+  audio_url?: string | null;
+  audio_status: string;
+  audio_error?: string | null;
+  promoted_phrase_id?: number | null;
+};
+
+export type SentencePack = {
+  id: number;
+  source_type: "lesson" | "verb";
+  source_id: string;
+  source_title: string;
+  backend: string;
+  model?: string | null;
+  status: string;
+  actual_count: number;
+  items: SentencePackItem[];
+};
+
+export type SentencePackJob = {
+  id: number;
+  source_type: "lesson" | "verb";
+  source_id: string;
+  status: "queued" | "running" | "completed" | "failed";
+  progress_current: number;
+  progress_total: number;
+  progress_message?: string | null;
+  error?: string | null;
+  pack?: SentencePack | null;
+};
+
+function hydrateSentencePack(pack: SentencePack): SentencePack {
+  return {
+    ...pack,
+    items: (pack.items ?? []).map((item) => ({
+      ...item,
+      audio_url: item.audio_path ? resolveUrl(`/api/audio/source/${item.audio_path}`) : null,
+    })),
+  };
+}
+
 export const api = {
   // ── Sessions / grading (real contract) ───────────────────────────────────
   async createSession(mode: SessionMode = "review", size = 10): Promise<Session> {
@@ -752,6 +799,21 @@ export const api = {
   },
   promotePatternPack(packId: number): Promise<{ pack_id: number; promoted: number; phrase_ids: number[] }> {
     return requestJson<{ pack_id: number; promoted: number; phrase_ids: number[] }>(`/api/study/pattern-packs/${packId}/promote`, "POST", {});
+  },
+  async generateSentencePack(payload: { source_type: "lesson" | "verb"; source_id: string; context: Record<string, unknown>; count?: number }): Promise<SentencePackJob> {
+    const job = await requestJson<SentencePackJob>("/api/study/sentence-packs/generate", "POST", payload);
+    return { ...job, pack: job.pack ? hydrateSentencePack(job.pack) : null };
+  },
+  async getSentencePackJob(jobId: number): Promise<SentencePackJob> {
+    const job = await request<SentencePackJob>(`/api/study/sentence-pack-jobs/${jobId}`);
+    return { ...job, pack: job.pack ? hydrateSentencePack(job.pack) : null };
+  },
+  async listSentencePacks(sourceType: "lesson" | "verb", sourceId: string): Promise<SentencePack[]> {
+    const res = await request<{ packs: SentencePack[] }>(`/api/study/sentence-packs?source_type=${encodeURIComponent(sourceType)}&source_id=${encodeURIComponent(sourceId)}`);
+    return (res.packs ?? []).map(hydrateSentencePack);
+  },
+  promoteSentencePack(packId: number): Promise<{ pack_id: number; promoted: number; phrase_ids: number[] }> {
+    return requestJson<{ pack_id: number; promoted: number; phrase_ids: number[] }>(`/api/study/sentence-packs/${packId}/promote`, "POST", {});
   },
   gradePatternDrills(attempts: { drill_id: number; user_answer: string }[]): Promise<{ items: PatternGradeResultItem[]; summary: string }> {
     return requestJson<{ items: PatternGradeResultItem[]; summary: string }>("/api/study/pattern-drills/grade", "POST", { attempts });

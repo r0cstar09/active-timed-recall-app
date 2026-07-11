@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, type StudyGradeResponse, type VerbCatalog, type VerbCatalogAssignment, type VerbProgress, type VerbPromptProgress, type LessonPromptProgress, type VerbUsagePrompt } from "../../lib/api";
+import LessonSentencePacks from "../lessons/LessonSentencePacks";
 
 type Assignment = VerbCatalogAssignment;
 type VerbData = VerbCatalog;
@@ -691,6 +692,22 @@ export default function VerbTrainer() {
           {grading ? "Grading…" : "Submit for LLM grading"}
         </button>
       </div>
+
+      {verb ? (
+        <LessonSentencePacks
+          sourceType="verb"
+          sourceId={verb.verb}
+          complete={verbComplete}
+          context={{
+            title: `${verb.verb} — ${verb.englishBase}`,
+            verb: verb.verb,
+            englishBase: verb.englishBase,
+            category: verb.category,
+            usage: verb.usageHint,
+            assignments: verb.assignments,
+          }}
+        />
+      ) : null}
 
       <div className="card stack">
         <button className="btn btn-danger btn-block" type="button" onClick={clearAnswers}>Clear answers</button>
