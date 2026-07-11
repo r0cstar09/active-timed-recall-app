@@ -659,9 +659,16 @@ export const api = {
     }));
   },
   async listCards(): Promise<Card[]> {
-    const res = await request<unknown>("/api/cards");
+    const res = await request<unknown>("/api/cards?active=1");
     const cards = toArray<Card>(res, ["cards", "items", "data", "results"]);
     return cards.map((c) => ({ ...c, audio_url: resolveUrl(c.audio_url) }));
+  },
+  removeCard(phraseId: number | string): Promise<{ phrase_id: number; removed: boolean; active: boolean }> {
+    return requestJson<{ phrase_id: number; removed: boolean; active: boolean }>(
+      `/api/cards/${encodeURIComponent(String(phraseId))}`,
+      "DELETE",
+      {},
+    );
   },
 
   // ── Study grading (LLM-backed, additive) ──────────────────────────────────

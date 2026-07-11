@@ -61,7 +61,12 @@ export default function Library() {
 
       {tab === "sources" && <RegionCards />}
       {tab === "sources" && <Sources sources={sources} />}
-      {tab === "cards" && <Cards cards={cards} />}
+      {tab === "cards" && (
+        <Cards
+          cards={cards}
+          onRemoved={(phraseId) => setCards((current) => current?.filter((card) => card.phrase_id !== phraseId) ?? null)}
+        />
+      )}
     </div>
   );
 }
@@ -168,7 +173,24 @@ function Sources({ sources }: { sources: Source[] | null }) {
   );
 }
 
-function Cards({ cards }: { cards: Card[] | null }) {
+function Cards({ cards, onRemoved }: { cards: Card[] | null; onRemoved: (phraseId: number) => void }) {
+  const [removingId, setRemovingId] = useState<number | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+
+  async function removeCard(card: Card) {
+    if (!window.confirm(`Remove “${card.spanish}” from your library?\n\nIts review history will be preserved.`)) return;
+    setRemovingId(card.phrase_id);
+    setRemoveError(null);
+    try {
+      await api.removeCard(card.phrase_id);
+      onRemoved(card.phrase_id);
+    } catch (err) {
+      setRemoveError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
   if (!cards) return <div className="card center stack"><StateIllustration type="loading" /><p className="faint">Loading cards…</p></div>;
   if (cards.length === 0) {
     return (
@@ -181,6 +203,7 @@ function Cards({ cards }: { cards: Card[] | null }) {
   }
   return (
     <>
+      {removeError && <div className="alert alert-error">Could not remove card: {removeError}</div>}
       {cards.map((c) => (
         <div className="card card-tight stack" key={c.phrase_id}>
           <div className="row between">
@@ -195,6 +218,16 @@ function Cards({ cards }: { cards: Card[] | null }) {
             <span>· {c.lapses} lapses</span>
           </div>
           <AudioPlayer src={c.audio_url} />
+          <div className="row" style={{ justifyContent: "flex-end" }}>
+            <button
+              className="btn btn-small btn-danger"
+              type="button"
+              disabled={removingId === c.phrase_id}
+              onClick={() => removeCard(c)}
+            >
+              {removingId === c.phrase_id ? "Removing…" : "Remove from library"}
+            </button>
+          </div>
         </div>
       ))}
     </>
