@@ -1020,8 +1020,11 @@ function Summary({
   recordings: Map<number, string>;
   onRefresh?: (fresh: Session) => void;
 }) {
+  const [deletedPhraseIds, setDeletedPhraseIds] = useState<Set<number>>(() => new Set());
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingPhraseId, setDeletingPhraseId] = useState<number | null>(null);
   const summary = graded?.summary;
-  const items = graded?.items ?? [];
+  const items = (graded?.items ?? []).filter((item) => !deletedPhraseIds.has(item.phrase_id));
   const mode = graded?.mode;
   const misses = items.filter((it) => it.result === "fail" || it.result === "partial");
   const maxPassStreak = items.reduce(
@@ -1040,6 +1043,20 @@ function Summary({
     else if (summary.failed > 0) pulseDevice([90, 45, 90]);
     else pulseDevice(35);
   }, [cleanRecall, graded?.mode, summary]);
+
+  async function deleteCard(item: SessionItem) {
+    if (!window.confirm(`Delete “${item.spanish || item.english}” from future practice?\n\nIts existing review history will be preserved.`)) return;
+    setDeletingPhraseId(item.phrase_id);
+    setDeleteError(null);
+    try {
+      await api.removeCard(item.phrase_id);
+      setDeletedPhraseIds((current) => new Set(current).add(item.phrase_id));
+    } catch (err) {
+      setDeleteError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setDeletingPhraseId(null);
+    }
+  }
 
   if (!items.length) {
     const title = mode === "learn" ? "No new phrases" : mode === "misses" ? "No misses waiting" : "Nothing due";
@@ -1133,6 +1150,8 @@ function Summary({
         </div>
       )}
 
+      {deleteError && <div className="alert alert-error" role="alert">{deleteError}</div>}
+
       {items.map((it) => {
         const userUrl = it.recording_audio_url || recordings.get(it.sprint_item_id);
         const unclear = it.error_type === "transcription_unclear";
@@ -1224,6 +1243,15 @@ function Summary({
                 onDone={onRefresh}
               />
             )}
+
+            <button
+              className="btn btn-small btn-danger"
+              type="button"
+              disabled={deletingPhraseId === it.phrase_id}
+              onClick={() => void deleteCard(it)}
+            >
+              {deletingPhraseId === it.phrase_id ? "Deleting…" : "Delete malformed card"}
+            </button>
           </div>
         );
       })}

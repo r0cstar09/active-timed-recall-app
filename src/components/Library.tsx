@@ -178,7 +178,7 @@ function Cards({ cards, onRemoved }: { cards: Card[] | null; onRemoved: (phraseI
   const [removeError, setRemoveError] = useState<string | null>(null);
 
   async function removeCard(card: Card) {
-    if (!window.confirm(`Remove “${card.spanish}” from your library?\n\nIts review history will be preserved.`)) return;
+    if (!window.confirm(`Delete “${card.spanish}” from future practice?\n\nIts existing review history will be preserved.`)) return;
     setRemovingId(card.phrase_id);
     setRemoveError(null);
     try {
@@ -225,7 +225,7 @@ function Cards({ cards, onRemoved }: { cards: Card[] | null; onRemoved: (phraseI
               disabled={removingId === c.phrase_id}
               onClick={() => removeCard(c)}
             >
-              {removingId === c.phrase_id ? "Removing…" : "Remove from library"}
+              {removingId === c.phrase_id ? "Deleting…" : "Delete card"}
             </button>
           </div>
         </div>
