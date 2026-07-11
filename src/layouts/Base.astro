@@ -63,6 +63,10 @@ const {
     <ClientRouter />
   </head>
   <body>
+    <div class="pull-refresh" data-pull-refresh aria-live="polite" aria-hidden="true">
+      <span class="pull-refresh__icon" aria-hidden="true">↓</span>
+      <span class="pull-refresh__label">Pull to refresh</span>
+    </div>
     <div class="app">
       <header class="app-header">
         <a class="brand" href="/">
@@ -90,6 +94,39 @@ const {
 
     {!hideNav && <Nav current={current} />}
 
+    <style is:global>
+      .pull-refresh {
+        --pull: 0px;
+        align-items: center;
+        color: var(--ink-muted, #76695d);
+        display: flex;
+        font: 700 0.78rem/1 var(--font-sans, system-ui, sans-serif);
+        gap: 0.45rem;
+        justify-content: center;
+        left: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: fixed;
+        right: 0;
+        top: max(0.55rem, env(safe-area-inset-top));
+        transform: translateY(calc(var(--pull) - 56px));
+        transition: opacity 120ms ease, transform 120ms ease;
+        z-index: 1000;
+      }
+      .pull-refresh.is-pulling,
+      .pull-refresh.is-refreshing { opacity: 1; }
+      .pull-refresh.is-ready .pull-refresh__icon { transform: rotate(180deg); }
+      .pull-refresh__icon { font-size: 1.05rem; transition: transform 150ms ease; }
+      .pull-refresh.is-refreshing .pull-refresh__icon { animation: pull-refresh-spin 650ms linear infinite; }
+      @keyframes pull-refresh-spin { to { transform: rotate(360deg); } }
+      @media (pointer: fine) { .pull-refresh { display: none; } }
+      @media (prefers-reduced-motion: reduce) {
+        .pull-refresh,
+        .pull-refresh__icon { transition: none; }
+        .pull-refresh.is-refreshing .pull-refresh__icon { animation: none; }
+      }
+    </style>
+
     <script>
       const updateThemeButton = () => {
         const button = document.querySelector("[data-theme-toggle]");
@@ -114,6 +151,71 @@ const {
             .catch((err) => console.warn("SW registration failed:", err));
         });
       }
+
+      const setupPullToRefresh = () => {
+        const pullWindow = window as typeof window & { __pullRefreshCleanup?: () => void };
+        pullWindow.__pullRefreshCleanup?.();
+        const indicator = document.querySelector("[data-pull-refresh]");
+        if (!(indicator instanceof HTMLElement) || !window.matchMedia("(pointer: coarse)").matches) return;
+
+        const controller = new AbortController();
+        const { signal } = controller;
+        const threshold = 72;
+        const label = indicator.querySelector(".pull-refresh__label");
+        let startX = 0;
+        let startY = 0;
+        let pull = 0;
+        let tracking = false;
+
+        const reset = () => {
+          tracking = false;
+          pull = 0;
+          indicator.classList.remove("is-ready", "is-pulling");
+          indicator.style.setProperty("--pull", "0px");
+          indicator.setAttribute("aria-hidden", "true");
+          if (label) label.textContent = "Pull to refresh";
+        };
+
+        document.addEventListener("touchstart", (event) => {
+          if (window.scrollY > 0 || event.touches.length !== 1) return;
+          startX = event.touches[0].clientX;
+          startY = event.touches[0].clientY;
+          tracking = true;
+        }, { passive: true, signal });
+
+        document.addEventListener("touchmove", (event) => {
+          if (!tracking || event.touches.length !== 1) return;
+          const deltaX = event.touches[0].clientX - startX;
+          const deltaY = event.touches[0].clientY - startY;
+          if (deltaY <= 0 || Math.abs(deltaX) > deltaY || window.scrollY > 0) return reset();
+          event.preventDefault();
+          pull = Math.min(104, deltaY * 0.55);
+          const ready = pull >= threshold;
+          indicator.classList.add("is-pulling");
+          indicator.classList.toggle("is-ready", ready);
+          indicator.style.setProperty("--pull", `${pull}px`);
+          indicator.setAttribute("aria-hidden", "false");
+          if (label) label.textContent = ready ? "Release to refresh" : "Pull to refresh";
+        }, { passive: false, signal });
+
+        const finish = () => {
+          if (!tracking) return;
+          if (pull >= threshold) {
+            tracking = false;
+            indicator.classList.add("is-refreshing");
+            if (label) label.textContent = "Refreshing…";
+            window.location.reload();
+          } else {
+            reset();
+          }
+        };
+        document.addEventListener("touchend", finish, { passive: true, signal });
+        document.addEventListener("touchcancel", reset, { passive: true, signal });
+        pullWindow.__pullRefreshCleanup = () => controller.abort();
+      };
+
+      setupPullToRefresh();
+      document.addEventListener("astro:page-load", setupPullToRefresh);
     </script>
   </body>
 </html>
