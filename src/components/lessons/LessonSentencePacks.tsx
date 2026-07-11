@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type SentencePack, type SentencePackJob } from "../../lib/api";
+import AudioPlayer from "../AudioPlayer";
 
 type Props = {
   sourceType: "lesson" | "verb";
@@ -16,6 +17,7 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
+  const requestVersionRef = useRef(0);
 
   const loadPacks = useCallback(async () => {
     if (!sourceId || !complete) {
@@ -26,23 +28,31 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
   }, [sourceType, sourceId, complete]);
 
   useEffect(() => {
+    const requestVersion = ++requestVersionRef.current;
+    setBusy(false);
+    setPromoting(null);
     setJob(null);
     setMessage(null);
     setError(null);
-    loadPacks().catch((err) => setError(err instanceof Error ? err.message : String(err)));
+    loadPacks().catch((err) => {
+      if (requestVersionRef.current === requestVersion) setError(err instanceof Error ? err.message : String(err));
+    });
     return () => {
+      requestVersionRef.current += 1;
       if (pollRef.current != null) window.clearTimeout(pollRef.current);
     };
   }, [loadPacks]);
 
-  async function poll(jobId: number) {
+  async function poll(jobId: number, requestVersion: number) {
     try {
       const next = await api.getSentencePackJob(jobId);
+      if (requestVersionRef.current !== requestVersion) return;
       setJob(next);
       if (next.status === "completed") {
         setBusy(false);
         setMessage(next.progress_message || "Hermes sentence pack ready.");
         await loadPacks();
+        if (requestVersionRef.current !== requestVersion) return;
         return;
       }
       if (next.status === "failed") {
@@ -50,22 +60,27 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
         setError(next.error || "Hermes generation failed.");
         return;
       }
-      pollRef.current = window.setTimeout(() => poll(jobId), 1800);
+      pollRef.current = window.setTimeout(() => poll(jobId, requestVersion), 1800);
     } catch (err) {
+      if (requestVersionRef.current !== requestVersion) return;
       setBusy(false);
       setError(err instanceof Error ? err.message : String(err));
     }
   }
 
   async function generate() {
+    const requestVersion = ++requestVersionRef.current;
+    if (pollRef.current != null) window.clearTimeout(pollRef.current);
     setBusy(true);
     setError(null);
     setMessage(null);
     try {
       const next = await api.generateSentencePack({ source_type: sourceType, source_id: sourceId, context, count: 10 });
+      if (requestVersionRef.current !== requestVersion) return;
       setJob(next);
-      await poll(next.id);
+      await poll(next.id, requestVersion);
     } catch (err) {
+      if (requestVersionRef.current !== requestVersion) return;
       setBusy(false);
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -132,7 +147,7 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
                 <strong>{item.prompt_en}</strong>
                 <span lang="es">{item.expected_es}</span>
                 {item.coaching_note ? <span className="small muted">{item.coaching_note}</span> : null}
-                {item.audio_url ? <audio controls preload="none" src={item.audio_url} /> : <span className="small muted">Audio: {item.audio_status}</span>}
+                {item.audio_url ? <AudioPlayer src={item.audio_url} label={`Spanish audio for ${item.prompt_en}`} /> : <span className="small muted">Audio: {item.audio_status}</span>}
               </div>
             ))}
           </div>

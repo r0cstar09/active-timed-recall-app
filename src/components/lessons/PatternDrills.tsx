@@ -35,8 +35,8 @@ export default function PatternDrills() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     setError(null);
     try {
       const res = await api.listPatterns();
@@ -45,13 +45,20 @@ export default function PatternDrills() {
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  const hasPendingAudio = packs.some((pack) => pack.drills.some((drill) => drill.audio_status === "pending"));
+  useEffect(() => {
+    if (!hasPendingAudio) return;
+    const timer = window.setTimeout(() => void refresh(false), 1800);
+    return () => window.clearTimeout(timer);
+  }, [hasPendingAudio, packs, refresh]);
 
   const unlockedPatterns = useMemo(
     () => patterns.filter((p) => p.status !== "locked"),
