@@ -750,6 +750,9 @@ export const api = {
   generatePatternPack(patternId: string, payload: { source_lesson_id?: string | null; count?: number } = {}): Promise<{ pack: PatternPack }> {
     return requestJson<{ pack: PatternPack }>(`/api/study/patterns/${encodeURIComponent(patternId)}/generate-pack`, "POST", payload);
   },
+  promotePatternPack(packId: number): Promise<{ pack_id: number; promoted: number; phrase_ids: number[] }> {
+    return requestJson<{ pack_id: number; promoted: number; phrase_ids: number[] }>(`/api/study/pattern-packs/${packId}/promote`, "POST", {});
+  },
   gradePatternDrills(attempts: { drill_id: number; user_answer: string }[]): Promise<{ items: PatternGradeResultItem[]; summary: string }> {
     return requestJson<{ items: PatternGradeResultItem[]; summary: string }>("/api/study/pattern-drills/grade", "POST", { attempts });
   },

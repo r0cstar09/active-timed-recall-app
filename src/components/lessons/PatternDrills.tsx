@@ -102,6 +102,20 @@ export default function PatternDrills() {
     }
   }
 
+  async function promotePack(pack: PatternPack) {
+    const key = `promote:${pack.id}`;
+    setBusy((b) => ({ ...b, [key]: true }));
+    setError(null);
+    try {
+      const res = await api.promotePatternPack(pack.id);
+      setMessage(`${res.promoted} cards are ready in Active Timed Recall.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy((b) => ({ ...b, [key]: false }));
+    }
+  }
+
   return (
     <div className="stack pattern-drills" data-pattern-drills="ready">
       <section className="card stack pattern-hero">
@@ -175,6 +189,14 @@ export default function PatternDrills() {
                   </div>
                   <span className="pill pill-good">{sealed}/{pack.drills.length} sealed</span>
                 </div>
+                <button
+                  className="btn btn-primary btn-block"
+                  type="button"
+                  disabled={busy[`promote:${pack.id}`]}
+                  onClick={() => void promotePack(pack)}
+                >
+                  {busy[`promote:${pack.id}`] ? "Adding cards…" : "Add pack to Active Timed Recall"}
+                </button>
                 <div className="stack">
                   {pack.drills.map((drill) => {
                     const key = drillKey(drill);
