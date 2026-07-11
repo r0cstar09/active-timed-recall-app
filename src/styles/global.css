@@ -403,7 +403,7 @@ button:focus-visible,
 .btn-ghost { background: transparent; box-shadow: none; }
 .btn-lg { min-height: 58px; font-size: 1.08rem; }
 .btn-small { min-height: 38px; padding: 8px 13px; font-size: .85rem; }
-.btn-row { display: flex; gap: 10px; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .btn-row > .btn { flex: 1; }
 
 /* Inputs ───────────────────────────────────────────────────────────────── */

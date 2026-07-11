@@ -580,7 +580,17 @@ function hydrateSentencePack(pack: SentencePack): SentencePack {
     ...pack,
     items: (pack.items ?? []).map((item) => ({
       ...item,
-      audio_url: item.audio_path ? resolveUrl(`/api/audio/source/${item.audio_path}`) : null,
+      audio_url: item.audio_url ? resolveUrl(item.audio_url) : (item.audio_path ? resolveUrl(`/api/audio/source/${item.audio_path}`) : null),
+    })),
+  };
+}
+
+function hydratePatternPack(pack: PatternPack): PatternPack {
+  return {
+    ...pack,
+    drills: (pack.drills ?? []).map((drill) => ({
+      ...drill,
+      audio_url: drill.audio_url ? resolveUrl(drill.audio_url) : (drill.audio_path ? resolveUrl(`/api/audio/source/${drill.audio_path}`) : null),
     })),
   };
 }
@@ -780,22 +790,17 @@ export const api = {
     const obj = res && typeof res === "object" ? res as Record<string, unknown> : {};
     return {
       patterns: toArray<PatternCatalogEntry>(obj.patterns, ["items", "data", "results"]),
-      packs: toArray<PatternPack>(obj.packs, ["items", "data", "results"]).map((pack) => ({
-        ...pack,
-        drills: (pack.drills ?? []).map((drill) => ({
-          ...drill,
-          audio_url: drill.audio_path ? resolveUrl(`/api/audio/source/${drill.audio_path}`) : null,
-        })),
-      })),
+      packs: toArray<PatternPack>(obj.packs, ["items", "data", "results"]).map(hydratePatternPack),
     };
   },
   async listPatternPacks(patternId?: string): Promise<PatternPack[]> {
     const suffix = patternId ? `?pattern_id=${encodeURIComponent(patternId)}` : "";
     const res = await request<unknown>(`/api/study/pattern-packs${suffix}`);
-    return toArray<PatternPack>(res, ["packs", "items", "data", "results"]);
+    return toArray<PatternPack>(res, ["packs", "items", "data", "results"]).map(hydratePatternPack);
   },
-  generatePatternPack(patternId: string, payload: { source_lesson_id?: string | null; count?: number } = {}): Promise<{ pack: PatternPack }> {
-    return requestJson<{ pack: PatternPack }>(`/api/study/patterns/${encodeURIComponent(patternId)}/generate-pack`, "POST", payload);
+  async generatePatternPack(patternId: string, payload: { source_lesson_id?: string | null; count?: number } = {}): Promise<{ pack: PatternPack }> {
+    const response = await requestJson<{ pack: PatternPack }>(`/api/study/patterns/${encodeURIComponent(patternId)}/generate-pack`, "POST", payload);
+    return { pack: hydratePatternPack(response.pack) };
   },
   promotePatternPack(packId: number): Promise<{ pack_id: number; promoted: number; phrase_ids: number[] }> {
     return requestJson<{ pack_id: number; promoted: number; phrase_ids: number[] }>(`/api/study/pattern-packs/${packId}/promote`, "POST", {});

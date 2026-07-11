@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api, type PatternCatalogEntry, type PatternDrill, type PatternPack, type PatternGradeResultItem } from "../../lib/api";
+import AudioPlayer from "../AudioPlayer";
 
 type View = "all" | "unlocked" | "packs";
 
@@ -210,7 +211,7 @@ export default function PatternDrills() {
                           </div>
                           {drill.grading_notes && <span className="small faint">{drill.grading_notes}</span>}
                           {drill.audio_url ? (
-                            <audio controls preload="none" src={drill.audio_url} aria-label={`Spanish audio for ${drill.prompt_en}`} />
+                            <AudioPlayer src={drill.audio_url} label={`Spanish audio for ${drill.prompt_en}`} />
                           ) : drill.audio_status === "failed" ? (
                             <span className="small faint">Audio is being repaired; the drill is still available.</span>
                           ) : null}
