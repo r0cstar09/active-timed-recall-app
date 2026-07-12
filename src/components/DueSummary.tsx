@@ -17,8 +17,8 @@ function queueMood(stats: DashboardStats | null, hasResumable: boolean) {
   const learning = stats?.learningCount ?? 0;
   const fresh = stats?.newCount ?? 0;
   if (due > 12) return { label: "review wave", tone: "Big due stack. Clear reviews first, then move into lessons or verb grids." };
-  if (due > 0) return { label: "reviews ready", tone: `${due} sentence${due === 1 ? "" : "s"} due. Clear the review queue and keep the passport moving.` };
-  if (learning > 0) return { label: "lesson loop", tone: `${learning} sentence${learning === 1 ? "" : "s"} still learning. Finish the loop, then stamp progress.` };
+  if (due > 0) return { label: "reviews ready", tone: `${due} sentence${due === 1 ? "" : "s"} due. Clear the review queue and keep your spoken recall moving.` };
+  if (learning > 0) return { label: "lesson loop", tone: `${learning} sentence${learning === 1 ? "" : "s"} still learning. Finish the loop, then practice speaking.` };
   if (fresh > 0) return { label: "new lessons", tone: "No urgent reviews. Learn sentence cards, drill verbs, or start a speaking sprint." };
   return { label: "open route", tone: "Add a source, drill verbs, learn sentence patterns, or practice speaking while FSRS waits." };
 }

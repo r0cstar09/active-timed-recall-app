@@ -8,7 +8,7 @@ import { ClientRouter } from "astro:transitions";
 interface Props {
   title?: string;
   heading?: string;
-  current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings" | "passport" | "session";
+  current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings" | "session";
   /** Hide the bottom tab bar (used by the focused recall session screen). */
   hideNav?: boolean;
 }
@@ -43,7 +43,7 @@ const {
     <title>{title}</title>
     <meta name="description" content="Spanish acoustic-first active timed recall." />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content="Ear-first Spanish recall with passport stamps, regional flavor, and spoken timer pressure." />
+    <meta property="og:description" content="Ear-first Spanish recall with focused lessons, spoken practice, and timer pressure." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/og/spanish-recall-og.png" />
     <meta name="twitter:card" content="summary_large_image" />

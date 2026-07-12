@@ -1,7 +1,7 @@
 ---
 import Glyph from "./Glyph.astro";
 interface Props {
-  current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings" | "passport" | "session";
+  current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings" | "session";
 }
 const { current } = Astro.props;
 
@@ -10,7 +10,6 @@ const primaryTabs = [
   { id: "lessons", href: "/lessons", label: "Lessons", icon: "lessons" },
   { id: "session", href: "/session", label: "Speak", icon: "session", cta: true },
   { id: "misses", href: "/misses", label: "Review", icon: "misses" },
-  { id: "passport", href: "/passport", label: "Passport", icon: "passport" },
 ] as const;
 
 const secondaryTabs = [
