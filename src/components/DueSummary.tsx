@@ -17,8 +17,8 @@ function queueMood(stats: DashboardStats | null, hasResumable: boolean) {
   const learning = stats?.learningCount ?? 0;
   const fresh = stats?.newCount ?? 0;
   if (due > 12) return { label: "review wave", tone: "Big due stack. Clear reviews first, then move into lessons or verb grids." };
-  if (due > 0) return { label: "reviews ready", tone: `${due} sentence${due === 1 ? "" : "s"} due. Clear the review queue and keep your spoken recall moving.` };
-  if (learning > 0) return { label: "lesson loop", tone: `${learning} sentence${learning === 1 ? "" : "s"} still learning. Finish the loop, then practice speaking.` };
+  if (due > 0) return { label: "reviews ready", tone: `${due} sentence${due === 1 ? "" : "s"} due. Clear the review queue and keep the passport moving.` };
+  if (learning > 0) return { label: "lesson loop", tone: `${learning} sentence${learning === 1 ? "" : "s"} still learning. Finish the loop, then stamp progress.` };
   if (fresh > 0) return { label: "new lessons", tone: "No urgent reviews. Learn sentence cards, drill verbs, or start a speaking sprint." };
   return { label: "open route", tone: "Add a source, drill verbs, learn sentence patterns, or practice speaking while FSRS waits." };
 }
@@ -158,7 +158,10 @@ export default function DueSummary() {
           <p className="muted" style={{ margin: 0 }}>{loading ? "Checking reviews, sentence lessons, verb grids, and open misses…" : nextFocus.note}</p>
           <div className="row wrap" style={{ gap: 10 }}>
             <a className="btn btn-primary btn-lg" href={nextFocus.href}>{nextFocus.label}</a>
-            <a className="btn btn-azul" href="/lessons">Sentence lessons</a>
+            <a className="btn btn-azul btn-lg" href="/session?mode=learn">
+              Learn new cards{stats && stats.newCount > 0 ? ` (${stats.newCount})` : ""}
+            </a>
+            <a className="btn btn-ghost" href="/lessons">Sentence lessons</a>
             <a className="btn btn-ghost" href="/verbs">Verb grids</a>
           </div>
         </div>
