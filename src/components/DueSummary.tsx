@@ -2,9 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../lib/api";
 import type { DailyHabitDay, ServerDashboardStats } from "../lib/types";
 
+function dateOnly(date: string): Date {
+  // The API already sends a New York-local calendar date. Format at UTC noon
+  // so DST offsets cannot shift the displayed day.
+  return new Date(`${date}T12:00:00Z`);
+}
+
 function dayLabel(date: string): string {
-  return new Intl.DateTimeFormat("en-US", { weekday: "narrow", timeZone: "America/New_York" })
-    .format(new Date(`${date}T12:00:00-04:00`));
+  return new Intl.DateTimeFormat("en-US", { weekday: "narrow", timeZone: "UTC" })
+    .format(dateOnly(date));
 }
 
 function longDate(date: string): string {
@@ -13,8 +19,8 @@ function longDate(date: string): string {
     weekday: "long",
     month: "long",
     day: "numeric",
-    timeZone: "America/New_York",
-  }).format(new Date(`${date}T12:00:00-04:00`));
+    timeZone: "UTC",
+  }).format(dateOnly(date));
 }
 
 function WeekStrip({ days, today }: { days: DailyHabitDay[]; today: string }) {
@@ -26,9 +32,9 @@ function WeekStrip({ days, today }: { days: DailyHabitDay[]; today: string }) {
           <div
             className={`habit-day ${state} ${day.date === today ? "today" : ""}`}
             key={day.date}
-            title={`${day.date}: ${day.reps} practice ${day.reps === 1 ? "rep" : "reps"}`}
+            title={`${longDate(day.date)}: ${day.reps} practice ${day.reps === 1 ? "rep" : "reps"}`}
             role="listitem"
-            aria-label={`${day.date}: ${day.reps} practice ${day.reps === 1 ? "rep" : "reps"}`}
+            aria-label={`${longDate(day.date)}: ${day.reps} practice ${day.reps === 1 ? "rep" : "reps"}${day.date === today ? "; today" : ""}`}
             aria-current={day.date === today ? "date" : undefined}
           >
             <span>{dayLabel(day.date)}</span>
