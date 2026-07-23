@@ -255,6 +255,33 @@ export interface Card {
   lapses: number;
 }
 
+export interface DailyHabitDay {
+  date: string;
+  reps: number;
+  target_met: boolean;
+}
+
+export interface DailyHabitStats {
+  timezone: string;
+  local_date: string;
+  daily_target: number;
+  today_reps: number;
+  remaining_reps: number;
+  target_met: boolean;
+  current_streak: number;
+  practiced_today: boolean;
+  recent_days: DailyHabitDay[];
+}
+
+export interface ServerDashboardStats {
+  due_count: number;
+  new_count: number;
+  review_count: number;
+  learning_count: number;
+  suspended_count: number;
+  habit: DailyHabitStats;
+}
+
 /** Dashboard counts derived client-side from /api/cards + /api/sources. */
 export interface DashboardStats {
   dueCount: number;

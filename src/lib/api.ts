@@ -53,6 +53,7 @@ import type {
   IngestJob,
   Source,
   Phrase,
+  ServerDashboardStats,
 } from "./types";
 import { isJobComplete, isJobFailed } from "./types";
 
@@ -681,21 +682,43 @@ export const api = {
    * from listCards(), which is capped at 100 rows and silently undercounts once
    * the deck grows past that.
    */
-  async getDashboardCounts(): Promise<{
-    due_count: number;
-    new_count: number;
-    review_count: number;
-    learning_count: number;
-    suspended_count: number;
-  }> {
+  async getDashboardCounts(): Promise<ServerDashboardStats> {
     const res = (await request<Record<string, unknown>>("/api/stats")) ?? {};
     const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+    const habit = res.habit && typeof res.habit === "object"
+      ? res.habit as Record<string, unknown>
+      : {};
+    const recent = Array.isArray(habit.recent_days) ? habit.recent_days : [];
+    const dailyTarget = Math.max(1, num(habit.daily_target) || 20);
+    const todayReps = Math.max(0, num(habit.today_reps));
     return {
       due_count: num(res.due_count),
       new_count: num(res.new_count),
       review_count: num(res.review_count),
       learning_count: num(res.learning_count),
       suspended_count: num(res.suspended_count),
+      habit: {
+        timezone: typeof habit.timezone === "string" ? habit.timezone : "America/New_York",
+        local_date: typeof habit.local_date === "string"
+          ? habit.local_date
+          : new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date()),
+        daily_target: dailyTarget,
+        today_reps: todayReps,
+        remaining_reps: typeof habit.remaining_reps === "number"
+          ? Math.max(0, habit.remaining_reps)
+          : Math.max(0, dailyTarget - todayReps),
+        target_met: habit.target_met === true,
+        current_streak: Math.max(0, num(habit.current_streak)),
+        practiced_today: habit.practiced_today === true,
+        recent_days: recent
+          .filter((day): day is Record<string, unknown> => Boolean(day && typeof day === "object"))
+          .map((day) => ({
+            date: typeof day.date === "string" ? day.date : "",
+            reps: Math.max(0, num(day.reps)),
+            target_met: day.target_met === true,
+          }))
+          .filter((day) => Boolean(day.date)),
+      },
     };
   },
 

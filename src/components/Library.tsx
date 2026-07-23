@@ -40,6 +40,13 @@ export default function Library() {
     })();
   }, [tab, sources, cards]);
 
+  function handleSourceCardRemoved(sourceId: number, phraseId: number) {
+    setSources((current) => current?.map((source) => source.id === sourceId
+      ? { ...source, active_count: Math.max(0, source.active_count - 1) }
+      : source) ?? null);
+    setCards((current) => current?.filter((card) => card.phrase_id !== phraseId) ?? null);
+  }
+
   return (
     <div className="stack">
       <div className="seg">
@@ -60,7 +67,7 @@ export default function Library() {
       {error && <div className="alert alert-error">{error}</div>}
 
       {tab === "sources" && <RegionCards />}
-      {tab === "sources" && <Sources sources={sources} />}
+      {tab === "sources" && <Sources sources={sources} onCardRemoved={handleSourceCardRemoved} />}
       {tab === "cards" && (
         <Cards
           cards={cards}
@@ -85,13 +92,24 @@ function RegionCards() {
   );
 }
 
-function Sources({ sources }: { sources: Source[] | null }) {
+function Sources({
+  sources,
+  onCardRemoved,
+}: {
+  sources: Source[] | null;
+  onCardRemoved: (sourceId: number, phraseId: number) => void;
+}) {
   const [openSourceId, setOpenSourceId] = useState<number | null>(null);
   const [phrasesBySource, setPhrasesBySource] = useState<Record<number, Phrase[]>>({});
   const [loadingSourceId, setLoadingSourceId] = useState<number | null>(null);
   const [sourceError, setSourceError] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<number | null>(null);
+  const [removingId, setRemovingId] = useState<number | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   async function toggleSource(sourceId: number) {
+    setConfirmingId(null);
+    setNotice(null);
     if (openSourceId === sourceId) {
       setOpenSourceId(null);
       return;
@@ -107,6 +125,28 @@ function Sources({ sources }: { sources: Source[] | null }) {
       setSourceError(err instanceof ApiError ? err.message : String(err));
     } finally {
       setLoadingSourceId(null);
+    }
+  }
+
+  async function removeSourceCard(sourceId: number, phrase: Phrase) {
+    setRemovingId(phrase.id);
+    setSourceError(null);
+    setNotice(null);
+    try {
+      await api.removeCard(phrase.id);
+      setPhrasesBySource((previous) => ({
+        ...previous,
+        [sourceId]: (previous[sourceId] ?? []).map((item) => item.id === phrase.id
+          ? { ...item, active: false }
+          : item),
+      }));
+      onCardRemoved(sourceId, phrase.id);
+      setConfirmingId(null);
+      setNotice(`“${phrase.spanish}” was removed from active study. Its review history was kept.`);
+    } catch (err) {
+      setSourceError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setRemovingId(null);
     }
   }
 
@@ -149,6 +189,7 @@ function Sources({ sources }: { sources: Source[] | null }) {
             <div className="stack">
               {loadingSourceId === s.id && <div className="alert">Loading cards for this source…</div>}
               {sourceError && <div className="alert alert-error">{sourceError}</div>}
+              {notice && <div className="alert alert-success" role="status">{notice}</div>}
               {!loadingSourceId && phrases.length === 0 && !sourceError && (
                 <div className="alert">No cards returned for this source.</div>
               )}
@@ -162,6 +203,26 @@ function Sources({ sources }: { sources: Source[] | null }) {
                   {p.context_clue && <div className="small faint">{p.context_clue}</div>}
                   {p.cloze_prompt && <div className="small faint"><strong>Cloze:</strong> {p.cloze_prompt}</div>}
                   {p.audio_url && <AudioPlayer src={p.audio_url} />}
+                  {p.active && confirmingId !== p.id && (
+                    <div className="row" style={{ justifyContent: "flex-end" }}>
+                      <button className="btn btn-small btn-danger" type="button" onClick={() => setConfirmingId(p.id)}>
+                        Delete card
+                      </button>
+                    </div>
+                  )}
+                  {p.active && confirmingId === p.id && (
+                    <div className="remove-confirm" role="group" aria-label={`Confirm removal of ${p.spanish}`}>
+                      <span>Remove this card from future study? History will be preserved.</span>
+                      <div className="row wrap">
+                        <button className="btn btn-small" type="button" onClick={() => setConfirmingId(null)} disabled={removingId === p.id}>
+                          Keep card
+                        </button>
+                        <button className="btn btn-small btn-danger" type="button" onClick={() => removeSourceCard(s.id, p)} disabled={removingId === p.id}>
+                          {removingId === p.id ? "Deleting…" : "Yes, delete card"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

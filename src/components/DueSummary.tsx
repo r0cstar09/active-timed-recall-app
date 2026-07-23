@@ -1,296 +1,233 @@
-import { useEffect, useMemo, useState } from "react";
-import { api, ApiError, type VerbCatalog } from "../lib/api";
-import type { DashboardStats } from "../lib/types";
-import { loadSession } from "../lib/timer";
-import { REGIONS, RegionArt, StateIllustration } from "../lib/visuals";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { api, ApiError } from "../lib/api";
+import type { DailyHabitDay, ServerDashboardStats } from "../lib/types";
 
-function dayPart() {
-  const h = new Date().getHours();
-  if (h < 12) return "Morning";
-  if (h < 17) return "Afternoon";
-  return "Evening";
+function dayLabel(date: string): string {
+  return new Intl.DateTimeFormat("en-US", { weekday: "narrow", timeZone: "America/New_York" })
+    .format(new Date(`${date}T12:00:00-04:00`));
 }
 
-function queueMood(stats: DashboardStats | null, hasResumable: boolean) {
-  if (hasResumable) return { label: "paused mid-flow", tone: "Resume the rep before starting anything new." };
-  const due = stats?.dueCount ?? 0;
-  const learning = stats?.learningCount ?? 0;
-  const fresh = stats?.newCount ?? 0;
-  if (due > 12) return { label: "review wave", tone: "Big due stack. Clear reviews first, then move into lessons or verb grids." };
-  if (due > 0) return { label: "reviews ready", tone: `${due} sentence${due === 1 ? "" : "s"} due. Clear the review queue and keep the passport moving.` };
-  if (learning > 0) return { label: "lesson loop", tone: `${learning} sentence${learning === 1 ? "" : "s"} still learning. Finish the loop, then stamp progress.` };
-  if (fresh > 0) return { label: "new lessons", tone: "No urgent reviews. Learn sentence cards, drill verbs, or start a speaking sprint." };
-  return { label: "open route", tone: "Add a source, drill verbs, learn sentence patterns, or practice speaking while FSRS waits." };
+function longDate(date: string): string {
+  if (!date) return "Today";
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/New_York",
+  }).format(new Date(`${date}T12:00:00-04:00`));
+}
+
+function WeekStrip({ days, today }: { days: DailyHabitDay[]; today: string }) {
+  return (
+    <div className="habit-week" aria-label="Practice during the last seven days">
+      {days.map((day) => {
+        const state = day.target_met ? "goal" : day.reps > 0 ? "active" : "empty";
+        return (
+          <div
+            className={`habit-day ${state} ${day.date === today ? "today" : ""}`}
+            key={day.date}
+            title={`${day.date}: ${day.reps} practice ${day.reps === 1 ? "rep" : "reps"}`}
+          >
+            <span>{dayLabel(day.date)}</span>
+            <i aria-hidden="true">{day.reps > 0 ? Math.min(day.reps, 99) : ""}</i>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function DueSummary() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState<ServerDashboardStats | null>(null);
+  const [sourceCount, setSourceCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasResumable, setHasResumable] = useState(false);
-  const [verbCompletion, setVerbCompletion] = useState({ completed: 0, total: 0 });
-  const [lessonCompletion, setLessonCompletion] = useState({ completed: 0, total: 0 });
-  const [patternCompletion, setPatternCompletion] = useState({ unlocked: 0, total: 0, packs: 0, sealed: 0, drills: 0 });
-  const [missCounts, setMissCounts] = useState({ lessons: 0, verbs: 0, patterns: 0 });
 
-  useEffect(() => {
-    setHasResumable(!!loadSession());
-    let alive = true;
-    (async () => {
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const dashboard = await api.getDashboardCounts();
+      setStats(dashboard);
       try {
-        const [counts, sourceCount, verbCatalog, verbProgress, lessonProgress, lessonCatalog, lessonMisses, verbMisses, patternState, patternMisses] = await Promise.all([
-          api.getDashboardCounts(),
-          api.countSources(),
-          api.listVerbCatalog().catch(async () => {
-            const mod = await import("../data/generated/verbs.json");
-            return mod.default as VerbCatalog;
-          }),
-          api.listVerbProgress().catch(() => []),
-          api.listLessonProgress().catch(() => []),
-          import("../data/generated/fuzzy_lessons.json").then((mod) => mod.default as { count: number }),
-          api.listLessonMisses(200).catch(() => []),
-          api.listVerbMisses(200).catch(() => []),
-          api.listPatterns().catch(() => ({ patterns: [], packs: [] })),
-          api.listPatternMisses(200).catch(() => []),
-        ]);
-        if (!alive) return;
-        setStats({
-          dueCount: counts.due_count,
-          newCount: counts.new_count,
-          learningCount: counts.learning_count,
-          reviewCount: counts.review_count,
-          totalCards: counts.new_count + counts.learning_count + counts.review_count + counts.suspended_count,
-          sourceCount,
-        });
-        setVerbCompletion({
-          completed: verbProgress.filter((p) => Number(p.completed) === 1).length,
-          total: verbCatalog.count || verbCatalog.verbs?.length || 0,
-        });
-        setLessonCompletion({
-          completed: lessonProgress.filter((p) => Number(p.completed) === 1).length,
-          total: lessonCatalog.count || 0,
-        });
-        const allDrills = patternState.packs.flatMap((p) => p.drills ?? []);
-        setPatternCompletion({
-          unlocked: patternState.patterns.filter((p) => p.status !== "locked").length,
-          total: patternState.patterns.length,
-          packs: patternState.packs.length,
-          sealed: allDrills.filter((d) => d.sealed).length,
-          drills: allDrills.length,
-        });
-        setMissCounts({
-          lessons: lessonMisses.filter((m) => m.status !== "cleared").length,
-          verbs: verbMisses.filter((m) => m.status !== "cleared").length,
-          patterns: patternMisses.filter((m) => m.status !== "cleared" && m.status !== "resolved").length,
-        });
-      } catch (err) {
-        if (alive) setError(err instanceof ApiError ? err.message : String(err));
-      } finally {
-        if (alive) setLoading(false);
+        setSourceCount(await api.countSources());
+      } catch {
+        setSourceCount(0);
       }
-    })();
-    return () => {
-      alive = false;
-    };
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const mood = useMemo(() => queueMood(stats, hasResumable), [hasResumable, stats]);
-  const completion = stats ? Math.min(100, Math.round(((stats.reviewCount + stats.learningCount) / Math.max(1, stats.totalCards)) * 100)) : 0;
-  const MOSAIC_TILES = 16;
-  const filledTiles = Math.round((completion / 100) * MOSAIC_TILES);
-  const verbPct = verbCompletion.total ? Math.round((verbCompletion.completed / verbCompletion.total) * 100) : 0;
-  const lessonPct = lessonCompletion.total ? Math.round((lessonCompletion.completed / lessonCompletion.total) * 100) : 0;
-  const dueCount = stats?.dueCount ?? 0;
-  const lessonRemaining = Math.max(0, lessonCompletion.total - lessonCompletion.completed);
-  const verbRemaining = Math.max(0, verbCompletion.total - verbCompletion.completed);
-  const patternPct = patternCompletion.drills ? Math.round((patternCompletion.sealed / patternCompletion.drills) * 100) : (patternCompletion.unlocked ? 20 : 0);
-  const openMisses = missCounts.lessons + missCounts.verbs + missCounts.patterns;
-  const passportPct = Math.round((verbPct + lessonPct + patternPct + Math.max(0, 100 - Math.min(100, openMisses * 8))) / 4);
-  const nextFocus = hasResumable
-    ? { label: "Resume session", href: "/session", note: "Finish the interrupted speaking rep before adding more work." }
-    : dueCount > 0
-      ? { label: "Clear reviews", href: "/session?mode=review", note: `${dueCount} due card${dueCount === 1 ? "" : "s"} are blocking clean momentum.` }
-      : openMisses > 0
-        ? { label: "Polish misses", href: "/misses", note: `${openMisses} open miss${openMisses === 1 ? "" : "es"} should become targeted recall fuel.` }
-        : patternCompletion.unlocked > patternCompletion.packs
-          ? { label: "Generate pattern pack", href: "/lessons/patterns", note: `${patternCompletion.unlocked - patternCompletion.packs} unlocked pattern${patternCompletion.unlocked - patternCompletion.packs === 1 ? "" : "s"} need saved drill packs.` }
-          : patternCompletion.drills > patternCompletion.sealed
-            ? { label: "Seal pattern drills", href: "/lessons/patterns", note: `${patternCompletion.drills - patternCompletion.sealed} generated pattern drill${patternCompletion.drills - patternCompletion.sealed === 1 ? "" : "s"} still open.` }
-        : lessonRemaining > verbRemaining
-          ? { label: "Sentence lessons", href: "/lessons", note: `${lessonRemaining} lesson${lessonRemaining === 1 ? "" : "s"} left in the pattern library.` }
-          : { label: "Verb grids", href: "/verbs", note: `${verbRemaining} verb grid${verbRemaining === 1 ? "" : "s"} left to lock in.` };
-  const heatSeed = (stats?.reviewCount ?? 0) + (stats?.learningCount ?? 0) + (stats?.sourceCount ?? 0);
-  const heatCells = Array.from({ length: 35 }, (_, i) => {
-    const age = 34 - i;
-    const activeToday = heatSeed > 0 && age < Math.min(35, Math.max(2, Math.ceil(completion / 4)));
-    const level = !activeToday ? 0 : Math.max(1, Math.min(4, ((heatSeed + i * 3) % 5)));
-    return level;
-  });
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const primary = useMemo(() => {
+    if (!stats) return { href: "/session?mode=practice", label: "Start practice" };
+    if (stats.new_count > 0) {
+      return {
+        href: "/session?mode=learn",
+        label: `Learn ${Math.min(stats.new_count, 10)} new ${Math.min(stats.new_count, 10) === 1 ? "card" : "cards"}`,
+      };
+    }
+    if (stats.due_count > 0) {
+      return {
+        href: "/session?mode=practice",
+        label: `Practice ${Math.min(stats.due_count, 10)} due ${Math.min(stats.due_count, 10) === 1 ? "card" : "cards"}`,
+      };
+    }
+    if (!stats.habit.target_met) {
+      return { href: "/session?mode=practice", label: "Build today’s reps" };
+    }
+    return { href: "/lessons", label: "Explore a lesson" };
+  }, [stats]);
+
+  if (loading && !stats) {
+    return (
+      <section className="daily-home" aria-busy="true">
+        <div className="daily-loading-card">
+          <div className="daily-loading-line wide"></div>
+          <div className="daily-loading-line"></div>
+          <div className="daily-loading-line button"></div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error || !stats) {
+    return (
+      <section className="daily-home">
+        <div className="card center stack daily-error-card" role="alert">
+          <span className="daily-error-icon" aria-hidden="true">!</span>
+          <h1>Today’s plan could not load.</h1>
+          <p className="muted">{error ?? "The learning service did not return your dashboard."}</p>
+          <button className="btn btn-primary" type="button" onClick={() => void load()}>Try again</button>
+        </div>
+      </section>
+    );
+  }
+
+  const { habit } = stats;
+  const progress = Math.min(100, Math.round((habit.today_reps / habit.daily_target) * 100));
+  const streakCopy = habit.current_streak === 0
+    ? "Start your streak today"
+    : habit.practiced_today
+      ? `${habit.current_streak}-day streak active`
+      : `Practice today to keep your ${habit.current_streak}-day streak`;
+  const planCopy = habit.target_met
+    ? "Daily target complete. Anything else is bonus Spanish."
+    : stats.new_count > 0
+      ? "Learn your new cards, then finish the remaining practice reps."
+      : stats.due_count > 0
+        ? "Clear the due queue and finish today’s practice target."
+        : "Build today’s practice reps to keep your momentum.";
 
   return (
-    <div className="stack dashboard-stack">
-      {error && (
-        <div className="alert alert-error">
-          {error}
-          <div className="small faint" style={{ marginTop: 6 }}>
-            Confirm the backend is reachable over Tailscale, then check the API base URL in Settings.
-          </div>
-        </div>
-      )}
-      {loading && <div className="mini-loading"><StateIllustration type="loading" /><span>Stamping today’s queue…</span></div>}
-
-      <div className="mission-card" style={{ "--region-accent": REGIONS[(new Date().getDate() - 1) % REGIONS.length].accent } as React.CSSProperties}>
-        <RegionArt region={REGIONS[(new Date().getDate() - 1) % REGIONS.length].key} className="mission-region-art" />
-        <div className="mission-mosaic" role="img" aria-label={`${completion}% of your deck is active`}>
-          {Array.from({ length: MOSAIC_TILES }).map((_, i) => (
-            <span key={i} className={i < filledTiles ? "m-tile filled" : "m-tile"} />
-          ))}
-          <small className="m-tile-label">{loading ? "·" : `${completion}% active`}</small>
-        </div>
-        <div className="mission-content stack">
-          <div className="row between wrap">
-            <div>
-              <div className="spanish-kicker">Today's route · {dayPart()} · {mood.label}</div>
-              <h2 style={{ margin: 0 }}>Move the bottleneck, earn the stamp.</h2>
-            </div>
-            <span className="flavor-badge">next: {nextFocus.label}</span>
-          </div>
-          <p className="muted" style={{ margin: 0 }}>{loading ? "Checking reviews, sentence lessons, verb grids, and open misses…" : nextFocus.note}</p>
-          <div className="row wrap" style={{ gap: 10 }}>
-            <a className="btn btn-primary btn-lg" href={nextFocus.href}>{nextFocus.label}</a>
-            <a className="btn btn-azul btn-lg" href="/session?mode=learn">
-              Learn new cards{stats && stats.newCount > 0 ? ` (${stats.newCount})` : ""}
-            </a>
-            <a className="btn btn-ghost" href="/lessons">Sentence lessons</a>
-            <a className="btn btn-ghost" href="/verbs">Verb grids</a>
-          </div>
-        </div>
-      </div>
-
-      <div className="score-strip">
-        <div className="score-ring" style={{ "--pct": `${completion}%` } as React.CSSProperties}>
-          <strong>{loading ? "·" : `${completion}%`}</strong>
-          <span>active</span>
-        </div>
-        <div className="score-copy">
-          <div className="spanish-kicker">passport readiness</div>
-          <strong>{loading ? "calculating the route" : `${passportPct}% toward the next visible milestone`}</strong>
-          <p className="muted small" style={{ margin: "4px 0 0" }}>
-            {stats ? `${dueCount} due · ${openMisses} open misses · ${patternCompletion.unlocked} patterns unlocked · ${lessonRemaining} lessons left · ${verbRemaining} verb grids left` : "Loading library totals…"}
-          </p>
-        </div>
-      </div>
-
-      <div className="route-board" aria-label="Today’s progress route">
-        <a className={`route-card ${dueCount ? "urgent" : "done"}`} href="/session?mode=review">
-          <span>1</span><strong>{dueCount} reviews due</strong><small>{dueCount ? "Clear these before new work." : "Review queue clear."}</small>
-        </a>
-        <a className={`route-card ${openMisses ? "urgent" : "done"}`} href="/misses">
-          <span>2</span><strong>{openMisses} misses open</strong><small>{missCounts.lessons} lesson · {missCounts.verbs} verb · {missCounts.patterns} pattern</small>
-        </a>
-        <a className="route-card" href="/lessons">
-          <span>3</span><strong>{lessonRemaining} lessons left</strong><small>{lessonPct}% sentence curriculum stamped</small>
-        </a>
-        <a className={`route-card ${patternCompletion.drills > patternCompletion.sealed ? "urgent" : patternCompletion.unlocked ? "done" : ""}`} href="/lessons/patterns">
-          <span>4</span><strong>{patternCompletion.unlocked} patterns unlocked</strong><small>{patternCompletion.sealed}/{patternCompletion.drills} generated drills sealed</small>
-        </a>
-        <a className="route-card" href="/verbs">
-          <span>5</span><strong>{verbRemaining} verb grids left</strong><small>{verbPct}% verb atlas complete</small>
-        </a>
-      </div>
-
-      <div className="card stack progress-card">
-        <div className="row between wrap">
+    <section className="daily-home">
+      <header className="daily-command-card">
+        <div className="daily-command-topline">
           <div>
-            <div className="spanish-kicker">visible progress</div>
-            <strong>Curriculum completion</strong>
+            <span className="daily-kicker">Your daily plan</span>
+            <span className="daily-date">{longDate(habit.local_date)}</span>
           </div>
-          <span className="pill">verbs + lessons + patterns</span>
-        </div>
-        <div className="progress-row">
-          <div className="row between small">
-            <span>Verb grids completed</span>
-            <strong>{loading ? "·" : `${verbCompletion.completed}/${verbCompletion.total} (${verbPct}%)`}</strong>
+          <div className={`streak-badge ${habit.practiced_today ? "is-active" : ""}`} aria-label={streakCopy}>
+            <span aria-hidden="true">🔥</span>
+            <strong>{habit.current_streak}</strong>
+            <small>{habit.current_streak === 1 ? "day" : "days"}</small>
           </div>
-          <div className="progress-track" aria-label={`Verb progress ${verbPct}%`}><span style={{ width: `${verbPct}%` }} /></div>
         </div>
-        <div className="progress-row">
-          <div className="row between small">
-            <span>Sentence lessons completed</span>
-            <strong>{loading ? "·" : `${lessonCompletion.completed}/${lessonCompletion.total} (${lessonPct}%)`}</strong>
+
+        <div className="daily-command-copy">
+          <h1>What to do today</h1>
+          <p>{planCopy}</p>
+        </div>
+
+        <div className="daily-goal-progress">
+          <div className="daily-goal-labels">
+            <strong>{habit.today_reps} of {habit.daily_target} practice reps</strong>
+            <span>{habit.target_met ? "Target complete" : `${habit.remaining_reps} left`}</span>
           </div>
-          <div className="progress-track" aria-label={`Sentence lesson progress ${lessonPct}%`}><span style={{ width: `${lessonPct}%` }} /></div>
-        </div>
-        <div className="progress-row">
-          <div className="row between small">
-            <span>Pattern drills sealed</span>
-            <strong>{loading ? "·" : `${patternCompletion.sealed}/${patternCompletion.drills} (${patternPct}%)`}</strong>
+          <div
+            className="daily-progress-track"
+            role="progressbar"
+            aria-label="Daily practice target"
+            aria-valuemin={0}
+            aria-valuemax={habit.daily_target}
+            aria-valuenow={Math.min(habit.today_reps, habit.daily_target)}
+          >
+            <span style={{ width: `${progress}%` }}></span>
           </div>
-          <div className="progress-track" aria-label={`Pattern drill progress ${patternPct}%`}><span style={{ width: `${patternPct}%` }} /></div>
         </div>
+
+        <a className="btn btn-primary btn-lg daily-primary-button" href={primary.href}>
+          {primary.label}
+          <span aria-hidden="true">→</span>
+        </a>
+      </header>
+
+      <div className="daily-task-grid" aria-label="Today’s Spanish tasks">
+        <article className={`daily-task-card learn ${stats.new_count === 0 ? "is-complete" : ""}`}>
+          <div className="daily-task-icon" aria-hidden="true">＋</div>
+          <div className="daily-task-number">{stats.new_count}</div>
+          <h2>New cards to learn</h2>
+          <p>{stats.new_count > 0
+            ? `Start with up to ${Math.min(stats.new_count, 10)} new cards. They stay out of review until you introduce them.`
+            : "You have introduced every current card."}</p>
+          <a className={`btn btn-block ${stats.new_count > 0 ? "btn-primary" : ""}`} href={stats.new_count > 0 ? "/session?mode=learn" : "/ingest"}>
+            {stats.new_count > 0 ? "Learn new cards" : "Add a source"}
+          </a>
+        </article>
+
+        <article className={`daily-task-card practice ${habit.target_met ? "is-complete" : ""}`}>
+          <div className="daily-task-icon" aria-hidden="true">◎</div>
+          <div className="daily-task-number">{habit.remaining_reps}</div>
+          <h2>{habit.target_met ? "Practice target complete" : "Practice reps remaining"}</h2>
+          <p>{habit.target_met
+            ? `You completed ${habit.today_reps} reps today. Your ${habit.daily_target}-rep target is covered.`
+            : `${stats.due_count} cards are due now. Lessons, verbs, patterns, and recall cards all move this target.`}</p>
+          <a className={`btn btn-block ${habit.target_met ? "" : "btn-primary"}`} href={habit.target_met ? "/misses" : "/session?mode=practice"}>
+            {habit.target_met ? "Optional: clear misses" : "Practice now"}
+          </a>
+        </article>
       </div>
 
-      <div className="card stack journey-card">
-        <div className="row between wrap">
+      <article className="streak-card">
+        <div className="streak-copy">
+          <span className="streak-flame" aria-hidden="true">🔥</span>
           <div>
-            <div className="spanish-kicker">study wall</div>
-            <strong>Azulejo heatmap + passport route</strong>
+            <span className="daily-kicker">Consistency</span>
+            <h2>{streakCopy}</h2>
+            <p>{habit.practiced_today
+              ? "Today is secured. Come back tomorrow to extend it."
+              : habit.current_streak > 0
+                ? "One meaningful practice rep today keeps the streak alive."
+                : "Practice today, then return tomorrow to build momentum."}</p>
           </div>
-          <span className="pill">last 5 weeks</span>
         </div>
-        <div className="heatmap-wall" aria-label="Study intensity heatmap">
-          {heatCells.map((level, i) => <span key={i} className={`heat-tile level-${level}`} />)}
-        </div>
-        <div className="journey-arc" style={{ "--pct": `${passportPct}%` } as React.CSSProperties}>
-          <span>reviews</span><i /><span>passport</span>
-        </div>
-      </div>
+        <WeekStrip days={habit.recent_days} today={habit.local_date} />
+      </article>
 
-      <div className="metric-board metric-board-pop" aria-label="Practice counts">
-        <div className="metric-card hot">
-          <div className="metric-icon">🔥</div>
-          <div className="num">{loading ? "·" : (stats?.dueCount ?? 0)}</div>
-          <div className="lbl">reviews due</div>
+      <section className="daily-more">
+        <div className="daily-section-heading">
+          <div>
+            <span className="daily-kicker">More ways to train</span>
+            <h2>Choose a focus</h2>
+          </div>
+          <span className="pill">{sourceCount} {sourceCount === 1 ? "source" : "sources"}</span>
         </div>
-        <div className="metric-card rhythm">
-          <div className="metric-icon">🎧</div>
-          <div className="num">{loading ? "·" : (stats?.learningCount ?? 0)}</div>
-          <div className="lbl">learning cards</div>
-        </div>
-        <div className="metric-card cool">
-          <div className="metric-icon">✨</div>
-          <div className="num">{loading ? "·" : (stats?.newCount ?? 0)}</div>
-          <div className="lbl">new cards</div>
-        </div>
-      </div>
-
-      <div className="action-grid action-grid-pop">
-        <a className="action-card action-card-red" href="/session?mode=review">
-          <span>primero</span>
-          <strong>Clear reviews</strong>
-          <small>Lock in due Spanish under real timer pressure.</small>
-        </a>
-        <a className="action-card action-card-blue" href="/verbs">
-          <span>motor</span>
-          <strong>Drill verbs</strong>
-          <small>Conjugation grids that feel like reps, not worksheets.</small>
-        </a>
-        <a className="action-card action-card-gold" href="/lessons">
-          <span>patrón</span>
-          <strong>Build patterns</strong>
-          <small>From meaning to flexible Spanish sentence shapes.</small>
-        </a>
-        <a className="action-card action-card-blue" href="/lessons/patterns">
-          <span>generar</span>
-          <strong>Pattern drills</strong>
-          <small>LLM-generated packs unlocked from completed lessons.</small>
-        </a>
-        <a className="action-card action-card-green" href="/misses">
-          <span>pulir</span>
-          <strong>Polish misses</strong>
-          <small>Weak spots become targeted recall fuel.</small>
-        </a>
-      </div>
-    </div>
+        <nav className="daily-focus-grid" aria-label="Spanish study areas">
+          <a href="/lessons"><span aria-hidden="true">80</span><strong>Lessons</strong><small>Meaning and patterns</small></a>
+          <a href="/verbs"><span aria-hidden="true">V</span><strong>Verbs</strong><small>Fast conjugation</small></a>
+          <a href="/misses"><span aria-hidden="true">✦</span><strong>Misses</strong><small>Fix weak spots</small></a>
+          <a href="/library"><span aria-hidden="true">▤</span><strong>Library</strong><small>Manage source cards</small></a>
+        </nav>
+        <p className="daily-queue-note">
+          {stats.due_count} due · {stats.learning_count} learning · {stats.review_count} in review
+        </p>
+      </section>
+    </section>
   );
 }

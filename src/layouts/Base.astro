@@ -2,6 +2,7 @@
 import "@fontsource-variable/fraunces";
 import "@fontsource-variable/inter";
 import "../styles/global.css";
+import "../styles/daily-home.css";
 import Nav from "../components/Nav.astro";
 import { ClientRouter } from "astro:transitions";
 
@@ -11,12 +12,15 @@ interface Props {
   current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings" | "session";
   /** Hide the bottom tab bar (used by the focused recall session screen). */
   hideNav?: boolean;
+  /** Hide global shortcuts when the page supplies its own command surface. */
+  hideCommandStrip?: boolean;
 }
 const {
   title = "Spanish Active Timed Recall",
   heading,
   current,
   hideNav = false,
+  hideCommandStrip = false,
 } = Astro.props;
 ---
 
@@ -79,7 +83,7 @@ const {
         </div>
       </header>
 
-      {!hideNav && (
+      {!hideNav && !hideCommandStrip && (
         <section class="recall-command-strip" aria-label="Spanish recall shortcuts">
           <a href="/session"><span>⏱</span><strong>Session</strong><em>timed recall</em></a>
           <a href="/misses"><span>✦</span><strong>Misses</strong><em>FSRS queue</em></a>
