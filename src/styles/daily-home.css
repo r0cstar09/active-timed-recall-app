@@ -108,6 +108,33 @@
   box-shadow: 0 0 20px rgba(244, 198, 110, .34);
   transition: width .3s ease;
 }
+.daily-queue-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  position: relative;
+  z-index: 1;
+}
+.daily-queue-chips a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid rgba(255, 249, 235, .2);
+  border-radius: 999px;
+  background: rgba(255, 249, 235, .09);
+  color: #fff9eb;
+  font-size: .86rem;
+  font-weight: 780;
+  text-decoration: none;
+}
+.daily-queue-chips a:hover,
+.daily-queue-chips a:focus-visible {
+  background: rgba(255, 249, 235, .16);
+  border-color: rgba(244, 198, 110, .72);
+}
+.daily-queue-chips strong { color: #f4c66e; font-size: 1.08rem; }
 .daily-primary-button { width: min(100%, 380px); position: relative; z-index: 1; }
 
 .daily-task-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }

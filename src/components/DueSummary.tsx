@@ -152,8 +152,10 @@ export default function DueSummary() {
 
         <div className="daily-goal-progress">
           <div className="daily-goal-labels">
-            <strong>{habit.available ? `${habit.today_reps} of ${habit.daily_target} practice reps` : "Practice tracking unavailable"}</strong>
-            <span>{habit.available ? (habit.target_met ? "Target complete" : `${habit.remaining_reps} left`) : "Your study queues still work"}</span>
+            <strong>{habit.available ? `${habit.today_reps} practice reps today` : "Practice tracking unavailable"}</strong>
+            <span>{habit.available
+              ? (habit.target_met ? `${habit.daily_target}-rep target complete` : `${habit.remaining_reps} to your ${habit.daily_target}-rep target`)
+              : "Your study queues still work"}</span>
           </div>
           <div
             className="daily-progress-track"
@@ -165,6 +167,11 @@ export default function DueSummary() {
           >
             <span style={{ width: `${progress}%` }}></span>
           </div>
+        </div>
+
+        <div className="daily-queue-chips" aria-label="Today’s card queues">
+          <a href="/session?mode=review"><strong>{stats.due_count}</strong> due now</a>
+          <a href="/session?mode=learn"><strong>{stats.new_count}</strong> new cards</a>
         </div>
 
         <a className="btn btn-primary btn-lg daily-primary-button" href={primary.href}>
