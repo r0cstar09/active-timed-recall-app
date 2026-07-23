@@ -698,6 +698,7 @@ export const api = {
       learning_count: num(res.learning_count),
       suspended_count: num(res.suspended_count),
       habit: {
+        available: habit.available !== false,
         timezone: typeof habit.timezone === "string" ? habit.timezone : "America/New_York",
         local_date: typeof habit.local_date === "string"
           ? habit.local_date

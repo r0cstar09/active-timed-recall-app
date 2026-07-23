@@ -206,7 +206,7 @@ function Sources({
                   {p.active && confirmingId !== p.id && (
                     <div className="row" style={{ justifyContent: "flex-end" }}>
                       <button className="btn btn-small btn-danger" type="button" onClick={() => setConfirmingId(p.id)}>
-                        Delete card
+                        Remove from active study
                       </button>
                     </div>
                   )}
@@ -218,7 +218,7 @@ function Sources({
                           Keep card
                         </button>
                         <button className="btn btn-small btn-danger" type="button" onClick={() => removeSourceCard(s.id, p)} disabled={removingId === p.id}>
-                          {removingId === p.id ? "Deleting…" : "Yes, delete card"}
+                          {removingId === p.id ? "Removing…" : "Yes, remove from active study"}
                         </button>
                       </div>
                     </div>
@@ -239,7 +239,7 @@ function Cards({ cards, onRemoved }: { cards: Card[] | null; onRemoved: (phraseI
   const [removeError, setRemoveError] = useState<string | null>(null);
 
   async function removeCard(card: Card) {
-    if (!window.confirm(`Delete “${card.spanish}” from future practice?\n\nIts existing review history will be preserved.`)) return;
+    if (!window.confirm(`Remove “${card.spanish}” from active study?\n\nIts source and existing review history will be preserved.`)) return;
     setRemovingId(card.phrase_id);
     setRemoveError(null);
     try {
@@ -286,7 +286,7 @@ function Cards({ cards, onRemoved }: { cards: Card[] | null; onRemoved: (phraseI
               disabled={removingId === c.phrase_id}
               onClick={() => removeCard(c)}
             >
-              {removingId === c.phrase_id ? "Deleting…" : "Delete card"}
+              {removingId === c.phrase_id ? "Removing…" : "Remove from active study"}
             </button>
           </div>
         </div>

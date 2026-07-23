@@ -262,6 +262,7 @@ export interface DailyHabitDay {
 }
 
 export interface DailyHabitStats {
+  available: boolean;
   timezone: string;
   local_date: string;
   daily_target: number;

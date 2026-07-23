@@ -19,7 +19,7 @@ function longDate(date: string): string {
 
 function WeekStrip({ days, today }: { days: DailyHabitDay[]; today: string }) {
   return (
-    <div className="habit-week" aria-label="Practice during the last seven days">
+    <div className="habit-week" role="list" aria-label="Practice during the last seven days">
       {days.map((day) => {
         const state = day.target_met ? "goal" : day.reps > 0 ? "active" : "empty";
         return (
@@ -27,6 +27,9 @@ function WeekStrip({ days, today }: { days: DailyHabitDay[]; today: string }) {
             className={`habit-day ${state} ${day.date === today ? "today" : ""}`}
             key={day.date}
             title={`${day.date}: ${day.reps} practice ${day.reps === 1 ? "rep" : "reps"}`}
+            role="listitem"
+            aria-label={`${day.date}: ${day.reps} practice ${day.reps === 1 ? "rep" : "reps"}`}
+            aria-current={day.date === today ? "date" : undefined}
           >
             <span>{dayLabel(day.date)}</span>
             <i aria-hidden="true">{day.reps > 0 ? Math.min(day.reps, 99) : ""}</i>
@@ -67,16 +70,16 @@ export default function DueSummary() {
 
   const primary = useMemo(() => {
     if (!stats) return { href: "/session?mode=practice", label: "Start practice" };
+    if (stats.due_count > 0) {
+      return {
+        href: "/session?mode=review",
+        label: `Review ${Math.min(stats.due_count, 10)} due ${Math.min(stats.due_count, 10) === 1 ? "card" : "cards"}`,
+      };
+    }
     if (stats.new_count > 0) {
       return {
         href: "/session?mode=learn",
         label: `Learn ${Math.min(stats.new_count, 10)} new ${Math.min(stats.new_count, 10) === 1 ? "card" : "cards"}`,
-      };
-    }
-    if (stats.due_count > 0) {
-      return {
-        href: "/session?mode=practice",
-        label: `Practice ${Math.min(stats.due_count, 10)} due ${Math.min(stats.due_count, 10) === 1 ? "card" : "cards"}`,
       };
     }
     if (!stats.habit.target_met) {
@@ -112,17 +115,19 @@ export default function DueSummary() {
 
   const { habit } = stats;
   const progress = Math.min(100, Math.round((habit.today_reps / habit.daily_target) * 100));
-  const streakCopy = habit.current_streak === 0
+  const streakCopy = !habit.available
+    ? "Streak tracking temporarily unavailable"
+    : habit.current_streak === 0
     ? "Start your streak today"
     : habit.practiced_today
       ? `${habit.current_streak}-day streak active`
       : `Practice today to keep your ${habit.current_streak}-day streak`;
   const planCopy = habit.target_met
     ? "Daily target complete. Anything else is bonus Spanish."
-    : stats.new_count > 0
-      ? "Learn your new cards, then finish the remaining practice reps."
-      : stats.due_count > 0
-        ? "Clear the due queue and finish today’s practice target."
+    : stats.due_count > 0
+      ? `Review your due cards${stats.new_count > 0 ? ", then learn your new cards" : ""} and finish today’s target.`
+      : stats.new_count > 0
+        ? "Learn your new cards, then finish the remaining practice reps."
         : "Build today’s practice reps to keep your momentum.";
 
   return (
@@ -135,8 +140,8 @@ export default function DueSummary() {
           </div>
           <div className={`streak-badge ${habit.practiced_today ? "is-active" : ""}`} aria-label={streakCopy}>
             <span aria-hidden="true">🔥</span>
-            <strong>{habit.current_streak}</strong>
-            <small>{habit.current_streak === 1 ? "day" : "days"}</small>
+            <strong>{habit.available ? habit.current_streak : "–"}</strong>
+            <small>{habit.available ? (habit.current_streak === 1 ? "day" : "days") : "offline"}</small>
           </div>
         </div>
 
@@ -147,8 +152,8 @@ export default function DueSummary() {
 
         <div className="daily-goal-progress">
           <div className="daily-goal-labels">
-            <strong>{habit.today_reps} of {habit.daily_target} practice reps</strong>
-            <span>{habit.target_met ? "Target complete" : `${habit.remaining_reps} left`}</span>
+            <strong>{habit.available ? `${habit.today_reps} of ${habit.daily_target} practice reps` : "Practice tracking unavailable"}</strong>
+            <span>{habit.available ? (habit.target_met ? "Target complete" : `${habit.remaining_reps} left`) : "Your study queues still work"}</span>
           </div>
           <div
             className="daily-progress-track"
@@ -188,8 +193,11 @@ export default function DueSummary() {
           <p>{habit.target_met
             ? `You completed ${habit.today_reps} reps today. Your ${habit.daily_target}-rep target is covered.`
             : `${stats.due_count} cards are due now. Lessons, verbs, patterns, and recall cards all move this target.`}</p>
-          <a className={`btn btn-block ${habit.target_met ? "" : "btn-primary"}`} href={habit.target_met ? "/misses" : "/session?mode=practice"}>
-            {habit.target_met ? "Optional: clear misses" : "Practice now"}
+          <a
+            className={`btn btn-block ${habit.target_met ? "" : "btn-primary"}`}
+            href={habit.target_met ? "/misses" : stats.due_count > 0 ? "/session?mode=review" : "/session?mode=practice"}
+          >
+            {habit.target_met ? "Optional: clear misses" : stats.due_count > 0 ? "Review due cards" : "Practice now"}
           </a>
         </article>
       </div>
@@ -200,7 +208,9 @@ export default function DueSummary() {
           <div>
             <span className="daily-kicker">Consistency</span>
             <h2>{streakCopy}</h2>
-            <p>{habit.practiced_today
+            <p>{!habit.available
+              ? "You can still review due cards; tracking will resume when the activity store recovers."
+              : habit.practiced_today
               ? "Today is secured. Come back tomorrow to extend it."
               : habit.current_streak > 0
                 ? "One meaningful practice rep today keeps the streak alive."
@@ -219,7 +229,7 @@ export default function DueSummary() {
           <span className="pill">{sourceCount} {sourceCount === 1 ? "source" : "sources"}</span>
         </div>
         <nav className="daily-focus-grid" aria-label="Spanish study areas">
-          <a href="/lessons"><span aria-hidden="true">80</span><strong>Lessons</strong><small>Meaning and patterns</small></a>
+          <a href="/lessons"><span aria-hidden="true">Aa</span><strong>Lessons</strong><small>Meaning and patterns</small></a>
           <a href="/verbs"><span aria-hidden="true">V</span><strong>Verbs</strong><small>Fast conjugation</small></a>
           <a href="/misses"><span aria-hidden="true">✦</span><strong>Misses</strong><small>Fix weak spots</small></a>
           <a href="/library"><span aria-hidden="true">▤</span><strong>Library</strong><small>Manage source cards</small></a>
