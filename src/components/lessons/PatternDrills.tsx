@@ -131,7 +131,7 @@ export default function PatternDrills() {
         <span className="eyebrow">Generated Practice</span>
         <h2>Pattern drills</h2>
         <p className="muted">
-          Core lessons unlock patterns. The app then uses an LLM to generate small, saved drill packs so you can practice the same structure with useful verbs without random worksheet chaos.
+          Core lessons unlock patterns. Packs begin with simple foundations for that pattern, then each new pack adds controlled complexity until advanced tense and mood work.
         </p>
         <div className="btn-row">
           <button className={view === "unlocked" ? "btn btn-primary" : "btn"} type="button" onClick={() => setView("unlocked")}>Unlocked</button>
@@ -168,9 +168,14 @@ export default function PatternDrills() {
                   <span>{pattern.level} · {pattern.target_dialect}</span>
                 </div>
                 {canGenerate ? (
-                  <button className="btn btn-primary btn-block" type="button" disabled={busy[key]} onClick={() => patternPacks.length ? setView("packs") : void generatePack(pattern)}>
-                    {busy[key] ? "Generating…" : patternPacks.length ? "Open saved pack" : "Generate drill pack"}
-                  </button>
+                  <div className="btn-row">
+                    <button className="btn btn-primary" type="button" disabled={busy[key]} onClick={() => void generatePack(pattern)}>
+                      {busy[key] ? "Generating…" : patternPacks.length ? "Generate next pack" : "Generate drill pack"}
+                    </button>
+                    {patternPacks.length > 0 ? (
+                      <button className="btn" type="button" onClick={() => setView("packs")}>Open saved packs</button>
+                    ) : null}
+                  </div>
                 ) : (
                   <div className="alert">Unlock this by sealing enough tagged prompts in core lessons.</div>
                 )}
@@ -190,12 +195,15 @@ export default function PatternDrills() {
             const pattern = patterns.find((p) => p.id === pack.pattern_id);
             const sealed = pack.drills.filter((d) => d.sealed).length;
             const promoted = pack.drills.length > 0 && pack.drills.every((d) => Boolean(d.promoted_phrase_id));
+            const stage = (pack.difficulty_stage || "foundation").replaceAll("_", " ");
             return (
               <article className="card stack" key={pack.id} data-pattern-pack={pack.pattern_id}>
                 <div className="row between wrap">
                   <div>
                     <h3>{pattern?.name ?? pack.pattern_id}</h3>
-                    <p className="small faint">Saved pack #{pack.id}{pack.source_lesson_id ? ` · from ${pack.source_lesson_id}` : ""}</p>
+                    <p className="small faint">
+                      Pack #{pack.generation_sequence ?? pack.id} · {stage}{pack.source_lesson_id ? ` · from ${pack.source_lesson_id}` : ""}
+                    </p>
                   </div>
                   <span className="pill pill-good">{sealed}/{pack.drills.length} sealed</span>
                 </div>

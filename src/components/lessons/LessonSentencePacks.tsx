@@ -125,7 +125,7 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
         <div>
           <div className="spanish-kicker">Hermes sentence lab</div>
           <h3 style={{ margin: 0 }}>Turn this {sourceType} into speaking reps</h3>
-          <p className="muted" style={{ margin: 0 }}>Hermes creates 10 fresh lesson-specific sentences. Shadow them, then add them to 15-second recall.</p>
+          <p className="muted" style={{ margin: 0 }}>Hermes creates 10 fresh lesson-specific sentences. Early packs build a simple foundation; each later pack becomes progressively harder.</p>
         </div>
         <button className="btn btn-primary" type="button" disabled={busy} onClick={generate}>
           {busy ? "Hermes is working…" : "Generate 10 sentences with Hermes"}
@@ -146,7 +146,12 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
         return (
           <div className="card stack" key={pack.id}>
             <div className="row between wrap">
-              <strong>{pack.source_title || `${sourceType} sentence pack`} · {pack.actual_count} sentences</strong>
+              <div>
+                <strong>{pack.source_title || `${sourceType} sentence pack`} · {pack.actual_count} sentences</strong>
+                <div className="small muted">
+                  Pack #{pack.source_context?.generation_sequence ?? pack.id} · {pack.source_context?.difficulty_label ?? pack.source_context?.difficulty_stage ?? "Foundation"}{pack.source_context?.difficulty_cefr ? ` (${pack.source_context.difficulty_cefr})` : ""}
+                </div>
+              </div>
               <button className="btn btn-small btn-primary" type="button" disabled={promoting === pack.id || promoted === pack.items.length} onClick={() => promote(pack.id)}>
                 {promoted === pack.items.length ? "Added to Active Recall" : promoting === pack.id ? "Adding…" : "Add pack to Active Timed Recall"}
               </button>

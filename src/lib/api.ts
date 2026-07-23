@@ -57,6 +57,10 @@ import type {
 } from "./types";
 import { isJobComplete, isJobFailed } from "./types";
 
+export type AppSettings = {
+  daily_practice_target: number;
+};
+
 export class ApiError extends Error {
   status: number;
   body?: unknown;
@@ -362,6 +366,8 @@ export type PatternPack = {
   id: number;
   pattern_id: string;
   source_lesson_id?: string | null;
+  generation_sequence?: number;
+  difficulty_stage?: string;
   status: string;
   drills: PatternDrill[];
 };
@@ -562,6 +568,13 @@ export type SentencePack = {
   model?: string | null;
   status: string;
   actual_count: number;
+  source_context?: {
+    generation_sequence?: number;
+    difficulty_stage?: string;
+    difficulty_label?: string;
+    difficulty_cefr?: string;
+    [key: string]: unknown;
+  };
   items: SentencePackItem[];
 };
 
@@ -676,6 +689,12 @@ export const api = {
   getStats(): Promise<unknown> {
     return request<unknown>("/api/stats");
   },
+  getSettings(): Promise<AppSettings> {
+    return request<AppSettings>("/api/settings");
+  },
+  updateSettings(settings: AppSettings): Promise<AppSettings> {
+    return requestJson<AppSettings>("/api/settings", "PUT", settings);
+  },
 
   /**
    * Server-side aggregated dashboard counts. Prefer this over deriving counts
@@ -689,7 +708,7 @@ export const api = {
       ? res.habit as Record<string, unknown>
       : {};
     const recent = Array.isArray(habit.recent_days) ? habit.recent_days : [];
-    const dailyTarget = Math.max(1, num(habit.daily_target) || 20);
+    const dailyTarget = Math.max(1, num(habit.daily_target) || 100);
     const todayReps = Math.max(0, num(habit.today_reps));
     return {
       due_count: num(res.due_count),
