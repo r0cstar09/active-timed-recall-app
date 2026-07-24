@@ -116,7 +116,7 @@ export default function PatternDrills() {
     setError(null);
     try {
       const res = await api.promotePatternPack(pack.id);
-      setMessage(`${res.promoted} cards are ready in Active Timed Recall.`);
+      setMessage(`${res.promoted} cards are ready in Due Review (FSRS).`);
       await refresh(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -213,7 +213,7 @@ export default function PatternDrills() {
                   disabled={busy[`promote:${pack.id}`] || promoted}
                   onClick={() => void promotePack(pack)}
                 >
-                  {busy[`promote:${pack.id}`] ? "Adding cards…" : promoted ? "Added to Active Timed Recall" : "Add pack to Active Timed Recall"}
+                  {busy[`promote:${pack.id}`] ? "Adding cards…" : promoted ? "Added to Due Review" : "Add sealed pack to Due Review · FSRS"}
                 </button>
                 <div className="stack">
                   {pack.drills.map((drill) => {

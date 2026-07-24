@@ -100,7 +100,7 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
     setError(null);
     try {
       const result = await api.promoteSentencePack(packId);
-      setMessage(`${result.promoted} sentences added to Active Timed Recall.`);
+      setMessage(`${result.promoted} sentences added to your Learn queue.`);
       await loadPacks();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -153,7 +153,7 @@ export default function LessonSentencePacks({ sourceType, sourceId, complete, co
                 </div>
               </div>
               <button className="btn btn-small btn-primary" type="button" disabled={promoting === pack.id || promoted === pack.items.length} onClick={() => promote(pack.id)}>
-                {promoted === pack.items.length ? "Added to Active Recall" : promoting === pack.id ? "Adding…" : "Add pack to Active Timed Recall"}
+                {promoted === pack.items.length ? "Added to Learn Queue" : promoting === pack.id ? "Adding…" : "Add pack to Learn Queue"}
               </button>
             </div>
             {pack.items.map((item) => (

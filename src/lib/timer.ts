@@ -13,7 +13,7 @@
  * uploaded, the grading job id, and the final graded session.
  */
 
-import type { Session } from "./types";
+import type { Session, SessionMode } from "./types";
 
 const KEY = "atr.session";
 const GRADED_KEY = "atr.lastGraded";
@@ -22,6 +22,8 @@ export type Phase = "learn" | "recall" | "uploading" | "grading" | "summary";
 
 export interface PersistedSession {
   sessionId: number;
+  /** Mode is optional so sessions saved by older app versions still resume. */
+  mode?: SessionMode;
   /** Raw items from POST /api/sessions (ungraded). */
   items: Session["items"];
   index: number;

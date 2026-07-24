@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, pollJob } from "../lib/api";
 import { MAX_RECALL_SECONDS, RECALL_SECONDS } from "../lib/config";
-import type { ActiveRecallV2Evidence, Job, Session, SessionItem, SessionMode, WordAlignmentOperation } from "../lib/types";
+import type { ActiveRecallV2Evidence, Job, ServerDashboardStats, Session, SessionItem, SessionMode, WordAlignmentOperation } from "../lib/types";
 import PipelineProgress from "./PipelineProgress";
 import { Recorder, isRecordingSupported } from "../lib/recorder";
 import {
@@ -44,18 +44,18 @@ function pulseDevice(pattern: number | number[]) {
 
 const VALID_MODES = new Set<SessionMode>(["learn", "review", "practice", "misses", "cloze", "english_to_spanish", "audio_shadow"]);
 
-function modeFromUrl(): SessionMode {
-  if (typeof window === "undefined") return "review";
-  const raw = new URLSearchParams(window.location.search).get("mode") || "review";
-  return VALID_MODES.has(raw as SessionMode) ? (raw as SessionMode) : "review";
+function explicitModeFromUrl(): SessionMode | null {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(window.location.search).get("mode");
+  return raw && VALID_MODES.has(raw as SessionMode) ? (raw as SessionMode) : null;
 }
 
 function modeLabel(mode: SessionMode): string {
   return {
-    learn: "Learn first queue",
-    review: "Due review",
-    practice: "Practice anytime",
-    misses: "Misses workout",
+    learn: "Learn queue · no FSRS yet",
+    review: "Due review · FSRS on",
+    practice: "Free practice · FSRS off",
+    misses: "Misses workout · FSRS off",
     cloze: "Cloze recall",
     english_to_spanish: "English → Spanish",
     audio_shadow: "Audio shadow",
@@ -87,6 +87,10 @@ export default function RecallSession() {
   const [graded, setGraded] = useState<Session | null>(null);
   const [gradingJob, setGradingJob] = useState<Job | null>(null);
   const [sessionMode, setSessionMode] = useState<SessionMode>("review");
+  const sessionModeRef = useRef<SessionMode>("review");
+  const [routeReady, setRouteReady] = useState(false);
+  const [showModePicker, setShowModePicker] = useState(false);
+  const [queueStats, setQueueStats] = useState<ServerDashboardStats | null>(null);
   const [noisyMode, setNoisyMode] = useState(false);
   const [micLevels, setMicLevels] = useState<number[]>(Array.from({ length: WAVE_BARS }, () => 0.35));
   const [, setTick] = useState(0);
@@ -107,6 +111,7 @@ export default function RecallSession() {
     (over: Partial<PersistedSession> = {}) => {
       saveSession({
         sessionId: sessionIdRef.current,
+        mode: sessionModeRef.current,
         items,
         index,
         phase,
@@ -126,10 +131,21 @@ export default function RecallSession() {
   );
 
   useEffect(() => {
-    const mode = modeFromUrl();
+    const explicitMode = explicitModeFromUrl();
+    const mode = explicitMode ?? "review";
+    sessionModeRef.current = mode;
     setSessionMode(mode);
+    setShowModePicker(explicitMode == null);
+    setRouteReady(true);
+    if (explicitMode == null) {
+      void api.getDashboardCounts().then(setQueueStats).catch(() => setQueueStats(null));
+    }
     if (status !== "idle") return;
     const saved = loadSession();
+    if (saved?.mode && (explicitMode == null || saved.phase === "grading")) {
+      sessionModeRef.current = saved.mode;
+      setSessionMode(saved.mode);
+    }
     if (saved?.phase === "grading" && saved.jobId != null) {
       sessionIdRef.current = saved.sessionId;
       uploadedRef.current = saved.uploadedItemIds ?? [];
@@ -227,6 +243,7 @@ export default function RecallSession() {
     }
     saveSession({
       sessionId: sessionIdRef.current,
+      mode: sessionModeRef.current,
       items: list,
       index: i,
       phase: "recall",
@@ -256,7 +273,8 @@ export default function RecallSession() {
   }
 
   async function start() {
-    const mode = modeFromUrl();
+    const mode = explicitModeFromUrl() ?? sessionMode;
+    sessionModeRef.current = mode;
     setSessionMode(mode);
     setError(null);
     if (mode !== "learn") {
@@ -280,16 +298,19 @@ export default function RecallSession() {
         setStatus("active");
         return;
       }
+      const actualMode = session.mode ?? mode;
       sessionIdRef.current = session.session_id;
       uploadedRef.current = [];
       setItems(session.items);
-      setSessionMode(session.mode ?? mode);
+      sessionModeRef.current = actualMode;
+      setSessionMode(actualMode);
       setStatus("active");
-      if ((session.mode ?? mode) === "learn") {
+      if (actualMode === "learn") {
         setIndex(0);
         setPhase("learn");
         saveSession({
           sessionId: session.session_id,
+          mode: actualMode,
           items: session.items,
           index: 0,
           phase: "learn",
@@ -314,6 +335,18 @@ export default function RecallSession() {
     const saved = resumable;
     if (!saved) return;
     setError(null);
+    let restoredMode = saved.mode ?? saved.graded?.mode;
+    if (!restoredMode) {
+      try {
+        restoredMode = (await api.getSession(saved.sessionId)).mode;
+      } catch {
+        /* Older offline saves can still resume; review was the historical default. */
+      }
+    }
+    if (restoredMode) {
+      sessionModeRef.current = restoredMode;
+      setSessionMode(restoredMode);
+    }
     sessionIdRef.current = saved.sessionId;
     uploadedRef.current = saved.uploadedItemIds ?? [];
     setItems(saved.items);
@@ -356,6 +389,7 @@ export default function RecallSession() {
         setIndex(next);
         saveSession({
           sessionId: sessionIdRef.current,
+          mode: sessionModeRef.current,
           items,
           index: next,
           phase: "learn",
@@ -469,6 +503,7 @@ export default function RecallSession() {
       const { job_id } = await api.gradeSession(sessionIdRef.current);
       saveSession({
         sessionId: sessionIdRef.current,
+        mode: sessionModeRef.current,
         items,
         index,
         phase: "grading",
@@ -507,6 +542,9 @@ export default function RecallSession() {
   }
 
   // ── render: IDLE ──────────────────────────────────────────────────────────
+  if (status === "idle" && !routeReady) {
+    return <div className="card muted center">Loading speaking modes…</div>;
+  }
   if (status === "idle") {
     return (
       <div className="stack">
@@ -539,18 +577,66 @@ export default function RecallSession() {
               Discard & start fresh
             </button>
           </div>
+        ) : showModePicker ? (
+          <div className="stack speak-mode-picker">
+            <div className="card hero-card stack center">
+              <div className="spanish-kicker">speak</div>
+              <div className="spanish-phrase" style={{ fontSize: "2.25rem" }}>Choose what this session does</div>
+              <p className="muted" style={{ margin: 0 }}>
+                Only <strong>Due Review</strong> grades your cards into FSRS and changes what is due next.
+              </p>
+            </div>
+
+            <div className="session-mode-grid">
+              <a className="card session-mode-choice session-mode-fsrs" href="/session?mode=review">
+                <div className="row between">
+                  <span className="pill">FSRS ON</span>
+                  <strong>{queueStats ? `${queueStats.due_count} due now` : "Due now"}</strong>
+                </div>
+                <div>
+                  <h2>Due Review</h2>
+                  <p className="muted">Practice the cards scheduled for now. Every grade updates the next due date and reduces or reschedules the due queue.</p>
+                </div>
+                <span className="btn btn-primary btn-block">Review due cards</span>
+              </a>
+
+              <a className="card session-mode-choice" href="/session?mode=learn">
+                <div className="row between">
+                  <span className="pill">LEARN FIRST</span>
+                  <strong>{queueStats ? `${queueStats.new_count} new` : "New cards"}</strong>
+                </div>
+                <div>
+                  <h2>Learn New Cards</h2>
+                  <p className="muted">Preview meaning, Spanish logic, traps, and audio. The cards enter the FSRS due queue only after you learn them.</p>
+                </div>
+                <span className="btn btn-block">Open Learn queue</span>
+              </a>
+
+              <a className="card session-mode-choice session-mode-free" href="/session?mode=practice">
+                <div className="row between">
+                  <span className="pill">FSRS OFF</span>
+                  <strong>Rotating cards</strong>
+                </div>
+                <div>
+                  <h2>Free Practice</h2>
+                  <p className="muted">Speak random introduced cards for extra reps. Feedback is saved, but due dates and the due count do not change.</p>
+                </div>
+                <span className="btn btn-block">Practice without scheduling</span>
+              </a>
+            </div>
+          </div>
         ) : (
           <div className="card hero-card stack center session-launch-card">
             <span className="pill">{modeLabel(sessionMode)}</span>
             <div className="spanish-phrase" style={{ fontSize: "2.6rem" }}>¿Listo?</div>
             <p className="muted">
               {sessionMode === "learn"
-                ? "Learn the meaning, Spanish logic, traps, and audio before this phrase enters timed recall."
+                ? "Preview new sentences here. They enter the FSRS due queue after you finish learning them; this step does not grade the schedule."
                 : sessionMode === "practice"
-                  ? "Practice introduced phrases anytime. This does not update FSRS."
+                  ? "FSRS is OFF. Cards rotate for extra speaking practice, but feedback does not change due dates or the due count."
                   : sessionMode === "misses"
-                    ? "Fix failed or partial items from previous sessions. This does not update FSRS."
-                    : "Recall each prompt aloud before the timer ends. The backend grades your spoken answers."}
+                    ? "FSRS is OFF. Fix failed or partial items from previous sessions without changing their schedule."
+                    : "FSRS is ON. These are cards due now; every grade updates the next due date and the due queue."}
             </p>
             {sessionMode !== "learn" && (
               <label className="alert row between" style={{ margin: 0, width: "100%", textAlign: "left", cursor: "pointer" }}>
@@ -573,7 +659,13 @@ export default function RecallSession() {
               onClick={start}
               disabled={sessionMode !== "learn" && !supported}
             >
-              {sessionMode === "learn" ? "Start learning" : "Start speaking"}
+              {sessionMode === "learn"
+                ? "Start learning"
+                : sessionMode === "review"
+                  ? "Start due review · FSRS ON"
+                  : sessionMode === "practice"
+                    ? "Start free practice · FSRS OFF"
+                    : "Start speaking · FSRS OFF"}
             </button>
           </div>
         )}
@@ -756,10 +848,9 @@ export default function RecallSession() {
 
   return (
     <div className="stack recall-shell">
-      <div className="row between small faint">
-        <span>
-          phrase {index + 1} / {items.length}
-        </span>
+      <div className="row between wrap small faint">
+        <span className="pill">{modeLabel(sessionMode)}</span>
+        <span>phrase {index + 1} / {items.length}</span>
         <button
           className="btn btn-ghost"
           style={{ minHeight: 32, padding: "4px 10px" }}
@@ -1059,21 +1150,32 @@ function Summary({
   }
 
   if (!items.length) {
-    const title = mode === "learn" ? "No new phrases" : mode === "misses" ? "No misses waiting" : "Nothing due";
+    const title = mode === "learn"
+      ? "No new cards"
+      : mode === "misses"
+        ? "No misses waiting"
+        : mode === "practice"
+          ? "Nothing available for Free Practice"
+          : "Nothing due";
     const body = mode === "learn"
-      ? "Everything new has already been introduced."
+      ? "Your Learn queue is empty. Newly generated packs will appear here before entering FSRS review."
       : mode === "misses"
         ? "No failed or partial items are waiting for a workout."
-        : "No items were scheduled for this session.";
+        : mode === "practice"
+          ? "Learn at least one new card, then return for schedule-neutral speaking practice."
+          : "No cards are scheduled for Due Review right now.";
     return (
       <div className="card stack center">
         <h2>{title}</h2>
         <p className="muted">{body}</p>
         {mode !== "learn" && (
-          <a className="btn btn-primary btn-block" href="/session?mode=learn">Learn first queue</a>
+          <a className="btn btn-block" href="/session?mode=learn">Open Learn queue</a>
+        )}
+        {mode !== "review" && (
+          <a className="btn btn-primary btn-block" href="/session?mode=review">Due Review · FSRS ON</a>
         )}
         {mode !== "practice" && (
-          <a className="btn btn-block" href="/session?mode=practice">Practice anytime</a>
+          <a className="btn btn-block" href="/session?mode=practice">Free Practice · FSRS OFF</a>
         )}
         <a className="btn btn-ghost btn-block" href="/">Home</a>
       </div>
@@ -1091,9 +1193,19 @@ function Summary({
             </div>
           </>
         )}
-        <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Ready to speak" : cleanRecall ? "Clean recall" : "Session graded"}</h2>
+        <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Ready for Due Review" : cleanRecall ? "Clean recall" : "Session graded"}</h2>
         {graded?.mode === "learn" && (
-          <p className="muted">These phrases are now introduced. Next step: produce them from English under the timer.</p>
+          <p className="muted">These cards are now introduced and due. Start Due Review when you want your spoken grades to begin scheduling them.</p>
+        )}
+        {graded?.affects_fsrs && (
+          <div className="alert alert-ok" style={{ margin: 0, width: "100%" }}>
+            <strong>FSRS ON:</strong> these grades updated the cards’ next due dates.
+          </div>
+        )}
+        {graded?.mode === "practice" && (
+          <div className="alert" style={{ margin: 0, width: "100%" }}>
+            <strong>FSRS OFF:</strong> Free Practice feedback was saved, but due dates and the due count were not changed.
+          </div>
         )}
         {graded?.mode === "misses" && (
           <p className="muted">Misses workout complete. Passing here resolves weak spots without touching FSRS.</p>
@@ -1129,13 +1241,13 @@ function Summary({
 
       {graded?.mode === "learn" && (
         <div className="card stack center">
-          <h3 style={{ margin: 0 }}>Ready for timed production</h3>
-          <p className="muted">Practice uses clear English prompts and does not update FSRS.</p>
-          <a className="btn btn-primary btn-block" href="/session?mode=practice">
-            Practice these now
+          <h3 style={{ margin: 0 }}>Ready to schedule these cards</h3>
+          <p className="muted">Due Review is the FSRS step: your spoken grades set each card’s next review date.</p>
+          <a className="btn btn-primary btn-block" href="/session?mode=review">
+            Start Due Review · FSRS ON
           </a>
-          <a className="btn btn-block" href="/session?mode=review">
-            Review due cards instead
+          <a className="btn btn-block" href="/session?mode=practice">
+            Free Practice instead · FSRS OFF
           </a>
         </div>
       )}
@@ -1176,7 +1288,8 @@ function Summary({
                 {!unclear && it.score != null ? ` · ${Math.round(it.score)}` : ""}
               </span>
               <span className="small faint">
-                {it.fsrs_rating && !unclear ? `FSRS ${it.fsrs_rating}` : ""}
+                {graded?.affects_fsrs && it.fsrs_rating && !unclear ? `FSRS ${it.fsrs_rating} · schedule updated` : ""}
+                {!graded?.affects_fsrs && !unclear ? "FSRS off · schedule unchanged" : ""}
                 {unclear ? "not counted against you" : ""}
                 {it.timed_out ? " · ⏱ timed out" : it.over_time ? " · ⏱ over time" : ""}
               </span>
@@ -1258,7 +1371,7 @@ function Summary({
 
       <div className="btn-row">
         <a className="btn btn-primary" href="/session?mode=misses">Misses workout</a>
-        <a className="btn" href="/session?mode=learn">Learn first queue</a>
+        <a className="btn" href="/session?mode=learn">Open Learn queue</a>
         <a className="btn" href="/">Home</a>
       </div>
     </div>

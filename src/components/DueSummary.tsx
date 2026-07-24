@@ -75,11 +75,11 @@ export default function DueSummary() {
   }, [load]);
 
   const primary = useMemo(() => {
-    if (!stats) return { href: "/session?mode=practice", label: "Start practice" };
+    if (!stats) return { href: "/session", label: "Choose a speaking mode" };
     if (stats.due_count > 0) {
       return {
         href: "/session?mode=review",
-        label: `Review ${Math.min(stats.due_count, 10)} due ${Math.min(stats.due_count, 10) === 1 ? "card" : "cards"}`,
+        label: `Due Review: ${Math.min(stats.due_count, 10)} ${Math.min(stats.due_count, 10) === 1 ? "card" : "cards"} · FSRS ON`,
       };
     }
     if (stats.new_count > 0) {
@@ -89,7 +89,7 @@ export default function DueSummary() {
       };
     }
     if (!stats.habit.target_met) {
-      return { href: "/session?mode=practice", label: "Build today’s reps" };
+      return { href: "/session?mode=practice", label: "Free Practice · FSRS OFF" };
     }
     return { href: "/lessons", label: "Explore a lesson" };
   }, [stats]);
@@ -175,6 +175,10 @@ export default function DueSummary() {
           </div>
         </div>
 
+        <p className="small muted" style={{ margin: 0 }}>
+          <strong>Two separate counters:</strong> daily reps count any study activity; only Due Review changes the FSRS due queue.
+        </p>
+
         <div className="daily-queue-chips" aria-label="Today’s card queues">
           <a href="/session?mode=review"><strong>{stats.due_count}</strong> due now</a>
           <a href="/session?mode=learn"><strong>{stats.new_count}</strong> new cards</a>
@@ -202,15 +206,17 @@ export default function DueSummary() {
         <article className={`daily-task-card practice ${habit.target_met ? "is-complete" : ""}`}>
           <div className="daily-task-icon" aria-hidden="true">◎</div>
           <div className="daily-task-number">{habit.remaining_reps}</div>
-          <h2>{habit.target_met ? "Practice target complete" : "Practice reps remaining"}</h2>
+          <h2>{habit.target_met ? "Daily activity goal complete" : "Daily activity reps remaining"}</h2>
           <p>{habit.target_met
-            ? `You completed ${habit.today_reps} reps today. Your ${habit.daily_target}-rep target is covered.`
-            : `${stats.due_count} cards are due now. Lessons, verbs, patterns, and recall cards all move this target.`}</p>
+            ? `You completed ${habit.today_reps} reps today. This activity goal is separate from the FSRS due queue.`
+            : stats.due_count > 0
+              ? `${stats.due_count} FSRS cards are due. Use Due Review to reschedule them; other study also counts toward the ${habit.daily_target}-rep activity goal.`
+              : `No FSRS cards are due. Other study and Free Practice still count toward the ${habit.daily_target}-rep activity goal.`}</p>
           <a
             className={`btn btn-block ${habit.target_met ? "" : "btn-primary"}`}
             href={habit.target_met ? "/misses" : stats.due_count > 0 ? "/session?mode=review" : "/session?mode=practice"}
           >
-            {habit.target_met ? "Optional: clear misses" : stats.due_count > 0 ? "Review due cards" : "Practice now"}
+            {habit.target_met ? "Optional: clear misses" : stats.due_count > 0 ? "Due Review · FSRS ON" : "Free Practice · FSRS OFF"}
           </a>
         </article>
       </div>
