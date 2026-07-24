@@ -56,9 +56,9 @@ function modeLabel(mode: SessionMode): string {
     review: "Due review · FSRS on",
     practice: "Free practice · FSRS off",
     misses: "Misses workout · FSRS off",
-    cloze: "Cloze recall",
-    english_to_spanish: "English → Spanish",
-    audio_shadow: "Audio shadow",
+    cloze: "Cloze recall · FSRS on",
+    english_to_spanish: "English → Spanish · FSRS on",
+    audio_shadow: "Audio shadow · FSRS on",
   }[mode];
 }
 
@@ -131,6 +131,9 @@ export default function RecallSession() {
   );
 
   useEffect(() => {
+    // This effect reruns when a session becomes active. Never let that rerun
+    // replace the persisted mode restored by resume() with the route/default.
+    if (status !== "idle") return;
     const explicitMode = explicitModeFromUrl();
     const mode = explicitMode ?? "review";
     sessionModeRef.current = mode;
@@ -140,7 +143,6 @@ export default function RecallSession() {
     if (explicitMode == null) {
       void api.getDashboardCounts().then(setQueueStats).catch(() => setQueueStats(null));
     }
-    if (status !== "idle") return;
     const saved = loadSession();
     if (saved?.mode && (explicitMode == null || saved.phase === "grading")) {
       sessionModeRef.current = saved.mode;
@@ -665,7 +667,9 @@ export default function RecallSession() {
                   ? "Start due review · FSRS ON"
                   : sessionMode === "practice"
                     ? "Start free practice · FSRS OFF"
-                    : "Start speaking · FSRS OFF"}
+                    : sessionMode === "misses"
+                      ? "Start misses workout · FSRS OFF"
+                      : "Start scheduled recall · FSRS ON"}
             </button>
           </div>
         )}
