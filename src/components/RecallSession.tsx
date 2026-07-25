@@ -55,7 +55,7 @@ function modeLabel(mode: SessionMode): string {
     learn: "Learn queue · no FSRS yet",
     review: "Due review · FSRS on",
     practice: "Free practice · FSRS off",
-    misses: "Misses workout · FSRS off",
+    misses: "Misses workout · FSRS on",
     cloze: "Cloze recall · FSRS on",
     english_to_spanish: "English → Spanish · FSRS on",
     audio_shadow: "Audio shadow · FSRS on",
@@ -637,7 +637,7 @@ export default function RecallSession() {
                 : sessionMode === "practice"
                   ? "FSRS is OFF. Cards rotate for extra speaking practice, but feedback does not change due dates or the due count."
                   : sessionMode === "misses"
-                    ? "FSRS is OFF. Fix failed or partial items from previous sessions without changing their schedule."
+                    ? "FSRS is ON. Recalling a missed card is a real review: every clear grade updates its next due date and schedule."
                     : "FSRS is ON. These are cards due now; every grade updates the next due date and the due queue."}
             </p>
             {sessionMode !== "learn" && (
@@ -668,7 +668,7 @@ export default function RecallSession() {
                   : sessionMode === "practice"
                     ? "Start free practice · FSRS OFF"
                     : sessionMode === "misses"
-                      ? "Start misses workout · FSRS OFF"
+                      ? "Start misses workout · FSRS ON"
                       : "Start scheduled recall · FSRS ON"}
             </button>
           </div>
@@ -1212,7 +1212,7 @@ function Summary({
           </div>
         )}
         {graded?.mode === "misses" && (
-          <p className="muted">Misses workout complete. Passing here resolves weak spots without touching FSRS.</p>
+          <p className="muted">Misses workout complete. Clear grades resolved weak spots and updated FSRS.</p>
         )}
         {summary && (
           <>
