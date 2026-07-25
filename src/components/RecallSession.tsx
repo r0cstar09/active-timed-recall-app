@@ -642,7 +642,7 @@ export default function RecallSession() {
             </p>
             {sessionMode !== "learn" && (
               <p className="small faint" style={{ margin: 0 }}>
-                Numbers can be spoken in English or Spanish; only the numeric value matters.
+                Numbers can be spoken in English, Spanish, or digits. The numeric value and any stated currency must match.
               </p>
             )}
             {sessionMode !== "learn" && (
