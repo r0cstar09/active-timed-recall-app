@@ -176,7 +176,7 @@ export default function DueSummary() {
         </div>
 
         <p className="small muted" style={{ margin: 0 }}>
-          <strong>Two separate counters:</strong> daily reps count any study activity; only Due Review changes the FSRS due queue.
+          <strong>Two separate counters:</strong> daily reps count any study activity; Due Review and fresh Misses attempts change the FSRS due queue.
         </p>
 
         <div className="daily-queue-chips" aria-label="Today’s card queues">

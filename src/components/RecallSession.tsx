@@ -585,7 +585,7 @@ export default function RecallSession() {
               <div className="spanish-kicker">speak</div>
               <div className="spanish-phrase" style={{ fontSize: "2.25rem" }}>Choose what this session does</div>
               <p className="muted" style={{ margin: 0 }}>
-                Only <strong>Due Review</strong> grades your cards into FSRS and changes what is due next.
+                <strong>Due Review</strong> and fresh <strong>Misses</strong> attempts update FSRS. Learn and Free Practice do not.
               </p>
             </div>
 
@@ -640,6 +640,11 @@ export default function RecallSession() {
                     ? "FSRS is ON. Recalling a missed card is a real review: every clear grade updates its next due date and schedule."
                     : "FSRS is ON. These are cards due now; every grade updates the next due date and the due queue."}
             </p>
+            {sessionMode !== "learn" && (
+              <p className="small faint" style={{ margin: 0 }}>
+                Numbers can be spoken in English or Spanish; only the numeric value matters.
+              </p>
+            )}
             {sessionMode !== "learn" && (
               <label className="alert row between" style={{ margin: 0, width: "100%", textAlign: "left", cursor: "pointer" }}>
                 <span>
@@ -1122,6 +1127,7 @@ function Summary({
   const items = (graded?.items ?? []).filter((item) => !deletedPhraseIds.has(item.phrase_id));
   const mode = graded?.mode;
   const misses = items.filter((it) => it.result === "fail" || it.result === "partial");
+  const fsrsAppliedCount = items.filter((it) => it.fsrs_applied).length;
   const maxPassStreak = items.reduce(
     (acc, it) => {
       const current = it.result === "pass" ? acc.current + 1 : 0;
@@ -1201,9 +1207,14 @@ function Summary({
         {graded?.mode === "learn" && (
           <p className="muted">These cards are now introduced and due. Start Due Review when you want your spoken grades to begin scheduling them.</p>
         )}
-        {graded?.affects_fsrs && (
+        {fsrsAppliedCount > 0 && (
           <div className="alert alert-ok" style={{ margin: 0, width: "100%" }}>
-            <strong>FSRS ON:</strong> these grades updated the cards’ next due dates.
+            <strong>FSRS updated:</strong> {fsrsAppliedCount} first-attempt grade{fsrsAppliedCount === 1 ? "" : "s"} changed scheduling.
+          </div>
+        )}
+        {graded?.affects_fsrs && fsrsAppliedCount === 0 && graded?.mode !== "learn" && (
+          <div className="alert" style={{ margin: 0, width: "100%" }}>
+            <strong>Schedule unchanged:</strong> no attempt shown here produced an FSRS review update.
           </div>
         )}
         {graded?.mode === "practice" && (
@@ -1212,7 +1223,7 @@ function Summary({
           </div>
         )}
         {graded?.mode === "misses" && (
-          <p className="muted">Misses workout complete. Clear grades resolved weak spots and updated FSRS.</p>
+          <p className="muted">Misses workout complete. Passed cards leave the Misses queue; partial and failed cards remain.</p>
         )}
         {summary && (
           <>
@@ -1292,8 +1303,9 @@ function Summary({
                 {!unclear && it.score != null ? ` · ${Math.round(it.score)}` : ""}
               </span>
               <span className="small faint">
-                {graded?.affects_fsrs && it.fsrs_rating && !unclear ? `FSRS ${it.fsrs_rating} · schedule updated` : ""}
-                {!graded?.affects_fsrs && !unclear ? "FSRS off · schedule unchanged" : ""}
+                {it.fsrs_applied && it.fsrs_rating && !unclear ? `FSRS ${it.fsrs_rating} · schedule updated` : ""}
+                {!it.fsrs_applied && !unclear && it.fsrs_rating ? "schedule unchanged" : ""}
+                {!it.fsrs_applied && !graded?.affects_fsrs && !unclear && !it.fsrs_rating ? "FSRS off · schedule unchanged" : ""}
                 {unclear ? "not counted against you" : ""}
                 {it.timed_out ? " · ⏱ timed out" : it.over_time ? " · ⏱ over time" : ""}
               </span>

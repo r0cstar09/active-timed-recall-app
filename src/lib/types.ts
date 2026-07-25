@@ -53,6 +53,8 @@ export interface SessionItem {
   error_type?: string | null;
   user_transcript_segment?: string;
   fsrs_rating?: FsrsRating;
+  /** True only when this exact attempt produced a persisted FSRS review log. */
+  fsrs_applied?: boolean;
   timed_out?: boolean;
   /** Server-measured: recording ran past the per-item answer window. */
   over_time?: boolean;
