@@ -155,11 +155,7 @@ export default function RecallSession() {
       setIndex(saved.index);
       setPhase("grading");
       setStatus("active");
-      if (saved.jobId != null) {
-        void runGrading(saved.sessionId, saved.jobId);
-      } else {
-        void startGrading(saved);
-      }
+      void startGrading(saved);
     } else {
       setResumable(saved);
     }
@@ -373,11 +369,7 @@ export default function RecallSession() {
     if (saved.phase === "grading") {
       setPhase("grading");
       setStatus("active");
-      if (saved.jobId != null) {
-        void runGrading(saved.sessionId, saved.jobId);
-      } else {
-        void startGrading(saved);
-      }
+      void startGrading(saved);
       return;
     }
     // recall / uploading → need the mic again; resume preserving the countdown
@@ -558,12 +550,7 @@ export default function RecallSession() {
   }
 
   function reconnectGrading() {
-    const saved = loadSession();
-    if (saved?.jobId != null) {
-      void runGrading(saved.sessionId, saved.jobId);
-      return;
-    }
-    void startGrading(saved ?? undefined);
+    void startGrading(loadSession() ?? undefined);
   }
 
   function quit() {
