@@ -148,14 +148,18 @@ export default function RecallSession() {
       sessionModeRef.current = saved.mode;
       setSessionMode(saved.mode);
     }
-    if (saved?.phase === "grading" && saved.jobId != null) {
+    if (saved?.phase === "grading") {
       sessionIdRef.current = saved.sessionId;
       uploadedRef.current = saved.uploadedItemIds ?? [];
       setItems(saved.items);
       setIndex(saved.index);
       setPhase("grading");
       setStatus("active");
-      void runGrading(saved.sessionId, saved.jobId);
+      if (saved.jobId != null) {
+        void runGrading(saved.sessionId, saved.jobId);
+      } else {
+        void startGrading(saved);
+      }
     } else {
       setResumable(saved);
     }
@@ -366,10 +370,14 @@ export default function RecallSession() {
       setStatus("active");
       return;
     }
-    if (saved.phase === "grading" && saved.jobId != null) {
+    if (saved.phase === "grading") {
       setPhase("grading");
       setStatus("active");
-      runGrading(saved.sessionId, saved.jobId);
+      if (saved.jobId != null) {
+        void runGrading(saved.sessionId, saved.jobId);
+      } else {
+        void startGrading(saved);
+      }
       return;
     }
     // recall / uploading → need the mic again; resume preserving the countdown
@@ -497,27 +505,38 @@ export default function RecallSession() {
     submitRef.current = submit;
   }, [submit]);
 
-  async function startGrading() {
+  async function startGrading(saved?: PersistedSession) {
+    const sessionId = saved?.sessionId ?? sessionIdRef.current;
+    const gradingItems = saved?.items ?? items;
+    const gradingIndex = saved?.index ?? index;
+    const uploadedItemIds = saved?.uploadedItemIds ?? uploadedRef.current;
+    sessionIdRef.current = sessionId;
+    uploadedRef.current = uploadedItemIds;
     setPhase("grading");
     setError(null);
-    persist({ phase: "grading" });
+    setGradingJob(null);
+    if (saved) {
+      saveSession({ ...saved, phase: "grading", jobId: null, graded: null, savedAt: Date.now() });
+    } else {
+      persist({ phase: "grading" });
+    }
     try {
-      const { job_id } = await api.gradeSession(sessionIdRef.current);
+      const { job_id } = await api.gradeSession(sessionId);
       saveSession({
-        sessionId: sessionIdRef.current,
+        sessionId,
         mode: sessionModeRef.current,
-        items,
-        index,
+        items: gradingItems,
+        index: gradingIndex,
         phase: "grading",
         deadline: null,
         durationMs: null,
         promptShownAt: null,
-        uploadedItemIds: uploadedRef.current,
+        uploadedItemIds,
         jobId: job_id,
         graded: null,
         savedAt: Date.now(),
       });
-      runGrading(sessionIdRef.current, job_id);
+      void runGrading(sessionId, job_id);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
     }
@@ -525,6 +544,7 @@ export default function RecallSession() {
 
   async function runGrading(sessionId: number, jobId: string | number) {
     setPhase("grading");
+    setError(null);
     try {
       await pollJob(jobId, { timeoutMs: 15 * 60_000, onUpdate: setGradingJob });
       const gradedSession = await api.getSession(sessionId);
@@ -535,6 +555,15 @@ export default function RecallSession() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
     }
+  }
+
+  function reconnectGrading() {
+    const saved = loadSession();
+    if (saved?.jobId != null) {
+      void runGrading(saved.sessionId, saved.jobId);
+      return;
+    }
+    void startGrading(saved ?? undefined);
   }
 
   function quit() {
@@ -724,10 +753,7 @@ export default function RecallSession() {
             <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
             <button
               className="btn btn-block"
-              onClick={() => {
-                const saved = loadSession();
-                if (saved?.jobId != null) void runGrading(saved.sessionId, saved.jobId);
-              }}
+              onClick={reconnectGrading}
             >
               Reconnect to grading
             </button>
