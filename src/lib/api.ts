@@ -458,6 +458,7 @@ export type LessonProgress = {
 export type LessonPromptProgress = {
   lesson_id: string;
   section: string;
+  prompt_key?: string | null;
   prompt: string;
   expected_answer?: string | null;
   status: "open" | "pass" | string;

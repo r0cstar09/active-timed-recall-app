@@ -139,7 +139,8 @@ export default function LessonsBrowser() {
   const currentProgress = lesson ? lessonProgress[lesson.id] : undefined;
   const progressTotal = currentProgress?.total_prompts || moduleTotalPrompts;
   const lessonComplete = Boolean(currentProgress?.completed);
-  const promptKey = (section: string, prompt: string) => `${lesson?.id ?? ""}::${section}::${prompt}`;
+  const slotPromptKey = (section: string, idx: number) => `${lesson?.id ?? ""}::${section}::client:${idx}`;
+  const legacyPromptKey = (section: string, prompt: string) => `${lesson?.id ?? ""}::${section}::legacy:${prompt}`;
   const passedPromptKeys = useMemo(
     () => new Set(Object.entries(promptProgress).filter(([, p]) => p.status === "pass").map(([key]) => key)),
     [promptProgress],
@@ -154,7 +155,10 @@ export default function LessonsBrowser() {
       for (const key of Object.keys(next)) {
         if (key.startsWith(`${id}::`)) delete next[key];
       }
-      for (const item of items) next[`${item.lesson_id}::${item.section}::${item.prompt}`] = item;
+      for (const item of items) {
+        const identity = item.prompt_key || `legacy:${item.prompt}`;
+        next[`${item.lesson_id}::${item.section}::${identity}`] = item;
+      }
       return next;
     });
   }
@@ -213,7 +217,7 @@ export default function LessonsBrowser() {
     if (!lesson || !section) return;
     const submitted = section.prompts
       .map((prompt, idx) => ({ prompt, idx, answer: responses[idx] ?? "" }))
-      .filter((item) => !passedPromptKeys.has(promptKey(sectionName, item.prompt)))
+      .filter((item) => !passedPromptKeys.has(slotPromptKey(sectionName, item.idx)) && !passedPromptKeys.has(legacyPromptKey(sectionName, item.prompt)))
       .filter((item) => item.answer.trim());
     if (!submitted.length) {
       setError(
@@ -272,9 +276,10 @@ export default function LessonsBrowser() {
           const idx = Number(item.client_id);
           const prompt = Number.isFinite(idx) ? section.prompts[idx] : "";
           if (prompt && item.result === "pass") {
-            next[promptKey(sectionName, prompt)] = {
+            next[slotPromptKey(sectionName, idx)] = {
               lesson_id: lesson.id,
               section: sectionName,
+              prompt_key: `client:${idx}`,
               prompt,
               expected_answer: section.answers?.[idx] ?? "",
               status: "pass",
@@ -352,7 +357,7 @@ export default function LessonsBrowser() {
   const visiblePrompts = useMemo(
     () => (section?.prompts ?? [])
       .map((prompt, idx) => ({ prompt, idx }))
-      .filter(({ prompt }) => !passedPromptKeys.has(promptKey(sectionName, prompt))),
+      .filter(({ prompt, idx }) => !passedPromptKeys.has(slotPromptKey(sectionName, idx)) && !passedPromptKeys.has(legacyPromptKey(sectionName, prompt))),
     [section?.prompts, passedPromptKeys, sectionName, lesson?.id],
   );
   const hiddenPassedCount = (section?.prompts?.length ?? 0) - visiblePrompts.length;
@@ -364,7 +369,7 @@ export default function LessonsBrowser() {
       .filter((name) => lesson?.sections?.[name]?.prompts?.length)
       .map((name) => {
         const prompts = lesson?.sections?.[name]?.prompts ?? [];
-        const passed = prompts.filter((prompt) => passedPromptKeys.has(promptKey(name, prompt))).length;
+        const passed = prompts.filter((prompt, idx) => passedPromptKeys.has(slotPromptKey(name, idx)) || passedPromptKeys.has(legacyPromptKey(name, prompt))).length;
         return {
           name,
           label: lesson?.sections?.[name]?.title ?? sectionLabels[name],
