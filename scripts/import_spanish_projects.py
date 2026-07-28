@@ -30,6 +30,7 @@ def load_json(path: Path):
 
 
 def all_verbs(rotation: list[str], by_category: dict[str, list[str]]) -> list[str]:
+    """Pin the first 12 catalog verbs, then group every remaining irregular verb."""
     seen: set[str] = set()
     ordered: list[str] = []
     for verb in rotation:
@@ -41,7 +42,11 @@ def all_verbs(rotation: list[str], by_category: dict[str, list[str]]) -> list[st
             if verb not in seen:
                 seen.add(verb)
                 ordered.append(verb)
-    return ordered
+
+    pinned = ordered[:12]
+    tail = ordered[12:]
+    irregulars = set(by_category.get('irregular', []))
+    return pinned + [verb for verb in tail if verb in irregulars] + [verb for verb in tail if verb not in irregulars]
 
 
 def build_verbs() -> None:
