@@ -102,6 +102,7 @@ export default function RecallSession() {
   const recordingsRef = useRef<Map<number, string>>(new Map());
   const pendingUploadRef = useRef<PendingUpload | null>(null);
   const submitRef = useRef<() => void>(() => {});
+  const submitInFlightRef = useRef(false);
   const itemStartTokenRef = useRef(0);
   const supported = isRecordingSupported();
 
@@ -232,23 +233,40 @@ export default function RecallSession() {
 
   async function beginItem(i: number, list: SessionItem[], preserveDeadline: number | null) {
     const startToken = ++itemStartTokenRef.current;
+    const dur = Math.max(1, itemForDuration(list[i]) ?? RECALL_SECONDS) * 1000;
+    submitInFlightRef.current = false;
     setIndex(i);
     setPhase("arming");
     setDeadline(null);
+    setDurationMs(dur);
     setError(null);
+    // Persist the next item before the asynchronous pre-roll. A refresh during
+    // microphone setup must not resume the previously uploaded card.
+    saveSession({
+      sessionId: sessionIdRef.current,
+      mode: sessionModeRef.current,
+      items: list,
+      index: i,
+      phase: "arming",
+      deadline: preserveDeadline,
+      durationMs: dur,
+      promptShownAt: null,
+      uploadedItemIds: uploadedRef.current,
+      jobId: null,
+      graded: null,
+      savedAt: Date.now(),
+    });
 
     try {
       await recorderRef.current?.start(ENCODER_PREROLL_MS);
     } catch (err) {
-      // Preserve the previous fallback (the item still starts), while retaining
-      // the original immediate microphone-error visibility.
       if (startToken === itemStartTokenRef.current) {
         setError(err instanceof Error ? err.message : "Could not start recording.");
       }
+      return;
     }
     if (startToken !== itemStartTokenRef.current) return;
 
-    const dur = Math.max(1, itemForDuration(list[i]) ?? RECALL_SECONDS) * 1000;
     let dl = preserveDeadline;
     if (dl == null || remainingMs(dl) < 1000) dl = Date.now() + dur;
     promptShownAtRef.current = dl - dur;
@@ -461,7 +479,8 @@ export default function RecallSession() {
   }, [items, persist, noisyMode]);
 
   const submit = useCallback(async () => {
-    if (phase !== "recall" || !item) return;
+    if (submitInFlightRef.current || phase !== "recall" || !item) return;
+    submitInFlightRef.current = true;
     const answeredAtMs = Date.now();
     const timedOut = deadline != null && remainingMs(deadline) <= 0;
     if (timedOut) pulseDevice([35, 35, 80]);
@@ -853,8 +872,19 @@ export default function RecallSession() {
   if (phase === "arming") {
     return (
       <div className="card stack center" style={{ padding: 36 }}>
-        <div className="spinner" aria-hidden="true" />
-        <p className="muted">Preparing microphone…</p>
+        {error ? (
+          <>
+            <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
+            <button className="btn btn-primary btn-block" onClick={() => void beginItem(index, items, null)}>
+              Retry microphone
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="spinner" aria-hidden="true" />
+            <p className="muted">Preparing microphone…</p>
+          </>
+        )}
       </div>
     );
   }

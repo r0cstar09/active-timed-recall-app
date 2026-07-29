@@ -63,6 +63,7 @@ function extensionFor(mimeType: string): string {
 export class Recorder {
   private stream: MediaStream | null = null;
   private recorder: MediaRecorder | null = null;
+  private stopPromise: Promise<RecordingResult> | null = null;
   private chunks: BlobPart[] = [];
   private startTime = 0;
   private mimeType = "";
@@ -100,7 +101,17 @@ export class Recorder {
     const options: MediaRecorderOptions = this.mimeType
       ? { mimeType: this.mimeType }
       : {};
-    const rec = new MediaRecorder(this.stream, options);
+    let rec: MediaRecorder;
+    try {
+      rec = new MediaRecorder(this.stream, options);
+    } catch (preferredTypeError) {
+      if (!this.mimeType) throw preferredTypeError;
+      // Some Safari builds claim an MP4 type is supported but reject that
+      // exact constructor option. Let the browser choose rather than losing
+      // recording entirely.
+      this.mimeType = "";
+      rec = new MediaRecorder(this.stream);
+    }
     this.recorder = rec;
     rec.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) this.chunks.push(e.data);
@@ -133,17 +144,21 @@ export class Recorder {
       };
       rec.addEventListener("start", onStart);
       rec.addEventListener("error", onError);
-      stateCheckId = setTimeout(() => {
-        // Preserve compatibility with Safari builds that transition state but
-        // delay or omit the `start` event.
-        if (rec.state === "recording") finish();
-      }, 100);
       timeoutId = setTimeout(() => {
         if (rec.state === "recording") finish();
         else finish(new Error("Audio recorder did not start."));
       }, 1000);
       try {
         rec.start();
+        // Safari can transition state correctly while delaying or omitting the
+        // `start` event. State is sufficient confirmation and avoids adding a
+        // hidden delay before the intentional pre-roll.
+        if (rec.state === "recording") finish();
+        else {
+          stateCheckId = setTimeout(() => {
+            if (rec.state === "recording") finish();
+          }, 100);
+        }
       } catch (err) {
         finish(err instanceof Error ? err : new Error(String(err)));
       }
@@ -152,22 +167,45 @@ export class Recorder {
     if (prerollMs > 0) await wait(prerollMs);
   }
 
-  async stop(postrollMs = 0): Promise<RecordingResult> {
+  stop(postrollMs = 0): Promise<RecordingResult> {
+    if (this.stopPromise) return this.stopPromise;
     const rec = this.recorder;
-    if (!rec) throw new Error("Not recording.");
-    if (postrollMs > 0) await wait(postrollMs);
+    if (!rec || rec.state === "inactive") {
+      return Promise.reject(new Error("Not recording."));
+    }
 
-    return new Promise((resolve, reject) => {
-      if (rec.state === "inactive") {
-        reject(new Error("Not recording."));
-        return;
-      }
-      rec.onerror = (event) => {
-        const mediaError = (event as Event & { error?: DOMException }).error;
-        reject(mediaError instanceof Error ? mediaError : new Error("Audio recorder failed."));
+    const stopPromise = new Promise<RecordingResult>((resolve, reject) => {
+      let settled = false;
+      let postrollId: ReturnType<typeof setTimeout> | null = null;
+      const cleanup = () => {
+        if (postrollId != null) clearTimeout(postrollId);
+        rec.removeEventListener("stop", onStop);
+        rec.removeEventListener("error", onError);
       };
-      rec.onstop = () => {
-        const type = rec.mimeType || this.mimeType || "audio/webm";
+      const fail = (error: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        try {
+          if (rec.state !== "inactive") rec.stop();
+        } catch {
+          /* already stopped */
+        }
+        if (this.recorder === rec) this.recorder = null;
+        reject(error);
+      };
+      const onError = (event: Event) => {
+        const mediaError = (event as Event & { error?: DOMException }).error;
+        fail(mediaError instanceof Error ? mediaError : new Error("Audio recorder failed."));
+      };
+      const onStop = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        const chunkType = this.chunks.find(
+          (chunk): chunk is Blob => chunk instanceof Blob && chunk.size > 0 && !!chunk.type,
+        )?.type;
+        const type = rec.mimeType || chunkType || this.mimeType || "audio/webm";
         const blob = new Blob(this.chunks, { type });
         if (this.recorder === rec) this.recorder = null;
         resolve({
@@ -177,12 +215,34 @@ export class Recorder {
           durationMs: Date.now() - this.startTime,
         });
       };
-      try {
-        rec.stop();
-      } catch (err) {
-        reject(err instanceof Error ? err : new Error(String(err)));
-      }
+      const requestStop = () => {
+        if (settled) return;
+        if (rec.state === "inactive") {
+          // An external interruption may transition state before dispatching a
+          // stop event. Finalize chunks already delivered instead of rejecting
+          // a usable recording.
+          onStop();
+          return;
+        }
+        try {
+          rec.stop();
+        } catch (err) {
+          fail(err instanceof Error ? err : new Error(String(err)));
+        }
+      };
+
+      // Install interruption handlers before the tail wait. iOS may stop a
+      // recorder when the app backgrounds or the audio route changes.
+      rec.addEventListener("stop", onStop);
+      rec.addEventListener("error", onError);
+      if (postrollMs > 0) postrollId = setTimeout(requestStop, Math.max(0, postrollMs));
+      else requestStop();
     });
+    this.stopPromise = stopPromise;
+    void stopPromise.finally(() => {
+      if (this.stopPromise === stopPromise) this.stopPromise = null;
+    }).catch(() => undefined);
+    return stopPromise;
   }
 
   /** Release the microphone (call when leaving the session). */
