@@ -653,6 +653,29 @@ export const api = {
     );
   },
 
+  saveAsrFeedback(
+    sessionId: number | string,
+    sprintItemId: number | string,
+    feedback: { status: "accurate" | "corrected"; corrected_transcript?: string },
+  ): Promise<{
+    ok: boolean;
+    sprint_item_id: number;
+    raw_transcript: string | null;
+    status: "accurate" | "corrected";
+    corrected_transcript: string | null;
+    feedback_at: string;
+    grading_changed: false;
+    fsrs_changed: false;
+  }> {
+    return requestJson(
+      `/api/sessions/${encodeURIComponent(String(sessionId))}/items/${encodeURIComponent(
+        String(sprintItemId),
+      )}/asr-feedback`,
+      "PUT",
+      feedback,
+    );
+  },
+
   gradeSession(sessionId: number | string): Promise<GradeResponse> {
     return requestJson<GradeResponse>(
       `/api/sessions/${encodeURIComponent(String(sessionId))}/grade`,

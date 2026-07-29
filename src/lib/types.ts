@@ -51,7 +51,11 @@ export interface SessionItem {
   score?: number;
   feedback?: string;
   error_type?: string | null;
-  user_transcript_segment?: string;
+  user_transcript_segment?: string | null;
+  /** Learner-verified ASR audit data; never changes grading or FSRS. */
+  asr_feedback_status?: "accurate" | "corrected" | null;
+  asr_corrected_transcript?: string | null;
+  asr_feedback_at?: string | null;
   fsrs_rating?: FsrsRating;
   /** True only when this exact attempt produced a persisted FSRS review log. */
   fsrs_applied?: boolean;

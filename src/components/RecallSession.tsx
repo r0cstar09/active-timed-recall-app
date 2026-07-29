@@ -3,7 +3,7 @@ import { api, ApiError, pollJob } from "../lib/api";
 import { MAX_RECALL_SECONDS, RECALL_SECONDS } from "../lib/config";
 import type { ActiveRecallV2Evidence, Job, ServerDashboardStats, Session, SessionItem, SessionMode, WordAlignmentOperation } from "../lib/types";
 import PipelineProgress from "./PipelineProgress";
-import { Recorder, isRecordingSupported } from "../lib/recorder";
+import { ENCODER_POSTROLL_MS, ENCODER_PREROLL_MS, Recorder, isRecordingSupported } from "../lib/recorder";
 import {
   clearSession,
   loadSession,
@@ -102,6 +102,7 @@ export default function RecallSession() {
   const recordingsRef = useRef<Map<number, string>>(new Map());
   const pendingUploadRef = useRef<PendingUpload | null>(null);
   const submitRef = useRef<() => void>(() => {});
+  const itemStartTokenRef = useRef(0);
   const supported = isRecordingSupported();
 
   const item = items[index];
@@ -223,26 +224,37 @@ export default function RecallSession() {
   useEffect(() => {
     const urls = recordingsRef.current;
     return () => {
+      itemStartTokenRef.current += 1;
       recorderRef.current?.dispose();
       urls.forEach((u) => URL.revokeObjectURL(u));
     };
   }, []);
 
-  function beginItem(i: number, list: SessionItem[], preserveDeadline: number | null) {
+  async function beginItem(i: number, list: SessionItem[], preserveDeadline: number | null) {
+    const startToken = ++itemStartTokenRef.current;
+    setIndex(i);
+    setPhase("arming");
+    setDeadline(null);
+    setError(null);
+
+    try {
+      await recorderRef.current?.start(ENCODER_PREROLL_MS);
+    } catch (err) {
+      // Preserve the previous fallback (the item still starts), while retaining
+      // the original immediate microphone-error visibility.
+      if (startToken === itemStartTokenRef.current) {
+        setError(err instanceof Error ? err.message : "Could not start recording.");
+      }
+    }
+    if (startToken !== itemStartTokenRef.current) return;
+
     const dur = Math.max(1, itemForDuration(list[i]) ?? RECALL_SECONDS) * 1000;
     let dl = preserveDeadline;
     if (dl == null || remainingMs(dl) < 1000) dl = Date.now() + dur;
     promptShownAtRef.current = dl - dur;
-    setIndex(i);
     setPhase("recall");
     setDurationMs(dur);
     setDeadline(dl);
-    setError(null);
-    try {
-      recorderRef.current?.start();
-    } catch {
-      /* will retry on next gesture */
-    }
     saveSession({
       sessionId: sessionIdRef.current,
       mode: sessionModeRef.current,
@@ -460,7 +472,7 @@ export default function RecallSession() {
 
     let rec: { blob: Blob; mimeType: string; filename: string } | null = null;
     try {
-      rec = await recorderRef.current!.stop();
+      rec = await recorderRef.current!.stop(ENCODER_POSTROLL_MS);
     } catch {
       /* no recording captured */
     }
@@ -555,6 +567,7 @@ export default function RecallSession() {
 
   function quit() {
     clearSession();
+    itemStartTokenRef.current += 1;
     recorderRef.current?.dispose();
     window.location.href = "/";
   }
@@ -836,6 +849,16 @@ export default function RecallSession() {
     );
   }
 
+  // ── render: ARMING ──────────────────────────────────────────────────────────
+  if (phase === "arming") {
+    return (
+      <div className="card stack center" style={{ padding: 36 }}>
+        <div className="spinner" aria-hidden="true" />
+        <p className="muted">Preparing microphone…</p>
+      </div>
+    );
+  }
+
   // ── render: UPLOADING (with retry on failure) ─────────────────────────────
   if (phase === "uploading") {
     return (
@@ -1016,7 +1039,7 @@ function RetryRecorder({
       targetRef.current = { id: retry.sprint_item_id, limit };
       if (!recRef.current) recRef.current = new Recorder();
       await recRef.current.init();
-      recRef.current.start();
+      await recRef.current.start(ENCODER_PREROLL_MS);
       finishingRef.current = false;
       pendingRef.current = null;
       shownAtRef.current = Date.now();
@@ -1033,10 +1056,11 @@ function RetryRecorder({
     if (finishingRef.current) return;
     finishingRef.current = true;
     setPhase("uploading");
+    const answeredAtMs = Date.now();
     try {
-      const rec = await recRef.current!.stop();
+      const rec = await recRef.current!.stop(ENCODER_POSTROLL_MS);
       if (!rec || rec.blob.size === 0) throw new Error("No audio was captured — try again.");
-      pendingRef.current = { blob: rec.blob, mimeType: rec.mimeType, filename: rec.filename, answeredAtMs: Date.now(), timedOut };
+      pendingRef.current = { blob: rec.blob, mimeType: rec.mimeType, filename: rec.filename, answeredAtMs, timedOut };
       await uploadAndGrade();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
@@ -1119,6 +1143,89 @@ function RetryRecorder({
           Try again
         </button>
       )}
+    </div>
+  );
+}
+
+// ── Transcript feedback (audit-only; never regrades or touches FSRS) ─────────
+function TranscriptFeedback({ sessionId, item }: { sessionId: number; item: SessionItem }) {
+  const [status, setStatus] = useState<"accurate" | "corrected" | null>(item.asr_feedback_status ?? null);
+  const [corrected, setCorrected] = useState(item.asr_corrected_transcript ?? item.user_transcript_segment ?? "");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const hasRawTranscript = Boolean(item.user_transcript_segment?.trim());
+
+  useEffect(() => {
+    setStatus(item.asr_feedback_status ?? null);
+    setCorrected(item.asr_corrected_transcript ?? item.user_transcript_segment ?? "");
+  }, [item.asr_corrected_transcript, item.asr_feedback_status, item.user_transcript_segment]);
+
+  async function save(nextStatus: "accurate" | "corrected") {
+    const verbatim = corrected.trim();
+    if (nextStatus === "corrected" && !verbatim) {
+      setError("Enter what you actually said.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const result = await api.saveAsrFeedback(sessionId, item.sprint_item_id, {
+        status: nextStatus,
+        ...(nextStatus === "corrected" ? { corrected_transcript: verbatim } : {}),
+      });
+      setStatus(result.status);
+      setCorrected(result.corrected_transcript ?? item.user_transcript_segment ?? "");
+      setEditing(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <div className="small faint">Help improve speech capture · does not change this grade</div>
+      {status && !editing ? (
+        <div className="alert alert-ok" style={{ margin: 0 }}>
+          {status === "accurate"
+            ? "Transcript marked accurate."
+            : <>Verbatim correction saved: <strong>{corrected}</strong></>}
+        </div>
+      ) : null}
+      {editing ? (
+        <div className="stack" style={{ gap: 8 }}>
+          <textarea
+            aria-label="What you actually said"
+            rows={2}
+            value={corrected}
+            disabled={saving}
+            onChange={(event) => setCorrected(event.target.value)}
+            placeholder="Type exactly what you actually said"
+          />
+          <div className="btn-row">
+            <button className="btn btn-primary btn-small" type="button" disabled={saving} onClick={() => void save("corrected")}>
+              {saving ? "Saving…" : "Save verbatim correction"}
+            </button>
+            <button className="btn btn-ghost btn-small" type="button" disabled={saving} onClick={() => { setEditing(false); setError(null); }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="btn-row">
+          {hasRawTranscript ? (
+            <button className="btn btn-small" type="button" disabled={saving} onClick={() => void save("accurate")}>
+              {saving ? "Saving…" : "Accurate transcript"}
+            </button>
+          ) : null}
+          <button className="btn btn-ghost btn-small" type="button" disabled={saving} onClick={() => { setEditing(true); setError(null); }}>
+            Fix transcript
+          </button>
+        </div>
+      )}
+      {error && <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>}
     </div>
   );
 }
@@ -1330,7 +1437,7 @@ function Summary({
               <div className="small faint">{it.english}</div>
             </div>
 
-            {it.user_transcript_segment != null && (
+            {it.recording_id != null && (
               <div>
                 <div className="small faint">You said</div>
                 <div style={{ color: "var(--text-dim)" }}>
@@ -1340,6 +1447,10 @@ function Summary({
                 </div>
               </div>
             )}
+
+            {it.recording_id != null && graded?.session_id ? (
+              <TranscriptFeedback sessionId={graded.session_id} item={it} />
+            ) : null}
 
             {wordFeedback.length > 0 && (
               <div className="stack" style={{ gap: 8 }}>

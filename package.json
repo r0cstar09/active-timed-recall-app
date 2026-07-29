@@ -9,7 +9,8 @@
     "start": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test:recorder": "node scripts/test_recorder.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.0",

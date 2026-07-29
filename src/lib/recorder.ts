@@ -14,6 +14,16 @@ export interface RecordingResult {
   durationMs: number;
 }
 
+/**
+ * Let the browser encoder settle before the prompt appears, then retain a
+ * short tail after the learner submits. These margins are deliberately below
+ * the server's two-second MediaRecorder grace and do not change answer timing.
+ */
+export const ENCODER_PREROLL_MS = 250;
+export const ENCODER_POSTROLL_MS = 250;
+
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, Math.max(0, ms)));
+
 const PREFERRED_TYPES = [
   "audio/mp4", // Safari / iOS
   "audio/webm;codecs=opus", // Chrome / Firefox
@@ -81,30 +91,85 @@ export class Recorder {
     return this.stream;
   }
 
-  start(): void {
+  async start(prerollMs = 0): Promise<void> {
     if (!this.stream) throw new Error("Recorder not initialized.");
+    if (this.recorder && this.recorder.state !== "inactive") {
+      throw new Error("Recorder is already active.");
+    }
     this.chunks = [];
     const options: MediaRecorderOptions = this.mimeType
       ? { mimeType: this.mimeType }
       : {};
-    this.recorder = new MediaRecorder(this.stream, options);
-    this.recorder.ondataavailable = (e) => {
+    const rec = new MediaRecorder(this.stream, options);
+    this.recorder = rec;
+    rec.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) this.chunks.push(e.data);
     };
-    this.startTime = Date.now();
-    this.recorder.start();
+
+    await new Promise<void>((resolve, reject) => {
+      let settled = false;
+      let stateCheckId: ReturnType<typeof setTimeout> | null = null;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+      const cleanup = () => {
+        if (stateCheckId != null) clearTimeout(stateCheckId);
+        if (timeoutId != null) clearTimeout(timeoutId);
+        rec.removeEventListener("start", onStart);
+        rec.removeEventListener("error", onError);
+      };
+      const finish = (error?: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        if (error) reject(error);
+        else {
+          this.startTime = Date.now();
+          resolve();
+        }
+      };
+      const onStart = () => finish();
+      const onError = (event: Event) => {
+        const mediaError = (event as Event & { error?: DOMException }).error;
+        finish(mediaError instanceof Error ? mediaError : new Error("Audio recorder failed to start."));
+      };
+      rec.addEventListener("start", onStart);
+      rec.addEventListener("error", onError);
+      stateCheckId = setTimeout(() => {
+        // Preserve compatibility with Safari builds that transition state but
+        // delay or omit the `start` event.
+        if (rec.state === "recording") finish();
+      }, 100);
+      timeoutId = setTimeout(() => {
+        if (rec.state === "recording") finish();
+        else finish(new Error("Audio recorder did not start."));
+      }, 1000);
+      try {
+        rec.start();
+      } catch (err) {
+        finish(err instanceof Error ? err : new Error(String(err)));
+      }
+    });
+
+    if (prerollMs > 0) await wait(prerollMs);
   }
 
-  stop(): Promise<RecordingResult> {
+  async stop(postrollMs = 0): Promise<RecordingResult> {
+    const rec = this.recorder;
+    if (!rec) throw new Error("Not recording.");
+    if (postrollMs > 0) await wait(postrollMs);
+
     return new Promise((resolve, reject) => {
-      const rec = this.recorder;
-      if (!rec) {
+      if (rec.state === "inactive") {
         reject(new Error("Not recording."));
         return;
       }
+      rec.onerror = (event) => {
+        const mediaError = (event as Event & { error?: DOMException }).error;
+        reject(mediaError instanceof Error ? mediaError : new Error("Audio recorder failed."));
+      };
       rec.onstop = () => {
         const type = rec.mimeType || this.mimeType || "audio/webm";
         const blob = new Blob(this.chunks, { type });
+        if (this.recorder === rec) this.recorder = null;
         resolve({
           blob,
           mimeType: type,
