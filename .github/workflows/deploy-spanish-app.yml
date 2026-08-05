@@ -49,6 +49,9 @@ jobs:
       - name: Test recorder lifecycle
         run: npm run test:recorder
 
+      - name: Test deployment safety contract
+        run: npm run test:deploy-workflow
+
       - name: Verify public API and adaptive timer bundle contract
         run: |
           python3 - <<'PY'
@@ -130,15 +133,16 @@ jobs:
             --revision-suffix "build-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             --update-env-vars "APP_BUILD_SHA=${GITHUB_SHA},APP_DEPLOY_RUN=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             --platform managed \
+            --no-traffic \
             --quiet
           LATEST=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.latestCreatedRevisionName)')
           REV_DIGEST=$(gcloud run revisions describe "${LATEST}" --region "${REGION}" --format='value(status.imageDigest)')
           test "${IMAGE_REF}" = "${REV_DIGEST}"
+          echo "TRAFFIC_MOVED=1" >> "$GITHUB_ENV"
           gcloud run services update-traffic "${SERVICE}" \
             --region "${REGION}" \
             --to-revisions "${LATEST}=100" \
             --quiet
-          echo "TRAFFIC_MOVED=1" >> "$GITHUB_ENV"
           TRAFFIC_REV=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.traffic[0].revisionName)')
           TRAFFIC_PERCENT=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.traffic[0].percent)')
           test "${TRAFFIC_REV}" = "${LATEST}"

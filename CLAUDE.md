@@ -45,6 +45,7 @@ the timer based on prior pass/fail speed.
 npm ci
 npm run test:timer
 npm run test:recorder
+npm run test:deploy-workflow
 npm run build
 python3 - <<'PY'
 from pathlib import Path
@@ -84,4 +85,4 @@ service: spanish-app
 image repo: us-east1-docker.pkg.dev/hermes-ai-agent-497702/tonymuzo-apps/app
 ```
 
-The repo owns `.github/workflows/deploy-spanish-app.yml`; it requires repo secret `GCP_SA_KEY` containing a deploy-capable service-account JSON. The HA lease service account is not enough for deploys.
+The repo owns `.github/workflows/deploy-spanish-app.yml`. It authenticates without JSON keys through the repo/`main`-restricted `active-timed-recall-app` GitHub OIDC provider and the least-privilege `spanish-app-github-deployer` service account. Keep deploys serialized, create revisions with `--no-traffic`, verify the immutable digest before cutover, arm rollback before `update-traffic`, and verify exact public bundle bytes after cutover.
