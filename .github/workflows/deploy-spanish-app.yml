@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: spanish-app-deploy
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   PROJECT_ID: hermes-ai-agent-497702
@@ -40,6 +40,9 @@ jobs:
 
       - name: Test adaptive recall timer
         run: npm run test:timer
+
+      - name: Test recorder lifecycle
+        run: npm run test:recorder
 
       - name: Verify public API and adaptive timer bundle contract
         run: |
@@ -112,11 +115,14 @@ jobs:
 
       - name: Deploy Cloud Run and move traffic
         run: |
+          PREVIOUS_REVISION=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format=json | python3 -c 'import json, sys; traffic = json.load(sys.stdin)["status"]["traffic"]; full = [row.get("revisionName") for row in traffic if row.get("percent") == 100 and row.get("revisionName")]; assert len(full) == 1, f"expected exactly one 100% traffic revision, got {traffic!r}"; print(full[0])')
+          test -n "${PREVIOUS_REVISION}"
+          echo "PREVIOUS_REVISION=${PREVIOUS_REVISION}" >> "$GITHUB_ENV"
           gcloud run deploy "${SERVICE}" \
             --region "${REGION}" \
             --image "${IMAGE_REF}" \
             --revision-suffix "build-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
-            --update-env-vars "APP_BUILD_SHA=${GITHUB_SHA},APP_DEPLOY_RUN=${GITHUB_RUN_ID}" \
+            --update-env-vars "APP_BUILD_SHA=${GITHUB_SHA},APP_DEPLOY_RUN=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             --platform managed \
             --quiet
           LATEST=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.latestCreatedRevisionName)')
@@ -126,6 +132,7 @@ jobs:
             --region "${REGION}" \
             --to-revisions "${LATEST}=100" \
             --quiet
+          echo "TRAFFIC_MOVED=1" >> "$GITHUB_ENV"
           TRAFFIC_REV=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.traffic[0].revisionName)')
           TRAFFIC_PERCENT=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.traffic[0].percent)')
           test "${TRAFFIC_REV}" = "${LATEST}"
@@ -148,3 +155,17 @@ jobs:
             sleep 5
           done
           test "$verified" = 1
+          echo "DEPLOY_VERIFIED=1" >> "$GITHUB_ENV"
+
+      - name: Roll back unverified traffic
+        if: ${{ always() && env.TRAFFIC_MOVED == '1' && env.DEPLOY_VERIFIED != '1' }}
+        run: |
+          gcloud run services update-traffic "${SERVICE}" \
+            --region "${REGION}" \
+            --to-revisions "${PREVIOUS_REVISION}=100" \
+            --quiet
+          ROLLED_BACK_REV=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.traffic[0].revisionName)')
+          ROLLED_BACK_PERCENT=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.traffic[0].percent)')
+          test "${ROLLED_BACK_REV}" = "${PREVIOUS_REVISION}"
+          test "${ROLLED_BACK_PERCENT}" = "100"
+          echo "Rolled traffic back to ${PREVIOUS_REVISION} after failed verification"
