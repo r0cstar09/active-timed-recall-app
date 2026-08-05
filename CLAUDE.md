@@ -22,34 +22,43 @@ This project is allowed to inspect deployment scripts, systemd unit shapes, Cadd
 
 ## Timer invariant
 
-Every timed recall mode is fixed at 15 seconds:
+All timed recall modes use one server-authoritative content budget:
 
 ```text
-review
-practice
-misses
-cloze
-english_to_spanish
-audio_shadow
+one clause: 15 seconds
+additional clause: +5 seconds each
+more than 18 words: +5-second speaking cushion
+maximum: 35 seconds
 ```
 
-Do not make the client timer adaptive or env-dependent. The frontend should ignore legacy backend per-item timer values and return the fixed constants.
+This applies to `review`, `practice`, `misses`, `cloze`, `english_to_spanish`,
+and `audio_shadow`. The backend computes the budget from both English and
+Spanish sentence text, serializes it as `scheduling.time_limit_seconds`, and
+uses the same function for server-side upload enforcement and inline retries.
+The frontend must consume that value, fall back to 15 seconds when it is absent
+or invalid, and clamp stale/hostile values to 35 seconds. Never shrink or grow
+the timer based on prior pass/fail speed.
 
 ## Required verification before reporting success
 
 ```bash
 npm ci
+npm run test:timer
+npm run test:recorder
 npm run build
 python3 - <<'PY'
 from pathlib import Path
 cfg = Path('src/lib/config.ts').read_text()
+timing = Path('src/lib/recallDuration.ts').read_text()
 rec = Path('src/components/RecallSession.tsx').read_text()
 docker = Path('Dockerfile.cloudrun').read_text()
 dist = ''.join(p.read_text(errors='ignore') for p in Path('dist/_astro').glob('*.js'))
 assert 'https://api-spanish.tonymuzo.dev' in cfg
-assert 'export const RECALL_SECONDS = 15;' in cfg
-assert 'export const MAX_RECALL_SECONDS = 15;' in cfg
-assert 'return Math.min(RECALL_SECONDS, MAX_RECALL_SECONDS);' in rec
+assert 'export const RECALL_SECONDS = 15;' in timing
+assert 'export const MAX_RECALL_SECONDS = 35;' in timing
+assert 'item?.scheduling?.time_limit_seconds' in timing
+assert 'itemForDuration(list[i])' in rec
+assert 'recallSecondsFromServer(retry.time_limit_seconds)' in rec
 assert 'https://api-spanish.tonymuzo.dev' in docker
 assert 'https://api-spanish.tonymuzo.dev' in dist
 print('frontend contract ok')

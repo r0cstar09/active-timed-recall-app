@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       - name: Install dependencies
@@ -38,23 +38,27 @@ jobs:
       - name: Build app
         run: npm run build
 
-      - name: Verify fixed public API and timer bundle contract
+      - name: Test adaptive recall timer
+        run: npm run test:timer
+
+      - name: Verify public API and adaptive timer bundle contract
         run: |
           python3 - <<'PY'
           from pathlib import Path
           cfg = Path('src/lib/config.ts').read_text()
+          timing = Path('src/lib/recallDuration.ts').read_text()
           rec = Path('src/components/RecallSession.tsx').read_text()
           docker = Path('Dockerfile.cloudrun').read_text()
           dist = ''.join(p.read_text(errors='ignore') for p in Path('dist/_astro').glob('*.js'))
           assert 'https://api-spanish.tonymuzo.dev' in cfg
-          assert 'export const RECALL_SECONDS = 15;' in cfg
-          assert 'export const MAX_RECALL_SECONDS = 15;' in cfg
-          assert 'return Math.min(RECALL_SECONDS, MAX_RECALL_SECONDS);' in rec
+          assert 'export const RECALL_SECONDS = 15;' in timing
+          assert 'export const MAX_RECALL_SECONDS = 35;' in timing
+          assert 'item?.scheduling?.time_limit_seconds' in timing
+          assert 'itemForDuration(list[i])' in rec
+          assert 'recallSecondsFromServer(retry.time_limit_seconds)' in rec
           assert 'https://api-spanish.tonymuzo.dev' in docker
           assert 'https://api-spanish.tonymuzo.dev' in dist
-          assert 'time_limit_seconds||' not in dist
-          assert 'time_limit_seconds ||' not in dist
-          print('Spanish app routing/timer contract verified')
+          print('Spanish app routing/adaptive-timer contract verified')
           PY
 
       - name: Authenticate to Google Cloud

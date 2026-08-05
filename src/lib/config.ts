@@ -55,17 +55,11 @@ export function getCachedActiveBase(): string | null {
 const ENV_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? "").trim();
 
 /**
- * Recall countdown length (seconds) per item. Every timed recall session runs
- * exactly 15s; do not make this adaptive or environment-dependent.
+ * Recall timing is server-authoritative per card: 15s baseline, up to 35s for
+ * additional clauses and materially long sentences. These exports remain here
+ * for compatibility with existing UI imports.
  */
-export const RECALL_SECONDS = 15;
-
-/**
- * Hard ceiling for any per-item recall window (seconds). The backend clamps
- * server-side too; this client clamp guarantees the countdown can never show a
- * 30s+ window even against a stale backend.
- */
-export const MAX_RECALL_SECONDS = 15;
+export { MAX_RECALL_SECONDS, RECALL_SECONDS } from "./recallDuration";
 
 function stripTrailingSlash(url: string): string {
   return url.replace(/\/+$/, "");

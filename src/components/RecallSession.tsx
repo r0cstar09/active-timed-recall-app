@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, pollJob } from "../lib/api";
-import { MAX_RECALL_SECONDS, RECALL_SECONDS } from "../lib/config";
+import { RECALL_SECONDS } from "../lib/config";
+import { itemForDuration, recallSecondsFromServer } from "../lib/recallDuration";
 import type { ActiveRecallV2Evidence, Job, ServerDashboardStats, Session, SessionItem, SessionMode, WordAlignmentOperation } from "../lib/types";
 import PipelineProgress from "./PipelineProgress";
 import { ENCODER_POSTROLL_MS, ENCODER_PREROLL_MS, Recorder, isRecordingSupported } from "../lib/recorder";
@@ -65,13 +66,6 @@ function modeLabel(mode: SessionMode): string {
 function promptText(item: SessionItem): string {
   if (item.prompt_type === "cloze") return item.cloze_prompt || item.prompt;
   return item.prompt;
-}
-
-function itemForDuration(item?: SessionItem): number {
-  // Timed recall is fixed at 15s. Ignore adaptive/server legacy values so the
-  // UI never deviates between review/practice/misses/redo sessions.
-  void item;
-  return Math.min(RECALL_SECONDS, MAX_RECALL_SECONDS);
 }
 
 export default function RecallSession() {
@@ -1064,8 +1058,8 @@ function RetryRecorder({
     setPhase("arming");
     try {
       const retry = await api.retryItem(sessionId, item.sprint_item_id);
-      // Retry/re-record uses the same fixed 15s contract as the main recall flow.
-      const limit = Math.min(RECALL_SECONDS, MAX_RECALL_SECONDS);
+      // Retry/re-record receives the same backend-derived limit as the attempt.
+      const limit = recallSecondsFromServer(retry.time_limit_seconds);
       targetRef.current = { id: retry.sprint_item_id, limit };
       if (!recRef.current) recRef.current = new Recorder();
       await recRef.current.init();
