@@ -10,6 +10,10 @@ concurrency:
   group: spanish-app-deploy
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  id-token: write
+
 env:
   PROJECT_ID: hermes-ai-agent-497702
   REGION: us-east1
@@ -67,7 +71,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: projects/1074324695821/locations/global/workloadIdentityPools/github-actions/providers/active-timed-recall-app
+          service_account: spanish-app-github-deployer@hermes-ai-agent-497702.iam.gserviceaccount.com
 
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
