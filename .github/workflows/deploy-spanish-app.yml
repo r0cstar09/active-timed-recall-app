@@ -74,32 +74,77 @@ jobs:
       - name: Configure Artifact Registry auth
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      - name: Build container
-        run: docker build -f Dockerfile.cloudrun -t "${IMAGE}" .
+      - name: Build and inspect container
+        run: |
+          docker build -f Dockerfile.cloudrun -t "${IMAGE}" .
+          cid=$(docker run -d -p 127.0.0.1:18080:8080 "${IMAGE}")
+          trap 'docker rm -f "$cid" >/dev/null 2>&1 || true' EXIT
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:18080/session/ -o /tmp/image-session.html; then break; fi
+            sleep 1
+          done
+          EXPECTED_ASSET=$(python3 - <<'PY'
+          import re
+          text = open('/tmp/image-session.html').read()
+          assets = sorted(set(re.findall(r'/_astro/RecallSession\.[^"\']+\.js', text)))
+          assert len(assets) == 1, assets
+          print(assets[0])
+          PY
+          )
+          curl -fsS "http://127.0.0.1:18080${EXPECTED_ASSET}" -o /tmp/image-recall.js
+          python3 - <<'PY'
+          text = open('/tmp/image-recall.js').read()
+          assert 'time_limit_seconds' in text
+          PY
+          EXPECTED_SHA=$(sha256sum /tmp/image-recall.js | cut -d' ' -f1)
+          echo "EXPECTED_ASSET=${EXPECTED_ASSET}" >> "$GITHUB_ENV"
+          echo "EXPECTED_SHA=${EXPECTED_SHA}" >> "$GITHUB_ENV"
+          docker rm -f "$cid" >/dev/null
+          trap - EXIT
 
-      - name: Push container
-        run: docker push "${IMAGE}"
+      - name: Push container and resolve immutable digest
+        run: |
+          docker push "${IMAGE}"
+          DIGEST=$(docker buildx imagetools inspect "${IMAGE}" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          test -n "${DIGEST}"
+          IMAGE_REF="${IMAGE%:*}@${DIGEST}"
+          echo "IMAGE_REF=${IMAGE_REF}" >> "$GITHUB_ENV"
 
-      - name: Deploy Cloud Run
+      - name: Deploy Cloud Run and move traffic
         run: |
           gcloud run deploy "${SERVICE}" \
             --region "${REGION}" \
-            --image "${IMAGE}" \
+            --image "${IMAGE_REF}" \
+            --revision-suffix "build-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --update-env-vars "APP_BUILD_SHA=${GITHUB_SHA},APP_DEPLOY_RUN=${GITHUB_RUN_ID}" \
             --platform managed \
             --quiet
+          LATEST=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.latestCreatedRevisionName)')
+          REV_DIGEST=$(gcloud run revisions describe "${LATEST}" --region "${REGION}" --format='value(status.imageDigest)')
+          test "${IMAGE_REF}" = "${REV_DIGEST}"
+          gcloud run services update-traffic "${SERVICE}" \
+            --region "${REGION}" \
+            --to-revisions "${LATEST}=100" \
+            --quiet
+          TRAFFIC_REV=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.traffic[0].revisionName)')
+          TRAFFIC_PERCENT=$(gcloud run services describe "${SERVICE}" --region "${REGION}" --format='value(status.traffic[0].percent)')
+          test "${TRAFFIC_REV}" = "${LATEST}"
+          test "${TRAFFIC_PERCENT}" = "100"
+          echo "LATEST_REVISION=${LATEST}" >> "$GITHUB_ENV"
 
-      - name: Smoke check public URL
+      - name: Verify exact public bundle
         run: |
+          verified=0
           for i in {1..24}; do
-            code=$(curl -L -s -A 'Mozilla/5.0 GitHubActionsSmoke' -o /tmp/spanish.html -w '%{http_code}' https://spanish-app.tonymuzo.dev/session/ || true)
-            if [ "$code" = "200" ]; then
-              if grep -q '/_astro/' /tmp/spanish.html; then
-                echo "spanish-app.tonymuzo.dev verified"
-                exit 0
-              fi
+            curl -LfsS -H 'Cache-Control: no-cache' -A "GitHubActionsVerified/${GITHUB_RUN_ID}" "https://spanish-app.tonymuzo.dev/session/?deploy=${GITHUB_RUN_ID}-${i}" -o /tmp/spanish.html || true
+            if grep -Fq "${EXPECTED_ASSET}" /tmp/spanish.html; then
+              curl -LfsS -H 'Cache-Control: no-cache' -A "GitHubActionsVerified/${GITHUB_RUN_ID}" "https://spanish-app.tonymuzo.dev${EXPECTED_ASSET}" -o /tmp/live-recall.js
+              LIVE_SHA=$(sha256sum /tmp/live-recall.js | cut -d' ' -f1)
+              test "${LIVE_SHA}" = "${EXPECTED_SHA}"
+              echo "spanish-app.tonymuzo.dev serves ${EXPECTED_ASSET} from ${LATEST_REVISION}"
+              verified=1
+              break
             fi
-            sleep 10
+            sleep 5
           done
-          echo "Smoke check failed"
-          head -c 500 /tmp/spanish.html || true
-          exit 1
+          test "$verified" = 1
