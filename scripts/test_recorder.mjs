@@ -95,16 +95,22 @@ const { Recorder } = context.module.exports;
 async function testNormalLifecycle() {
   const recorder = new Recorder();
   await recorder.init();
-  const startedAt = Date.now();
-  await recorder.start(20);
-  const readyMs = Date.now() - startedAt;
+  const startPromise = recorder.start(20);
+  const startStillPendingAtHalfway = await Promise.race([
+    startPromise.then(() => false),
+    new Promise((resolve) => setTimeout(() => resolve(true), 10)),
+  ]);
+  assert.equal(startStillPendingAtHalfway, true, "pre-roll resolved before its halfway point");
+  await startPromise;
   assert.equal(recorder.isRecording, true);
-  assert.ok(readyMs >= 20, `pre-roll was not awaited (${readyMs}ms)`);
 
-  const stoppedAt = Date.now();
-  const result = await recorder.stop(20);
-  const stopMs = Date.now() - stoppedAt;
-  assert.ok(stopMs >= 20, `post-roll was not awaited (${stopMs}ms)`);
+  const stopPromise = recorder.stop(20);
+  const stopStillPendingAtHalfway = await Promise.race([
+    stopPromise.then(() => false),
+    new Promise((resolve) => setTimeout(() => resolve(true), 10)),
+  ]);
+  assert.equal(stopStillPendingAtHalfway, true, "post-roll resolved before its halfway point");
+  const result = await stopPromise;
   assert.equal(lastRecorder.requested, false, "stop should not force an extra MP4 fragment");
   assert.ok(result.blob.size > 0, "recording blob was empty");
   assert.equal(result.mimeType, "audio/mp4");
