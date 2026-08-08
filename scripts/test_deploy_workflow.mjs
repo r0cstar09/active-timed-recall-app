@@ -9,6 +9,7 @@ const workflow = readFileSync(
 assert.match(workflow, /cancel-in-progress:\s*false/);
 assert.match(workflow, /id-token:\s*write/);
 
+const promptGate = workflow.indexOf('npm run test:prompt');
 const priorCapture = workflow.indexOf('PREVIOUS_REVISION=$(gcloud run services describe');
 const deploy = workflow.indexOf('gcloud run deploy "${SERVICE}"');
 const revisionLookup = workflow.indexOf('LATEST=$(gcloud run services describe', deploy);
@@ -22,7 +23,9 @@ const deployVerified = workflow.indexOf('echo "DEPLOY_VERIFIED=1"', exactShaChec
 const rollback = workflow.indexOf('- name: Roll back unverified traffic', publicVerify);
 const rollbackBlock = workflow.slice(rollback);
 
+assert.ok(promptGate >= 0, 'sentence-specific recall prompt test gate is missing');
 assert.ok(priorCapture >= 0, 'previous 100% traffic revision capture is missing');
+assert.ok(promptGate < deploy, 'recall prompt test must pass before deployment');
 assert.ok(deploy > priorCapture, 'previous revision must be captured before deploy');
 assert.ok(revisionLookup > deploy, 'latest created revision lookup is missing');
 assert.match(deployBlock, /--no-traffic/, 'Cloud Run deploy command must include --no-traffic');

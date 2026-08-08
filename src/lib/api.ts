@@ -248,7 +248,7 @@ async function requestJson<T>(path: string, method: string, body: unknown): Prom
 function hydrateItem(item: SessionItem): SessionItem {
   return {
     ...item,
-    source_audio_url: resolveUrl(item.source_audio_url),
+    source_audio_url: item.source_audio_url ? resolveUrl(item.source_audio_url) : null,
     recording_audio_url: item.recording_audio_url ? resolveUrl(item.recording_audio_url) : item.recording_audio_url,
   };
 }

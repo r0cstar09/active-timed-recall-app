@@ -10,9 +10,10 @@
 interface Props {
   src: string;
   label?: string;
+  onError?: () => void;
 }
 
-export default function AudioPlayer({ src, label }: Props) {
+export default function AudioPlayer({ src, label, onError }: Props) {
   return (
     <div>
       {label && <div className="small faint" style={{ marginBottom: 4 }}>{label}</div>}
@@ -22,6 +23,7 @@ export default function AudioPlayer({ src, label }: Props) {
         preload="none"
         playsInline
         src={src}
+        onError={onError}
       />
     </div>
   );

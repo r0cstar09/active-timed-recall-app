@@ -39,11 +39,21 @@ The frontend must consume that value, fall back to 15 seconds when it is absent
 or invalid, and clamp stale/hostile values to 35 seconds. Never shrink or grow
 the timer based on prior pass/fail speed.
 
+## Recall prompt invariant
+
+Every unrevealed speaking item must provide one sentence-specific cue: the full
+English meaning, a cloze prompt, or a verified non-empty source-audio clip.
+Never ask for a sentence from only a shared grammar/pattern label. Mature FSRS
+cards use audio and fall back to English when the file is missing, empty, or
+fails playback. The frontend must also convert stale cached `minimal` payloads
+to their English meaning.
+
 ## Required verification before reporting success
 
 ```bash
 npm ci
 npm run test:timer
+npm run test:prompt
 npm run test:recorder
 npm run test:deploy-workflow
 npm run build
@@ -51,6 +61,7 @@ python3 - <<'PY'
 from pathlib import Path
 cfg = Path('src/lib/config.ts').read_text()
 timing = Path('src/lib/recallDuration.ts').read_text()
+prompt = Path('src/lib/recallPrompt.ts').read_text()
 rec = Path('src/components/RecallSession.tsx').read_text()
 docker = Path('Dockerfile.cloudrun').read_text()
 dist = ''.join(p.read_text(errors='ignore') for p in Path('dist/_astro').glob('*.js'))
@@ -58,6 +69,9 @@ assert 'https://api-spanish.tonymuzo.dev' in cfg
 assert 'export const RECALL_SECONDS = 15;' in timing
 assert 'export const MAX_RECALL_SECONDS = 35;' in timing
 assert 'item?.scheduling?.time_limit_seconds' in timing
+assert 'item.prompt_type === "minimal"' in prompt
+assert 'recallPromptText(item, sourceAudioUsable)' in rec
+assert 'sourceAudioUnavailable' in rec
 assert 'itemForDuration(list[i])' in rec
 assert 'recallSecondsFromServer(retry.time_limit_seconds)' in rec
 assert 'https://api-spanish.tonymuzo.dev' in docker

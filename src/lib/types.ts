@@ -41,7 +41,7 @@ export interface SessionItem {
   english_meaning?: string;
   context_clue?: string | null;
   cloze_prompt: string;
-  source_audio_url: string;
+  source_audio_url: string | null;
   answer_visible?: boolean;
   learning_card?: LearningCard | null;
   scheduling?: SchedulingInfo;

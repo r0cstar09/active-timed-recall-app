@@ -12,6 +12,7 @@
     "astro": "astro",
     "test:recorder": "node scripts/test_recorder.mjs",
     "test:timer": "node --experimental-strip-types --test tests/recallDuration.test.mjs",
+    "test:prompt": "node --experimental-strip-types --test tests/recallPrompt.test.mjs",
     "test:deploy-workflow": "node scripts/test_deploy_workflow.mjs"
   },
   "dependencies": {

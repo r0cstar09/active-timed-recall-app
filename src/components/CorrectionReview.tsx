@@ -69,7 +69,7 @@ export default function CorrectionReview() {
 
           {it.feedback && <div className="alert" style={{ margin: 0 }}>{it.feedback}</div>}
 
-          <AudioPlayer src={it.source_audio_url} label="Native audio" />
+          {it.source_audio_url && <AudioPlayer src={it.source_audio_url} label="Native audio" />}
         </div>
       ))}
     </div>

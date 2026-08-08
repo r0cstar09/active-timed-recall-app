@@ -16,6 +16,7 @@ import {
   type Phase,
 } from "../lib/timer";
 import AudioPlayer from "./AudioPlayer";
+import { recallPromptText } from "../lib/recallPrompt";
 
 type Status = "idle" | "active" | "error";
 
@@ -63,11 +64,6 @@ function modeLabel(mode: SessionMode): string {
   }[mode];
 }
 
-function promptText(item: SessionItem): string {
-  if (item.prompt_type === "cloze") return item.cloze_prompt || item.prompt;
-  return item.prompt;
-}
-
 export default function RecallSession() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +83,7 @@ export default function RecallSession() {
   const [queueStats, setQueueStats] = useState<ServerDashboardStats | null>(null);
   const [noisyMode, setNoisyMode] = useState(false);
   const [micLevels, setMicLevels] = useState<number[]>(Array.from({ length: WAVE_BARS }, () => 0.35));
+  const [failedSourceAudioItems, setFailedSourceAudioItems] = useState<Set<number>>(() => new Set());
   const [, setTick] = useState(0);
 
   const sessionIdRef = useRef<number>(0);
@@ -914,6 +911,20 @@ export default function RecallSession() {
     ? Math.max(0, Math.min(100, (remainingMs(deadline) / (durationMs || 1)) * 100))
     : 0;
   const danger = secs <= 3;
+  const expectsSourceAudio = item?.prompt_type === "audio" || item?.prompt_type === "audio_shadow";
+  const sourceAudioUsable = Boolean(
+    item?.source_audio_url && !failedSourceAudioItems.has(item.sprint_item_id),
+  );
+  const sourceAudioUnavailable = Boolean(item && expectsSourceAudio && !sourceAudioUsable);
+  const markSourceAudioFailed = () => {
+    if (!item) return;
+    setFailedSourceAudioItems((previous) => {
+      if (previous.has(item.sprint_item_id)) return previous;
+      const next = new Set(previous);
+      next.add(item.sprint_item_id);
+      return next;
+    });
+  };
 
   return (
     <div className="stack recall-shell">
@@ -961,7 +972,7 @@ export default function RecallSession() {
               ? "Complete the phrase out loud"
               : danger ? "Fast now — say it" : "Breathe, think of the idea, speak in Spanish"}
         </p>
-        <h2 style={{ margin: "2px 0 0" }}>{item ? promptText(item) : ""}</h2>
+        <h2 style={{ margin: "2px 0 0" }}>{item ? recallPromptText(item, sourceAudioUsable) : ""}</h2>
         {item?.context_clue && (
           <p className="small faint" style={{ margin: 0 }}>{item.context_clue}</p>
         )}
@@ -972,13 +983,23 @@ export default function RecallSession() {
           </div>
         )}
 
-        {item?.prompt_type === "audio_shadow" && (
-          <AudioPlayer src={item.source_audio_url} />
+        {item?.prompt_type === "audio_shadow" && sourceAudioUsable && item.source_audio_url && (
+          <AudioPlayer src={item.source_audio_url} onError={markSourceAudioFailed} />
         )}
 
-        {item?.source_audio_url && item.prompt_type !== "audio_shadow" && item.answer_visible === false && (
+        {item?.source_audio_url && item.prompt_type !== "audio_shadow" && item.answer_visible === false && sourceAudioUsable && (
           <div style={{ width: "100%", textAlign: "left" }}>
-            <AudioPlayer src={item.source_audio_url} label="Pronunciation audio" />
+            <AudioPlayer
+              src={item.source_audio_url}
+              label="Sentence audio"
+              onError={markSourceAudioFailed}
+            />
+          </div>
+        )}
+
+        {sourceAudioUnavailable && item && (
+          <div className="alert" style={{ margin: "8px 0 0", textAlign: "left" }}>
+            <strong>Audio unavailable.</strong> Use the full English meaning shown above.
           </div>
         )}
 
@@ -1510,7 +1531,7 @@ function Summary({
               <div className="alert" style={{ margin: 0 }}>{it.feedback}</div>
             )}
 
-            <AudioPlayer src={it.source_audio_url} label="Native audio" />
+            {it.source_audio_url && <AudioPlayer src={it.source_audio_url} label="Native audio" />}
             {userUrl && <AudioPlayer src={userUrl} label="Your recording" />}
 
             {unclear && graded?.session_id && onRefresh && (
