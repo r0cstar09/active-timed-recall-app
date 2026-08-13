@@ -111,6 +111,14 @@ export interface SessionSummary {
   overtime_count: number;
 }
 
+export interface ResumableSessionSummary {
+  session_id: number;
+  mode: SessionMode;
+  status: string;
+  item_count: number;
+  remaining_items: number;
+}
+
 export interface Session {
   session_id: number;
   items: SessionItem[];
@@ -119,6 +127,7 @@ export interface Session {
   mode?: SessionMode;
   affects_fsrs?: boolean;
   seconds_per_card?: number;
+  resumable_session?: ResumableSessionSummary | null;
 }
 
 /** Returned by POST /api/sessions/:id/recording. */

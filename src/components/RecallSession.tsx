@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, pollJob } from "../lib/api";
 import { RECALL_SECONDS } from "../lib/config";
 import { itemForDuration, recallSecondsFromServer } from "../lib/recallDuration";
-import type { ActiveRecallV2Evidence, Job, ServerDashboardStats, Session, SessionItem, SessionMode, WordAlignmentOperation } from "../lib/types";
+import type { ActiveRecallV2Evidence, Job, ResumableSessionSummary, ServerDashboardStats, Session, SessionItem, SessionMode, WordAlignmentOperation } from "../lib/types";
 import PipelineProgress from "./PipelineProgress";
 import { ENCODER_POSTROLL_MS, ENCODER_PREROLL_MS, Recorder, isRecordingSupported } from "../lib/recorder";
 import {
@@ -81,6 +81,8 @@ export default function RecallSession() {
   const [routeReady, setRouteReady] = useState(false);
   const [showModePicker, setShowModePicker] = useState(false);
   const [queueStats, setQueueStats] = useState<ServerDashboardStats | null>(null);
+  const [serverResumable, setServerResumable] = useState<ResumableSessionSummary | null>(null);
+  const [launching, setLaunching] = useState(false);
   const [noisyMode, setNoisyMode] = useState(false);
   const [micLevels, setMicLevels] = useState<number[]>(Array.from({ length: WAVE_BARS }, () => 0.35));
   const [failedSourceAudioItems, setFailedSourceAudioItems] = useState<Set<number>>(() => new Set());
@@ -94,6 +96,7 @@ export default function RecallSession() {
   const pendingUploadRef = useRef<PendingUpload | null>(null);
   const submitRef = useRef<() => void>(() => {});
   const submitInFlightRef = useRef(false);
+  const launchInFlightRef = useRef(false);
   const itemStartTokenRef = useRef(0);
   const supported = isRecordingSupported();
 
@@ -296,21 +299,25 @@ export default function RecallSession() {
   }
 
   async function start() {
-    const mode = explicitModeFromUrl() ?? sessionMode;
-    sessionModeRef.current = mode;
-    setSessionMode(mode);
-    setError(null);
-    if (mode !== "learn") {
-      if (!supported) {
-        setError("This browser does not support audio recording.");
-        return;
-      }
-      if (!(await armRecorder())) return;
-    }
+    if (launchInFlightRef.current) return;
+    launchInFlightRef.current = true;
+    setLaunching(true);
     try {
+      const mode = explicitModeFromUrl() ?? sessionMode;
+      sessionModeRef.current = mode;
+      setSessionMode(mode);
+      setError(null);
+      if (mode !== "learn") {
+        if (!supported) {
+          setError("This browser does not support audio recording.");
+          return;
+        }
+        if (!(await armRecorder())) return;
+      }
       const session = await api.createSession(mode);
       if (!session.items?.length) {
         clearSession();
+        setServerResumable(session.resumable_session ?? null);
         setGraded({
           session_id: session.session_id,
           items: [],
@@ -351,6 +358,9 @@ export default function RecallSession() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
       setStatus("error");
+    } finally {
+      launchInFlightRef.current = false;
+      setLaunching(false);
     }
   }
 
@@ -400,6 +410,69 @@ export default function RecallSession() {
     }
     setStatus("active");
     beginItem(saved.index, saved.items, saved.deadline);
+  }
+
+  async function continueServerSession() {
+    const resumable = serverResumable;
+    if (!resumable) return;
+    setError(null);
+    if (resumable.mode !== "learn") {
+      if (!supported) {
+        setError("This browser does not support audio recording.");
+        setStatus("error");
+        return;
+      }
+      if (!(await armRecorder())) {
+        setStatus("error");
+        return;
+      }
+    }
+
+    try {
+      const session = await api.getSession(resumable.session_id);
+      const actualMode = session.mode ?? resumable.mode;
+      const remainingItems = session.items.filter(
+        (candidate) => candidate.result === "pending" && !candidate.recording_id && !candidate.timed_out,
+      );
+      sessionIdRef.current = session.session_id;
+      sessionModeRef.current = actualMode;
+      uploadedRef.current = session.items
+        .filter((candidate) => Boolean(candidate.recording_id) || Boolean(candidate.timed_out))
+        .map((candidate) => candidate.sprint_item_id);
+      setSessionMode(actualMode);
+      setServerResumable(null);
+
+      if (!remainingItems.length) {
+        const saved: PersistedSession = {
+          sessionId: session.session_id,
+          mode: actualMode,
+          items: session.items,
+          index: Math.max(0, session.items.length - 1),
+          phase: "grading",
+          deadline: null,
+          durationMs: null,
+          promptShownAt: null,
+          uploadedItemIds: uploadedRef.current,
+          jobId: null,
+          graded: null,
+          savedAt: Date.now(),
+        };
+        setItems(session.items);
+        setIndex(saved.index);
+        setPhase("grading");
+        setStatus("active");
+        void startGrading(saved);
+        return;
+      }
+
+      setItems(remainingItems);
+      setIndex(0);
+      setStatus("active");
+      beginItem(0, remainingItems, null);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+      setStatus("error");
+    }
   }
 
   async function acknowledgeLearned() {
@@ -703,9 +776,11 @@ export default function RecallSession() {
             <button
               className="btn btn-primary btn-lg btn-block"
               onClick={start}
-              disabled={sessionMode !== "learn" && !supported}
+              disabled={launching || (sessionMode !== "learn" && !supported)}
             >
-              {sessionMode === "learn"
+              {launching
+                ? "Opening session…"
+                : sessionMode === "learn"
                 ? "Start learning"
                 : sessionMode === "review"
                   ? "Start due review · FSRS ON"
@@ -744,6 +819,8 @@ export default function RecallSession() {
       <Summary
         graded={graded}
         recordings={recordingsRef.current}
+        serverResumable={serverResumable}
+        onContinueServerSession={() => void continueServerSession()}
         onRefresh={(g) => {
           setGraded(g);
           saveLastGraded(g);
@@ -1279,10 +1356,14 @@ function TranscriptFeedback({ sessionId, item }: { sessionId: number; item: Sess
 function Summary({
   graded,
   recordings,
+  serverResumable,
+  onContinueServerSession,
   onRefresh,
 }: {
   graded: Session | null;
   recordings: Map<number, string>;
+  serverResumable?: ResumableSessionSummary | null;
+  onContinueServerSession?: () => void;
   onRefresh?: (fresh: Session) => void;
 }) {
   const [deletedPhraseIds, setDeletedPhraseIds] = useState<Set<number>>(() => new Set());
@@ -1342,7 +1423,14 @@ function Summary({
     return (
       <div className="card stack center">
         <h2>{title}</h2>
-        <p className="muted">{body}</p>
+        <p className="muted">{serverResumable
+          ? `${serverResumable.remaining_items} card${serverResumable.remaining_items === 1 ? " is" : "s are"} waiting in an unfinished ${serverResumable.mode === "review" ? "Due Review" : "session"}.`
+          : body}</p>
+        {serverResumable && onContinueServerSession && (
+          <button className="btn btn-primary btn-lg btn-block" onClick={onContinueServerSession}>
+            Continue unfinished {serverResumable.mode === "review" ? "review" : "session"} · {serverResumable.remaining_items} remaining
+          </button>
+        )}
         {mode !== "learn" && (
           <a className="btn btn-block" href="/session?mode=learn">Open Learn queue</a>
         )}
