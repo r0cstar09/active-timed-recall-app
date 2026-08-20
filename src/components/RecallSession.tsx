@@ -83,6 +83,7 @@ export default function RecallSession() {
   const [queueStats, setQueueStats] = useState<ServerDashboardStats | null>(null);
   const [serverResumable, setServerResumable] = useState<ResumableSessionSummary | null>(null);
   const [launching, setLaunching] = useState(false);
+  const [advancingLearn, setAdvancingLearn] = useState(false);
   const [noisyMode, setNoisyMode] = useState(false);
   const [micLevels, setMicLevels] = useState<number[]>(Array.from({ length: WAVE_BARS }, () => 0.35));
   const [failedSourceAudioItems, setFailedSourceAudioItems] = useState<Set<number>>(() => new Set());
@@ -97,6 +98,7 @@ export default function RecallSession() {
   const submitRef = useRef<() => void>(() => {});
   const submitInFlightRef = useRef(false);
   const launchInFlightRef = useRef(false);
+  const learnAdvanceInFlightRef = useRef(false);
   const itemStartTokenRef = useRef(0);
   const supported = isRecordingSupported();
 
@@ -476,11 +478,24 @@ export default function RecallSession() {
   }
 
   async function acknowledgeLearned() {
-    if (!item) return;
+    if (!item || learnAdvanceInFlightRef.current) return;
+    learnAdvanceInFlightRef.current = true;
+    setAdvancingLearn(true);
     setError(null);
+    const finishingBatch = index + 1 >= items.length;
     try {
+      // Request the microphone from the final explicit learner gesture before
+      // any network awaits; iPhone Safari can otherwise drop user activation.
+      if (finishingBatch) {
+        if (!supported) {
+          setError("This browser cannot record the immediate spoken test. Open the app in Safari or Chrome.");
+          return;
+        }
+        if (!(await armRecorder())) return;
+      }
+
       await api.introducePhrase(item.phrase_id);
-      if (index + 1 < items.length) {
+      if (!finishingBatch) {
         const next = index + 1;
         setIndex(next);
         saveSession({
@@ -497,13 +512,37 @@ export default function RecallSession() {
           graded: null,
           savedAt: Date.now(),
         });
-      } else {
-        clearSession();
-        setGraded({ session_id: sessionIdRef.current, mode: "learn", affects_fsrs: false, items });
-        setPhase("summary");
+        return;
       }
+
+      const learnedPhraseIds = items.map((learnedItem) => learnedItem.phrase_id);
+      const practice = await api.createSession("practice", learnedPhraseIds.length, learnedPhraseIds);
+      if (!practice.items?.length) {
+        throw new Error("The just-learned test could not be created. Tap again to retry.");
+      }
+
+      clearSession();
+      sessionIdRef.current = practice.session_id;
+      sessionModeRef.current = "practice";
+      uploadedRef.current = [];
+      setSessionMode("practice");
+      setItems(practice.items);
+      setIndex(0);
+      setGraded(null);
+      setResumable(null);
+      setServerResumable(null);
+      setFailedSourceAudioItems(new Set());
+      if (typeof window !== "undefined") {
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set("mode", "practice");
+        window.history.replaceState({}, "", nextUrl);
+      }
+      await beginItem(0, practice.items, null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      learnAdvanceInFlightRef.current = false;
+      setAdvancingLearn(false);
     }
   }
 
@@ -925,8 +964,16 @@ export default function RecallSession() {
 
           {error && <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>}
 
-          <button className="btn btn-primary btn-lg btn-block" onClick={acknowledgeLearned}>
-            {index + 1 < items.length ? "I understand · next" : "I understand · finish"}
+          <button
+            className="btn btn-primary btn-lg btn-block"
+            onClick={acknowledgeLearned}
+            disabled={advancingLearn}
+          >
+            {advancingLearn
+              ? "Preparing your test…"
+              : index + 1 < items.length
+                ? "I understand · next"
+                : "I understand · test these now"}
           </button>
           <a className="btn btn-ghost btn-block" href="/session?mode=practice">
             Practice introduced phrases instead

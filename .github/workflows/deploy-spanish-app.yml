@@ -52,6 +52,9 @@ jobs:
       - name: Test recorder lifecycle
         run: npm run test:recorder
 
+      - name: Test Learn-to-practice handoff
+        run: npm run test:learn-handoff
+
       - name: Test deployment safety contract
         run: npm run test:deploy-workflow
 

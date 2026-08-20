@@ -613,8 +613,13 @@ function hydratePatternPack(pack: PatternPack): PatternPack {
 
 export const api = {
   // ── Sessions / grading (real contract) ───────────────────────────────────
-  async createSession(mode: SessionMode = "review", size = 10): Promise<Session> {
-    return hydrateSession(await requestJson<Session>("/api/sessions", "POST", { mode, size }));
+  async createSession(mode: SessionMode = "review", size = 10, phraseIds?: number[]): Promise<Session> {
+    const phrase_ids = phraseIds?.filter((id, index, all) => Number.isInteger(id) && id > 0 && all.indexOf(id) === index);
+    return hydrateSession(await requestJson<Session>("/api/sessions", "POST", {
+      mode,
+      size,
+      ...(phrase_ids?.length ? { phrase_ids } : {}),
+    }));
   },
 
   introducePhrase(phraseId: number | string): Promise<{ id: number; introduced_at: string; learning_status: string }> {
