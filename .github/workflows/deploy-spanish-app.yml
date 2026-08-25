@@ -55,6 +55,9 @@ jobs:
       - name: Test Learn-to-practice handoff
         run: npm run test:learn-handoff
 
+      - name: Test Written Recall queue contract
+        run: npm run test:written-recall
+
       - name: Test deployment safety contract
         run: npm run test:deploy-workflow
 

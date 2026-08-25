@@ -1,5 +1,5 @@
 ---
-type GlyphName = "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "session" | "settings" | "stamp" | "suitcase" | "spark" | "more";
+type GlyphName = "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "session" | "write" | "settings" | "stamp" | "suitcase" | "spark" | "more";
 interface Props { name: GlyphName; class?: string; title?: string; }
 const { name, class: klass, title } = Astro.props;
 const paths: Record<GlyphName, string[]> = {
@@ -10,6 +10,7 @@ const paths: Record<GlyphName, string[]> = {
   ingest: ["M12 5v14", "M5 12h14", "M4 19h16"],
   library: ["M4 5h16v14H4z", "M4 9h16", "M8 13h3", "M14 13h3", "M8 16h8"],
   session: ["M9 4a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0z", "M6 11a6 6 0 0 0 12 0", "M12 17v4", "M8 21h8"],
+  write: ["M4 20h4l11-11-4-4L4 16z", "m13.5 2.5 4 4", "M11 20h9"],
   settings: ["M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z", "M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 0 0-2.1-1.2L14 3h-4l-.4 2.6a7 7 0 0 0-2.1 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 2.1 1.2L10 21h4l.4-2.6a7 7 0 0 0 2.1-1.2l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2Z"],
 
   stamp: ["M7 4h10v5l2 2-2 2v7H7v-7l-2-2 2-2Z", "M9 16h6", "M10 8h4"],

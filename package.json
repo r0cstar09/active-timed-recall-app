@@ -10,9 +10,10 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "npm run test:recorder && npm run test:learn-handoff && npm run build",
+    "test": "npm run test:recorder && npm run test:learn-handoff && npm run test:written-recall && npm run build",
     "test:recorder": "node scripts/test_recorder.mjs",
     "test:learn-handoff": "node scripts/test_learn_handoff.mjs",
+    "test:written-recall": "node scripts/test_written_recall.mjs",
     "test:timer": "node --experimental-strip-types --test tests/recallDuration.test.mjs",
     "test:prompt": "node --experimental-strip-types --test tests/recallPrompt.test.mjs",
     "test:deploy-workflow": "node scripts/test_deploy_workflow.mjs"

@@ -1,0 +1,9 @@
+---
+import Base from "../layouts/Base.astro";
+import WrittenRecall from "../components/WrittenRecall";
+import "../styles/written-recall.css";
+---
+
+<Base title="Written Recall · Spanish" heading="Written Recall" current="write" hideCommandStrip={true}>
+  <WrittenRecall client:load />
+</Base>

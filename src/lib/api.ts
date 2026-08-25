@@ -61,6 +61,12 @@ export type AppSettings = {
   daily_practice_target: number;
 };
 
+export type WrittenAttempt = {
+  sprint_item_id: number;
+  answer: string;
+  response_seconds?: number;
+};
+
 export class ApiError extends Error {
   status: number;
   body?: unknown;
@@ -620,6 +626,31 @@ export const api = {
       size,
       ...(phrase_ids?.length ? { phrase_ids } : {}),
     }));
+  },
+
+  async createWrittenSession(
+    mode: "learn" | "review" | "practice",
+    size = 10,
+    targetVerb?: string,
+    phraseIds?: number[],
+  ): Promise<Session> {
+    const phrase_ids = phraseIds?.filter((id, index, all) => Number.isInteger(id) && id > 0 && all.indexOf(id) === index);
+    const target_verb = targetVerb?.trim().toLocaleLowerCase() || undefined;
+    return hydrateSession(await requestJson<Session>("/api/sessions", "POST", {
+      mode,
+      size,
+      response_mode: "written",
+      ...(target_verb ? { target_verb } : {}),
+      ...(phrase_ids?.length ? { phrase_ids } : {}),
+    }));
+  },
+
+  async gradeWrittenSession(sessionId: number | string, attempts: WrittenAttempt[]): Promise<Session> {
+    return hydrateSession(await requestJson<Session>(
+      `/api/sessions/${encodeURIComponent(String(sessionId))}/written-grade`,
+      "POST",
+      { attempts },
+    ));
   },
 
   introducePhrase(phraseId: number | string): Promise<{ id: number; introduced_at: string; learning_status: string }> {

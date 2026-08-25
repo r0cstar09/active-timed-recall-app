@@ -8,6 +8,7 @@
 
 // ── Sessions & grading (REAL contract) ─────────────────────────────────────
 
+export type ResponseMode = "spoken" | "written";
 export type SessionMode = "learn" | "review" | "practice" | "misses" | "cloze" | "english_to_spanish" | "audio_shadow";
 export type PromptType = "learn" | "english" | "context" | "cloze" | "audio" | "minimal" | "miss" | "english_to_spanish" | "audio_shadow";
 export type ItemResult = "pass" | "fail" | "partial" | "pending";
@@ -35,6 +36,7 @@ export interface SessionItem {
   prompt: string;
   prompt_type: PromptType;
   mode?: SessionMode;
+  response_mode?: ResponseMode;
   spanish?: string;
   target_spanish?: string;
   english: string;
@@ -109,11 +111,14 @@ export interface SessionSummary {
   unclear?: number;
   score: number;
   overtime_count: number;
+  response_mode?: ResponseMode;
 }
 
 export interface ResumableSessionSummary {
   session_id: number;
   mode: SessionMode;
+  response_mode?: ResponseMode;
+  target_verb?: string | null;
   status: string;
   item_count: number;
   remaining_items: number;
@@ -125,6 +130,8 @@ export interface Session {
   summary?: SessionSummary;
   status?: string;
   mode?: SessionMode;
+  response_mode?: ResponseMode;
+  target_verb?: string | null;
   affects_fsrs?: boolean;
   seconds_per_card?: number;
   resumable_session?: ResumableSessionSummary | null;
