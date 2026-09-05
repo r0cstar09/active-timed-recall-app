@@ -12,6 +12,8 @@ export interface RecordingResult {
   /** Suggested filename (extension matches the container). */
   filename: string;
   durationMs: number;
+  /** Capture ended before the learner submitted; never grade as a full answer. */
+  interrupted: boolean;
 }
 
 /**
@@ -67,13 +69,17 @@ export class Recorder {
   private chunks: BlobPart[] = [];
   private startTime = 0;
   private mimeType = "";
+  private finalized = new WeakSet<MediaRecorder>();
+  private submitted = new WeakSet<MediaRecorder>();
 
   /** Request mic permission and prepare the stream (acceptance test #2). */
   async init(): Promise<void> {
     if (!isRecordingSupported()) {
       throw new Error("Audio recording is not supported in this browser.");
     }
-    if (this.stream) return;
+    if (this.stream?.getAudioTracks().some((track) => track.readyState === "live")) return;
+    this.stream?.getTracks().forEach((track) => track.stop());
+    this.stream = null;
     this.stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
@@ -94,7 +100,8 @@ export class Recorder {
 
   async start(prerollMs = 0): Promise<void> {
     if (!this.stream) throw new Error("Recorder not initialized.");
-    if (this.recorder && this.recorder.state !== "inactive") {
+    if (!this.stream.getAudioTracks().some((track) => track.readyState === "live")) await this.init();
+    if (this.stopPromise || (this.recorder && this.recorder.state !== "inactive")) {
       throw new Error("Recorder is already active.");
     }
     this.chunks = [];
@@ -113,8 +120,10 @@ export class Recorder {
       rec = new MediaRecorder(this.stream);
     }
     this.recorder = rec;
+    rec.addEventListener("stop", () => this.finalized.add(rec), { once: true });
     rec.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) this.chunks.push(e.data);
+      // An old recorder may deliver queued events after dispose/new capture.
+      if (this.recorder === rec && e.data && e.data.size > 0) this.chunks.push(e.data);
     };
 
     await new Promise<void>((resolve, reject) => {
@@ -165,20 +174,56 @@ export class Recorder {
     });
 
     if (prerollMs > 0) await wait(prerollMs);
+    // A route change, lock-screen transition, or audio-device interruption can
+    // stop iOS MediaRecorder during the hidden pre-roll. Never reveal the
+    // prompt and start the scored clock unless this exact recorder is still
+    // actively capturing.
+    if (this.recorder !== rec || rec.state !== "recording") {
+      if (this.recorder === rec) this.recorder = null;
+      throw new Error("Audio recorder stopped before the prompt was shown.");
+    }
+  }
+
+  private resultFrom(rec: MediaRecorder): RecordingResult {
+    const chunkType = this.chunks.find(
+      (chunk): chunk is Blob => chunk instanceof Blob && chunk.size > 0 && !!chunk.type,
+    )?.type;
+    const type = rec.mimeType || chunkType || this.mimeType || "audio/webm";
+    const blob = new Blob(this.chunks, { type });
+    if (this.recorder === rec) this.recorder = null;
+    return {
+      blob,
+      mimeType: type,
+      filename: `recall.${extensionFor(type)}`,
+      durationMs: Date.now() - this.startTime,
+      interrupted: !this.submitted.has(rec),
+    };
   }
 
   stop(postrollMs = 0): Promise<RecordingResult> {
     if (this.stopPromise) return this.stopPromise;
     const rec = this.recorder;
-    if (!rec || rec.state === "inactive") {
+    if (!rec) {
       return Promise.reject(new Error("Not recording."));
+    }
+    if (rec.state !== "inactive") this.submitted.add(rec);
+    if (rec.state === "inactive" && this.finalized.has(rec)) {
+      // iOS can stop MediaRecorder while the page backgrounds or the audio
+      // route changes. If its final data event already arrived, preserve those
+      // frames when the learner submits instead of forcing a destructive retry.
+      const result = this.resultFrom(rec);
+      return result.blob.size > 0
+        ? Promise.resolve(result)
+        : Promise.reject(new Error("Not recording."));
     }
 
     const stopPromise = new Promise<RecordingResult>((resolve, reject) => {
       let settled = false;
       let postrollId: ReturnType<typeof setTimeout> | null = null;
+      let finalEventTimeout: ReturnType<typeof setTimeout> | null = null;
       const cleanup = () => {
         if (postrollId != null) clearTimeout(postrollId);
+        if (finalEventTimeout != null) clearTimeout(finalEventTimeout);
         rec.removeEventListener("stop", onStop);
         rec.removeEventListener("error", onError);
       };
@@ -202,26 +247,15 @@ export class Recorder {
         if (settled) return;
         settled = true;
         cleanup();
-        const chunkType = this.chunks.find(
-          (chunk): chunk is Blob => chunk instanceof Blob && chunk.size > 0 && !!chunk.type,
-        )?.type;
-        const type = rec.mimeType || chunkType || this.mimeType || "audio/webm";
-        const blob = new Blob(this.chunks, { type });
-        if (this.recorder === rec) this.recorder = null;
-        resolve({
-          blob,
-          mimeType: type,
-          filename: `recall.${extensionFor(type)}`,
-          durationMs: Date.now() - this.startTime,
-        });
+        resolve(this.resultFrom(rec));
       };
       const requestStop = () => {
         if (settled) return;
+        finalEventTimeout = setTimeout(() => fail(new Error("Audio recorder did not finalize. Please record again.")), 3000);
         if (rec.state === "inactive") {
-          // An external interruption may transition state before dispatching a
-          // stop event. Finalize chunks already delivered instead of rejecting
-          // a usable recording.
-          onStop();
+          // Inactive is synchronous, but final data/stop events are queued.
+          // Only the actual stop event proves all encoded audio arrived.
+          if (this.finalized.has(rec)) onStop();
           return;
         }
         try {

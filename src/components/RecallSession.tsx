@@ -592,16 +592,16 @@ export default function RecallSession() {
     setPhase("uploading");
     persist({ phase: "uploading" });
 
-    let rec: { blob: Blob; mimeType: string; filename: string } | null = null;
+    let rec: { blob: Blob; mimeType: string; filename: string; interrupted: boolean } | null = null;
     try {
       rec = await recorderRef.current!.stop(ENCODER_POSTROLL_MS);
     } catch {
       /* no recording captured */
     }
 
-    if (!rec || rec.blob.size === 0) {
-      setError("No audio was captured. Recording again.");
-      beginItem(index, items, null);
+    if (!rec || rec.blob.size === 0 || rec.interrupted) {
+      void beginItem(index, items, null);
+      setError(rec?.interrupted ? "Microphone was interrupted. This attempt won't be graded. Recording again." : "No audio was captured. Recording again.");
       return;
     }
 
@@ -858,6 +858,7 @@ export default function RecallSession() {
       <Summary
         graded={graded}
         recordings={recordingsRef.current}
+        noisyMode={noisyMode}
         serverResumable={serverResumable}
         onContinueServerSession={() => void continueServerSession()}
         onRefresh={(g) => {
@@ -1168,10 +1169,12 @@ type RetryPhase = "idle" | "arming" | "recording" | "uploading" | "grading" | "e
 function RetryRecorder({
   sessionId,
   item,
+  noisyMode,
   onDone,
 }: {
   sessionId: number;
   item: SessionItem;
+  noisyMode: boolean;
   onDone: (fresh: Session) => void;
 }) {
   const [phase, setPhase] = useState<RetryPhase>("idle");
@@ -1202,12 +1205,15 @@ function RetryRecorder({
     setError(null);
     setPhase("arming");
     try {
+      // Warm the microphone from the learner's tap before the retry request.
+      // iPhone Safari can reject a first getUserMedia call after a network await
+      // because the original user activation is no longer available.
+      if (!recRef.current) recRef.current = new Recorder();
+      await recRef.current.init();
       const retry = await api.retryItem(sessionId, item.sprint_item_id);
       // Retry/re-record receives the same backend-derived limit as the attempt.
       const limit = recallSecondsFromServer(retry.time_limit_seconds);
       targetRef.current = { id: retry.sprint_item_id, limit };
-      if (!recRef.current) recRef.current = new Recorder();
-      await recRef.current.init();
       await recRef.current.start(ENCODER_PREROLL_MS);
       finishingRef.current = false;
       pendingRef.current = null;
@@ -1253,6 +1259,7 @@ function RetryRecorder({
         responseSeconds: Math.round(((pending.answeredAtMs - shownAtRef.current) / 1000) * 10) / 10,
         timedOut: pending.timedOut,
         filename: pending.filename,
+        noisyMode,
       });
       setPhase("grading");
       const { job_id } = await api.gradeItem(sessionId, target.id);
@@ -1403,12 +1410,14 @@ function TranscriptFeedback({ sessionId, item }: { sessionId: number; item: Sess
 function Summary({
   graded,
   recordings,
+  noisyMode,
   serverResumable,
   onContinueServerSession,
   onRefresh,
 }: {
   graded: Session | null;
   recordings: Map<number, string>;
+  noisyMode: boolean;
   serverResumable?: ResumableSessionSummary | null;
   onContinueServerSession?: () => void;
   onRefresh?: (fresh: Session) => void;
@@ -1673,6 +1682,7 @@ function Summary({
               <RetryRecorder
                 sessionId={graded.session_id}
                 item={it}
+                noisyMode={noisyMode}
                 onDone={onRefresh}
               />
             )}
