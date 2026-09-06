@@ -189,7 +189,7 @@ def verify_spoken_resume_lock(browser, base):
     expect(page.get_by_role("button", name="Resume", exact=True)).to_be_enabled()
     assert page.evaluate("JSON.parse(localStorage.getItem('atr.session')).sessionId") == 9999
     expect(page.get_by_role("button", name="Correct this batch", exact=True)).to_have_count(0)
-    assert not fixture.created and not fixture.unexpected
+    assert not fixture.created and not fixture.unexpected, (fixture.created, fixture.unexpected)
     context.close()
     return {"spoken_resume": ["duplicate resume locked", "discard blocked while restoring", "late restore cannot overwrite a newer saved batch"], "production_writes": 0}
 

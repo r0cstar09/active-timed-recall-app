@@ -50,6 +50,9 @@ class StudyFixture:
         request = route.request
         parsed = urlparse(request.url)
         path = parsed.path
+        # Public Cloudflare telemetry is not a study write; mock it without sending data.
+        if parsed.hostname == "spanish-app.tonymuzo.dev" and path == "/cdn-cgi/rum" and request.method == "POST":
+            return route.fulfill(status=204, body="")
         # Every API URL, including public host calls, is intercepted. Unknown writes fail closed.
         if not (path.startswith("/api/") or parsed.hostname == "api-spanish.tonymuzo.dev" or path == "/health"):
             if request.method not in ("GET", "HEAD"):
