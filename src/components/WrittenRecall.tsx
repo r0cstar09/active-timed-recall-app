@@ -144,10 +144,12 @@ export default function WrittenRecall() {
     const nextIndex = next.mode === "learn" ? (pendingIndex < 0 ? next.items.length - 1 : pendingIndex) : 0;
     const nextPhase: WrittenPhase = next.mode === "learn" ? "learn"
       : next.status === "complete" || next.status === "complete_overtime" ? "results" : "answer";
-    // Save the new identity synchronously before allowing refresh or input.
+    // Keep the live ref and persisted identity aligned before effects can run.
+    const startedAt = Date.now();
+    promptStartedAt.current = startedAt;
     saveWrittenSession({ version: 1, sessionId: next.session_id, phraseIds: next.items.map(item => item.phrase_id),
       mode: originMode, targetVerb: next.target_verb || "", index: nextIndex, phase: nextPhase,
-      answers: {}, draft: "", promptStartedAt: Date.now() });
+      answers: {}, draft: "", promptStartedAt: startedAt });
     restoredDraft.current = null;
     setMode(originMode);
     setSession(next);

@@ -194,6 +194,73 @@ def verify_spoken_resume_lock(browser, base):
     return {"spoken_resume": ["duplicate resume locked", "discard blocked while restoring", "late restore cannot overwrite a newer saved batch"], "production_writes": 0}
 
 
+def verify_written_prompt_timing(browser, base, entry):
+    context = browser.new_context(service_workers="block")
+    fixture = RecoveryFixture()
+    submissions = []
+    def handle(route):
+        request = route.request
+        if re.fullmatch(r"/api/sessions/\d+/written-grade", urlparse(request.url).path) and request.method == "POST":
+            submissions.append(request.post_data_json)
+        return fixture.route(route)
+    context.route("**/*", handle)
+    page = context.new_page()
+    errors = []
+    page.on("pageerror", lambda error: errors.append(str(error)))
+    # Advance only Date.now; real browser scheduling stays live and reload retains the clock.
+    initial = 1700000000000
+    page.add_init_script("Date.now = () => Number(sessionStorage.getItem('test.writtenClock') || 1700000000000)")
+    def set_clock(value):
+        page.evaluate("value => sessionStorage.setItem('test.writtenClock', String(value))", value)
+    page.goto(base + "/write/", wait_until="networkidle")
+    if entry == "correction":
+        parent = fixture.make_session({"mode": "practice", "response_mode": "written", "phrase_ids": BATCH})
+        fixture.grade(parent["session_id"])
+        saved = {"version": 1, "sessionId": parent["session_id"], "phraseIds": BATCH, "mode": "learn", "targetVerb": "", "index": 0, "phase": "results", "answers": {}, "draft": "", "promptStartedAt": initial}
+        page.evaluate("saved => localStorage.setItem('atr.writtenSession', JSON.stringify(saved))", saved)
+        page.reload(wait_until="networkidle")
+        started_at = initial + 120000
+        set_clock(started_at)  # Deliberate time on the previous batch's results.
+        page.get_by_role("button", name="Correct this batch", exact=True).click()
+        ids = [9, 17]
+    else:
+        mode = "learn" if entry == "learn" else "practice"
+        page.locator(f'input[name="written-mode"][value="{mode}"]').check()
+        started_at = initial + 60000
+        set_clock(started_at)  # Deliberate setup delay, not a readiness sleep.
+        page.get_by_role("button", name=re.compile("Start 10-card")).click()
+        ids = BATCH if entry == "learn" else [999]
+        if entry == "learn":
+            started_at = initial + 120000
+            set_clock(started_at)  # Additional Learn time must not count as answer time.
+            for pid in ids:
+                expect(page.get_by_text(TEXT[pid][1], exact=True).first).to_be_visible()
+                page.get_by_role("button", name=re.compile("I understand|Learned — start writing")).click()
+    observed = []
+    for pid in ids:
+        expect(page.get_by_role("heading", name=TEXT[pid][0], exact=True)).to_be_visible()
+        expect(page.locator("#written-answer")).to_have_value("")
+        # Let passive effects settle without a keystroke that could hide a stale ref.
+        page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
+        before = page.evaluate("JSON.parse(localStorage.getItem('atr.writtenSession'))")
+        page.reload(wait_until="networkidle")
+        expect(page.locator("#written-answer")).to_have_value("")
+        after = page.evaluate("JSON.parse(localStorage.getItem('atr.writtenSession'))")
+        assert after == before, (before, after)
+        observed.append({"phrase_id": pid, "expected_start": started_at, "stored_start": after["promptStartedAt"]})
+        set_clock(started_at + 2000)
+        page.locator("#written-answer").fill(TEXT[pid][1])
+        page.get_by_role("button", name=re.compile("Save & next|Grade all answers")).click()
+        started_at += 2000
+    expect(page.get_by_role("heading", name=re.compile(r"passed$"))).to_be_visible()
+    assert len(submissions) == 1, submissions
+    seconds = [attempt["response_seconds"] for attempt in submissions[0]["attempts"]]
+    assert all(row["stored_start"] == row["expected_start"] for row in observed) and seconds == [2] * len(ids), {"entry": entry, "timestamps": observed, "submitted_response_seconds": seconds}
+    assert not fixture.unexpected and not errors, (fixture.unexpected, errors)
+    context.close()
+    return {"written_timing": entry, "verified": "refresh before first keystroke preserves prompt-only timing, including next-card transitions", "submitted_response_seconds": seconds, "production_writes": 0}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url")
@@ -209,7 +276,7 @@ def main():
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(executable_path=os.environ.get("BROWSER_BINARY", "/home/rootadmin/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"), headless=True, args=["--no-sandbox", "--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"])
-            report = {"base": base, "scope": "Mocked API routes; no production writes", "results": [verify_spoken_resume_lock(browser, base), verify_spoken(browser, base), verify_written(browser, base), verify_lost_create_response(browser, base, False), verify_lost_create_response(browser, base, True)]}
+            report = {"base": base, "scope": "Mocked API routes; no production writes", "results": [*[verify_written_prompt_timing(browser, base, entry) for entry in ("learn", "setup", "correction")], verify_spoken_resume_lock(browser, base), verify_spoken(browser, base), verify_written(browser, base), verify_lost_create_response(browser, base, False), verify_lost_create_response(browser, base, True)]}
             Path(args.output).write_text(json.dumps(report, indent=2))
             print(json.dumps(report, indent=2))
             browser.close()
