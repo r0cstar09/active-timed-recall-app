@@ -368,62 +368,83 @@ export default function RecallSession() {
   }
 
   async function resume() {
-    const saved = resumable;
-    if (!saved) return;
+    if (launchInFlightRef.current) return;
+    const saved = loadSession();
+    if (!saved) { setResumable(null); return; }
+    launchInFlightRef.current = true;
+    setLaunching(true);
     setError(null);
-    let restoredMode = saved.mode ?? saved.graded?.mode;
-    if (!restoredMode) {
-      try {
-        restoredMode = (await api.getSession(saved.sessionId)).mode;
-      } catch {
-        /* Older offline saves can still resume; review was the historical default. */
+    const startToken = itemStartTokenRef.current;
+    const snapshot = JSON.stringify(saved);
+    const stillCurrent = () => {
+      if (startToken !== itemStartTokenRef.current) return false;
+      const current = loadSession();
+      if (JSON.stringify(current) === snapshot) return true;
+      setResumable(current);
+      return false;
+    };
+    try {
+      let restoredMode = saved.mode ?? saved.graded?.mode;
+      if (!restoredMode) {
+        try {
+          restoredMode = (await api.getSession(saved.sessionId)).mode;
+        } catch {
+          /* Older offline saves can still resume; review was the historical default. */
+        }
+        if (!stillCurrent()) return;
       }
-    }
-    if (restoredMode) {
-      sessionModeRef.current = restoredMode;
-      setSessionMode(restoredMode);
-    }
-    sessionIdRef.current = saved.sessionId;
-    uploadedRef.current = saved.uploadedItemIds ?? [];
-    setItems(saved.items);
-    setIndex(saved.index);
+      if (restoredMode) {
+        sessionModeRef.current = restoredMode;
+        setSessionMode(restoredMode);
+      }
+      sessionIdRef.current = saved.sessionId;
+      uploadedRef.current = saved.uploadedItemIds ?? [];
+      setItems(saved.items);
+      setIndex(saved.index);
 
-    if (saved.phase === "learn") {
-      setPhase("learn");
-      setStatus("active");
-      return;
-    }
-
-    if (saved.phase === "summary" && saved.graded) {
-      try {
-        const fresh = await api.getSession(saved.sessionId);
-        if (fresh.session_id !== saved.sessionId || fresh.response_mode === "written") throw new Error("Saved batch mismatch");
-        // Refresh grades, not batch membership (including locally removed cards).
-        const allowed = new Set(saved.items.map(item => item.phrase_id));
-        const scoped = { ...fresh, items: fresh.items.filter(item => allowed.has(item.phrase_id)) };
-        saveCompletedSession(scoped);
-        setItems(scoped.items);
-        setGraded(scoped);
-        setPhase("summary");
+      if (saved.phase === "learn") {
+        setPhase("learn");
         setStatus("active");
-      } catch (err) {
-        setError(`Could not restore this batch: ${err instanceof Error ? err.message : String(err)}. Retry; no other cards were requested.`);
+        return;
       }
-      return;
-    }
-    if (saved.phase === "grading") {
-      setPhase("grading");
+
+      if (saved.phase === "summary" && saved.graded) {
+        try {
+          const fresh = await api.getSession(saved.sessionId);
+          if (!stillCurrent()) return;
+          if (fresh.session_id !== saved.sessionId || fresh.response_mode === "written") throw new Error("Saved batch mismatch");
+          // Refresh grades, not batch membership (including locally removed cards).
+          const allowed = new Set(saved.items.map(item => item.phrase_id));
+          const scoped = { ...fresh, items: fresh.items.filter(item => allowed.has(item.phrase_id)) };
+          saveCompletedSession(scoped);
+          setItems(scoped.items);
+          setGraded(scoped);
+          setPhase("summary");
+          setStatus("active");
+        } catch (err) {
+          if (stillCurrent()) setError(`Could not restore this batch: ${err instanceof Error ? err.message : String(err)}. Retry; no other cards were requested.`);
+        }
+        return;
+      }
+      if (saved.phase === "grading") {
+        setPhase("grading");
+        setStatus("active");
+        void startGrading(saved);
+        return;
+      }
+      // recall / uploading → need the mic again; resume preserving the countdown
+      const armed = await armRecorder();
+      if (!stillCurrent()) return;
+      if (!armed) {
+        setStatus("idle");
+        return;
+      }
       setStatus("active");
-      void startGrading(saved);
-      return;
+      beginItem(saved.index, saved.items, saved.deadline);
+    } finally {
+      launchInFlightRef.current = false;
+      setLaunching(false);
     }
-    // recall / uploading → need the mic again; resume preserving the countdown
-    if (!(await armRecorder())) {
-      setStatus("idle");
-      return;
-    }
-    setStatus("active");
-    beginItem(saved.index, saved.items, saved.deadline);
   }
 
   async function continueServerSession() {
@@ -773,12 +794,14 @@ export default function RecallSession() {
                   ? "Resume grading your session?"
                   : `Resume at item ${resumable.index + 1} of ${resumable.items.length}?`}
             </p>
-            <button className="btn btn-primary btn-lg btn-block" onClick={resume}>
+            <button className="btn btn-primary btn-lg btn-block" onClick={resume} disabled={launching}>
               Resume
             </button>
             <button
               className="btn btn-ghost btn-block"
+              disabled={launching}
               onClick={() => {
+                if (launchInFlightRef.current) return;
                 clearSession();
                 setResumable(null);
               }}

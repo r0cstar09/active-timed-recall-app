@@ -162,6 +162,38 @@ def verify_lost_create_response(browser, base, written):
     return {"modality": "written" if written else "spoken", "lost_response_refresh": "same reserved session and ordered target recovered", "production_writes": 0}
 
 
+def verify_spoken_resume_lock(browser, base):
+    context = browser.new_context(service_workers="block")
+    fixture = RecoveryFixture()
+    parent = fixture.make_session({"mode": "practice", "phrase_ids": BATCH})
+    fixture.grade(parent["session_id"])
+    held = []
+    def handle(route):
+        if urlparse(route.request.url).path == f"/api/sessions/{parent['session_id']}" and route.request.method == "GET":
+            held.append(route)
+            return
+        return fixture.route(route)
+    context.route("**/*", handle)
+    page = context.new_page()
+    page.goto(base + "/session/?mode=practice", wait_until="networkidle")
+    saved = {"sessionId": parent["session_id"], "mode": "practice", "phase": "summary", "items": parent["items"], "graded": parent, "index": 0, "uploadedItemIds": [], "deadline": None, "durationMs": None, "promptShownAt": None, "jobId": None}
+    page.evaluate("saved => localStorage.setItem('atr.session', JSON.stringify(saved))", saved)
+    page.reload(wait_until="networkidle")
+    page.get_by_role("button", name="Resume", exact=True).evaluate("button => {button.click(); button.click();}")
+    expect(page.get_by_role("button", name="Resume", exact=True)).to_be_disabled()
+    expect(page.get_by_role("button", name="Discard & start fresh", exact=True)).to_be_disabled()
+    assert len(held) == 1, f"Duplicate resume requests: {len(held)}"
+    newer = {**saved, "sessionId": 9999, "savedAt": 9999}
+    page.evaluate("saved => localStorage.setItem('atr.session', JSON.stringify(saved))", newer)
+    held[0].fulfill(status=200, content_type="application/json", body=json.dumps(parent))
+    expect(page.get_by_role("button", name="Resume", exact=True)).to_be_enabled()
+    assert page.evaluate("JSON.parse(localStorage.getItem('atr.session')).sessionId") == 9999
+    expect(page.get_by_role("button", name="Correct this batch", exact=True)).to_have_count(0)
+    assert not fixture.created and not fixture.unexpected
+    context.close()
+    return {"spoken_resume": ["duplicate resume locked", "discard blocked while restoring", "late restore cannot overwrite a newer saved batch"], "production_writes": 0}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url")
@@ -177,7 +209,7 @@ def main():
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(executable_path=os.environ.get("BROWSER_BINARY", "/home/rootadmin/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"), headless=True, args=["--no-sandbox", "--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"])
-            report = {"base": base, "scope": "Mocked API routes; no production writes", "results": [verify_spoken(browser, base), verify_written(browser, base), verify_lost_create_response(browser, base, False), verify_lost_create_response(browser, base, True)]}
+            report = {"base": base, "scope": "Mocked API routes; no production writes", "results": [verify_spoken_resume_lock(browser, base), verify_spoken(browser, base), verify_written(browser, base), verify_lost_create_response(browser, base, False), verify_lost_create_response(browser, base, True)]}
             Path(args.output).write_text(json.dumps(report, indent=2))
             print(json.dumps(report, indent=2))
             browser.close()
