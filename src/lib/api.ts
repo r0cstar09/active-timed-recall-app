@@ -56,6 +56,7 @@ import type {
   ServerDashboardStats,
 } from "./types";
 import { isJobComplete, isJobFailed } from "./types";
+import { assertTargetedSession, targetedPhraseIds } from "./sessionCorrections";
 
 export type AppSettings = {
   daily_practice_target: number;
@@ -620,12 +621,14 @@ function hydratePatternPack(pack: PatternPack): PatternPack {
 export const api = {
   // ── Sessions / grading (real contract) ───────────────────────────────────
   async createSession(mode: SessionMode = "review", size = 10, phraseIds?: number[]): Promise<Session> {
-    const phrase_ids = phraseIds?.filter((id, index, all) => Number.isInteger(id) && id > 0 && all.indexOf(id) === index);
-    return hydrateSession(await requestJson<Session>("/api/sessions", "POST", {
+    const phrase_ids = targetedPhraseIds(phraseIds);
+    const session = hydrateSession(await requestJson<Session>("/api/sessions", "POST", {
       mode,
       size,
       ...(phrase_ids?.length ? { phrase_ids } : {}),
     }));
+    if (phrase_ids) assertTargetedSession(session, phrase_ids);
+    return session;
   },
 
   async createWrittenSession(
@@ -634,15 +637,17 @@ export const api = {
     targetVerb?: string,
     phraseIds?: number[],
   ): Promise<Session> {
-    const phrase_ids = phraseIds?.filter((id, index, all) => Number.isInteger(id) && id > 0 && all.indexOf(id) === index);
+    const phrase_ids = targetedPhraseIds(phraseIds);
     const target_verb = targetVerb?.trim().toLocaleLowerCase() || undefined;
-    return hydrateSession(await requestJson<Session>("/api/sessions", "POST", {
+    const session = hydrateSession(await requestJson<Session>("/api/sessions", "POST", {
       mode,
       size,
       response_mode: "written",
       ...(target_verb ? { target_verb } : {}),
       ...(phrase_ids?.length ? { phrase_ids } : {}),
     }));
+    if (phrase_ids) assertTargetedSession(session, phrase_ids);
+    return session;
   },
 
   async gradeWrittenSession(sessionId: number | string, attempts: WrittenAttempt[]): Promise<Session> {

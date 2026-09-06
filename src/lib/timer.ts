@@ -65,6 +65,25 @@ export function clearSession(): void {
   localStorage.removeItem(KEY);
 }
 
+/** Keep batch results resumable so refresh cannot lose the correction scope. */
+export function saveCompletedSession(session: Session): void {
+  saveLastGraded(session);
+  saveSession({
+    sessionId: session.session_id,
+    mode: session.mode,
+    items: session.items,
+    index: 0,
+    phase: "summary",
+    deadline: null,
+    durationMs: null,
+    promptShownAt: null,
+    uploadedItemIds: session.items.filter((item) => item.recording_id || item.timed_out).map((item) => item.sprint_item_id),
+    jobId: null,
+    graded: session,
+    savedAt: Date.now(),
+  });
+}
+
 /** Persist the last graded session so the Review screen can show its misses. */
 export function saveLastGraded(s: Session): void {
   if (typeof localStorage === "undefined") return;

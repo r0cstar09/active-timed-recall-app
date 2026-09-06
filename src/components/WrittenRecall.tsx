@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type WrittenAttempt } from "../lib/api";
 import type { Session, SessionItem } from "../lib/types";
+import { correctionPhraseIds } from "../lib/sessionCorrections";
 
 type WrittenMode = "learn" | "review" | "practice";
 type Phase = "setup" | "learn" | "answer" | "grading" | "results";
@@ -49,6 +50,7 @@ export default function WrittenRecall() {
   const [emptyMessage, setEmptyMessage] = useState<string | null>(null);
   const promptStartedAt = useRef(Date.now());
   const answerInput = useRef<HTMLTextAreaElement | null>(null);
+  const launchInFlight = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,6 +103,8 @@ export default function WrittenRecall() {
   }
 
   async function startPack(nextMode: WrittenMode = mode) {
+    if (launchInFlight.current) return;
+    launchInFlight.current = true;
     setBusy(true);
     setError(null);
     setEmptyMessage(null);
@@ -124,12 +128,14 @@ export default function WrittenRecall() {
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
+      launchInFlight.current = false;
       setBusy(false);
     }
   }
 
   async function learnCurrent() {
-    if (!session || !current) return;
+    if (!session || !current || launchInFlight.current) return;
+    launchInFlight.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -155,6 +161,27 @@ export default function WrittenRecall() {
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
+      launchInFlight.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function correctBatch() {
+    if (!session || launchInFlight.current) return;
+    const phraseIds = correctionPhraseIds(session.items);
+    if (!phraseIds.length) return;
+    launchInFlight.current = true;
+    setBusy(true);
+    setError(null);
+    try {
+      const next = await api.createWrittenSession(
+        "practice", phraseIds.length, session.target_verb || undefined, phraseIds,
+      );
+      activateSession(next);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      launchInFlight.current = false;
       setBusy(false);
     }
   }
@@ -326,6 +353,7 @@ export default function WrittenRecall() {
 
   if (phase === "results" && session) {
     const summary = session.summary;
+    const misses = correctionPhraseIds(session.items);
     return (
       <section className="written-shell">
         <div className="card written-results-head stack">
@@ -342,6 +370,16 @@ export default function WrittenRecall() {
           </p>
         </div>
         <div className="written-result-list">
+          {misses.length > 0 && (
+            <div className="card stack">
+              <h2>Corrections · this batch only</h2>
+              <p className="muted">Repeat only the {misses.length} card{misses.length === 1 ? "" : "s"} needing correction. No other queue cards are added; FSRS stays off.</p>
+              <button className="btn btn-primary btn-lg btn-block" type="button" disabled={busy} onClick={() => void correctBatch()}>
+                {busy ? "Preparing this batch…" : "Correct this batch"}
+              </button>
+            </div>
+          )}
+          {error && <p className="alert alert-error" role="alert">{error}</p>}
           {session.items.map((item, itemIndex) => (
             <article className={`card written-result result-${item.result || "pending"}`} key={item.sprint_item_id}>
               <div className="written-result-title">
@@ -359,10 +397,10 @@ export default function WrittenRecall() {
           ))}
         </div>
         <div className="card stack">
-          <button className="btn btn-primary btn-lg btn-block" type="button" disabled={busy} onClick={() => startPack(mode)}>
-            Another {mode === "review" ? "due" : mode} pack
+          <button className={`btn ${misses.length ? "" : "btn-primary"} btn-lg btn-block`} type="button" disabled={busy} onClick={() => startPack(mode)}>
+            {mode === "learn" ? "Learn next batch" : `Another ${mode === "review" ? "due" : mode} pack`}
           </button>
-          <button className="btn btn-block" type="button" onClick={returnToSetup}>Change mode or verb</button>
+          <button className="btn btn-block" type="button" disabled={busy} onClick={returnToSetup}>Change mode or verb</button>
         </div>
       </section>
     );

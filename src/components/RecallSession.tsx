@@ -10,13 +10,14 @@ import {
   loadSession,
   remainingMs,
   remainingSeconds,
-  saveLastGraded,
+  saveCompletedSession,
   saveSession,
   type PersistedSession,
   type Phase,
 } from "../lib/timer";
 import AudioPlayer from "./AudioPlayer";
 import { recallPromptText } from "../lib/recallPrompt";
+import { correctionPhraseIds } from "../lib/sessionCorrections";
 
 type Status = "idle" | "active" | "error";
 
@@ -155,7 +156,7 @@ export default function RecallSession() {
       setStatus("active");
       void startGrading(saved);
     } else {
-      setResumable(saved);
+      setResumable(saved?.phase === "summary" && explicitMode && saved.mode !== explicitMode ? null : saved);
     }
   }, [status]);
 
@@ -546,6 +547,39 @@ export default function RecallSession() {
     }
   }
 
+  async function correctBatch(phraseIds: number[]) {
+    if (launchInFlightRef.current || !graded || !phraseIds.length) return;
+    const allowed = new Set(correctionPhraseIds(graded.items));
+    if (phraseIds.some((id) => !allowed.has(id))) return;
+    launchInFlightRef.current = true;
+    setLaunching(true);
+    setError(null);
+    try {
+      // Explicit gesture before network calls, as in the initial Learn handoff.
+      if (!(await armRecorder())) return;
+      const practice = await api.createSession("practice", phraseIds.length, phraseIds);
+      sessionIdRef.current = practice.session_id;
+      sessionModeRef.current = "practice";
+      uploadedRef.current = [];
+      pendingUploadRef.current = null;
+      setSessionMode("practice");
+      setItems(practice.items);
+      setGraded(null);
+      setResumable(null);
+      setServerResumable(null);
+      setFailedSourceAudioItems(new Set());
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set("mode", "practice");
+      window.history.replaceState({}, "", nextUrl);
+      await beginItem(0, practice.items, null);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      launchInFlightRef.current = false;
+      setLaunching(false);
+    }
+  }
+
   const uploadPendingAndAdvance = useCallback(async (pending = pendingUploadRef.current) => {
     if (!pending) return;
     setPhase("uploading");
@@ -675,8 +709,7 @@ export default function RecallSession() {
       await pollJob(jobId, { timeoutMs: 15 * 60_000, onUpdate: setGradingJob });
       const gradedSession = await api.getSession(sessionId);
       setGraded(gradedSession);
-      saveLastGraded(gradedSession);
-      clearSession();
+      saveCompletedSession(gradedSession);
       setPhase("summary");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
@@ -861,9 +894,14 @@ export default function RecallSession() {
         noisyMode={noisyMode}
         serverResumable={serverResumable}
         onContinueServerSession={() => void continueServerSession()}
+        onCorrectBatch={(phraseIds) => void correctBatch(phraseIds)}
+        correcting={launching}
+        correctionError={error}
         onRefresh={(g) => {
+          // An older inline retry may finish after a correction round starts.
+          if (g.session_id !== sessionIdRef.current) return;
           setGraded(g);
-          saveLastGraded(g);
+          saveCompletedSession(g);
         }}
       />
     );
@@ -1413,6 +1451,9 @@ function Summary({
   noisyMode,
   serverResumable,
   onContinueServerSession,
+  onCorrectBatch,
+  correcting,
+  correctionError,
   onRefresh,
 }: {
   graded: Session | null;
@@ -1420,6 +1461,9 @@ function Summary({
   noisyMode: boolean;
   serverResumable?: ResumableSessionSummary | null;
   onContinueServerSession?: () => void;
+  onCorrectBatch: (phraseIds: number[]) => void;
+  correcting: boolean;
+  correctionError: string | null;
   onRefresh?: (fresh: Session) => void;
 }) {
   const [deletedPhraseIds, setDeletedPhraseIds] = useState<Set<number>>(() => new Set());
@@ -1428,7 +1472,7 @@ function Summary({
   const summary = graded?.summary;
   const items = (graded?.items ?? []).filter((item) => !deletedPhraseIds.has(item.phrase_id));
   const mode = graded?.mode;
-  const misses = items.filter((it) => it.result === "fail" || it.result === "partial");
+  const misses = correctionPhraseIds(items);
   const fsrsAppliedCount = items.filter((it) => it.fsrs_applied).length;
   const maxPassStreak = items.reduce(
     (acc, it) => {
@@ -1454,6 +1498,7 @@ function Summary({
     try {
       await api.removeCard(item.phrase_id);
       setDeletedPhraseIds((current) => new Set(current).add(item.phrase_id));
+      if (graded) onRefresh?.({ ...graded, items: graded.items.filter((row) => row.phrase_id !== item.phrase_id) });
     } catch (err) {
       setDeleteError(err instanceof ApiError ? err.message : String(err));
     } finally {
@@ -1578,14 +1623,15 @@ function Summary({
 
       {graded?.mode !== "learn" && misses.length > 0 && (
         <div className="card stack center">
-          <h3 style={{ margin: 0 }}>Work the misses next</h3>
-          <p className="muted">{misses.length} failed/partial item{misses.length === 1 ? "" : "s"} ready for targeted retry.</p>
-          <a className="btn btn-primary btn-block" href="/session?mode=misses">
-            Start misses workout
-          </a>
+          <h3 style={{ margin: 0 }}>Corrections · this batch only</h3>
+          <p className="muted">Repeat only the {misses.length} card{misses.length === 1 ? "" : "s"} needing correction from this batch. No other queue cards are added; FSRS stays off.</p>
+          <button className="btn btn-primary btn-block" type="button" disabled={correcting || deletingPhraseId !== null} onClick={() => onCorrectBatch(misses)}>
+            {correcting ? "Preparing this batch…" : "Correct this batch"}
+          </button>
         </div>
       )}
 
+      {correctionError && <div className="alert alert-error" role="alert">{correctionError}</div>}
       {deleteError && <div className="alert alert-error" role="alert">{deleteError}</div>}
 
       {items.map((it) => {
@@ -1690,7 +1736,7 @@ function Summary({
             <button
               className="btn btn-small btn-danger"
               type="button"
-              disabled={deletingPhraseId === it.phrase_id}
+              disabled={correcting || deletingPhraseId !== null}
               onClick={() => void deleteCard(it)}
             >
               {deletingPhraseId === it.phrase_id ? "Deleting…" : "Delete malformed card"}
@@ -1700,8 +1746,7 @@ function Summary({
       })}
 
       <div className="btn-row">
-        <a className="btn btn-primary" href="/session?mode=misses">Misses workout</a>
-        <a className="btn" href="/session?mode=learn">Open Learn queue</a>
+        <a className={`btn ${misses.length ? "" : "btn-primary"}`} href="/session?mode=learn">Learn next batch</a>
         <a className="btn" href="/">Home</a>
       </div>
     </div>
