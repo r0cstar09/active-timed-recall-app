@@ -17,7 +17,7 @@ import {
 } from "../lib/timer";
 import AudioPlayer from "./AudioPlayer";
 import { recallPromptText } from "../lib/recallPrompt";
-import { correctionPhraseIds } from "../lib/sessionCorrections";
+import { correctionPhraseIds, latestSessionItems } from "../lib/sessionCorrections";
 
 type Status = "idle" | "active" | "error";
 
@@ -395,9 +395,20 @@ export default function RecallSession() {
     }
 
     if (saved.phase === "summary" && saved.graded) {
-      setGraded(saved.graded);
-      setPhase("summary");
-      setStatus("active");
+      try {
+        const fresh = await api.getSession(saved.sessionId);
+        if (fresh.session_id !== saved.sessionId || fresh.response_mode === "written") throw new Error("Saved batch mismatch");
+        // Refresh grades, not batch membership (including locally removed cards).
+        const allowed = new Set(saved.items.map(item => item.phrase_id));
+        const scoped = { ...fresh, items: fresh.items.filter(item => allowed.has(item.phrase_id)) };
+        saveCompletedSession(scoped);
+        setItems(scoped.items);
+        setGraded(scoped);
+        setPhase("summary");
+        setStatus("active");
+      } catch (err) {
+        setError(`Could not restore this batch: ${err instanceof Error ? err.message : String(err)}. Retry; no other cards were requested.`);
+      }
       return;
     }
     if (saved.phase === "grading") {
@@ -557,6 +568,18 @@ export default function RecallSession() {
     try {
       // Explicit gesture before network calls, as in the initial Learn handoff.
       if (!(await armRecorder())) return;
+      const fresh = await api.getSession(graded.session_id);
+      if (fresh.session_id !== graded.session_id || fresh.response_mode === "written") throw new Error("Saved batch mismatch");
+      const scope = new Set(graded.items.map(item => item.phrase_id));
+      const scoped = { ...fresh, items: fresh.items.filter(item => scope.has(item.phrase_id)) };
+      setGraded(scoped);
+      saveCompletedSession(scoped);
+      if (latestSessionItems(scoped.items).some(item => item.result === "pending")) {
+        throw new Error("Resume the unfinished re-recording in this batch before starting corrections.");
+      }
+      const remaining = new Set(correctionPhraseIds(scoped.items));
+      phraseIds = phraseIds.filter(id => remaining.has(id));
+      if (!phraseIds.length) return;
       const practice = await api.createSession("practice", phraseIds.length, phraseIds);
       sessionIdRef.current = practice.session_id;
       sessionModeRef.current = "practice";
@@ -900,8 +923,12 @@ export default function RecallSession() {
         onRefresh={(g) => {
           // An older inline retry may finish after a correction round starts.
           if (g.session_id !== sessionIdRef.current) return;
-          setGraded(g);
-          saveCompletedSession(g);
+          setGraded(current => {
+            const allowed = new Set((current?.items ?? g.items).map(item => item.phrase_id));
+            const scoped = { ...g, items: g.items.filter(item => allowed.has(item.phrase_id)) };
+            saveCompletedSession(scoped);
+            return scoped;
+          });
         }}
       />
     );
@@ -1209,11 +1236,15 @@ function RetryRecorder({
   item,
   noisyMode,
   onDone,
+  disabled,
+  onBusyChange,
 }: {
   sessionId: number;
   item: SessionItem;
   noisyMode: boolean;
   onDone: (fresh: Session) => void;
+  disabled: boolean;
+  onBusyChange: (itemId: number, busy: boolean) => void;
 }) {
   const [phase, setPhase] = useState<RetryPhase>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -1226,6 +1257,10 @@ function RetryRecorder({
   const pendingRef = useRef<{ blob: Blob; mimeType: string; filename: string; answeredAtMs: number; timedOut: boolean } | null>(null);
 
   useEffect(() => () => recRef.current?.dispose(), []);
+  useEffect(() => {
+    onBusyChange(item.sprint_item_id, phase !== "idle");
+    return () => onBusyChange(item.sprint_item_id, false);
+  }, [phase, item.sprint_item_id, onBusyChange]);
 
   // countdown + auto-stop at the limit (recording stops automatically)
   useEffect(() => {
@@ -1240,6 +1275,7 @@ function RetryRecorder({
   }, [phase]);
 
   async function begin() {
+    if (disabled && phase === "idle") return;
     setError(null);
     setPhase("arming");
     try {
@@ -1315,7 +1351,7 @@ function RetryRecorder({
 
   if (phase === "idle") {
     return (
-      <button className="btn btn-primary btn-block" onClick={() => void begin()}>
+      <button className="btn btn-primary btn-block" disabled={disabled} onClick={() => void begin()}>
         Re-record now
       </button>
     );
@@ -1353,7 +1389,7 @@ function RetryRecorder({
           Retry upload
         </button>
       ) : (
-        <button className="btn btn-block" onClick={() => void begin()}>
+        <button className="btn btn-block" disabled={disabled} onClick={() => void begin()}>
           Try again
         </button>
       )}
@@ -1469,10 +1505,15 @@ function Summary({
   const [deletedPhraseIds, setDeletedPhraseIds] = useState<Set<number>>(() => new Set());
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletingPhraseId, setDeletingPhraseId] = useState<number | null>(null);
+  const [busyRetry, setBusyRetry] = useState<number | null>(null);
+  const onRetryBusy = useCallback((itemId: number, busy: boolean) => {
+    setBusyRetry(current => busy ? itemId : current === itemId ? null : current);
+  }, []);
   const summary = graded?.summary;
   const items = (graded?.items ?? []).filter((item) => !deletedPhraseIds.has(item.phrase_id));
   const mode = graded?.mode;
   const misses = correctionPhraseIds(items);
+  const pendingRetry = latestSessionItems(items).some(item => item.result === "pending");
   const fsrsAppliedCount = items.filter((it) => it.fsrs_applied).length;
   const maxPassStreak = items.reduce(
     (acc, it) => {
@@ -1625,18 +1666,20 @@ function Summary({
         <div className="card stack center">
           <h3 style={{ margin: 0 }}>Corrections · this batch only</h3>
           <p className="muted">Repeat only the {misses.length} card{misses.length === 1 ? "" : "s"} needing correction from this batch. No other queue cards are added; FSRS stays off.</p>
-          <button className="btn btn-primary btn-block" type="button" disabled={correcting || deletingPhraseId !== null} onClick={() => onCorrectBatch(misses)}>
+          <button className="btn btn-primary btn-block" type="button" disabled={correcting || deletingPhraseId !== null || busyRetry !== null || pendingRetry} onClick={() => onCorrectBatch(misses)}>
             {correcting ? "Preparing this batch…" : "Correct this batch"}
           </button>
         </div>
       )}
 
       {correctionError && <div className="alert alert-error" role="alert">{correctionError}</div>}
+      {pendingRetry && <div className="alert">An unfinished re-recording is still in this batch. Use Re-record on its unclear card before starting corrections.</div>}
       {deleteError && <div className="alert alert-error" role="alert">{deleteError}</div>}
 
       {items.map((it) => {
         const userUrl = it.recording_audio_url || recordings.get(it.sprint_item_id);
         const unclear = it.error_type === "transcription_unclear";
+        const latest = latestSessionItems(items).find(item => item.phrase_id === it.phrase_id);
         const alignment = (it.asr?.active_recall_v2 as ActiveRecallV2Evidence | undefined);
         const wordFeedback = Array.isArray(alignment?.word_feedback)
           ? alignment.word_feedback.filter(
@@ -1724,12 +1767,14 @@ function Summary({
             {it.source_audio_url && <AudioPlayer src={it.source_audio_url} label="Native audio" />}
             {userUrl && <AudioPlayer src={userUrl} label="Your recording" />}
 
-            {unclear && graded?.session_id && onRefresh && (
+            {unclear && (latest?.sprint_item_id === it.sprint_item_id || latest?.result === "pending") && graded?.session_id && onRefresh && (
               <RetryRecorder
                 sessionId={graded.session_id}
                 item={it}
                 noisyMode={noisyMode}
                 onDone={onRefresh}
+                disabled={correcting || (busyRetry !== null && busyRetry !== it.sprint_item_id)}
+                onBusyChange={onRetryBusy}
               />
             )}
 

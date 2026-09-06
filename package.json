@@ -13,7 +13,7 @@
     "test": "npm run test:recorder && npm run test:learn-handoff && npm run test:written-recall && npm run build",
     "test:recorder": "node scripts/test_recorder.mjs",
     "test:learn-handoff": "node scripts/test_learn_handoff.mjs && node --experimental-strip-types --test tests/sessionCorrections.test.mjs tests/sessionCorrectionApi.test.mjs",
-    "test:written-recall": "node scripts/test_written_recall.mjs",
+    "test:written-recall": "node scripts/test_written_recall.mjs && node --experimental-strip-types --test tests/writtenSession.test.mjs",
     "test:timer": "node --experimental-strip-types --test tests/recallDuration.test.mjs",
     "test:prompt": "node --experimental-strip-types --test tests/recallPrompt.test.mjs",
     "test:deploy-workflow": "node scripts/test_deploy_workflow.mjs"

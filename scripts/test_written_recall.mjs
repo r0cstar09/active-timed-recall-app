@@ -15,7 +15,7 @@ assert.match(
   "Written Learn handoff must support the exact learned phrase batch",
 );
 
-assert.match(writtenSource, /type WrittenMode = "learn" \| "review" \| "practice"/, "All three queue-backed written modes must remain available");
+assert.match(readFileSync(new URL("../src/lib/writtenSession.ts", import.meta.url), "utf8"), /type WrittenMode = "learn" \| "review" \| "practice"/, "All three queue-backed written modes must remain available");
 assert.match(writtenSource, /createWrittenSession\(nextMode, 10,/, "Normal Written Recall packs must contain ten cards");
 assert.match(writtenSource, /await api\.introducePhrase\(current\.phrase_id\)/, "Written Learn must use the real introduction endpoint");
 assert.match(

@@ -2,10 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type WrittenAttempt } from "../lib/api";
 import type { Session, SessionItem } from "../lib/types";
 import { correctionPhraseIds } from "../lib/sessionCorrections";
+import { clearWrittenSession, loadWrittenSession, reconcileWrittenSession, saveWrittenSession, type SavedAnswer, type WrittenMode, type WrittenPhase, type WrittenSnapshot } from "../lib/writtenSession";
 
-type WrittenMode = "learn" | "review" | "practice";
-type Phase = "setup" | "learn" | "answer" | "grading" | "results";
-type SavedAnswer = { answer: string; response_seconds: number };
+type Phase = "setup" | "restoring" | "restore-error" | WrittenPhase;
 
 const MODE_COPY: Record<WrittenMode, { title: string; description: string; schedule: string }> = {
   learn: {
@@ -40,7 +39,7 @@ export default function WrittenRecall() {
   const [mode, setMode] = useState<WrittenMode>("review");
   const [targetVerb, setTargetVerb] = useState("");
   const [verbs, setVerbs] = useState<Array<{ verb: string; englishBase: string }>>([]);
-  const [phase, setPhase] = useState<Phase>("setup");
+  const [phase, setPhase] = useState<Phase>("restoring");
   const [session, setSession] = useState<Session | null>(null);
   const [index, setIndex] = useState(0);
   const [draft, setDraft] = useState("");
@@ -51,6 +50,58 @@ export default function WrittenRecall() {
   const promptStartedAt = useRef(Date.now());
   const answerInput = useRef<HTMLTextAreaElement | null>(null);
   const launchInFlight = useRef(false);
+  const restoredDraft = useRef<string | null>(null);
+  const [restoreAttempt, setRestoreAttempt] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPhase("restoring");
+    setError(null);
+    void (async () => {
+      try {
+        const saved = loadWrittenSession();
+        if (!saved) { if (!cancelled) setPhase("setup"); return; }
+        let fresh = await api.getSession(saved.sessionId);
+        // Reconnect a committed grade, but never automatically submit/grade answers.
+        for (let attempt = 0; fresh.status === "grading" && attempt < 40 && !cancelled; attempt++) {
+          await new Promise(resolve => window.setTimeout(resolve, 1500));
+          if (cancelled) return;
+          fresh = await api.getSession(saved.sessionId);
+        }
+        if (cancelled) return;
+        if (fresh.status === "grading") throw new Error("This batch is still grading. Retry restore shortly; your answers are saved.");
+        const restored = reconcileWrittenSession(saved, fresh);
+        saveWrittenSession(restored);
+        setMode(restored.mode);
+        setTargetVerb(restored.targetVerb);
+        setSession(fresh);
+        setIndex(restored.index);
+        setSavedAnswers(restored.answers);
+        restoredDraft.current = restored.draft;
+        setDraft(restored.draft);
+        promptStartedAt.current = restored.promptStartedAt;
+        setPhase(restored.phase);
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : String(err));
+          setPhase("restore-error");
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [restoreAttempt]);
+
+  function persistCurrent(overrides: Partial<WrittenSnapshot> = {}) {
+    if (!session || phase === "setup" || phase === "restoring" || phase === "restore-error") return;
+    saveWrittenSession({ version: 1, sessionId: session.session_id, phraseIds: session.items.map(item => item.phrase_id),
+      mode, targetVerb: session.target_verb || "", index, phase, answers: savedAnswers, draft,
+      promptStartedAt: promptStartedAt.current, ...overrides });
+  }
+
+  useEffect(() => {
+    try { persistCurrent(); }
+    catch { setError("Browser storage could not save this batch. Keep this page open to avoid losing your draft."); }
+  }, [session, phase, mode, index, savedAnswers, draft]);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,8 +122,13 @@ export default function WrittenRecall() {
   useEffect(() => {
     if (phase !== "answer" || !session) return;
     const item = session.items[index];
-    setDraft(item ? savedAnswers[item.sprint_item_id]?.answer || "" : "");
-    promptStartedAt.current = Date.now();
+    if (restoredDraft.current !== null) {
+      setDraft(restoredDraft.current);
+      restoredDraft.current = null;
+    } else {
+      setDraft(item ? savedAnswers[item.sprint_item_id]?.answer || "" : "");
+      promptStartedAt.current = Date.now();
+    }
     window.setTimeout(() => answerInput.current?.focus(), 30);
   }, [index, phase, session?.session_id]);
 
@@ -83,23 +139,23 @@ export default function WrittenRecall() {
     [savedAnswers],
   );
 
-  function activateSession(next: Session) {
+  function activateSession(next: Session, originMode: WrittenMode = mode) {
+    const pendingIndex = next.items.findIndex((item) => (item.result || "pending") === "pending");
+    const nextIndex = next.mode === "learn" ? (pendingIndex < 0 ? next.items.length - 1 : pendingIndex) : 0;
+    const nextPhase: WrittenPhase = next.mode === "learn" ? "learn"
+      : next.status === "complete" || next.status === "complete_overtime" ? "results" : "answer";
+    // Save the new identity synchronously before allowing refresh or input.
+    saveWrittenSession({ version: 1, sessionId: next.session_id, phraseIds: next.items.map(item => item.phrase_id),
+      mode: originMode, targetVerb: next.target_verb || "", index: nextIndex, phase: nextPhase,
+      answers: {}, draft: "", promptStartedAt: Date.now() });
+    restoredDraft.current = null;
+    setMode(originMode);
     setSession(next);
     setSavedAnswers({});
-    setIndex(0);
+    setIndex(nextIndex);
     setDraft("");
     setEmptyMessage(null);
-    if (next.status === "complete" || next.status === "complete_overtime") {
-      setPhase("results");
-      return;
-    }
-    if (next.mode === "learn") {
-      const pendingIndex = next.items.findIndex((item) => (item.result || "pending") === "pending");
-      setIndex(Math.max(0, pendingIndex));
-      setPhase("learn");
-      return;
-    }
-    setPhase("answer");
+    setPhase(nextPhase);
   }
 
   async function startPack(nextMode: WrittenMode = mode) {
@@ -124,7 +180,7 @@ export default function WrittenRecall() {
         setPhase("setup");
         return;
       }
-      activateSession(next);
+      activateSession(next, nextMode);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -252,12 +308,25 @@ export default function WrittenRecall() {
   }
 
   function returnToSetup() {
+    clearWrittenSession();
+    restoredDraft.current = null;
     setPhase("setup");
     setSession(null);
     setSavedAnswers({});
     setDraft("");
     setError(null);
     setEmptyMessage(null);
+  }
+
+  if (phase === "restoring" || phase === "restore-error") {
+    return <section className="written-shell"><div className="card stack" aria-live="polite">
+      <h1>{phase === "restoring" ? "Restoring your written batch…" : "Your batch is still saved"}</h1>
+      {error && <p className="alert alert-error" role="alert">{error}</p>}
+      {phase === "restore-error" && <>
+        <button className="btn btn-primary" onClick={() => setRestoreAttempt(value => value + 1)}>Retry restore</button>
+        <button className="btn btn-ghost" onClick={returnToSetup}>Exit this batch</button>
+      </>}
+    </div></section>;
   }
 
   if (phase === "grading") {
@@ -277,7 +346,7 @@ export default function WrittenRecall() {
     return (
       <section className="written-shell">
         <div className="written-topline">
-          <button className="btn btn-ghost btn-small" type="button" onClick={returnToSetup}>Exit</button>
+          <button className="btn btn-ghost btn-small" type="button" disabled={busy} onClick={returnToSetup}>Exit</button>
           <span className="pill">Learn {index + 1}/{session.items.length}</span>
           {session.target_verb && <span className="pill pill-warn">{session.target_verb}</span>}
         </div>
@@ -307,7 +376,7 @@ export default function WrittenRecall() {
     return (
       <section className="written-shell">
         <div className="written-topline">
-          <button className="btn btn-ghost btn-small" type="button" onClick={returnToSetup}>Exit</button>
+          <button className="btn btn-ghost btn-small" type="button" disabled={busy} onClick={returnToSetup}>Exit</button>
           <span className="pill">Write {index + 1}/{session.items.length}</span>
           {session.target_verb && <span className="pill pill-warn">{session.target_verb}</span>}
         </div>
@@ -323,7 +392,12 @@ export default function WrittenRecall() {
             id="written-answer"
             ref={answerInput}
             value={draft}
-            onChange={(event) => setDraft(event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              setDraft(value);
+              try { persistCurrent({ draft: value }); }
+              catch { setError("Browser storage could not save this draft. Keep this page open."); }
+            }}
             onKeyDown={(event) => {
               if ((event.metaKey || event.ctrlKey) && event.key === "Enter") nextAnswer();
             }}

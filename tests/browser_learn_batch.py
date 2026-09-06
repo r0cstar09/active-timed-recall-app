@@ -33,7 +33,7 @@ class StudyFixture:
             ids = [999, *ids[1:]]
             self.inject_unrelated = False
         items = [{"sprint_item_id": sid * 10 + i, "phrase_id": pid, "spanish": TEXT[pid][1], "english": TEXT[pid][0], "prompt": TEXT[pid][0], "prompt_type": "english", "result": "pending", "attempt_number": 1, "scheduling": {"time_limit_seconds": 15}} for i, pid in enumerate(ids)]
-        session = {"session_id": sid, "mode": body["mode"], "response_mode": body.get("response_mode", "spoken"), "affects_fsrs": False, "status": "pending", "items": items}
+        session = {"session_id": sid, "mode": body["mode"], "response_mode": body.get("response_mode", "spoken"), "target_verb": body.get("target_verb"), "affects_fsrs": False, "status": "pending", "items": items}
         self.sessions[sid] = session
         return session
 
@@ -67,6 +67,13 @@ class StudyFixture:
         match = re.fullmatch(r"/api/cards/(\d+)/introduce", path)
         if match:
             pid = int(match[1]); self.introduced.append(pid)
+            for session in self.sessions.values():
+                if session["mode"] == "learn":
+                    for item in session["items"]:
+                        if item["phrase_id"] == pid:
+                            item["result"] = "pass"
+                    if all(item["result"] == "pass" for item in session["items"]):
+                        session["status"] = "complete"
             return reply({"id": pid, "introduced_at": "2026-09-06T00:00:00Z", "learning_status": "introduced"})
         match = re.fullmatch(r"/api/sessions/(\d+)/items/(\d+)/recording", path)
         if match:
@@ -101,6 +108,14 @@ def answer_written(page, ids):
     for pid in ids:
         expect(page.get_by_role("heading", name=TEXT[pid][0], exact=True)).to_be_visible()
         page.locator("#written-answer").fill(TEXT[pid][1])
+        if len(ids) > 1 and pid == ids[1]:
+            before = page.evaluate("JSON.parse(localStorage.getItem('atr.writtenSession'))")
+            page.reload(wait_until="networkidle")
+            expect(page.locator("#written-answer")).to_have_value(TEXT[pid][1])
+            after = page.evaluate("JSON.parse(localStorage.getItem('atr.writtenSession'))")
+            for key in ("sessionId", "phraseIds", "mode", "targetVerb", "index", "answers", "draft"):
+                assert after[key] == before[key], (key, before, after)
+            assert after["mode"] == "learn" and after["targetVerb"] == "ser"
         page.get_by_role("button", name=re.compile("Save & next|Grade all answers")).click()
     expect(page.get_by_role("heading", name=re.compile(r"passed$"))).to_be_visible()
 
@@ -115,12 +130,16 @@ def verify_flow(browser, base, written, output):
     page.goto(base + ("/write/" if written else "/session/?mode=learn"), wait_until="networkidle")
     if written:
         page.locator('input[name="written-mode"][value="learn"]').check()
+        page.locator("#target-verb").fill("ser")
         page.get_by_role("button", name="Start 10-card learn queue").click()
     else:
         page.get_by_role("button", name="Start learning", exact=True).click()
     for pid in BATCH:
         expect(page.get_by_text(TEXT[pid][1], exact=True).first).to_be_visible()
         page.get_by_role("button", name=re.compile("I understand|Learned — start writing")).click()
+        if written and pid == BATCH[0]:
+            page.reload(wait_until="networkidle")
+            expect(page.get_by_text(TEXT[BATCH[1]][1], exact=True)).to_be_visible()
     expect(page.locator("#written-answer") if written else page.get_by_role("button", name="Check and continue", exact=True)).to_be_visible()
     assert fixture.introduced == BATCH, fixture.introduced
     assert fixture.created[1]["phrase_ids"] == BATCH, fixture.created
@@ -133,6 +152,9 @@ def verify_flow(browser, base, written, output):
         page.reload(wait_until="networkidle")
         page.get_by_role("button", name="Resume", exact=True).click()
         expect(page.get_by_role("button", name="Correct this batch", exact=True)).to_be_visible()
+    else:
+        page.reload(wait_until="networkidle")
+        expect(page.get_by_role("button", name="Correct this batch", exact=True)).to_be_visible()
     # Same-size unrelated server response is rejected without displaying another queue card.
     fixture.inject_unrelated = True
     page.get_by_role("button", name="Correct this batch", exact=True).click()
@@ -142,6 +164,7 @@ def verify_flow(browser, base, written, output):
     for ids in ([9, 17], [17]):
         before = len(fixture.created)
         page.get_by_role("button", name="Correct this batch", exact=True).evaluate("button => { button.click(); button.click(); }")
+        expect(page.locator("#written-answer") if written else page.get_by_role("button", name=re.compile("Check and (continue|grade)"))).to_be_visible()
         expect(page.get_by_text(TEXT[ids[0]][0], exact=True).first).to_be_visible()
         assert len(fixture.created) == before + 1, fixture.created
         request = fixture.created[-1]
@@ -164,8 +187,9 @@ def verify_flow(browser, base, written, output):
     assert not fixture.unexpected, fixture.unexpected
     page.screenshot(path=str(output / ("written-batch.png" if written else "spoken-batch.png")), full_page=True)
     result = {"modality": "written" if written else "spoken", "created_requests": fixture.created, "introduced_ids": fixture.introduced, "unexpected_writes": fixture.unexpected, "page_errors": errors, "verified": ["Learn exact-batch test", "same-size unrelated response rejected", "repeat shrinking corrections", "double-click guard", "no queue top-up", "clean completion", "Learn next batch"]}
-    if not written:
-        result["verified"].append("refresh preserves summary/correction scope")
+    result["verified"].append("refresh preserves summary/correction scope")
+    if written:
+        result["verified"].extend(["Learn refresh resumes next card", "answers and unsaved draft survive refresh", "Learn origin and verb focus survive refresh"])
     context.close()
     return result
 

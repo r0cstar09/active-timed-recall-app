@@ -624,7 +624,7 @@ export const api = {
     const phrase_ids = targetedPhraseIds(phraseIds);
     const session = hydrateSession(await requestJson<Session>("/api/sessions", "POST", {
       mode,
-      size,
+      size: phrase_ids?.length ?? size,
       ...(phrase_ids?.length ? { phrase_ids } : {}),
     }));
     if (phrase_ids) assertTargetedSession(session, phrase_ids);
@@ -641,7 +641,7 @@ export const api = {
     const target_verb = targetVerb?.trim().toLocaleLowerCase() || undefined;
     const session = hydrateSession(await requestJson<Session>("/api/sessions", "POST", {
       mode,
-      size,
+      size: phrase_ids?.length ?? size,
       response_mode: "written",
       ...(target_verb ? { target_verb } : {}),
       ...(phrase_ids?.length ? { phrase_ids } : {}),

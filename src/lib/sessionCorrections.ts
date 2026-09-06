@@ -10,7 +10,7 @@ export function targetedPhraseIds(ids?: number[]): number[] | undefined {
 }
 
 /** Use the latest attempt for each card, not a historical failure it corrected. */
-export function correctionPhraseIds(items: SessionItem[]): number[] {
+export function latestSessionItems(items: SessionItem[]): SessionItem[] {
   const latest = new Map<number, SessionItem>();
   for (const item of items) {
     const previous = latest.get(item.phrase_id);
@@ -21,7 +21,11 @@ export function correctionPhraseIds(items: SessionItem[]): number[] {
       latest.set(item.phrase_id, item);
     }
   }
-  return [...latest.values()]
+  return [...latest.values()];
+}
+
+export function correctionPhraseIds(items: SessionItem[]): number[] {
+  return latestSessionItems(items)
     .filter((item) => item.result === "fail" || item.result === "partial")
     .map((item) => item.phrase_id);
 }
