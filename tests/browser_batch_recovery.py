@@ -117,6 +117,51 @@ def verify_written(browser, base):
     return {"written": ["failed rehydrate never opens Review", "explicit retry restores draft and exact batch", "committed grade recovered without resubmission", "Learn origin survives grading recovery"], "production_writes": 0}
 
 
+def verify_lost_create_response(browser, base, written):
+    context = browser.new_context(permissions=["microphone"], service_workers="block")
+    fixture = RecoveryFixture()
+    parent = fixture.make_session({"mode": "practice", "phrase_ids": BATCH, "response_mode": "written" if written else "spoken"})
+    fixture.grade(parent["session_id"])
+    reserved = []
+    attempts = []
+    def handle(route):
+        request = route.request
+        if urlparse(request.url).path == "/api/sessions" and request.method == "POST":
+            body = request.post_data_json
+            attempts.append(body)
+            assert body["phrase_ids"] == [9, 17] and body["mode"] == "practice"
+            if not reserved:
+                fixture.created.append(body)
+                reserved.append(fixture.make_session(body))
+                return route.abort("failed")  # Commit/reserve succeeded; HTTP response was lost.
+            assert body == attempts[0], attempts
+            return route.fulfill(status=200, content_type="application/json", body=json.dumps(reserved[0]))
+        return fixture.route(route)
+    context.route("**/*", handle)
+    page = context.new_page()
+    page.goto(base + ("/write/" if written else "/session/?mode=practice"), wait_until="networkidle")
+    if written:
+        key = "atr.writtenSession"
+        saved = {"version": 1, "sessionId": parent["session_id"], "phraseIds": BATCH, "mode": "learn", "targetVerb": "", "index": 0, "phase": "results", "answers": {}, "draft": "", "promptStartedAt": 1000}
+    else:
+        key = "atr.session"
+        saved = {"sessionId": parent["session_id"], "mode": "practice", "phase": "summary", "items": parent["items"], "graded": parent, "index": 0, "uploadedItemIds": [], "deadline": None, "durationMs": None, "promptShownAt": None, "jobId": None}
+    page.evaluate("([key, saved]) => localStorage.setItem(key, JSON.stringify(saved))", [key, saved])
+    page.reload(wait_until="networkidle")
+    if not written: page.get_by_role("button", name="Resume", exact=True).click()
+    page.get_by_role("button", name="Correct this batch", exact=True).click()
+    expect(page.get_by_role("alert")).to_be_visible()
+    page.reload(wait_until="networkidle")
+    if not written: page.get_by_role("button", name="Resume", exact=True).click()
+    page.get_by_role("button", name="Correct this batch", exact=True).click()
+    expect(page.locator("#written-answer") if written else page.get_by_role("button", name="Check and continue", exact=True)).to_be_visible()
+    restored = page.evaluate("key => JSON.parse(localStorage.getItem(key))", key)
+    assert restored["sessionId"] == reserved[0]["session_id"]
+    assert len(attempts) == 2 and len(fixture.created) == 1 and not fixture.unexpected
+    context.close()
+    return {"modality": "written" if written else "spoken", "lost_response_refresh": "same reserved session and ordered target recovered", "production_writes": 0}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url")
@@ -132,7 +177,7 @@ def main():
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(executable_path=os.environ.get("BROWSER_BINARY", "/home/rootadmin/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome"), headless=True, args=["--no-sandbox", "--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"])
-            report = {"base": base, "scope": "Mocked API routes; no production writes", "results": [verify_spoken(browser, base), verify_written(browser, base)]}
+            report = {"base": base, "scope": "Mocked API routes; no production writes", "results": [verify_spoken(browser, base), verify_written(browser, base), verify_lost_create_response(browser, base, False), verify_lost_create_response(browser, base, True)]}
             Path(args.output).write_text(json.dumps(report, indent=2))
             print(json.dumps(report, indent=2))
             browser.close()
