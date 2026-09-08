@@ -43,6 +43,9 @@ jobs:
       - name: Build app
         run: npm run build
 
+      - name: Test ingestion job deletion
+        run: npm run test:ingestion
+
       - name: Test adaptive recall timer
         run: npm run test:timer
 

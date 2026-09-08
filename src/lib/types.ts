@@ -252,6 +252,23 @@ export interface IngestJob {
   updated_at?: string | null;
   started_at?: string | null;
   completed_at?: string | null;
+  phrase_count?: number | null;
+  active_phrase_count?: number | null;
+  /** True when legacy data cannot be attributed safely to this ingestion. */
+  ownership_unknown?: boolean | null;
+  ownership_message?: string | null;
+  ownership_mode?: string | null;
+}
+
+export interface RemoveIngestCardsResponse {
+  job_id: number;
+  removed_count: number | null;
+  phrase_count: number | null;
+  active_phrase_count: number | null;
+  history_preserved: boolean;
+  ownership_unknown: boolean;
+  ownership_message: string | null;
+  ownership_mode: string | null;
 }
 
 export function isIngestComplete(job: IngestJob): boolean {

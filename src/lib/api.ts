@@ -51,6 +51,7 @@ import type {
   SessionItem,
   SessionMode,
   IngestJob,
+  RemoveIngestCardsResponse,
   Source,
   Phrase,
   ServerDashboardStats,
@@ -947,6 +948,12 @@ export const api = {
   async getRecentIngests(limit = 10): Promise<IngestJob[]> {
     const res = await request<{ jobs?: IngestJob[] }>(`/api/ingest/recent?limit=${encodeURIComponent(String(limit))}`);
     return Array.isArray(res.jobs) ? res.jobs : [];
+  },
+  removeIngestCards(jobId: number | string): Promise<RemoveIngestCardsResponse> {
+    return request<RemoveIngestCardsResponse>(
+      `/api/ingest/${encodeURIComponent(String(jobId))}/cards`,
+      { method: "DELETE" },
+    );
   },
 
   // Backward-compatible names used by older UI code.
