@@ -43,6 +43,9 @@ jobs:
       - name: Build app
         run: npm run build
 
+      - name: Test manual curation workflow
+        run: npm run test:curation
+
       - name: Test ingestion job deletion
         run: npm run test:ingestion
 

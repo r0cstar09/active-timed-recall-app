@@ -13,16 +13,13 @@ import {
   ingestPhraseCount,
   isTerminalIngest,
   mergeRecentIngests,
-  recentTerminalIngests,
-  reopenRecentTerminalJob,
+
 } from "../lib/ingestJobs";
 import PipelineProgress from "./PipelineProgress";
+import ManualCuration from "./ManualCuration";
 
 const INGEST_STORAGE_KEY = "atr.ingest.active";
 const INGEST_TTL_MS = 24 * 60 * 60 * 1000;
-
-const YT_RE =
-  /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|shorts\/|embed\/)|youtu\.be\/)[\w-]{6,}/i;
 
 function statusLabel(job: IngestJob): string {
   if (job.status === "partial") return "partial";
@@ -32,7 +29,7 @@ function statusLabel(job: IngestJob): string {
 }
 
 export default function IngestForm() {
-  const [urlValue, setUrlValue] = useState("");
+
   const [job, setJob] = useState<IngestJob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pollError, setPollError] = useState<string | null>(null);
@@ -166,33 +163,6 @@ export default function IngestForm() {
     }, 1000);
   }
 
-  async function submit(e: { preventDefault(): void }) {
-    e.preventDefault();
-    if (restoring || busy || creatingRef.current || !canChangeIngestSelection(deleteGateRef.current) || openingJobRef.current !== null) return;
-    setError(null);
-    const trimmed = urlValue.trim();
-    if (!YT_RE.test(trimmed)) {
-      setError("Enter a valid YouTube URL.");
-      return;
-    }
-    creatingRef.current = true;
-    dispatchDeleteUi({ type: "selectionChanged" });
-    setBusy(true);
-    stopPolling();
-    try {
-      const created = await api.createIngest(trimmed);
-      setJob(created);
-      setRecentJobs((current) => mergeRecentIngests(current, [created]));
-      rememberJob(created.job_id);
-      if (finishIfTerminal(created)) return;
-      startPolling(created.job_id);
-    } catch (err) {
-      setBusy(false);
-      setError(err instanceof ApiError ? err.message : String(err));
-    } finally {
-      creatingRef.current = false;
-    }
-  }
 
   async function addVerb(e: { preventDefault(): void }) {
     e.preventDefault();
@@ -257,7 +227,7 @@ export default function IngestForm() {
     stopPolling();
     forgetJob();
     setJob(null);
-    setUrlValue("");
+
     setError(null);
     dispatchDeleteUi({ type: "reset" });
     setBusy(false);
@@ -301,30 +271,9 @@ export default function IngestForm() {
 
   return (
     <div className="stack">
-      <form onSubmit={submit} className="card">
-        <label className="field">
-          <span>YouTube URL</span>
-          <input
-            className="input"
-            type="url"
-            inputMode="url"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            placeholder="https://youtube.com/watch?v=…"
-            value={urlValue}
-            onChange={(e) => setUrlValue(e.target.value)}
-            disabled={selectionLocked}
-          />
-        </label>
-        <button
-          className="btn btn-primary btn-block"
-          type="submit"
-          disabled={selectionLocked || !urlValue.trim()}
-        >
-          {busy ? "Ingesting…" : "Ingest video"}
-        </button>
-      </form>
+      <ManualCuration />
+
+      <h2>Legacy auto-ingest history &amp; custom verbs</h2>
 
       <form onSubmit={addVerb} className="card stack">
         <div>

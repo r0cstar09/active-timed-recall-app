@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError } from "../lib/api";
-import type { Card, Phrase, Source } from "../lib/types";
+import { curationApi, CurationApiError } from "../lib/curationApi";
+import type { CurationLibraryCard } from "../lib/curationTypes";
+import type { Phrase, Source } from "../lib/types";
 import { isStatusFailed, isStatusReady } from "../lib/types";
 import AudioPlayer from "./AudioPlayer";
 import { REGIONS, RegionArt, StateIllustration, regionForIndex } from "../lib/visuals";
 
 type Tab = "sources" | "cards";
+type CardView = "active" | "archived";
 
 function StatusPill({ label, status }: { label: string; status: string | null }) {
   const cls = isStatusReady(status)
@@ -23,7 +26,14 @@ function StatusPill({ label, status }: { label: string; status: string | null })
 export default function Library() {
   const [tab, setTab] = useState<Tab>("sources");
   const [sources, setSources] = useState<Source[] | null>(null);
-  const [cards, setCards] = useState<Card[] | null>(null);
+  const [activeCards, setActiveCards] = useState<CurationLibraryCard[] | null>(null);
+  const [archivedCards, setArchivedCards] = useState<CurationLibraryCard[] | null>(null);
+  const [cardView, setCardView] = useState<CardView>("active");
+  const [cardSearch, setCardSearch] = useState("");
+  const [targetPhraseId, setTargetPhraseId] = useState<number | null>(null);
+  const [cardsLoading, setCardsLoading] = useState(false);
+  const [cardsError, setCardsError] = useState<string | null>(null);
+  const [cardsReload, setCardsReload] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,20 +41,87 @@ export default function Library() {
       try {
         if (tab === "sources" && !sources) {
           setSources(await api.listSources());
-        } else if (tab === "cards" && !cards) {
-          setCards(await api.listCards());
         }
       } catch (err) {
         setError(err instanceof ApiError ? err.message : String(err));
       }
     })();
-  }, [tab, sources, cards]);
+  }, [tab, sources]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get("q");
+    const phrase = params.get("phrase");
+    if (query) setCardSearch(query);
+    if (phrase && /^\d+$/.test(phrase)) setTargetPhraseId(Number(phrase));
+    if (query || phrase) setTab("cards");
+  }, []);
+
+  useEffect(() => {
+    if (tab !== "cards") return;
+    let cancelled = false;
+    setCardsLoading(true);
+    setCardsError(null);
+    Promise.all([curationApi.listCards(true), curationApi.listCards(false)])
+      .then(([active, archived]) => {
+        if (cancelled) return;
+        setActiveCards(active);
+        setArchivedCards(archived);
+      })
+      .catch((err) => {
+        if (!cancelled) setCardsError(err instanceof CurationApiError ? err.message : String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setCardsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tab, cardsReload]);
+
+  useEffect(() => {
+    if (targetPhraseId === null || !activeCards || !archivedCards) return;
+    if (archivedCards.some((card) => card.phrase_id === targetPhraseId)) setCardView("archived");
+    else if (activeCards.some((card) => card.phrase_id === targetPhraseId)) setCardView("active");
+  }, [activeCards, archivedCards, targetPhraseId]);
+
+  useEffect(() => {
+    if (tab !== "cards" || targetPhraseId === null) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(`library-card-${targetPhraseId}`)?.scrollIntoView({ block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [cardView, tab, targetPhraseId, activeCards, archivedCards]);
+
+  function adjustSourceActiveCount(sourceId: number | null | undefined, delta: number) {
+    if (sourceId == null) return;
+    setSources((current) => current?.map((source) => source.id === sourceId
+      ? { ...source, active_count: Math.max(0, source.active_count + delta) }
+      : source) ?? null);
+  }
 
   function handleSourceCardRemoved(sourceId: number, phraseId: number) {
     setSources((current) => current?.map((source) => source.id === sourceId
       ? { ...source, active_count: Math.max(0, source.active_count - 1) }
       : source) ?? null);
-    setCards((current) => current?.filter((card) => card.phrase_id !== phraseId) ?? null);
+    setActiveCards((current) => current?.filter((card) => card.phrase_id !== phraseId) ?? null);
+    setArchivedCards(null);
+  }
+
+  function handleCardRemoved(card: CurationLibraryCard) {
+    setActiveCards((current) => current?.filter((item) => item.phrase_id !== card.phrase_id) ?? null);
+    setArchivedCards((current) => current && !current.some((item) => item.phrase_id === card.phrase_id)
+      ? [{ ...card, active: false }, ...current]
+      : current);
+    adjustSourceActiveCount(card.source_id, -1);
+  }
+
+  function handleCardRestored(card: CurationLibraryCard) {
+    setArchivedCards((current) => current?.filter((item) => item.phrase_id !== card.phrase_id) ?? null);
+    setActiveCards((current) => current && !current.some((item) => item.phrase_id === card.phrase_id)
+      ? [{ ...card, active: true }, ...current]
+      : current);
+    adjustSourceActiveCount(card.source_id, 1);
   }
 
   return (
@@ -70,8 +147,18 @@ export default function Library() {
       {tab === "sources" && <Sources sources={sources} onCardRemoved={handleSourceCardRemoved} />}
       {tab === "cards" && (
         <Cards
-          cards={cards}
-          onRemoved={(phraseId) => setCards((current) => current?.filter((card) => card.phrase_id !== phraseId) ?? null)}
+          activeCards={activeCards}
+          archivedCards={archivedCards}
+          cardView={cardView}
+          search={cardSearch}
+          targetPhraseId={targetPhraseId}
+          loading={cardsLoading}
+          loadError={cardsError}
+          onCardViewChange={setCardView}
+          onSearchChange={setCardSearch}
+          onRetry={() => setCardsReload((value) => value + 1)}
+          onRemoved={handleCardRemoved}
+          onRestored={handleCardRestored}
         />
       )}
     </div>
@@ -234,63 +321,243 @@ function Sources({
   );
 }
 
-function Cards({ cards, onRemoved }: { cards: Card[] | null; onRemoved: (phraseId: number) => void }) {
-  const [removingId, setRemovingId] = useState<number | null>(null);
-  const [removeError, setRemoveError] = useState<string | null>(null);
+type CardAction = "remove" | "restore" | "repair";
 
-  async function removeCard(card: Card) {
+function actionErrorMessage(error: unknown): string {
+  return error instanceof ApiError || error instanceof CurationApiError
+    ? error.message
+    : String(error);
+}
+
+function Cards({
+  activeCards,
+  archivedCards,
+  cardView,
+  search,
+  targetPhraseId,
+  loading,
+  loadError,
+  onCardViewChange,
+  onSearchChange,
+  onRetry,
+  onRemoved,
+  onRestored,
+}: {
+  activeCards: CurationLibraryCard[] | null;
+  archivedCards: CurationLibraryCard[] | null;
+  cardView: CardView;
+  search: string;
+  targetPhraseId: number | null;
+  loading: boolean;
+  loadError: string | null;
+  onCardViewChange: (view: CardView) => void;
+  onSearchChange: (value: string) => void;
+  onRetry: () => void;
+  onRemoved: (card: CurationLibraryCard) => void;
+  onRestored: (card: CurationLibraryCard) => void;
+}) {
+  const actionLocks = useRef(new Set<number>());
+  const [actions, setActions] = useState<Record<number, CardAction>>({});
+  const [actionErrors, setActionErrors] = useState<Record<number, string>>({});
+  const cards = cardView === "active" ? activeCards : archivedCards;
+  const normalizedSearch = search.trim().toLocaleLowerCase();
+  const visibleCards = useMemo(() => (cards ?? []).filter((card) => {
+    if (card.phrase_id === targetPhraseId) return true;
+    if (!normalizedSearch) return true;
+    return [card.spanish, card.english, card.context_clue, card.cloze_prompt, card.source_type]
+      .some((value) => value?.toLocaleLowerCase().includes(normalizedSearch));
+  }), [cards, normalizedSearch, targetPhraseId]);
+
+  function beginAction(phraseId: number, action: CardAction): boolean {
+    if (actionLocks.current.has(phraseId)) return false;
+    actionLocks.current.add(phraseId);
+    setActions((current) => ({ ...current, [phraseId]: action }));
+    setActionErrors((current) => {
+      const next = { ...current };
+      delete next[phraseId];
+      return next;
+    });
+    return true;
+  }
+
+  function finishAction(phraseId: number) {
+    actionLocks.current.delete(phraseId);
+    setActions((current) => {
+      const next = { ...current };
+      delete next[phraseId];
+      return next;
+    });
+  }
+
+  function failAction(phraseId: number, error: unknown) {
+    setActionErrors((current) => ({ ...current, [phraseId]: actionErrorMessage(error) }));
+  }
+
+  async function removeCard(card: CurationLibraryCard) {
     if (!window.confirm(`Remove “${card.spanish}” from active study?\n\nIts source and existing review history will be preserved.`)) return;
-    setRemovingId(card.phrase_id);
-    setRemoveError(null);
+    if (!beginAction(card.phrase_id, "remove")) return;
     try {
       await api.removeCard(card.phrase_id);
-      onRemoved(card.phrase_id);
-    } catch (err) {
-      setRemoveError(err instanceof ApiError ? err.message : String(err));
+      onRemoved(card);
+    } catch (error) {
+      failAction(card.phrase_id, error);
     } finally {
-      setRemovingId(null);
+      finishAction(card.phrase_id);
     }
   }
 
-  if (!cards) return <div className="card center stack"><StateIllustration type="loading" /><p className="faint">Loading cards…</p></div>;
-  if (cards.length === 0) {
-    return (
-      <div className="card center stack">
-        <StateIllustration type="empty" />
-        <p className="muted">No cards yet.</p>
-        <a className="btn btn-primary" href="/ingest">Ingest a video</a>
-      </div>
-    );
+  async function restoreCard(card: CurationLibraryCard) {
+    if (!beginAction(card.phrase_id, "restore")) return;
+    try {
+      await curationApi.reactivateCard(card.phrase_id);
+      onRestored(card);
+    } catch (error) {
+      failAction(card.phrase_id, error);
+    } finally {
+      finishAction(card.phrase_id);
+    }
   }
+
+  async function repairCard(card: CurationLibraryCard) {
+    if (!beginAction(card.phrase_id, "repair")) return;
+    try {
+      const draft = await curationApi.createRepairDraft(card.phrase_id);
+      if (!Number.isFinite(draft.import_id) || !Number.isFinite(draft.id)) {
+        throw new Error("The repair draft response did not include a valid import and draft ID.");
+      }
+      window.location.assign(`/ingest/?import=${encodeURIComponent(String(draft.import_id))}&draft=${encodeURIComponent(String(draft.id))}`);
+    } catch (error) {
+      failAction(card.phrase_id, error);
+      finishAction(card.phrase_id);
+    }
+  }
+
   return (
-    <>
-      {removeError && <div className="alert alert-error">Could not remove card: {removeError}</div>}
-      {cards.map((c) => (
-        <div className="card card-tight stack" key={c.phrase_id}>
-          <div className="row between">
-            <div style={{ fontWeight: 600 }}>{c.spanish}</div>
-            <span className="pill">{c.state}</span>
-          </div>
-          <div className="small faint">{c.english}</div>
-          {c.context_clue && <div className="small faint">{c.context_clue}</div>}
-          <div className="row wrap small faint" style={{ gap: 8 }}>
-            <span>due {new Date(c.due_at).toLocaleDateString()}</span>
-            <span>· {c.reps} reps</span>
-            <span>· {c.lapses} lapses</span>
-          </div>
-          <AudioPlayer src={c.audio_url} />
-          <div className="row" style={{ justifyContent: "flex-end" }}>
-            <button
-              className="btn btn-small btn-danger"
-              type="button"
-              disabled={removingId === c.phrase_id}
-              onClick={() => removeCard(c)}
-            >
-              {removingId === c.phrase_id ? "Removing…" : "Remove from active study"}
-            </button>
-          </div>
+    <div className="stack">
+      <div className="seg" role="tablist" aria-label="Card status">
+        <button
+          className={`seg-btn ${cardView === "active" ? "active" : ""}`}
+          type="button"
+          role="tab"
+          aria-selected={cardView === "active"}
+          onClick={() => onCardViewChange("active")}
+        >
+          Active ({activeCards?.length ?? "…"})
+        </button>
+        <button
+          className={`seg-btn ${cardView === "archived" ? "active" : ""}`}
+          type="button"
+          role="tab"
+          aria-selected={cardView === "archived"}
+          onClick={() => onCardViewChange("archived")}
+        >
+          Archived ({archivedCards?.length ?? "…"})
+        </button>
+      </div>
+
+      <div className="row wrap">
+        <label style={{ flex: "1 1 220px" }}>
+          <span className="small faint">Search cards</span>
+          <input
+            className="input"
+            type="search"
+            value={search}
+            placeholder="Spanish, English, or source"
+            onChange={(event) => onSearchChange(event.currentTarget.value)}
+          />
+        </label>
+        {cardView === "active" && activeCards && activeCards.length > 0 && (
+          <a className="btn btn-primary" href="/session?mode=practice">Study active cards</a>
+        )}
+      </div>
+
+      {loadError && (
+        <div className="alert alert-error" role="alert">
+          <div>Could not load cards: {loadError}</div>
+          <button className="btn btn-small" type="button" onClick={onRetry} disabled={loading}>
+            {loading ? "Retrying…" : "Retry"}
+          </button>
         </div>
-      ))}
-    </>
+      )}
+      {loading && !cards && (
+        <div className="card center stack"><StateIllustration type="loading" /><p className="faint">Loading cards…</p></div>
+      )}
+      {!loading && cards && cards.length === 0 && (
+        <div className="card center stack">
+          <StateIllustration type="empty" />
+          <p className="muted">{cardView === "active" ? "No active cards yet." : "No archived cards."}</p>
+          {cardView === "active" && <a className="btn btn-primary" href="/ingest">Ingest a video</a>}
+        </div>
+      )}
+      {cards && cards.length > 0 && visibleCards.length === 0 && (
+        <div className="alert">No {cardView} cards match “{search}”.</div>
+      )}
+
+      {visibleCards.map((card) => {
+        const action = actions[card.phrase_id];
+        const isBusy = Boolean(action);
+        const isTarget = card.phrase_id === targetPhraseId;
+        return (
+          <div
+            className="card card-tight stack"
+            id={`library-card-${card.phrase_id}`}
+            key={card.phrase_id}
+            style={isTarget ? { outline: "2px solid var(--accent, currentColor)", outlineOffset: 2 } : undefined}
+          >
+            <div className="row between">
+              <div style={{ fontWeight: 600 }}>{card.spanish}</div>
+              <span className={`pill ${cardView === "active" ? "pill-good" : "pill-warn"}`}>
+                {cardView === "active" ? (card.state ?? "active") : "archived"}
+              </span>
+            </div>
+            <div className="small faint">{card.english}</div>
+            {card.context_clue && <div className="small faint">{card.context_clue}</div>}
+            {card.cloze_prompt && <div className="small faint"><strong>Cloze:</strong> {card.cloze_prompt}</div>}
+            <div className="row wrap small faint" style={{ gap: 8 }}>
+              {card.due_at && <span>due {new Date(card.due_at).toLocaleDateString()}</span>}
+              {typeof card.reps === "number" && <span>· {card.reps} reps</span>}
+              {typeof card.lapses === "number" && <span>· {card.lapses} lapses</span>}
+            </div>
+            {card.audio_url && <AudioPlayer src={card.audio_url} />}
+            {actionErrors[card.phrase_id] && (
+              <div className="alert alert-error" role="alert">
+                {action === "repair" ? "Could not open repair" : cardView === "archived" ? "Could not restore card" : "Could not remove card"}: {actionErrors[card.phrase_id]}
+              </div>
+            )}
+            <div className="row wrap" style={{ justifyContent: "flex-end" }}>
+              {cardView === "archived" ? (
+                <button
+                  className="btn btn-small btn-primary"
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => restoreCard(card)}
+                >
+                  {action === "restore" ? "Restoring…" : "Restore"}
+                </button>
+              ) : (
+                <button
+                  className="btn btn-small btn-danger"
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => removeCard(card)}
+                >
+                  {action === "remove" ? "Removing…" : "Remove from active study"}
+                </button>
+              )}
+              {card.repair_available === true && (
+                <button
+                  className="btn btn-small"
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => repairCard(card)}
+                >
+                  {action === "repair" ? "Opening repair…" : "Repair clip"}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
