@@ -41,12 +41,18 @@ the timer based on prior pass/fail speed.
 
 ## Recall prompt invariant
 
-Every unrevealed speaking item must provide one sentence-specific cue: the full
-English meaning, a cloze prompt, or a verified non-empty source-audio clip.
-Never ask for a sentence from only a shared grammar/pattern label. Mature FSRS
-cards use audio and fall back to English when the file is missing, empty, or
-fails playback. The frontend must also convert stale cached `minimal` payloads
-to their English meaning.
+Every unrevealed normal `review`, `practice`, or `misses` speaking item shows
+the full sentence-specific English meaning. These queues never automatically
+graduate into cloze or audio-only recall: stale cached `audio`, `cloze`, or
+`minimal` payloads are rendered as English even when source audio is playable.
+Source audio is optional in Learn and after reveal/results, but must stay hidden
+before a normal recall answer because it contains the Spanish target.
+
+The legacy `audio_shadow` flow may still use source audio before the answer only
+when the session mode was explicitly selected as `audio_shadow` and the item is
+also an `audio_shadow` prompt. Failed/missing playback falls back to English.
+An explicitly selected legacy `cloze` session may retain its cloze; normal
+queues do not. Never ask for a sentence from only a grammar/pattern label.
 
 ## Required verification before reporting success
 
@@ -69,8 +75,11 @@ assert 'https://api-spanish.tonymuzo.dev' in cfg
 assert 'export const RECALL_SECONDS = 15;' in timing
 assert 'export const MAX_RECALL_SECONDS = 35;' in timing
 assert 'item?.scheduling?.time_limit_seconds' in timing
-assert 'item.prompt_type === "minimal"' in prompt
-assert 'recallPromptText(item, sourceAudioUsable)' in rec
+assert 'recallPromptPresentation' in prompt
+assert 'sessionMode === "audio_shadow"' in prompt
+assert 'recallPromptPresentation(item, sessionMode, sourceAudioUsable)' in rec
+assert 'promptPresentation?.showSourceAudio' in rec
+assert 'item.prompt_type !== "audio_shadow"' not in rec
 assert 'sourceAudioUnavailable' in rec
 assert 'itemForDuration(list[i])' in rec
 assert 'recallSecondsFromServer(retry.time_limit_seconds)' in rec

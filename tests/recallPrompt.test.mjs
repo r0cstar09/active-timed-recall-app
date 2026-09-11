@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { recallPromptText } from "../src/lib/recallPrompt.ts";
+import { recallPromptPresentation, recallPromptText } from "../src/lib/recallPrompt.ts";
 
 const base = {
   sprint_item_id: 1,
@@ -14,35 +15,110 @@ const base = {
   context_clue: "Uses irse and a command.",
   cloze_prompt: "Cuando te vayas, ____.",
   source_audio_url: null,
+  answer_visible: false,
 };
 
-test("stale minimal payloads show the sentence-specific English meaning", () => {
-  assert.equal(recallPromptText(base), base.english);
-  assert.notEqual(recallPromptText(base), base.prompt);
-});
+const recallSessionSource = readFileSync(
+  new URL("../src/components/RecallSession.tsx", import.meta.url),
+  "utf8",
+);
 
-test("audio prompts use English when the clip is missing or playback failed", () => {
-  const audio = {
+for (const mode of ["review", "practice", "misses"]) {
+  test(`${mode} always uses English for stale graduated prompt payloads`, () => {
+    for (const prompt_type of ["audio", "cloze", "minimal"]) {
+      const item = {
+        ...base,
+        mode,
+        prompt_type,
+        prompt: prompt_type === "audio" ? "Listen once, then produce the Spanish." : base.prompt,
+        source_audio_url: "https://api.example/source-answer.mp3",
+      };
+      const presentation = recallPromptPresentation(item, mode, true);
+      assert.equal(presentation.cue, base.english);
+      assert.equal(presentation.cueKind, "english");
+      assert.equal(presentation.showSourceAudio, false);
+      assert.equal(presentation.sourceAudioUnavailable, false);
+      assert.equal(recallPromptText(item, mode, true), base.english);
+    }
+  });
+}
+
+test("a stale cached normal-review audio payload cannot leak source-answer audio before the answer", () => {
+  const staleAudio = {
     ...base,
+    mode: "review",
     prompt_type: "audio",
     prompt: "Listen once, then produce the Spanish.",
-    source_audio_url: "https://api.example/audio.mp3",
+    source_audio_url: "https://api.example/source-answer.mp3",
+    answer_visible: false,
   };
-  assert.equal(recallPromptText(audio, false), base.english);
-  assert.equal(recallPromptText({ ...audio, source_audio_url: null }), base.english);
+  const presentation = recallPromptPresentation(staleAudio, "review", true);
+  assert.equal(presentation.cue, base.english);
+  assert.equal(presentation.showSourceAudio, false);
+  assert.equal(presentation.expectsSourceAudio, false);
 });
 
-test("playable audio prompts keep their listening instruction", () => {
-  const audio = {
+test("normal English prompts do not expose optional source audio before reveal", () => {
+  const presentation = recallPromptPresentation({
     ...base,
-    prompt_type: "audio",
-    prompt: "Listen once, then produce the Spanish.",
-    source_audio_url: "https://api.example/audio.mp3",
-  };
-  assert.equal(recallPromptText(audio, true), audio.prompt);
+    mode: "practice",
+    prompt_type: "english",
+    prompt: base.english,
+    source_audio_url: "https://api.example/source-answer.mp3",
+  }, "practice", true);
+  assert.equal(presentation.cue, base.english);
+  assert.equal(presentation.showSourceAudio, false);
 });
 
-test("cloze and English prompts retain their intended sentence cues", () => {
-  assert.equal(recallPromptText({ ...base, prompt_type: "cloze" }), base.cloze_prompt);
-  assert.equal(recallPromptText({ ...base, prompt_type: "english", prompt: base.english }), base.english);
+test("the recall component renders cue and pre-answer audio from the shared policy", () => {
+  assert.match(
+    recallSessionSource,
+    /recallPromptPresentation\(item, sessionMode, sourceAudioUsable\)/,
+  );
+  assert.match(recallSessionSource, /promptPresentation\?\.showSourceAudio/);
+  assert.doesNotMatch(
+    recallSessionSource,
+    /item\?\.source_audio_url && item\.prompt_type !== "audio_shadow" && item\.answer_visible === false/,
+  );
+  assert.doesNotMatch(recallSessionSource, /item\?\.prompt_type === "cloze"/);
+});
+
+test("explicit legacy audio shadow keeps its listening cue and pre-answer player", () => {
+  const shadow = {
+    ...base,
+    mode: "audio_shadow",
+    prompt_type: "audio_shadow",
+    prompt: "Listen once, then shadow the Spanish.",
+    source_audio_url: "https://api.example/audio.mp3",
+  };
+  const presentation = recallPromptPresentation(shadow, "audio_shadow", true);
+  assert.equal(presentation.cue, shadow.prompt);
+  assert.equal(presentation.cueKind, "audio_shadow");
+  assert.equal(presentation.showSourceAudio, true);
+  assert.equal(presentation.expectsSourceAudio, true);
+  assert.equal(presentation.sourceAudioUnavailable, false);
+});
+
+test("explicit audio shadow falls back to English when playback is unavailable", () => {
+  const shadow = {
+    ...base,
+    mode: "audio_shadow",
+    prompt_type: "audio_shadow",
+    prompt: "Listen once, then shadow the Spanish.",
+    source_audio_url: "https://api.example/audio.mp3",
+  };
+  const presentation = recallPromptPresentation(shadow, "audio_shadow", false);
+  assert.equal(presentation.cue, base.english);
+  assert.equal(presentation.cueKind, "english");
+  assert.equal(presentation.showSourceAudio, false);
+  assert.equal(presentation.expectsSourceAudio, true);
+  assert.equal(presentation.sourceAudioUnavailable, true);
+});
+
+test("explicit cloze mode retains its cloze cue without source audio", () => {
+  const cloze = { ...base, mode: "cloze", prompt_type: "cloze", source_audio_url: "https://api.example/audio.mp3" };
+  const presentation = recallPromptPresentation(cloze, "cloze", true);
+  assert.equal(presentation.cue, base.cloze_prompt);
+  assert.equal(presentation.cueKind, "cloze");
+  assert.equal(presentation.showSourceAudio, false);
 });

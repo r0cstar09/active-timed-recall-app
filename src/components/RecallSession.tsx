@@ -16,7 +16,7 @@ import {
   type Phase,
 } from "../lib/timer";
 import AudioPlayer from "./AudioPlayer";
-import { recallPromptText } from "../lib/recallPrompt";
+import { recallPromptPresentation } from "../lib/recallPrompt";
 import { correctionPhraseIds, latestSessionItems } from "../lib/sessionCorrections";
 
 type Status = "idle" | "active" | "error";
@@ -1124,11 +1124,13 @@ export default function RecallSession() {
     ? Math.max(0, Math.min(100, (remainingMs(deadline) / (durationMs || 1)) * 100))
     : 0;
   const danger = secs <= 3;
-  const expectsSourceAudio = item?.prompt_type === "audio" || item?.prompt_type === "audio_shadow";
   const sourceAudioUsable = Boolean(
     item?.source_audio_url && !failedSourceAudioItems.has(item.sprint_item_id),
   );
-  const sourceAudioUnavailable = Boolean(item && expectsSourceAudio && !sourceAudioUsable);
+  const promptPresentation = item
+    ? recallPromptPresentation(item, sessionMode, sourceAudioUsable)
+    : null;
+  const sourceAudioUnavailable = Boolean(promptPresentation?.sourceAudioUnavailable);
   const markSourceAudioFailed = () => {
     if (!item) return;
     setFailedSourceAudioItems((previous) => {
@@ -1179,13 +1181,13 @@ export default function RecallSession() {
         </div>
 
         <p className="small faint" style={{ margin: "8px 0 0" }}>
-          {item?.prompt_type === "audio_shadow"
+          {promptPresentation?.cueKind === "audio_shadow"
             ? "Listen, then shadow it calmly"
-            : item?.prompt_type === "cloze"
+            : promptPresentation?.cueKind === "cloze"
               ? "Complete the phrase out loud"
               : danger ? "Fast now — say it" : "Breathe, think of the idea, speak in Spanish"}
         </p>
-        <h2 style={{ margin: "2px 0 0" }}>{item ? recallPromptText(item, sourceAudioUsable) : ""}</h2>
+        <h2 style={{ margin: "2px 0 0" }}>{promptPresentation?.cue ?? ""}</h2>
         {item?.context_clue && (
           <p className="small faint" style={{ margin: 0 }}>{item.context_clue}</p>
         )}
@@ -1196,15 +1198,11 @@ export default function RecallSession() {
           </div>
         )}
 
-        {item?.prompt_type === "audio_shadow" && sourceAudioUsable && item.source_audio_url && (
-          <AudioPlayer src={item.source_audio_url} onError={markSourceAudioFailed} />
-        )}
-
-        {item?.source_audio_url && item.prompt_type !== "audio_shadow" && item.answer_visible === false && sourceAudioUsable && (
+        {promptPresentation?.showSourceAudio && item?.source_audio_url && (
           <div style={{ width: "100%", textAlign: "left" }}>
             <AudioPlayer
               src={item.source_audio_url}
-              label="Sentence audio"
+              label="Shadow audio"
               onError={markSourceAudioFailed}
             />
           </div>

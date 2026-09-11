@@ -9,7 +9,9 @@
 // ── Sessions & grading (REAL contract) ─────────────────────────────────────
 
 export type ResponseMode = "spoken" | "written";
+/** `audio_shadow` is legacy and must be selected explicitly; normal queues stay English-cued. */
 export type SessionMode = "learn" | "review" | "practice" | "misses" | "cloze" | "english_to_spanish" | "audio_shadow";
+/** Graduated prompt types remain in the wire type for stale session/cache compatibility. */
 export type PromptType = "learn" | "english" | "context" | "cloze" | "audio" | "minimal" | "miss" | "english_to_spanish" | "audio_shadow";
 export type ItemResult = "pass" | "fail" | "partial" | "pending";
 export type FsrsRating = 1 | 2 | 3 | 4;
