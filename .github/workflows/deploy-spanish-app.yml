@@ -81,8 +81,9 @@ jobs:
           assert 'export const RECALL_SECONDS = 15;' in timing
           assert 'export const MAX_RECALL_SECONDS = 35;' in timing
           assert 'item?.scheduling?.time_limit_seconds' in timing
-          assert 'item.prompt_type === "minimal"' in prompt
-          assert 'recallPromptText(item, sourceAudioUsable)' in rec
+          assert 'const explicitAudioShadow = sessionMode === "audio_shadow"' in prompt
+          assert 'recallPromptPresentation(item, sessionMode, sourceAudioUsable)' in rec
+          assert 'promptPresentation?.showSourceAudio' in rec
           assert 'sourceAudioUnavailable' in rec
           assert 'itemForDuration(list[i])' in rec
           assert 'recallSecondsFromServer(retry.time_limit_seconds)' in rec

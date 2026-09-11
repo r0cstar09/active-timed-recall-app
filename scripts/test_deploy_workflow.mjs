@@ -24,6 +24,9 @@ const rollback = workflow.indexOf('- name: Roll back unverified traffic', public
 const rollbackBlock = workflow.slice(rollback);
 
 assert.ok(promptGate >= 0, 'sentence-specific recall prompt test gate is missing');
+assert.ok(workflow.includes('recallPromptPresentation(item, sessionMode, sourceAudioUsable)'), 'deploy cue guard must match the shared mode-aware presentation policy');
+assert.ok(workflow.includes('promptPresentation?.showSourceAudio'), 'deploy guard must check source-audio visibility policy');
+assert.ok(!workflow.includes('recallPromptText(item, sourceAudioUsable)'), 'retired prompt helper signature must not block deployment');
 assert.ok(priorCapture >= 0, 'previous 100% traffic revision capture is missing');
 assert.ok(promptGate < deploy, 'recall prompt test must pass before deployment');
 assert.ok(deploy > priorCapture, 'previous revision must be captured before deploy');
