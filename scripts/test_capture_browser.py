@@ -64,7 +64,8 @@ def context_for(browser, inline=False):
             route.fulfill(status=status, content_type='application/json', body=json.dumps(body), headers=headers)
         if parsed.netloc==urlparse(BASE).netloc and not path.startswith('/api/') and request.method in ('GET','HEAD'):
             route.continue_(); return
-        if parsed.netloc!='api-spanish.tonymuzo.dev':
+        is_fixture_api = parsed.netloc=='api-spanish.tonymuzo.dev' or (parsed.netloc==urlparse(BASE).netloc and path.startswith('/api/'))
+        if not is_fixture_api:
             blocked.append(request.url); route.abort(); return
         requests.append((request.method,path))
         if request.method=='OPTIONS': reply({}); return

@@ -31,7 +31,9 @@ test('normal and inline retry monitor capture health and reject incomplete uploa
 });
 
 test('session microphone is released before inline retry can open another', () => {
-  const grading=source.slice(source.indexOf('  async function startGrading('),source.indexOf('  async function runGrading('));
+  const grading = source.slice(source.indexOf('  async function startGrading('), source.indexOf('  async function runGrading('));
+  assert.ok(grading.includes('recorderRef.current?.dispose()'));
+  assert.ok(grading.includes('api.gradeSession('));
   assert.ok(grading.indexOf('recorderRef.current?.dispose()') < grading.indexOf('api.gradeSession('));
-  assert.match(grading,/recorderRef\.current = null/);
+  assert.match(grading, /recorderRef\.current = null/);
 });
