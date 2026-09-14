@@ -175,7 +175,11 @@ with sync_playwright() as pw:
     page.get_by_role('button',name='Done — grade it',exact=True).click()
     grade_calls=0
     for stage in ('grade','poll','refresh'):
-        expect(page.get_by_text(f'Fixture {stage} outage',exact=True)).to_be_visible()
+        try:
+            expect(page.get_by_text(f'Request failed (503): Fixture {stage} outage',exact=True)).to_be_visible()
+        except Exception:
+            print('RETRY_STAGE_DEBUG',json.dumps({'stage':stage,'body':page.locator('body').inner_text(),'uploads':uploads,'requests':requests,'blocked':blocked,'page_errors':errors}),flush=True)
+            raise
         expect(page.get_by_role('button',name='Retry grading',exact=True)).to_be_visible()
         assert len(uploads)==2, 'An accepted recording was uploaded again'
         assert page.evaluate('window.__captureStreams.every(s => s.getTracks().every(t => t.readyState === "ended"))')
