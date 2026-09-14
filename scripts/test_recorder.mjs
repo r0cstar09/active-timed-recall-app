@@ -334,7 +334,7 @@ function testInlineRetryWarmsMicrophoneBeforeNetwork() {
     retryComponent.indexOf("async function begin()"),
     retryComponent.indexOf("async function finish"),
   );
-  const initAt = begin.indexOf("await recRef.current.init()");
+  const initAt = begin.indexOf("await recorder.init()");
   const requestAt = begin.indexOf("await api.retryItem");
   assert.ok(initAt >= 0 && requestAt >= 0, "retry setup calls changed unexpectedly");
   assert.ok(

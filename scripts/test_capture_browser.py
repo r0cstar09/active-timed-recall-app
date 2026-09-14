@@ -46,6 +46,7 @@ def context_for(browser, inline=False):
     context=browser.new_context(viewport=viewport,is_mobile=inline,has_touch=inline,permissions=['microphone'],service_workers='block')
     page=context.new_page()
     errors, uploads, requests, blocked = [], [], [], []
+    stages = {'grade_failed':False, 'poll_failed':False, 'refresh_failed':False, 'graded':False}
     page.on('pageerror', lambda error: errors.append(str(error)))
     items = [dict(ITEMS[0], result='partial', error_type='transcription_unclear', answer_visible=True,
                   feedback='Fixture capture needs another take.', attempt_number=1)] if inline else ITEMS
@@ -87,10 +88,26 @@ def context_for(browser, inline=False):
         elif path.endswith('/retry'):
             reply({'sprint_item_id':990100,'attempt_number':2,'time_limit_seconds':15,'existing':True})
         elif path.endswith('/grade'):
-            reply({'job_id':990001})
+            if inline and not stages['grade_failed']:
+                stages['grade_failed']=True
+                reply({'detail':'Fixture grade outage'},503)
+            else: reply({'job_id':990001})
         elif path.startswith('/api/jobs/'):
-            reply({'job_id':990001,'status':'complete','result':None,'error_message':None})
-        elif path=='/api/sessions/990001': reply(graded)
+            if inline and not stages['poll_failed']:
+                stages['poll_failed']=True
+                reply({'detail':'Fixture poll outage'},503)
+            else:
+                stages['graded']=True
+                reply({'job_id':990001,'status':'complete','result':None,'error_message':None})
+        elif path=='/api/sessions/990001':
+            if inline and stages['graded']:
+                if not stages['refresh_failed']:
+                    stages['refresh_failed']=True
+                    reply({'detail':'Fixture refresh outage'},503)
+                else:
+                    reply(dict(graded,items=[dict(items[0],result='passed',error_type=None,feedback='Fixture retry successfully graded.')],
+                               summary=dict(total=1,passed=1,failed=0,partial=0,unclear=0,score=100,overtime_count=0)))
+            else: reply(graded)
         elif path=='/api/sources': reply([])
         elif request.method in ('GET','HEAD'): reply({})
         else:
@@ -154,11 +171,27 @@ with sync_playwright() as pw:
     page.get_by_role('button',name='Try again',exact=True).click()
     expect(page.get_by_role('button',name='Done — grade it',exact=True)).to_be_visible()
     assert page.evaluate('window.__captureStreams.length')>=3
+    page.wait_for_timeout(900)
+    page.get_by_role('button',name='Done — grade it',exact=True).click()
+    grade_calls=0
+    for stage in ('grade','poll','refresh'):
+        expect(page.get_by_text(f'Fixture {stage} outage',exact=True)).to_be_visible()
+        expect(page.get_by_role('button',name='Retry grading',exact=True)).to_be_visible()
+        assert len(uploads)==2, 'An accepted recording was uploaded again'
+        assert page.evaluate('window.__captureStreams.every(s => s.getTracks().every(t => t.readyState === "ended"))')
+        if stage=='refresh':
+            grade_calls=sum(method=='POST' and path.endswith('/grade') for method,path in requests)
+        page.get_by_role('button',name='Retry grading',exact=True).click()
+    expect(page.get_by_text('Fixture retry successfully graded.',exact=True)).to_be_visible()
+    assert len(uploads)==2
+    assert sum(method=='POST' and path.endswith('/grade') for method,path in requests)==grade_calls==3
     assert not errors,errors
     assert not blocked,blocked
     page.screenshot(path=str(OUT/'inline-capture-recovery.png'))
     report['checks'].append({'flow':'inline_retry','interrupted_no_upload':True,'fresh_mic_recovery':True,
-                            'incomplete_capture_not_graded':True,'page_errors':errors})
+                            'incomplete_capture_not_graded':True,'accepted_audio_not_reuploaded':True,
+                            'grade_poll_refresh_failures_recovered':True,'refresh_not_regraded':True,
+                            'microphone_released_after_upload':True,'uploads':uploads,'page_errors':errors})
     context.close()
     browser.close()
 report['status']='passed'

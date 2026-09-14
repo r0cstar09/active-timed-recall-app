@@ -27,7 +27,7 @@ test('normal and inline retry monitor capture health and reject incomplete uploa
   const retry=source.slice(source.indexOf('function RetryRecorder('));
   assert.ok(retry.indexOf('if (rec.interrupted)') < retry.indexOf('pendingRef.current = { blob:'));
   assert.match(retry,/beginningRef\.current \|\|/);
-  assert.match(retry,/if \(isIncompleteRecordingError\(err\)\) \{\s*pendingRef\.current = null/);
+  assert.match(retry,/if \(isIncompleteRecordingError\(err\) && uploadedTargetRef\.current !== target\.id\) \{\s*pendingRef\.current = null/);
 });
 
 test('session microphone is released before inline retry can open another', () => {

@@ -99,6 +99,7 @@ export default function RecallSession() {
   const pendingUploadRef = useRef<PendingUpload | null>(null);
   const submitRef = useRef<() => void>(() => {});
   const submitInFlightRef = useRef(false);
+  const uploadInFlightRef = useRef(false);
   const launchInFlightRef = useRef(false);
   const learnAdvanceInFlightRef = useRef(false);
   const itemStartTokenRef = useRef(0);
@@ -663,40 +664,45 @@ export default function RecallSession() {
   }
 
   const uploadPendingAndAdvance = useCallback(async (pending = pendingUploadRef.current) => {
-    if (!pending) return;
-    setPhase("uploading");
-    setError(null);
-    persist({ phase: "uploading" });
-
+    if (!pending || uploadInFlightRef.current) return;
+    uploadInFlightRef.current = true;
     try {
-      await api.uploadRecording(sessionIdRef.current, pending.item.sprint_item_id, pending.blob, {
-        mimeType: pending.mimeType,
-        promptShownAt: isoFromMs(pending.promptShownAtMs),
-        answeredAt: isoFromMs(pending.answeredAtMs),
-        responseSeconds: pending.responseSeconds,
-        timedOut: pending.timedOut,
-        filename: pending.filename,
-        noisyMode,
-      });
-      if (!uploadedRef.current.includes(pending.item.sprint_item_id)) {
-        uploadedRef.current.push(pending.item.sprint_item_id);
-      }
-      pendingUploadRef.current = null;
-    } catch (err) {
-      if (isIncompleteRecordingError(err)) {
-        recoverMicrophone("The browser captured only part of your audio.");
-        return;
-      }
-      setError(
-        `${err instanceof ApiError ? err.message : String(err)} — tap to retry.`,
-      );
-      return; // keep pendingUploadRef so the Retry button resends the same blob
-    }
+      setPhase("uploading");
+      setError(null);
+      persist({ phase: "uploading" });
 
-    if (pending.itemIndex + 1 < items.length) {
-      beginItem(pending.itemIndex + 1, items, null);
-    } else {
-      startGrading();
+      try {
+        await api.uploadRecording(sessionIdRef.current, pending.item.sprint_item_id, pending.blob, {
+          mimeType: pending.mimeType,
+          promptShownAt: isoFromMs(pending.promptShownAtMs),
+          answeredAt: isoFromMs(pending.answeredAtMs),
+          responseSeconds: pending.responseSeconds,
+          timedOut: pending.timedOut,
+          filename: pending.filename,
+          noisyMode,
+        });
+        if (!uploadedRef.current.includes(pending.item.sprint_item_id)) {
+          uploadedRef.current.push(pending.item.sprint_item_id);
+        }
+        pendingUploadRef.current = null;
+      } catch (err) {
+        if (isIncompleteRecordingError(err)) {
+          recoverMicrophone("The browser captured only part of your audio.");
+          return;
+        }
+        setError(
+          `${err instanceof ApiError ? err.message : String(err)} — tap to retry.`,
+        );
+        return; // keep pendingUploadRef so the Retry button resends the same blob
+      }
+
+      if (pending.itemIndex + 1 < items.length) {
+        beginItem(pending.itemIndex + 1, items, null);
+      } else {
+        startGrading();
+      }
+    } finally {
+      uploadInFlightRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, persist, noisyMode]);
@@ -1320,9 +1326,20 @@ function RetryRecorder({
   const deadlineRef = useRef(0);
   const finishingRef = useRef(false);
   const beginningRef = useRef(false);
+  const uploadInFlightRef = useRef(false);
+  const uploadedTargetRef = useRef<number | null>(null);
+  const gradedTargetRef = useRef<number | null>(null);
+  const mountedRef = useRef(true);
   const pendingRef = useRef<{ blob: Blob; mimeType: string; filename: string; answeredAtMs: number; timedOut: boolean } | null>(null);
 
-  useEffect(() => () => recRef.current?.dispose(), []);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      recRef.current?.dispose();
+      recRef.current = null;
+    };
+  }, []);
   useEffect(() => {
     onBusyChange(item.sprint_item_id, phase !== "idle");
     return () => onBusyChange(item.sprint_item_id, false);
@@ -1357,7 +1374,7 @@ function RetryRecorder({
   }, [phase]);
 
   async function begin() {
-    if (beginningRef.current || (disabled && phase === "idle")) return;
+    if (beginningRef.current || !mountedRef.current || (disabled && phase === "idle")) return;
     beginningRef.current = true;
     setError(null);
     setPhase("arming");
@@ -1366,19 +1383,26 @@ function RetryRecorder({
       // iPhone Safari can reject a first getUserMedia call after a network await
       // because the original user activation is no longer available.
       if (!recRef.current) recRef.current = new Recorder();
-      await recRef.current.init();
+      const recorder = recRef.current;
+      await recorder.init();
+      if (!mountedRef.current || recRef.current !== recorder) return;
       const retry = await api.retryItem(sessionId, item.sprint_item_id);
+      if (!mountedRef.current || recRef.current !== recorder) return;
       // Retry/re-record receives the same backend-derived limit as the attempt.
       const limit = recallSecondsFromServer(retry.time_limit_seconds);
       targetRef.current = { id: retry.sprint_item_id, limit };
-      await recRef.current.start(ENCODER_PREROLL_MS);
+      await recorder.start(ENCODER_PREROLL_MS);
+      if (!mountedRef.current || recRef.current !== recorder) return;
       finishingRef.current = false;
       pendingRef.current = null;
+      uploadedTargetRef.current = null;
+      gradedTargetRef.current = null;
       shownAtRef.current = Date.now();
       deadlineRef.current = shownAtRef.current + limit * 1000;
       setSecs(limit);
       setPhase("recording");
     } catch (err) {
+      if (!mountedRef.current) return;
       recRef.current?.dispose();
       recRef.current = null;
       setError(err instanceof ApiError ? err.message : `Microphone unavailable: ${err instanceof Error ? err.message : String(err)}`);
@@ -1389,17 +1413,20 @@ function RetryRecorder({
   }
 
   async function finish(timedOut: boolean) {
-    if (finishingRef.current) return;
+    if (finishingRef.current || !mountedRef.current || !recRef.current) return;
     finishingRef.current = true;
+    const recorder = recRef.current;
     setPhase("uploading");
     const answeredAtMs = Date.now();
     try {
-      const rec = await recRef.current!.stop(ENCODER_POSTROLL_MS);
+      const rec = await recorder.stop(ENCODER_POSTROLL_MS);
+      if (!mountedRef.current || recRef.current !== recorder) return;
       if (!rec || rec.blob.size === 0) throw new Error("No audio was captured — try again.");
       if (rec.interrupted) throw new Error("Microphone was interrupted. This attempt won't be graded — try again.");
       pendingRef.current = { blob: rec.blob, mimeType: rec.mimeType, filename: rec.filename, answeredAtMs, timedOut };
       await uploadAndGrade();
     } catch (err) {
+      if (!mountedRef.current) return;
       recRef.current?.dispose();
       recRef.current = null;
       setError(err instanceof ApiError ? err.message : String(err));
@@ -1408,32 +1435,46 @@ function RetryRecorder({
     }
   }
 
-  // Upload retry preserves the captured Blob: tapping retry re-sends it.
+  // Retry only the unfinished stage. Once accepted, audio must never be uploaded
+  // again because grading/polling/refresh failed. Grade enqueue is idempotent.
   async function uploadAndGrade() {
     const pending = pendingRef.current;
     const target = targetRef.current;
-    if (!pending || !target) return;
-    setPhase("uploading");
-    setError(null);
+    if (!mountedRef.current || uploadInFlightRef.current || !target || (!pending && uploadedTargetRef.current !== target.id)) return;
+    uploadInFlightRef.current = true;
     try {
-      await api.uploadRecording(sessionId, target.id, pending.blob, {
-        mimeType: pending.mimeType,
-        promptShownAt: new Date(shownAtRef.current).toISOString(),
-        answeredAt: new Date(pending.answeredAtMs).toISOString(),
-        responseSeconds: Math.round(((pending.answeredAtMs - shownAtRef.current) / 1000) * 10) / 10,
-        timedOut: pending.timedOut,
-        filename: pending.filename,
-        noisyMode,
-      });
+      setError(null);
+      if (uploadedTargetRef.current !== target.id) {
+        if (!pending) return;
+        setPhase("uploading");
+        await api.uploadRecording(sessionId, target.id, pending.blob, {
+          mimeType: pending.mimeType,
+          promptShownAt: new Date(shownAtRef.current).toISOString(),
+          answeredAt: new Date(pending.answeredAtMs).toISOString(),
+          responseSeconds: Math.round(((pending.answeredAtMs - shownAtRef.current) / 1000) * 10) / 10,
+          timedOut: pending.timedOut,
+          filename: pending.filename,
+          noisyMode,
+        });
+        uploadedTargetRef.current = target.id;
+        pendingRef.current = null;
+        recRef.current?.dispose();
+        recRef.current = null;
+      }
+      if (!mountedRef.current) return;
       setPhase("grading");
-      const { job_id } = await api.gradeItem(sessionId, target.id);
-      await pollJob(job_id);
+      if (gradedTargetRef.current !== target.id) {
+        const { job_id } = await api.gradeItem(sessionId, target.id);
+        if (!mountedRef.current) return;
+        await pollJob(job_id);
+        gradedTargetRef.current = target.id;
+      }
+      if (!mountedRef.current) return;
       const fresh = await api.getSession(sessionId);
-      recRef.current?.dispose();
-      recRef.current = null;
-      onDone(fresh);
+      if (mountedRef.current) onDone(fresh);
     } catch (err) {
-      if (isIncompleteRecordingError(err)) {
+      if (!mountedRef.current) return;
+      if (isIncompleteRecordingError(err) && uploadedTargetRef.current !== target.id) {
         pendingRef.current = null;
         recRef.current?.dispose();
         recRef.current = null;
@@ -1443,6 +1484,8 @@ function RetryRecorder({
       }
       setPhase("error");
       finishingRef.current = false;
+    } finally {
+      uploadInFlightRef.current = false;
     }
   }
 
@@ -1481,9 +1524,9 @@ function RetryRecorder({
   return (
     <div className="stack" style={{ gap: 8 }}>
       <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
-      {pendingRef.current ? (
+      {pendingRef.current || uploadedTargetRef.current !== null ? (
         <button className="btn btn-primary btn-block" onClick={() => void uploadAndGrade()}>
-          Retry upload
+          {pendingRef.current ? "Retry upload" : "Retry grading"}
         </button>
       ) : (
         <button className="btn btn-block" disabled={disabled} onClick={() => void begin()}>
