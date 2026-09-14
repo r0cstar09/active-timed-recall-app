@@ -1,0 +1,31 @@
+name: Capture Browser QA
+on:
+  push:
+    branches: [fix/audio-capture-recovery]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Optional public frontend base; all API calls remain fixture-only
+        required: false
+        default: ''
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:recorder && npm run build
+      - name: Browser capture and recovery
+        env:
+          CAPTURE_QA_BASE: ${{ inputs.base || 'http://127.0.0.1:18763' }}
+        run: |
+          python3 -m venv /tmp/spanish-browser-qa
+          /tmp/spanish-browser-qa/bin/pip install --quiet playwright==1.55.0
+          /tmp/spanish-browser-qa/bin/playwright install --with-deps chromium
+          /tmp/spanish-browser-qa/bin/python scripts/test_capture_browser.py

@@ -72,10 +72,38 @@ class FakeMediaRecorder extends EventTarget {
     this.dispatchEvent(new Event("stop"));
     this.onstop?.();
   }
+
+  fail(message = "Device disconnected") {
+    const event = new Event("error");
+    Object.defineProperty(event, "error", {
+      value: new DOMException(message, "UnknownError"),
+    });
+    this.dispatchEvent(event);
+  }
+}
+
+class FakeTrack extends EventTarget {
+  constructor() {
+    super();
+    this.readyState = "live";
+    this.enabled = true;
+    this.muted = false;
+  }
+
+  stop() {
+    if (this.readyState === "ended") return;
+    this.readyState = "ended";
+    this.dispatchEvent(new Event("ended"));
+  }
+
+  mute() {
+    this.muted = true;
+    this.dispatchEvent(new Event("mute"));
+  }
 }
 
 function makeStream() {
-  const track = { readyState: "live", stop() { this.readyState = "ended"; } };
+  const track = new FakeTrack();
   return { getTracks: () => [track], getAudioTracks: () => [track] };
 }
 let micRequests = 0;
@@ -130,10 +158,16 @@ async function testMissingStartEventFallback() {
   const recorder = new Recorder();
   await recorder.init();
   const startedAt = Date.now();
-  await recorder.start();
+  const startPromise = recorder.start();
+  const startStillPending = await Promise.race([
+    startPromise.then(() => false),
+    new Promise((resolve) => setTimeout(() => resolve(true), 25)),
+  ]);
+  assert.equal(startStillPending, true, "synchronous state was treated as immediate capture readiness");
+  await startPromise;
   const readyMs = Date.now() - startedAt;
   assert.equal(recorder.isRecording, true);
-  assert.ok(readyMs < 80, `state fallback added a hidden delay (${readyMs}ms)`);
+  assert.ok(readyMs < 500, `state fallback took too long (${readyMs}ms)`);
   await recorder.stop();
   recorder.dispose();
   FakeMediaRecorder.emitStart = true;
@@ -171,9 +205,28 @@ async function testInterruptionBeforeSubmitPreservesCapture() {
   await recorder.init();
   await recorder.start();
   lastRecorder.interrupt();
+  assert.match(recorder.captureIssue, /stopped unexpectedly/i);
   const result = await recorder.stop();
   assert.ok(result.blob.size > 0, "audio delivered before the interruption was discarded");
   assert.equal(result.mimeType, "audio/mp4");
+  assert.equal(result.interrupted, true, "an unexpected pre-submit stop became gradeable");
+
+  const requests = micRequests;
+  await recorder.start();
+  assert.equal(micRequests, requests + 1, "a stream from a failed capture was reused");
+  assert.equal(recorder.captureIssue, null, "a successful new capture did not clear the old issue");
+  await recorder.stop();
+  recorder.dispose();
+}
+
+async function testInactiveStateIsDetectedBeforeStopEvent() {
+  const recorder = new Recorder();
+  await recorder.init();
+  await recorder.start();
+  lastRecorder.state = "inactive";
+  assert.match(recorder.captureIssue, /stopped unexpectedly/i, "inactive state was missed before stop event");
+  lastRecorder.interrupt();
+  assert.equal((await recorder.stop()).interrupted, true);
   recorder.dispose();
 }
 
@@ -185,6 +238,62 @@ async function testInterruptionDuringPostroll() {
   setTimeout(() => lastRecorder.interrupt(), 10);
   const result = await resultPromise;
   assert.ok(result.blob.size > 0, "interrupted capture was discarded");
+  assert.equal(result.interrupted, false, "post-roll stop was misclassified as pre-submit interruption");
+  assert.equal(recorder.captureIssue, null, "an expected post-submit stop raised a capture issue");
+  recorder.dispose();
+}
+
+async function testMutedTrackLatchesIssueAndForcesReacquisition() {
+  const recorder = new Recorder();
+  await recorder.init();
+  await recorder.start();
+  const track = recorder.getStream().getAudioTracks()[0];
+  track.mute();
+  assert.match(recorder.captureIssue, /muted/i, "track mute was not exposed to UI polling");
+  const interrupted = await recorder.stop();
+  assert.ok(interrupted.blob.size > 0, "valid frames before track mute were discarded");
+  assert.equal(interrupted.interrupted, true, "muted capture became gradeable");
+
+  const requests = micRequests;
+  await recorder.start();
+  assert.equal(micRequests, requests + 1, "muted microphone stream was reused");
+  assert.equal(recorder.captureIssue, null);
+  await recorder.stop();
+  recorder.dispose();
+}
+
+async function testDisabledTrackIsDetectedByCaptureIssuePolling() {
+  const recorder = new Recorder();
+  await recorder.init();
+  await recorder.start();
+  recorder.getStream().getAudioTracks()[0].enabled = false;
+  assert.match(recorder.captureIssue, /disabled/i, "disabled track was not exposed to UI polling");
+  assert.equal((await recorder.stop()).interrupted, true);
+  recorder.dispose();
+}
+
+async function testEndedTrackLatchesIssue() {
+  const recorder = new Recorder();
+  await recorder.init();
+  await recorder.start();
+  recorder.getStream().getAudioTracks()[0].stop();
+  assert.match(recorder.captureIssue, /ended/i, "ended track was not exposed to UI polling");
+  assert.equal((await recorder.stop()).interrupted, true);
+  recorder.dispose();
+}
+
+async function testRecorderErrorLatchesIssueAndInvalidatesStream() {
+  const recorder = new Recorder();
+  await recorder.init();
+  await recorder.start();
+  lastRecorder.fail();
+  assert.match(recorder.captureIssue, /recorder.*failed/i, "recorder error was not exposed to UI polling");
+  assert.equal((await recorder.stop()).interrupted, true);
+
+  const requests = micRequests;
+  await recorder.start();
+  assert.equal(micRequests, requests + 1, "recorder-error stream was reused");
+  await recorder.stop();
   recorder.dispose();
 }
 
@@ -318,13 +427,21 @@ async function testEndedMicrophoneIsReacquired() {
   const requests = micRequests;
   await recorder.init();
   assert.equal(micRequests, requests, "live mic should be reused");
+  recorder.getStream().getAudioTracks()[0].muted = true;
+  await recorder.init();
+  assert.equal(micRequests, requests + 1, "muted mic should be reacquired");
+  assert.equal(recorder.getStream().getAudioTracks()[0].muted, false);
+  recorder.getStream().getAudioTracks()[0].enabled = false;
+  await recorder.init();
+  assert.equal(micRequests, requests + 2, "disabled mic should be reacquired");
+  assert.equal(recorder.getStream().getAudioTracks()[0].enabled, true);
   recorder.getStream().getTracks().forEach(track => track.stop());
   await recorder.init();
-  assert.equal(micRequests, requests + 1);
+  assert.equal(micRequests, requests + 3);
   assert.equal(recorder.getStream().getAudioTracks()[0].readyState, "live");
   recorder.getStream().getTracks().forEach(track => track.stop());
   await recorder.start(); // beginItem retries start directly, without init.
-  assert.equal(micRequests, requests + 2);
+  assert.equal(micRequests, requests + 4);
   assert.equal((await recorder.stop()).interrupted, false);
   recorder.dispose();
 }
@@ -336,7 +453,12 @@ await testMissingStartEventFallback();
 await testTypedConstructorFallback();
 await testInterruptionDuringPrerollIsRejected();
 await testInterruptionBeforeSubmitPreservesCapture();
+await testInactiveStateIsDetectedBeforeStopEvent();
 await testInterruptionDuringPostroll();
+await testMutedTrackLatchesIssueAndForcesReacquisition();
+await testDisabledTrackIsDetectedByCaptureIssuePolling();
+await testEndedTrackLatchesIssue();
+await testRecorderErrorLatchesIssueAndInvalidatesStream();
 await testPausedCaptureCanStillStop();
 await testDuplicateStopSharesCapture();
 await testStartErrorIsSurfaced();

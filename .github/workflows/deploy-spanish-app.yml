@@ -92,6 +92,13 @@ jobs:
           print('Spanish app routing/adaptive-timer contract verified')
           PY
 
+      - name: Test browser microphone recovery without learner writes
+        run: |
+          python3 -m venv /tmp/spanish-browser-qa
+          /tmp/spanish-browser-qa/bin/pip install --quiet playwright==1.55.0
+          /tmp/spanish-browser-qa/bin/playwright install --with-deps chromium
+          /tmp/spanish-browser-qa/bin/python scripts/test_capture_browser.py
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:

@@ -69,24 +69,111 @@ export class Recorder {
   private chunks: BlobPart[] = [];
   private startTime = 0;
   private mimeType = "";
+  private captureIssueValue: string | null = null;
+  private monitoredRecorder: MediaRecorder | null = null;
+  private removeCaptureMonitors: (() => void) | null = null;
   private finalized = new WeakSet<MediaRecorder>();
   private submitted = new WeakSet<MediaRecorder>();
+  private interrupted = new WeakSet<MediaRecorder>();
 
-  /** Request mic permission and prepare the stream (acceptance test #2). */
+  private streamHealthIssue(stream: MediaStream | null = this.stream): string | null {
+    const tracks = stream?.getAudioTracks() ?? [];
+    if (tracks.length === 0) return "Microphone audio track is missing. Please record again.";
+    if (tracks.some((track) => track.readyState !== "live")) {
+      return "Microphone track ended. Please record again.";
+    }
+    if (tracks.some((track) => !track.enabled)) {
+      return "Microphone track is disabled. Please record again.";
+    }
+    if (tracks.some((track) => track.muted)) {
+      return "Microphone track is muted. Please record again.";
+    }
+    return null;
+  }
+
+  private invalidateStream(stream: MediaStream | null = this.stream): void {
+    if (!stream || this.stream !== stream) return;
+    stream.getTracks().forEach((track) => {
+      try {
+        track.stop();
+      } catch {
+        /* already stopped */
+      }
+    });
+  }
+
+  private latchCaptureIssue(rec: MediaRecorder, issue: string): void {
+    if (this.recorder !== rec || this.submitted.has(rec) || this.captureIssueValue) return;
+    this.captureIssueValue = issue;
+    this.interrupted.add(rec);
+    // Do not let a subsequent attempt reuse a route/device that just failed.
+    // Keep the stream object long enough for stop() to preserve queued chunks;
+    // init()/start() will see its ended tracks and reacquire the microphone.
+    this.invalidateStream(rec.stream);
+  }
+
+  private clearCaptureMonitors(rec?: MediaRecorder): void {
+    if (rec && this.monitoredRecorder !== rec) return;
+    this.removeCaptureMonitors?.();
+    this.removeCaptureMonitors = null;
+    this.monitoredRecorder = null;
+  }
+
+  private monitorCapture(rec: MediaRecorder): void {
+    this.clearCaptureMonitors();
+    const stream = rec.stream;
+    const tracks = stream.getAudioTracks();
+    const onStop = () => {
+      this.latchCaptureIssue(rec, "Audio capture stopped unexpectedly. Please record again.");
+    };
+    const onError = () => {
+      this.latchCaptureIssue(rec, "Audio recorder failed during capture. Please record again.");
+    };
+    const onEnded = () => {
+      this.latchCaptureIssue(rec, "Microphone track ended. Please record again.");
+    };
+    const onMute = () => {
+      this.latchCaptureIssue(rec, "Microphone track is muted. Please record again.");
+    };
+
+    rec.addEventListener("stop", onStop);
+    rec.addEventListener("error", onError);
+    tracks.forEach((track) => {
+      track.addEventListener("ended", onEnded);
+      track.addEventListener("mute", onMute);
+    });
+    this.monitoredRecorder = rec;
+    this.removeCaptureMonitors = () => {
+      rec.removeEventListener("stop", onStop);
+      rec.removeEventListener("error", onError);
+      tracks.forEach((track) => {
+        track.removeEventListener("ended", onEnded);
+        track.removeEventListener("mute", onMute);
+      });
+    };
+  }
+
+  /** Request mic permission and prepare a healthy stream. */
   async init(): Promise<void> {
     if (!isRecordingSupported()) {
       throw new Error("Audio recording is not supported in this browser.");
     }
-    if (this.stream?.getAudioTracks().some((track) => track.readyState === "live")) return;
+    if (this.stream && !this.streamHealthIssue(this.stream)) return;
     this.stream?.getTracks().forEach((track) => track.stop());
     this.stream = null;
-    this.stream = await navigator.mediaDevices.getUserMedia({
+    const stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,
       },
     });
+    const issue = this.streamHealthIssue(stream);
+    if (issue) {
+      stream.getTracks().forEach((track) => track.stop());
+      throw new Error(issue);
+    }
+    this.stream = stream;
     this.mimeType = pickMimeType();
   }
 
@@ -94,30 +181,54 @@ export class Recorder {
     return this.recorder?.state === "recording";
   }
 
+  /** Latched failure from the current pre-submit capture, suitable for UI polling. */
+  get captureIssue(): string | null {
+    const rec = this.recorder;
+    if (!this.captureIssueValue && rec && !this.submitted.has(rec)) {
+      if (rec.state === "inactive") {
+        this.latchCaptureIssue(rec, "Audio capture stopped unexpectedly. Please record again.");
+      } else {
+        const issue = this.streamHealthIssue(rec.stream);
+        if (issue) this.latchCaptureIssue(rec, issue);
+      }
+    }
+    return this.captureIssueValue;
+  }
+
   getStream(): MediaStream | null {
     return this.stream;
   }
 
   async start(prerollMs = 0): Promise<void> {
-    if (!this.stream) throw new Error("Recorder not initialized.");
-    if (!this.stream.getAudioTracks().some((track) => track.readyState === "live")) await this.init();
     if (this.stopPromise || (this.recorder && this.recorder.state !== "inactive")) {
       throw new Error("Recorder is already active.");
     }
+    if (!this.stream) throw new Error("Recorder not initialized.");
+    if (this.streamHealthIssue(this.stream)) await this.init();
+    const stream = this.stream;
+    if (!stream) throw new Error("Recorder not initialized.");
+
+    this.captureIssueValue = null;
+    this.clearCaptureMonitors();
     this.chunks = [];
     const options: MediaRecorderOptions = this.mimeType
       ? { mimeType: this.mimeType }
       : {};
     let rec: MediaRecorder;
     try {
-      rec = new MediaRecorder(this.stream, options);
-    } catch (preferredTypeError) {
-      if (!this.mimeType) throw preferredTypeError;
-      // Some Safari builds claim an MP4 type is supported but reject that
-      // exact constructor option. Let the browser choose rather than losing
-      // recording entirely.
-      this.mimeType = "";
-      rec = new MediaRecorder(this.stream);
+      try {
+        rec = new MediaRecorder(stream, options);
+      } catch (preferredTypeError) {
+        if (!this.mimeType) throw preferredTypeError;
+        // Some Safari builds claim an MP4 type is supported but reject that
+        // exact constructor option. Let the browser choose rather than losing
+        // recording entirely.
+        this.mimeType = "";
+        rec = new MediaRecorder(stream);
+      }
+    } catch (error) {
+      this.invalidateStream(stream);
+      throw error;
     }
     this.recorder = rec;
     rec.addEventListener("stop", () => this.finalized.add(rec), { once: true });
@@ -125,62 +236,76 @@ export class Recorder {
       // An old recorder may deliver queued events after dispose/new capture.
       if (this.recorder === rec && e.data && e.data.size > 0) this.chunks.push(e.data);
     };
+    this.monitorCapture(rec);
 
-    await new Promise<void>((resolve, reject) => {
-      let settled = false;
-      let stateCheckId: ReturnType<typeof setTimeout> | null = null;
-      let timeoutId: ReturnType<typeof setTimeout> | null = null;
-      const cleanup = () => {
-        if (stateCheckId != null) clearTimeout(stateCheckId);
-        if (timeoutId != null) clearTimeout(timeoutId);
-        rec.removeEventListener("start", onStart);
-        rec.removeEventListener("error", onError);
-      };
-      const finish = (error?: Error) => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        if (error) reject(error);
-        else {
-          this.startTime = Date.now();
-          resolve();
-        }
-      };
-      const onStart = () => finish();
-      const onError = (event: Event) => {
-        const mediaError = (event as Event & { error?: DOMException }).error;
-        finish(mediaError instanceof Error ? mediaError : new Error("Audio recorder failed to start."));
-      };
-      rec.addEventListener("start", onStart);
-      rec.addEventListener("error", onError);
-      timeoutId = setTimeout(() => {
-        if (rec.state === "recording") finish();
-        else finish(new Error("Audio recorder did not start."));
-      }, 1000);
-      try {
-        rec.start();
-        // Safari can transition state correctly while delaying or omitting the
-        // `start` event. State is sufficient confirmation and avoids adding a
-        // hidden delay before the intentional pre-roll.
-        if (rec.state === "recording") finish();
-        else {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        let settled = false;
+        let stateCheckId: ReturnType<typeof setTimeout> | null = null;
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+        const cleanup = () => {
+          if (stateCheckId != null) clearTimeout(stateCheckId);
+          if (timeoutId != null) clearTimeout(timeoutId);
+          rec.removeEventListener("start", onStart);
+          rec.removeEventListener("error", onError);
+          rec.removeEventListener("stop", onStop);
+        };
+        const finish = (error?: Error) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          if (error) reject(error);
+          else {
+            this.startTime = Date.now();
+            resolve();
+          }
+        };
+        const onStart = () => finish();
+        const onError = (event: Event) => {
+          const mediaError = (event as Event & { error?: DOMException }).error;
+          finish(mediaError instanceof Error ? mediaError : new Error("Audio recorder failed to start."));
+        };
+        const onStop = () => finish(new Error("Audio recorder stopped before the prompt was shown."));
+        rec.addEventListener("start", onStart);
+        rec.addEventListener("error", onError);
+        rec.addEventListener("stop", onStop);
+        timeoutId = setTimeout(() => {
+          if (rec.state === "recording") finish();
+          else finish(new Error("Audio recorder did not start."));
+        }, 1000);
+        try {
+          rec.start();
+          // Safari can omit `start`, but a synchronous state mutation alone is
+          // too early to expose the prompt: queued error/stop events must get a
+          // chance to win first. Use one bounded delayed state fallback.
           stateCheckId = setTimeout(() => {
             if (rec.state === "recording") finish();
           }, 100);
+        } catch (err) {
+          finish(err instanceof Error ? err : new Error(String(err)));
         }
-      } catch (err) {
-        finish(err instanceof Error ? err : new Error(String(err)));
-      }
-    });
+      });
 
-    if (prerollMs > 0) await wait(prerollMs);
-    // A route change, lock-screen transition, or audio-device interruption can
-    // stop iOS MediaRecorder during the hidden pre-roll. Never reveal the
-    // prompt and start the scored clock unless this exact recorder is still
-    // actively capturing.
-    if (this.recorder !== rec || rec.state !== "recording") {
+      if (prerollMs > 0) await wait(prerollMs);
+      // A route change, lock-screen transition, or audio-device interruption can
+      // stop iOS MediaRecorder during the hidden pre-roll. Never reveal the
+      // prompt and start the scored clock unless this exact recorder and track
+      // are still actively capturing.
+      const issue = this.captureIssueValue || this.streamHealthIssue(stream);
+      if (issue && !this.captureIssueValue) this.latchCaptureIssue(rec, issue);
+      if (this.recorder !== rec || rec.state !== "recording" || issue) {
+        throw new Error("Audio recorder stopped before the prompt was shown.");
+      }
+    } catch (error) {
+      this.latchCaptureIssue(rec, "Audio recorder failed to start. Please record again.");
+      try {
+        if (rec.state !== "inactive") rec.stop();
+      } catch {
+        /* already stopped */
+      }
+      this.clearCaptureMonitors(rec);
       if (this.recorder === rec) this.recorder = null;
-      throw new Error("Audio recorder stopped before the prompt was shown.");
+      throw error;
     }
   }
 
@@ -190,13 +315,14 @@ export class Recorder {
     )?.type;
     const type = rec.mimeType || chunkType || this.mimeType || "audio/webm";
     const blob = new Blob(this.chunks, { type });
+    this.clearCaptureMonitors(rec);
     if (this.recorder === rec) this.recorder = null;
     return {
       blob,
       mimeType: type,
       filename: `recall.${extensionFor(type)}`,
       durationMs: Date.now() - this.startTime,
-      interrupted: !this.submitted.has(rec),
+      interrupted: this.interrupted.has(rec) || !this.submitted.has(rec),
     };
   }
 
@@ -231,11 +357,14 @@ export class Recorder {
         if (settled) return;
         settled = true;
         cleanup();
+        this.interrupted.add(rec);
+        this.invalidateStream(rec.stream);
         try {
           if (rec.state !== "inactive") rec.stop();
         } catch {
           /* already stopped */
         }
+        this.clearCaptureMonitors(rec);
         if (this.recorder === rec) this.recorder = null;
         reject(error);
       };
@@ -281,6 +410,7 @@ export class Recorder {
 
   /** Release the microphone (call when leaving the session). */
   dispose(): void {
+    this.clearCaptureMonitors();
     try {
       this.recorder?.stop();
     } catch {

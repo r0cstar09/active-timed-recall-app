@@ -18,6 +18,7 @@ import {
 import AudioPlayer from "./AudioPlayer";
 import { recallPromptPresentation } from "../lib/recallPrompt";
 import { correctionPhraseIds, latestSessionItems } from "../lib/sessionCorrections";
+import { isIncompleteRecordingError } from "../lib/recordingRecovery";
 
 type Status = "idle" | "active" | "error";
 
@@ -101,6 +102,7 @@ export default function RecallSession() {
   const launchInFlightRef = useRef(false);
   const learnAdvanceInFlightRef = useRef(false);
   const itemStartTokenRef = useRef(0);
+  const microphoneStartInFlightRef = useRef(false);
   const supported = isRecordingSupported();
 
   const item = items[index];
@@ -163,8 +165,18 @@ export default function RecallSession() {
   // ── countdown tick + auto-resync on visibility/refocus ───────────────────
   useEffect(() => {
     if (status !== "active" || phase !== "recall") return;
-    const id = setInterval(() => setTick((t) => t + 1), 200);
-    const onVisible = () => setTick((t) => t + 1);
+    const checkCapture = () => {
+      if (!submitInFlightRef.current) {
+        const issue = recorderRef.current?.captureIssue;
+        if (issue) {
+          recoverMicrophone(issue);
+          return;
+        }
+      }
+      setTick((t) => t + 1);
+    };
+    const id = setInterval(checkCapture, 200);
+    const onVisible = checkCapture;
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
     window.addEventListener("pageshow", onVisible);
@@ -174,7 +186,7 @@ export default function RecallSession() {
       window.removeEventListener("focus", onVisible);
       window.removeEventListener("pageshow", onVisible);
     };
-  }, [status, phase]);
+  }, [status, phase, index, persist]);
 
   // ── auto-submit when the recall countdown reaches zero ───────────────────
   useEffect(() => {
@@ -228,7 +240,22 @@ export default function RecallSession() {
     };
   }, []);
 
+  function recoverMicrophone(message: string) {
+    // Broken capture is not an upload retry. Wait for a fresh gesture on the same card.
+    itemStartTokenRef.current += 1;
+    submitInFlightRef.current = true;
+    recorderRef.current?.dispose();
+    recorderRef.current = null;
+    pendingUploadRef.current = null;
+    setPhase("arming");
+    setDeadline(null);
+    setError(`${message} This attempt won't be graded. Tap Retry microphone to record this card again.`);
+    persist({ phase: "arming", deadline: null, promptShownAt: null });
+  }
+
   async function beginItem(i: number, list: SessionItem[], preserveDeadline: number | null) {
+    if (microphoneStartInFlightRef.current) return;
+    microphoneStartInFlightRef.current = true;
     const startToken = ++itemStartTokenRef.current;
     const dur = Math.max(1, itemForDuration(list[i]) ?? RECALL_SECONDS) * 1000;
     submitInFlightRef.current = false;
@@ -255,12 +282,23 @@ export default function RecallSession() {
     });
 
     try {
-      await recorderRef.current?.start(ENCODER_PREROLL_MS);
+      if (!recorderRef.current) recorderRef.current = new Recorder();
+      const recorder = recorderRef.current;
+      await recorder.init();
+      if (startToken !== itemStartTokenRef.current) {
+        recorder.dispose();
+        return;
+      }
+      await recorder.start(ENCODER_PREROLL_MS);
     } catch (err) {
       if (startToken === itemStartTokenRef.current) {
+        recorderRef.current?.dispose();
+        recorderRef.current = null;
         setError(err instanceof Error ? err.message : "Could not start recording.");
       }
       return;
+    } finally {
+      microphoneStartInFlightRef.current = false;
     }
     if (startToken !== itemStartTokenRef.current) return;
 
@@ -645,6 +683,10 @@ export default function RecallSession() {
       }
       pendingUploadRef.current = null;
     } catch (err) {
+      if (isIncompleteRecordingError(err)) {
+        recoverMicrophone("The browser captured only part of your audio.");
+        return;
+      }
       setError(
         `${err instanceof ApiError ? err.message : String(err)} — tap to retry.`,
       );
@@ -678,8 +720,7 @@ export default function RecallSession() {
     }
 
     if (!rec || rec.blob.size === 0 || rec.interrupted) {
-      void beginItem(index, items, null);
-      setError(rec?.interrupted ? "Microphone was interrupted. This attempt won't be graded. Recording again." : "No audio was captured. Recording again.");
+      recoverMicrophone(rec?.interrupted ? "Microphone was interrupted." : "No audio was captured.");
       return;
     }
 
@@ -710,6 +751,9 @@ export default function RecallSession() {
   }, [submit]);
 
   async function startGrading(saved?: PersistedSession) {
+    // Release the session stream before inline retries open another microphone.
+    recorderRef.current?.dispose();
+    recorderRef.current = null;
     const sessionId = saved?.sessionId ?? sessionIdRef.current;
     const gradingItems = saved?.items ?? items;
     const gradingIndex = saved?.index ?? index;
@@ -1275,6 +1319,7 @@ function RetryRecorder({
   const shownAtRef = useRef(0);
   const deadlineRef = useRef(0);
   const finishingRef = useRef(false);
+  const beginningRef = useRef(false);
   const pendingRef = useRef<{ blob: Blob; mimeType: string; filename: string; answeredAtMs: number; timedOut: boolean } | null>(null);
 
   useEffect(() => () => recRef.current?.dispose(), []);
@@ -1286,17 +1331,34 @@ function RetryRecorder({
   // countdown + auto-stop at the limit (recording stops automatically)
   useEffect(() => {
     if (phase !== "recording") return;
-    const id = setInterval(() => {
+    const checkCapture = () => {
+      if (finishingRef.current) return;
+      const issue = recRef.current?.captureIssue;
+      if (issue) {
+        recRef.current?.dispose();
+        recRef.current = null;
+        setError(`${issue} This attempt won't be graded. Try again to reconnect the microphone.`);
+        setPhase("error");
+        return;
+      }
       const left = Math.max(0, deadlineRef.current - Date.now());
       setSecs(Math.ceil(left / 1000));
       if (left <= 0) void finish(true);
-    }, 200);
-    return () => clearInterval(id);
+    };
+    const id = setInterval(checkCapture, 200);
+    document.addEventListener("visibilitychange", checkCapture);
+    window.addEventListener("pageshow", checkCapture);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", checkCapture);
+      window.removeEventListener("pageshow", checkCapture);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
   async function begin() {
-    if (disabled && phase === "idle") return;
+    if (beginningRef.current || (disabled && phase === "idle")) return;
+    beginningRef.current = true;
     setError(null);
     setPhase("arming");
     try {
@@ -1317,8 +1379,12 @@ function RetryRecorder({
       setSecs(limit);
       setPhase("recording");
     } catch (err) {
+      recRef.current?.dispose();
+      recRef.current = null;
       setError(err instanceof ApiError ? err.message : `Microphone unavailable: ${err instanceof Error ? err.message : String(err)}`);
       setPhase("error");
+    } finally {
+      beginningRef.current = false;
     }
   }
 
@@ -1330,9 +1396,12 @@ function RetryRecorder({
     try {
       const rec = await recRef.current!.stop(ENCODER_POSTROLL_MS);
       if (!rec || rec.blob.size === 0) throw new Error("No audio was captured — try again.");
+      if (rec.interrupted) throw new Error("Microphone was interrupted. This attempt won't be graded — try again.");
       pendingRef.current = { blob: rec.blob, mimeType: rec.mimeType, filename: rec.filename, answeredAtMs, timedOut };
       await uploadAndGrade();
     } catch (err) {
+      recRef.current?.dispose();
+      recRef.current = null;
       setError(err instanceof ApiError ? err.message : String(err));
       setPhase("error");
       finishingRef.current = false;
@@ -1364,7 +1433,14 @@ function RetryRecorder({
       recRef.current = null;
       onDone(fresh);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : String(err));
+      if (isIncompleteRecordingError(err)) {
+        pendingRef.current = null;
+        recRef.current?.dispose();
+        recRef.current = null;
+        setError("The browser captured only part of your audio. This attempt won't be graded — try again to reconnect the microphone.");
+      } else {
+        setError(err instanceof ApiError ? err.message : String(err));
+      }
       setPhase("error");
       finishingRef.current = false;
     }
