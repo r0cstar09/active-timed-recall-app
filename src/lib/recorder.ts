@@ -64,6 +64,7 @@ function extensionFor(mimeType: string): string {
 
 export class Recorder {
   private stream: MediaStream | null = null;
+  private streamRequestGeneration = 0;
   private recorder: MediaRecorder | null = null;
   private stopPromise: Promise<RecordingResult> | null = null;
   private chunks: BlobPart[] = [];
@@ -129,6 +130,9 @@ export class Recorder {
     const onError = () => {
       this.latchCaptureIssue(rec, "Audio recorder failed during capture. Please record again.");
     };
+    const onPause = () => {
+      this.latchCaptureIssue(rec, "Audio capture was paused. Please record again.");
+    };
     const onEnded = () => {
       this.latchCaptureIssue(rec, "Microphone track ended. Please record again.");
     };
@@ -138,6 +142,7 @@ export class Recorder {
 
     rec.addEventListener("stop", onStop);
     rec.addEventListener("error", onError);
+    rec.addEventListener("pause", onPause);
     tracks.forEach((track) => {
       track.addEventListener("ended", onEnded);
       track.addEventListener("mute", onMute);
@@ -146,6 +151,7 @@ export class Recorder {
     this.removeCaptureMonitors = () => {
       rec.removeEventListener("stop", onStop);
       rec.removeEventListener("error", onError);
+      rec.removeEventListener("pause", onPause);
       tracks.forEach((track) => {
         track.removeEventListener("ended", onEnded);
         track.removeEventListener("mute", onMute);
@@ -159,6 +165,7 @@ export class Recorder {
       throw new Error("Audio recording is not supported in this browser.");
     }
     if (this.stream && !this.streamHealthIssue(this.stream)) return;
+    const generation = ++this.streamRequestGeneration;
     this.stream?.getTracks().forEach((track) => track.stop());
     this.stream = null;
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -168,10 +175,21 @@ export class Recorder {
         autoGainControl: true,
       },
     });
-    const issue = this.streamHealthIssue(stream);
-    if (issue) {
+    try {
+      // A newly opened route can briefly be muted while the device warms up.
+      // Wait before showing/scoring the prompt; never use loudness as readiness.
+      const readyDeadline = Date.now() + 1000;
+      const tracks = stream.getAudioTracks();
+      while (tracks.some((track) => track.muted) && tracks.every((track) => track.readyState === "live" && track.enabled) && Date.now() < readyDeadline) {
+        if (generation !== this.streamRequestGeneration) throw new Error("Microphone setup was cancelled.");
+        await wait(25);
+      }
+      if (generation !== this.streamRequestGeneration) throw new Error("Microphone setup was cancelled.");
+      const issue = this.streamHealthIssue(stream);
+      if (issue) throw new Error(issue);
+    } catch (error) {
       stream.getTracks().forEach((track) => track.stop());
-      throw new Error(issue);
+      throw error;
     }
     this.stream = stream;
     this.mimeType = pickMimeType();
@@ -185,8 +203,8 @@ export class Recorder {
   get captureIssue(): string | null {
     const rec = this.recorder;
     if (!this.captureIssueValue && rec && !this.submitted.has(rec)) {
-      if (rec.state === "inactive") {
-        this.latchCaptureIssue(rec, "Audio capture stopped unexpectedly. Please record again.");
+      if (rec.state !== "recording") {
+        this.latchCaptureIssue(rec, rec.state === "paused" ? "Audio capture was paused. Please record again." : "Audio capture stopped unexpectedly. Please record again.");
       } else {
         const issue = this.streamHealthIssue(rec.stream);
         if (issue) this.latchCaptureIssue(rec, issue);
@@ -332,6 +350,8 @@ export class Recorder {
     if (!rec) {
       return Promise.reject(new Error("Not recording."));
     }
+    // Catch a device change between the UI's health poll and this submit.
+    void this.captureIssue;
     if (rec.state !== "inactive") this.submitted.add(rec);
     if (rec.state === "inactive" && this.finalized.has(rec)) {
       // iOS can stop MediaRecorder while the page backgrounds or the audio
@@ -410,6 +430,7 @@ export class Recorder {
 
   /** Release the microphone (call when leaving the session). */
   dispose(): void {
+    this.streamRequestGeneration += 1;
     this.clearCaptureMonitors();
     try {
       this.recorder?.stop();

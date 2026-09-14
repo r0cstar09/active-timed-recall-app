@@ -348,9 +348,11 @@ function testScoredBoundariesExcludeEncoderMargins() {
     recallSource.indexOf("async function beginItem"),
     recallSource.indexOf("async function armRecorder"),
   );
+  const recorderStart = beginItem.indexOf("await recorder.start(ENCODER_PREROLL_MS)");
+  const promptStart = beginItem.indexOf("promptShownAtRef.current =");
+  assert.ok(recorderStart >= 0 && promptStart >= 0, "scored capture boundaries were not found");
   assert.ok(
-    beginItem.indexOf("await recorderRef.current?.start(ENCODER_PREROLL_MS)")
-      < beginItem.indexOf("promptShownAtRef.current ="),
+    recorderStart < promptStart,
     "the scored prompt clock starts before encoder pre-roll completes",
   );
 
@@ -446,6 +448,65 @@ async function testEndedMicrophoneIsReacquired() {
   recorder.dispose();
 }
 
+async function testDisposedPermissionRequestCannotReopenMicrophone() {
+  const getUserMedia = context.navigator.mediaDevices.getUserMedia;
+  const recorder = new Recorder();
+  const stream = makeStream();
+  let resolvePermission;
+  context.navigator.mediaDevices.getUserMedia = () => new Promise(resolve => { resolvePermission = resolve; });
+  try {
+    const permission = recorder.init();
+    recorder.dispose();
+    resolvePermission(stream);
+    await assert.rejects(permission, /cancelled/i);
+    assert.equal(stream.getAudioTracks()[0].readyState, 'ended');
+    assert.equal(recorder.getStream(), null);
+  } finally {
+    context.navigator.mediaDevices.getUserMedia = getUserMedia;
+    recorder.dispose();
+  }
+}
+
+async function testInitiallyMutedMicrophoneCanBecomeReady() {
+  const getUserMedia = context.navigator.mediaDevices.getUserMedia;
+  const recorder = new Recorder();
+  const stream = makeStream();
+  stream.getAudioTracks()[0].muted = true;
+  context.navigator.mediaDevices.getUserMedia = async () => stream;
+  try {
+    const permission = recorder.init();
+    setTimeout(() => { stream.getAudioTracks()[0].muted = false; }, 30);
+    await permission;
+    assert.equal(recorder.getStream(), stream);
+    assert.equal(stream.getAudioTracks()[0].readyState, 'live');
+    assert.equal(stream.getAudioTracks()[0].muted, false);
+  } finally {
+    context.navigator.mediaDevices.getUserMedia = getUserMedia;
+    recorder.dispose();
+  }
+}
+
+async function testPauseAndLastMomentDisableAreNotGraded() {
+  for (const kind of ['pause', 'disable']) {
+    const recorder = new Recorder();
+    await recorder.init();
+    await recorder.start();
+    if (kind === 'pause') {
+      lastRecorder.state = 'paused';
+      lastRecorder.dispatchEvent(new Event('pause'));
+      lastRecorder.state = 'recording';
+    } else {
+      recorder.getStream().getAudioTracks()[0].enabled = false;
+    }
+    // No health poll before stop: submission itself must validate the track.
+    assert.equal((await recorder.stop()).interrupted, true, kind);
+    recorder.dispose();
+  }
+}
+
+await testPauseAndLastMomentDisableAreNotGraded();
+await testDisposedPermissionRequestCannotReopenMicrophone();
+await testInitiallyMutedMicrophoneCanBecomeReady();
 await testInactiveStateWaitsForFinalData();
 await testEndedMicrophoneIsReacquired();
 await testNormalLifecycle();
