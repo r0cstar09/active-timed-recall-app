@@ -63,6 +63,10 @@ def context_for(browser, inline=False):
         headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*','Access-Control-Allow-Methods':'*'}
         def reply(body, status=200):
             route.fulfill(status=status, content_type='application/json', body=json.dumps(body), headers=headers)
+        if parsed.hostname=='static.cloudflareinsights.com' and path.startswith('/beacon.min.js'):
+            # Disable analytics in QA, without contacting it or weakening API isolation.
+            route.fulfill(status=200,content_type='application/javascript',body='/* analytics disabled in fixture QA */')
+            return
         if parsed.netloc==urlparse(BASE).netloc and not path.startswith('/api/') and request.method in ('GET','HEAD'):
             route.continue_(); return
         is_fixture_api = parsed.netloc=='api-spanish.tonymuzo.dev' or (parsed.netloc==urlparse(BASE).netloc and path.startswith('/api/'))
