@@ -42,8 +42,9 @@ MIC_SCRIPT = """(() => {
 report = {'checks': [], 'fixture_apis': True, 'synthetic_microphone': True, 'production_test_writes': 0, 'base': BASE}
 
 def context_for(browser, inline=False):
-    context = browser.new_context(viewport={'width':390,'height':844}, permissions=['microphone'], service_workers='block')
-    page = context.new_page()
+    viewport = {'width':390,'height':844} if inline else {'width':1365,'height':900}
+    context=browser.new_context(viewport=viewport,is_mobile=inline,has_touch=inline,permissions=['microphone'],service_workers='block')
+    page=context.new_page()
     errors, uploads, requests, blocked = [], [], [], []
     page.on('pageerror', lambda error: errors.append(str(error)))
     items = [dict(ITEMS[0], result='partial', error_type='transcription_unclear', answer_visible=True,
