@@ -7,6 +7,7 @@ import hashlib
 import http.server
 import json
 import os
+import sys
 from pathlib import Path
 import threading
 import time
@@ -108,7 +109,11 @@ with sync_playwright() as pw:
     # First complete Blob is deliberately rejected by the fixture API as truncated.
     page.wait_for_timeout(900)
     page.get_by_role('button',name='Check and continue',exact=True).click()
-    expect(page.get_by_role('button',name='Retry microphone',exact=True)).to_be_visible()
+    try:
+        expect(page.get_by_role('button',name='Retry microphone',exact=True)).to_be_visible()
+    except Exception:
+        print('CAPTURE_DEBUG',json.dumps({'body':page.locator('body').inner_text(),'uploads':uploads,'requests':requests,'blocked':blocked,'page_errors':errors}),flush=True)
+        raise
     assert len(uploads)==1
     page.get_by_role('button',name='Retry microphone',exact=True).click()
     expect(page.get_by_text(ITEMS[0]['english'],exact=True)).to_be_visible()
