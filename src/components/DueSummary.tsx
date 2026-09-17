@@ -105,6 +105,9 @@ export default function DueSummary() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const requestId = useRef(0);
+  const restoreRetryFocus = useRef(false);
+  const primaryLink = useRef<HTMLAnchorElement>(null);
+  const retryButton = useRef<HTMLButtonElement>(null);
 
   const load = useCallback(async () => {
     const currentRequest = ++requestId.current;
@@ -143,6 +146,14 @@ export default function DueSummary() {
       requestId.current += 1;
     };
   }, [load]);
+
+  useEffect(() => {
+    if (!loading && restoreRetryFocus.current) {
+      const target = error ? retryButton.current : primaryLink.current;
+      target?.focus();
+      restoreRetryFocus.current = false;
+    }
+  }, [loading, error]);
 
   const primary = useMemo(() => {
     if (!stats) {
@@ -211,7 +222,7 @@ export default function DueSummary() {
           <span className="daily-eyebrow">Dashboard unavailable</span>
           <h1>Today’s plan could not load.</h1>
           <p>{error ?? "The learning service did not return your dashboard."}</p>
-          <button className="btn btn-primary" type="button" onClick={() => void load()}>Try again</button>
+          <button ref={retryButton} className="btn btn-primary" type="button" onClick={() => { restoreRetryFocus.current = true; void load(); }}>Try again</button>
         </div>
       </section>
     );
@@ -270,7 +281,7 @@ export default function DueSummary() {
             <span className="daily-hero-kicker">Best next step</span>
             <h2>{primary.headline}</h2>
             <p>{planCopy}</p>
-            <a className="daily-primary-action" href={primary.href}>
+            <a ref={primaryLink} className="daily-primary-action" href={primary.href}>
               <span>
                 <strong>{primary.label}</strong>
                 <small>{primary.detail}</small>

@@ -89,7 +89,7 @@ img, video { max-width: 100%; }
 .header-actions { gap: 16px; margin-left: auto; }
 .language-label { font-size: .7rem; font-weight: 650; letter-spacing: .12em; color: var(--text-dim); }
 .language-label span { padding-inline: 5px; color: var(--accent); }
-.theme-toggle { display: grid; place-items: center; width: 42px; min-height: 42px; padding: 10px; border: 1px solid var(--border); background: transparent; box-shadow: none; cursor: pointer; }
+.theme-toggle { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 10px; border: 1px solid var(--border); background: transparent; box-shadow: none; cursor: pointer; }
 .theme-toggle:hover { background: var(--bg-elev-2); }
 .theme-toggle svg { width: 19px; height: 19px; }
 .theme-sun { display: none; }
@@ -247,7 +247,7 @@ html[data-theme="dark"] .theme-moon { display: none; }
   .header-actions { gap: 12px; }
   .brand { font-size: 1.6rem; }
   .language-label { font-size: .6rem; }
-  .theme-toggle { width: 40px; min-height: 40px; }
+  .theme-toggle { width: 44px; min-height: 44px; }
   .card { padding: 20px; }
   .voice-card { padding: 22px 18px; gap: 14px; }
   .recall-cue { padding-top: 0; padding-bottom: 14px; }

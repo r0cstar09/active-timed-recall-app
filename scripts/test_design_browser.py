@@ -364,6 +364,7 @@ def main() -> int:
                         for key, values in log.items():
                             capture[key] = values[before_counts[key] :]
                         report["captures"].append(capture)
+                    page.unroute_all(behavior="wait")
                     context.close()
             for device_name in DEVICES:
                 report["behavior_checks"].append(

@@ -1,7 +1,7 @@
 name: Studio Browser QA
 on:
   push:
-    branches: [feat/recall-studio-redesign]
+    branches: [main, feat/recall-studio-redesign]
   workflow_dispatch:
     inputs:
       base:
@@ -47,6 +47,15 @@ jobs:
             for attempt in 1 2 3 4 5; do curl --silent --fail http://127.0.0.1:18764/ >/dev/null && break; sleep 1; done
             /tmp/studio-qa/bin/python scripts/test_design_browser.py --base http://127.0.0.1:18764 --api-origin https://api-spanish.tonymuzo.dev --browser ${{ matrix.browser }} --all-routes --output /tmp/studio-results/${{ matrix.browser }}
           fi
+      - name: Dashboard states, keyboard accessibility, narrow phones and axe checks
+        if: matrix.browser == 'chromium'
+        run: |
+          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.3/axe.min.js -o /tmp/axe-4.10.3.min.js
+          python3 -m http.server 18764 --bind 127.0.0.1 --directory dist >/tmp/studio-states-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for attempt in 1 2 3 4 5; do curl --silent --fail http://127.0.0.1:18764/ >/dev/null && break; sleep 1; done
+          /tmp/studio-qa/bin/python scripts/test_dashboard_browser.py --base http://127.0.0.1:18764 --output /tmp/studio-results/dashboard --axe-script /tmp/axe-4.10.3.min.js
       - name: Recording recovery with isolated API fixtures
         if: matrix.browser == 'chromium'
         env:
