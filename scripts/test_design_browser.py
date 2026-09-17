@@ -124,6 +124,15 @@ def inspect_page(page: Page) -> dict:
 
 
 def attach_read_only_guard(page: Page, log: dict) -> None:
+    navigation_generation = 0
+
+    def on_navigation(frame) -> None:
+        nonlocal navigation_generation
+        if frame == page.main_frame:
+            navigation_generation += 1
+
+    page.on("framenavigated", on_navigation)
+
     def guard(route) -> None:
         request = route.request
         method = request.method.upper()
@@ -133,6 +142,7 @@ def attach_read_only_guard(page: Page, log: dict) -> None:
             return
         parsed = urlparse(request.url)
         if API_ORIGIN and parsed.hostname in {"localhost", "127.0.0.1"} and parsed.path.startswith("/api/"):
+            request_generation = navigation_generation
             target = API_ORIGIN + parsed.path + ("?" + parsed.query if parsed.query else "")
             try:
                 response = route.fetch(url=target)
@@ -144,11 +154,21 @@ def attach_read_only_guard(page: Page, log: dict) -> None:
                         "access-control-allow-origin": f"{parsed.scheme}://{parsed.netloc}",
                         "access-control-allow-credentials": "true",
                     })
-            except Exception:
-                # Astro can leave read-only background requests pending when
-                # a screenshot context is closed. Never mask a live-page error.
-                if not page.is_closed():
-                    raise
+            except Exception as exc:
+                if page.is_closed():
+                    return
+                # Navigation cancels the old document's reads without closing
+                # the Page. Playwright may already have handled that route by
+                # the time its upstream response arrives. Only suppress this
+                # exact lifecycle error with evidence of a navigation/cancel;
+                # genuine errors for the current page remain fatal.
+                if "Route is already handled!" in str(exc) and (
+                    request_generation != navigation_generation
+                    or "ABORT" in (request.failure or "").upper()
+                    or "CANCEL" in (request.failure or "").upper()
+                ):
+                    return
+                raise
             return
         route.continue_()
 
@@ -364,7 +384,6 @@ def main() -> int:
                         for key, values in log.items():
                             capture[key] = values[before_counts[key] :]
                         report["captures"].append(capture)
-                    page.unroute_all(behavior="wait")
                     context.close()
             for device_name in DEVICES:
                 report["behavior_checks"].append(

@@ -28,7 +28,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npm test && npm run test:timer && npm run test:prompt && npm run build
+      - run: python3 scripts/test_design_guard.py && npm test && npm run test:timer && npm run test:prompt && npm run build
       - name: Install browser test runtime
         run: |
           python3 -m venv /tmp/studio-qa
