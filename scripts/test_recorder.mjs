@@ -12,6 +12,64 @@ const compiled = ts.transpileModule(source, {
 }).outputText;
 
 let lastRecorder = null;
+let lastAudioContext = null;
+class FakeAudioNode {
+  constructor() {
+    this.connections = [];
+  }
+
+  connect(node) {
+    this.connections.push(node);
+    return node;
+  }
+
+  disconnect() {
+    this.connections = [];
+  }
+}
+
+class FakeAudioContext extends EventTarget {
+  static freezeClock = false;
+
+  constructor() {
+    super();
+    this.state = "suspended";
+    this.resumeCalls = 0;
+    this.runningAt = 0;
+    this.sourceStream = null;
+    this.destination = new FakeAudioNode();
+    lastAudioContext = this;
+  }
+
+  get currentTime() {
+    if (this.state !== "running" || FakeAudioContext.freezeClock) return 0;
+    return (Date.now() - this.runningAt) / 1000;
+  }
+
+  async resume() {
+    this.resumeCalls += 1;
+    this.state = "running";
+    this.runningAt = Date.now();
+    this.dispatchEvent(new Event("statechange"));
+  }
+
+  createMediaStreamSource(stream) {
+    this.sourceStream = stream;
+    return new FakeAudioNode();
+  }
+
+  createGain() {
+    const node = new FakeAudioNode();
+    node.gain = { value: 1 };
+    return node;
+  }
+
+  async close() {
+    this.state = "closed";
+    this.dispatchEvent(new Event("statechange"));
+  }
+}
+
 class FakeMediaRecorder extends EventTarget {
   static emitStart = true;
   static startError = false;
@@ -116,6 +174,7 @@ const context = {
   clearTimeout,
   navigator: { mediaDevices: { getUserMedia: async () => { micRequests += 1; return makeStream(); } } },
   MediaRecorder: FakeMediaRecorder,
+  AudioContext: FakeAudioContext,
   Blob,
   Event,
   EventTarget,
@@ -486,6 +545,52 @@ async function testInitiallyMutedMicrophoneCanBecomeReady() {
   }
 }
 
+async function testColdAudioGraphMustAdvanceBeforeStartResolves() {
+  FakeAudioContext.freezeClock = true;
+  const recorder = new Recorder();
+  try {
+    await recorder.init();
+    const startPromise = recorder.start();
+    const stillStarting = await Promise.race([
+      startPromise.then(() => false),
+      new Promise((resolve) => setTimeout(() => resolve(true), 35)),
+    ]);
+    assert.equal(
+      stillStarting,
+      true,
+      "cold start exposed the prompt before the microphone audio graph processed a frame",
+    );
+    assert.equal(lastAudioContext.sourceStream, recorder.getStream(), "microphone was not connected to the warmup graph");
+    FakeAudioContext.freezeClock = false;
+    await startPromise;
+    assert.equal(recorder.isRecording, true);
+    await recorder.stop();
+  } finally {
+    FakeAudioContext.freezeClock = false;
+    recorder.dispose();
+  }
+}
+
+async function testColdAudioGraphFailureIsBounded() {
+  FakeAudioContext.freezeClock = true;
+  const recorder = new Recorder();
+  try {
+    await recorder.init();
+    const startedAt = Date.now();
+    await assert.rejects(
+      recorder.start(),
+      /audio path did not become ready/i,
+      "a stalled cold audio route was allowed to expose the prompt",
+    );
+    const elapsed = Date.now() - startedAt;
+    assert.ok(elapsed >= 900 && elapsed < 1800, `capture readiness was not bounded (${elapsed}ms)`);
+    assert.equal(recorder.isRecording, false);
+  } finally {
+    FakeAudioContext.freezeClock = false;
+    recorder.dispose();
+  }
+}
+
 async function testPauseAndLastMomentDisableAreNotGraded() {
   for (const kind of ['pause', 'disable']) {
     const recorder = new Recorder();
@@ -507,6 +612,8 @@ async function testPauseAndLastMomentDisableAreNotGraded() {
 await testPauseAndLastMomentDisableAreNotGraded();
 await testDisposedPermissionRequestCannotReopenMicrophone();
 await testInitiallyMutedMicrophoneCanBecomeReady();
+await testColdAudioGraphMustAdvanceBeforeStartResolves();
+await testColdAudioGraphFailureIsBounded();
 await testInactiveStateWaitsForFinalData();
 await testEndedMicrophoneIsReacquired();
 await testNormalLifecycle();

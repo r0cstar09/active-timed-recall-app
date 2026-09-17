@@ -24,7 +24,23 @@ export interface RecordingResult {
 export const ENCODER_PREROLL_MS = 250;
 export const ENCODER_POSTROLL_MS = 250;
 
+const CAPTURE_READY_TIMEOUT_MS = 1000;
+const CAPTURE_READY_POLL_MS = 20;
+
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, Math.max(0, ms)));
+
+type AudioContextConstructor = new () => AudioContext;
+
+function getAudioContextConstructor(): AudioContextConstructor | null {
+  const browser = globalThis as typeof globalThis & {
+    webkitAudioContext?: AudioContextConstructor;
+  };
+  return browser.AudioContext ?? browser.webkitAudioContext ?? null;
+}
+
+function isAudioContextRunning(context: AudioContext): boolean {
+  return context.state === "running";
+}
 
 const PREFERRED_TYPES = [
   "audio/mp4", // Safari / iOS
@@ -64,6 +80,10 @@ function extensionFor(mimeType: string): string {
 
 export class Recorder {
   private stream: MediaStream | null = null;
+  private audioContext: AudioContext | null = null;
+  private audioSource: MediaStreamAudioSourceNode | null = null;
+  private silentGain: GainNode | null = null;
+  private audioGraphStream: MediaStream | null = null;
   private streamRequestGeneration = 0;
   private recorder: MediaRecorder | null = null;
   private stopPromise: Promise<RecordingResult> | null = null;
@@ -76,6 +96,100 @@ export class Recorder {
   private finalized = new WeakSet<MediaRecorder>();
   private submitted = new WeakSet<MediaRecorder>();
   private interrupted = new WeakSet<MediaRecorder>();
+
+  private async ensureAudioContextRunning(generation: number): Promise<AudioContext | null> {
+    const AudioContextClass = getAudioContextConstructor();
+    if (!AudioContextClass) return null;
+
+    let context = this.audioContext;
+    if (!context || context.state === "closed") {
+      context = new AudioContextClass();
+      this.audioContext = context;
+    }
+    if (generation !== this.streamRequestGeneration) {
+      throw new Error("Microphone setup was cancelled.");
+    }
+    if (isAudioContextRunning(context)) return context;
+
+    let resumeError: unknown = null;
+    try {
+      // Call resume while init() is still executing from the learner's tap. On
+      // iPhone, delaying this until after getUserMedia can lose user activation.
+      void context.resume().catch((error) => {
+        resumeError = error;
+      });
+    } catch (error) {
+      resumeError = error;
+    }
+
+    const deadline = Date.now() + CAPTURE_READY_TIMEOUT_MS;
+    while (!isAudioContextRunning(context) && !resumeError && Date.now() < deadline) {
+      if (generation !== this.streamRequestGeneration) {
+        throw new Error("Microphone setup was cancelled.");
+      }
+      await wait(CAPTURE_READY_POLL_MS);
+    }
+    if (generation !== this.streamRequestGeneration) {
+      throw new Error("Microphone setup was cancelled.");
+    }
+    if (!isAudioContextRunning(context)) {
+      const detail = resumeError instanceof Error ? ` (${resumeError.message})` : "";
+      throw new Error(`Microphone audio path did not start${detail}. Please tap record again.`);
+    }
+    return context;
+  }
+
+  private disconnectAudioGraph(stream?: MediaStream): void {
+    if (stream && this.audioGraphStream !== stream) return;
+    try {
+      this.audioSource?.disconnect();
+    } catch {
+      /* already disconnected */
+    }
+    try {
+      this.silentGain?.disconnect();
+    } catch {
+      /* already disconnected */
+    }
+    this.audioSource = null;
+    this.silentGain = null;
+    this.audioGraphStream = null;
+  }
+
+  private connectAudioGraph(stream: MediaStream, context: AudioContext): void {
+    if (this.audioGraphStream === stream && this.audioSource && this.silentGain) return;
+    this.disconnectAudioGraph();
+    const source = context.createMediaStreamSource(stream);
+    const silentGain = context.createGain();
+    silentGain.gain.value = 0;
+    source.connect(silentGain);
+    silentGain.connect(context.destination);
+    this.audioSource = source;
+    this.silentGain = silentGain;
+    this.audioGraphStream = stream;
+  }
+
+  private async waitForCaptureReadiness(stream: MediaStream, generation: number): Promise<void> {
+    const context = await this.ensureAudioContextRunning(generation);
+    if (!context) return;
+    this.connectAudioGraph(stream, context);
+
+    // AudioContext.currentTime advances when the connected graph processes
+    // render quanta. This is a route/readiness signal only: never inspect sample
+    // amplitude, so silence and quiet speech remain fully valid.
+    const initialAudioTime = context.currentTime;
+    const deadline = Date.now() + CAPTURE_READY_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+      if (generation !== this.streamRequestGeneration || this.stream !== stream) {
+        throw new Error("Microphone setup was cancelled.");
+      }
+      const issue = this.streamHealthIssue(stream);
+      if (issue) throw new Error("Audio recorder stopped before the prompt was shown.");
+      if (context.state === "running" && context.currentTime > initialAudioTime) return;
+      await wait(CAPTURE_READY_POLL_MS);
+    }
+    throw new Error("Microphone audio path did not become ready. Please tap record again.");
+  }
 
   private streamHealthIssue(stream: MediaStream | null = this.stream): string | null {
     const tracks = stream?.getAudioTracks() ?? [];
@@ -94,6 +208,7 @@ export class Recorder {
 
   private invalidateStream(stream: MediaStream | null = this.stream): void {
     if (!stream || this.stream !== stream) return;
+    this.disconnectAudioGraph(stream);
     stream.getTracks().forEach((track) => {
       try {
         track.stop();
@@ -164,21 +279,40 @@ export class Recorder {
     if (!isRecordingSupported()) {
       throw new Error("Audio recording is not supported in this browser.");
     }
-    if (this.stream && !this.streamHealthIssue(this.stream)) return;
     const generation = ++this.streamRequestGeneration;
+    // Start resume before the first await so iPhone Safari keeps the learner's
+    // tap as the activation that opens the audio route.
+    const audioContextPromise = this.ensureAudioContextRunning(generation);
+    if (this.stream && !this.streamHealthIssue(this.stream)) {
+      const audioContext = await audioContextPromise;
+      if (audioContext) this.connectAudioGraph(this.stream, audioContext);
+      return;
+    }
+    this.disconnectAudioGraph();
     this.stream?.getTracks().forEach((track) => track.stop());
     this.stream = null;
-    const stream = await navigator.mediaDevices.getUserMedia({
+
+    let acceptStream = true;
+    // Invoke getUserMedia in the same synchronous turn as AudioContext.resume().
+    const streamPromise = navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,
       },
+    }).then((stream) => {
+      if (!acceptStream || generation !== this.streamRequestGeneration) {
+        stream.getTracks().forEach((track) => track.stop());
+        throw new Error("Microphone setup was cancelled.");
+      }
+      return stream;
     });
+
     try {
+      const [audioContext, stream] = await Promise.all([audioContextPromise, streamPromise]);
       // A newly opened route can briefly be muted while the device warms up.
       // Wait before showing/scoring the prompt; never use loudness as readiness.
-      const readyDeadline = Date.now() + 1000;
+      const readyDeadline = Date.now() + CAPTURE_READY_TIMEOUT_MS;
       const tracks = stream.getAudioTracks();
       while (tracks.some((track) => track.muted) && tracks.every((track) => track.readyState === "live" && track.enabled) && Date.now() < readyDeadline) {
         if (generation !== this.streamRequestGeneration) throw new Error("Microphone setup was cancelled.");
@@ -187,12 +321,19 @@ export class Recorder {
       if (generation !== this.streamRequestGeneration) throw new Error("Microphone setup was cancelled.");
       const issue = this.streamHealthIssue(stream);
       if (issue) throw new Error(issue);
+      if (audioContext) this.connectAudioGraph(stream, audioContext);
+      this.stream = stream;
+      this.mimeType = pickMimeType();
     } catch (error) {
-      stream.getTracks().forEach((track) => track.stop());
+      acceptStream = false;
+      // If readiness fails before permission resolves, the stream's rejection
+      // handler below is still attached and late microphone tracks are stopped.
+      void streamPromise.then(
+        (stream) => stream.getTracks().forEach((track) => track.stop()),
+        () => { /* a rejected request owns no usable tracks */ },
+      );
       throw error;
     }
-    this.stream = stream;
-    this.mimeType = pickMimeType();
   }
 
   get isRecording(): boolean {
@@ -225,6 +366,7 @@ export class Recorder {
     if (this.streamHealthIssue(this.stream)) await this.init();
     const stream = this.stream;
     if (!stream) throw new Error("Recorder not initialized.");
+    const generation = this.streamRequestGeneration;
 
     this.captureIssueValue = null;
     this.clearCaptureMonitors();
@@ -304,6 +446,7 @@ export class Recorder {
         }
       });
 
+      await this.waitForCaptureReadiness(stream, generation);
       if (prerollMs > 0) await wait(prerollMs);
       // A route change, lock-screen transition, or audio-device interruption can
       // stop iOS MediaRecorder during the hidden pre-roll. Never reveal the
@@ -438,7 +581,13 @@ export class Recorder {
       /* ignore */
     }
     this.recorder = null;
+    this.disconnectAudioGraph();
     this.stream?.getTracks().forEach((t) => t.stop());
     this.stream = null;
+    const audioContext = this.audioContext;
+    this.audioContext = null;
+    if (audioContext && audioContext.state !== "closed") {
+      void audioContext.close().catch(() => undefined);
+    }
   }
 }

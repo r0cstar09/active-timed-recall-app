@@ -3,6 +3,7 @@ import "@fontsource-variable/fraunces";
 import "@fontsource-variable/inter";
 import "../styles/global.css";
 import "../styles/daily-home.css";
+import "../styles/studio.css";
 import Nav from "../components/Nav.astro";
 import { ClientRouter } from "astro:transitions";
 
@@ -20,7 +21,6 @@ const {
   heading,
   current,
   hideNav = false,
-  hideCommandStrip = false,
 } = Astro.props;
 ---
 
@@ -42,20 +42,20 @@ const {
     </script>
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <title>{title}</title>
-    <meta name="description" content="Spanish acoustic-first active timed recall." />
+    <meta name="description" content="Make Spanish your own. Meaning-first lessons, speaking practice, and thoughtful daily review." />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content="Ear-first Spanish recall with focused lessons, spoken practice, and timer pressure." />
+    <meta property="og:description" content="Your daily space for Spanish. Learn the meaning, find the words, and build lasting confidence." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/og/spanish-recall-og.png" />
     <meta name="twitter:card" content="summary_large_image" />
 
     <!-- PWA / iOS home-screen install -->
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#f6ead4" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1a1410" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f7f8f2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121e19" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -66,43 +66,39 @@ const {
     <link rel="apple-touch-startup-image" href="/splash/apple-splash-1170-2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
     <ClientRouter />
   </head>
-  <body>
+  <body data-page={current}>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <div class="pull-refresh" data-pull-refresh aria-live="polite" aria-hidden="true">
       <span class="pull-refresh__icon" aria-hidden="true">↓</span>
       <span class="pull-refresh__label">Pull to refresh</span>
     </div>
-    <div class="app">
+    {!hideNav && <Nav current={current} />}
+    <div class:list={["app", { "app-focused": hideNav }]}>
       <header class="app-header">
-        <a class="brand" href="/">
+        <a class="brand" href="/" aria-label="Recall home">
           <img src="/icons/icon.svg" alt="" width="30" height="30" />
-          <span>{heading ?? "Recall"}</span>
+          <span>Recall</span>
         </a>
+        <div class="studio-breadcrumb"><span>Your Spanish</span><span aria-hidden="true">/</span><strong>{current === "home" ? "Today" : heading ?? "Practice"}</strong></div>
         <div class="header-actions">
           <slot name="header-actions" />
-          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle theme">☀︎</button>
+          <span class="language-label">EN <span aria-hidden="true">→</span> ES</span>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark theme" aria-pressed="false">
+            <svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></svg>
+            <svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M20.5 13.4A8.8 8.8 0 0 1 10.6 3.5 9 9 0 1 0 20.5 13.4Z" /></svg>
+          </button>
         </div>
       </header>
-
-      {!hideNav && !hideCommandStrip && (
-        <section class="recall-command-strip" aria-label="Spanish recall shortcuts">
-          <a href="/session"><span>⏱</span><strong>Session</strong><em>timed recall</em></a>
-          <a href="/misses"><span>✦</span><strong>Misses</strong><em>FSRS queue</em></a>
-          <a href="/lessons"><span>80</span><strong>Lessons</strong><em>pattern bank</em></a>
-        </section>
-      )}
-
-      <main class="main">
+      <main class="main" id="main-content" tabindex="-1">
         <slot />
       </main>
     </div>
-
-    {!hideNav && <Nav current={current} />}
 
     <style is:global>
       .pull-refresh {
         --pull: 0px;
         align-items: center;
-        color: var(--ink-muted, #76695d);
+        color: var(--text-dim);
         display: flex;
         font: 700 0.78rem/1 var(--font-sans, system-ui, sans-serif);
         gap: 0.45rem;
@@ -135,15 +131,25 @@ const {
       const updateThemeButton = () => {
         const button = document.querySelector("[data-theme-toggle]");
         if (!button) return;
-        button.textContent = document.documentElement.dataset.theme === "dark" ? "Noche" : "Paper";
+        const dark = document.documentElement.dataset.theme === "dark";
+        button.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+        button.setAttribute("aria-pressed", String(dark));
+        document.querySelectorAll('meta[name="theme-color"]').forEach(meta => meta.setAttribute("content", dark ? "#121e19" : "#f7f8f2"));
       };
       updateThemeButton();
-      document.querySelector("[data-theme-toggle]")?.addEventListener("click", () => {
+      // Delegate once: Astro replaces page elements during client-side navigation.
+      document.addEventListener("click", (event) => {
+        if (!(event.target instanceof Element) || !event.target.closest("[data-theme-toggle]")) return;
         const next = document.documentElement.dataset.theme === "dark" ? "paper" : "dark";
         document.documentElement.dataset.theme = next;
-        localStorage.setItem("atr-theme", next);
+        try { localStorage.setItem("atr-theme", next); } catch { /* Private storage may be unavailable. */ }
         updateThemeButton();
       });
+      document.addEventListener("astro:before-swap", (event) => {
+        const swap = event as Event & { newDocument: Document };
+        swap.newDocument.documentElement.dataset.theme = document.documentElement.dataset.theme;
+      });
+      document.addEventListener("astro:page-load", updateThemeButton);
 
       // Register the non-intercepting service worker for installability.
       // It has NO fetch handler, so it never touches audio/media or /api
@@ -181,6 +187,8 @@ const {
         };
 
         document.addEventListener("touchstart", (event) => {
+          // Never reload away a recording or typed answer while the learner is working.
+          if (document.querySelector(".recall-shell, .retry-recorder, textarea:focus, input:focus, [data-recording-pending]")) return;
           if (window.scrollY > 0 || event.touches.length !== 1) return;
           startX = event.touches[0].clientX;
           startY = event.touches[0].clientY;

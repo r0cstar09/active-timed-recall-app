@@ -1,0 +1,62 @@
+name: Studio Browser QA
+on:
+  push:
+    branches: [feat/recall-studio-redesign]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Optional public frontend origin for read-only deployment verification
+        required: false
+        default: ''
+permissions:
+  contents: read
+concurrency:
+  group: studio-qa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm test && npm run test:timer && npm run test:prompt && npm run build
+      - name: Install browser test runtime
+        run: |
+          python3 -m venv /tmp/studio-qa
+          /tmp/studio-qa/bin/pip install --quiet playwright==1.63.0
+          /tmp/studio-qa/bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Every screen, desktop and iPhone viewports, light and dark
+        env:
+          QA_BASE: ${{ inputs.base }}
+        run: |
+          if [ -n "$QA_BASE" ]; then
+            /tmp/studio-qa/bin/python scripts/test_design_browser.py --base "$QA_BASE" --browser ${{ matrix.browser }} --all-routes --output /tmp/studio-results/${{ matrix.browser }}
+          else
+            python3 -m http.server 18764 --bind 127.0.0.1 --directory dist >/tmp/studio-server.log 2>&1 &
+            server=$!
+            trap 'kill "$server" 2>/dev/null || true' EXIT
+            for attempt in 1 2 3 4 5; do curl --silent --fail http://127.0.0.1:18764/ >/dev/null && break; sleep 1; done
+            /tmp/studio-qa/bin/python scripts/test_design_browser.py --base http://127.0.0.1:18764 --api-origin https://api-spanish.tonymuzo.dev --browser ${{ matrix.browser }} --all-routes --output /tmp/studio-results/${{ matrix.browser }}
+          fi
+      - name: Recording recovery with isolated API fixtures
+        if: matrix.browser == 'chromium'
+        env:
+          CAPTURE_QA_BASE: ${{ inputs.base || 'http://127.0.0.1:18763' }}
+          CAPTURE_QA_OUTPUT: /tmp/studio-results/capture
+        run: /tmp/studio-qa/bin/python scripts/test_capture_browser.py
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: studio-${{ matrix.browser }}-evidence
+          path: /tmp/studio-results
+          if-no-files-found: warn
+          retention-days: 7

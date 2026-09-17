@@ -4,45 +4,65 @@ interface Props {
   current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings" | "session" | "write";
 }
 const { current } = Astro.props;
-
-const primaryTabs = [
-  { id: "home", href: "/", label: "Home", icon: "home" },
+const study = [
+  { id: "home", href: "/", label: "Today", icon: "home" },
+  { id: "session", href: "/session", label: "Speaking", icon: "session" },
+  { id: "write", href: "/write", label: "Writing", icon: "write" },
   { id: "lessons", href: "/lessons", label: "Lessons", icon: "lessons" },
-  { id: "session", href: "/session", label: "Speak", icon: "session", cta: true },
-  { id: "write", href: "/write", label: "Write", icon: "write" },
-  { id: "misses", href: "/misses", label: "Review", icon: "misses" },
-] as const;
-
-const secondaryTabs = [
   { id: "verbs", href: "/verbs", label: "Verbs", icon: "verbs" },
-  { id: "ingest", href: "/ingest", label: "Add", icon: "ingest" },
-  { id: "library", href: "/library", label: "Library", icon: "library" },
-  { id: "settings", href: "/settings", label: "Settings", icon: "settings" },
 ] as const;
-const secondaryActive = secondaryTabs.some((t) => t.id === current);
+const collection = [
+  { id: "misses", href: "/misses", label: "Review misses", icon: "misses" },
+  { id: "library", href: "/library", label: "Your library", icon: "library" },
+  { id: "ingest", href: "/ingest", label: "Add a source", icon: "ingest" },
+] as const;
+const mobile = [
+  { id: "home", href: "/", label: "Today", icon: "home" },
+  { id: "lessons", href: "/lessons", label: "Learn", icon: "lessons" },
+  { id: "session", href: "/session", label: "Speak", icon: "session" },
+  { id: "write", href: "/write", label: "Write", icon: "write" },
+] as const;
+const more = [...collection, study[4], { id: "settings", href: "/settings", label: "Settings", icon: "settings" }] as const;
+const active = (id: string) => current === id || (id === "misses" && current === "review");
 ---
-
+<aside class="studio-sidebar" aria-label="App sidebar">
+  <a class="studio-wordmark" href="/" aria-label="Recall home">
+    <img src="/icons/icon.svg" width="38" height="38" alt="" />
+    <span>Recall<small>SPANISH, EVERY DAY.</small></span>
+  </a>
+  <nav class="studio-navigation" aria-label="Main navigation">
+    <p class="nav-group-label">Your practice</p>
+    {study.map(t => <a href={t.href} aria-current={active(t.id) ? "page" : undefined}><Glyph name={t.icon} /><span>{t.label}</span>{active(t.id) && <i aria-hidden="true" />}</a>)}
+    <p class="nav-group-label nav-group-divider">Your collection</p>
+    {collection.map(t => <a href={t.href} aria-current={active(t.id) ? "page" : undefined}><Glyph name={t.icon} /><span>{t.label}</span>{active(t.id) && <i aria-hidden="true" />}</a>)}
+  </nav>
+  <div class="studio-sidebar-footer">
+    <div class="sidebar-note"><span aria-hidden="true">Aa.</span><p>A little practice.<br />A little more you.</p></div>
+    <a class="sidebar-settings" href="/settings" aria-current={active("settings") ? "page" : undefined}><Glyph name="settings" /><span>Settings</span></a>
+  </div>
+</aside>
 <nav class="tabbar" aria-label="Primary">
   <div class="tabbar-inner tabbar-primary">
-    {primaryTabs.map((t) => (
-      <a class={`tab ${"cta" in t ? "tab-speak" : ""}`} href={t.href} aria-current={current === t.id ? "page" : undefined}>
-        <Glyph name={t.icon} />
-        <span>{t.label}</span>
-      </a>
-    ))}
-    <details class="tab-more">
-      <summary class="tab tab-more-trigger" aria-current={secondaryActive ? "page" : undefined}>
-        <Glyph name="more" />
-        <span>More</span>
-      </summary>
+    {mobile.map(t => <a class={`tab ${t.id === "session" ? "tab-speak" : ""}`} href={t.href} aria-current={active(t.id) ? "page" : undefined}><Glyph name={t.icon} /><span>{t.label}</span></a>)}
+    <details class="tab-more" data-nav-more>
+      <summary class="tab tab-more-trigger" aria-current={more.some(t => active(t.id)) ? "page" : undefined}><Glyph name="more" /><span>More</span></summary>
       <div class="tab-more-menu">
-        {secondaryTabs.map((t) => (
-          <a class="tab-more-item" href={t.href} aria-current={current === t.id ? "page" : undefined}>
-            <Glyph name={t.icon} />
-            <span>{t.label}</span>
-          </a>
-        ))}
+        <span class="nav-group-label">Your learning space</span>
+        {more.map(t => <a class="tab-more-item" href={t.href} aria-current={active(t.id) ? "page" : undefined}><Glyph name={t.icon} /><span>{t.label}</span></a>)}
       </div>
     </details>
   </div>
 </nav>
+<script>
+  document.addEventListener("click", event => {
+    const menu = document.querySelector<HTMLDetailsElement>("[data-nav-more]");
+    if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
+  });
+  document.addEventListener("keydown", event => {
+    const menu = document.querySelector<HTMLDetailsElement>("[data-nav-more]");
+    if (event.key === "Escape" && menu?.open) {
+      menu.open = false;
+      menu.querySelector("summary")?.focus();
+    }
+  });
+</script>

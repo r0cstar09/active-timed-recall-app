@@ -836,7 +836,7 @@ export default function RecallSession() {
         {error && <div className="alert alert-error">{error}</div>}
         {resumable ? (
           <div className="card hero-card stack center">
-            <div className="spanish-kicker">seguimos</div>
+            <div className="spanish-kicker">Right where you left off</div>
             <p className="muted">
               {resumable.phase === "summary"
                 ? "View your last session results?"
@@ -861,13 +861,11 @@ export default function RecallSession() {
           </div>
         ) : showModePicker ? (
           <div className="stack speak-mode-picker">
-            <div className="card hero-card stack center">
-              <div className="spanish-kicker">speak</div>
-              <div className="spanish-phrase" style={{ fontSize: "2.25rem" }}>Choose what this session does</div>
-              <p className="muted" style={{ margin: 0 }}>
-                <strong>Due Review</strong> and fresh <strong>Misses</strong> attempts update FSRS. Learn and Free Practice do not.
-              </p>
-            </div>
+            <header className="page-intro">
+              <span className="eyebrow">The speaking studio</span>
+              <h1>A thought.<br />Your words. In Spanish.</h1>
+              <p>Keep familiar phrases fresh, discover something new, or simply find your rhythm. Choose your practice.</p>
+            </header>
 
             <div className="session-mode-grid">
               <a className="card session-mode-choice session-mode-fsrs" href="/session?mode=review">
@@ -877,7 +875,7 @@ export default function RecallSession() {
                 </div>
                 <div>
                   <h2>Due Review</h2>
-                  <p className="muted">Practice the cards scheduled for now. Every grade updates the next due date and reduces or reschedules the due queue.</p>
+                  <p className="muted">The right phrases, at the right time. Review what is due and set its next place in your schedule.</p>
                 </div>
                 <span className="btn btn-primary btn-block">Review due cards</span>
               </a>
@@ -889,7 +887,7 @@ export default function RecallSession() {
                 </div>
                 <div>
                   <h2>Learn New Cards</h2>
-                  <p className="muted">Preview meaning, Spanish logic, traps, and audio. The cards enter the FSRS due queue only after you learn them.</p>
+                  <p className="muted">Meaning first. Explore a phrase and hear how it sounds before introducing it to your review queue.</p>
                 </div>
                 <span className="btn btn-block">Open Learn queue</span>
               </a>
@@ -901,11 +899,12 @@ export default function RecallSession() {
                 </div>
                 <div>
                   <h2>Free Practice</h2>
-                  <p className="muted">Speak random introduced cards for extra reps. Feedback is saved, but due dates and the due count do not change.</p>
+                  <p className="muted">A little extra room to find your voice. Rotate through familiar cards without changing their due dates.</p>
                 </div>
                 <span className="btn btn-block">Practice without scheduling</span>
               </a>
             </div>
+            <p className="session-mode-note"><strong>Your schedule stays intentional.</strong> Due Review and fresh Misses attempts update FSRS. Learn introduces cards; Free Practice leaves their due dates alone.</p>
           </div>
         ) : (
           <div className="card hero-card stack center session-launch-card">
@@ -1125,7 +1124,7 @@ export default function RecallSession() {
   // ── render: ARMING ──────────────────────────────────────────────────────────
   if (phase === "arming") {
     return (
-      <div className="card stack center" style={{ padding: 36 }}>
+      <div className="card stack center capture-wait" data-recording-pending>
         {error ? (
           <>
             <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
@@ -1136,7 +1135,8 @@ export default function RecallSession() {
         ) : (
           <>
             <div className="spinner" aria-hidden="true" />
-            <p className="muted">Preparing microphone…</p>
+            <h2>Finding your voice.</h2>
+            <p className="muted" role="status">Preparing microphone… Your prompt and timer will start when it is ready.</p>
           </>
         )}
       </div>
@@ -1146,7 +1146,7 @@ export default function RecallSession() {
   // ── render: UPLOADING (with retry on failure) ─────────────────────────────
   if (phase === "uploading") {
     return (
-      <div className="card stack center" style={{ padding: 36 }}>
+      <div className="card stack center capture-wait" data-recording-pending>
         {error ? (
           <>
             <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
@@ -1160,7 +1160,8 @@ export default function RecallSession() {
         ) : (
           <>
             <div className="spinner" aria-hidden="true" />
-            <p className="muted">Uploading…</p>
+            <h2>Keeping your words.</h2>
+            <p className="muted" role="status">Uploading… Keep this screen open while your recording is saved.</p>
           </>
         )}
       </div>
@@ -1206,6 +1207,13 @@ export default function RecallSession() {
       </div>
 
       <div className="card hero-card voice-card stack center">
+        <div className="recall-cue">
+          <p className="eyebrow">{promptPresentation?.cueKind === "audio_shadow" ? "Listen and shadow" : promptPresentation?.cueKind === "cloze" ? "Complete the thought" : "Say it in Spanish"}</p>
+          <h2 style={{ margin: "2px 0 0" }}>{promptPresentation?.cue ?? ""}</h2>
+          {item?.context_clue && (
+            <p className="small faint" style={{ margin: 0 }}>{item.context_clue}</p>
+          )}
+        </div>
         <div
           className={`mic-timer-ring ${danger ? "danger" : ""}`}
           style={{ "--pct": `${pct}%` } as React.CSSProperties}
@@ -1235,12 +1243,8 @@ export default function RecallSession() {
             ? "Listen, then shadow it calmly"
             : promptPresentation?.cueKind === "cloze"
               ? "Complete the phrase out loud"
-              : danger ? "Fast now — say it" : "Breathe, think of the idea, speak in Spanish"}
+              : danger ? "Finish your thought" : "Take a breath. You know more than you think."}
         </p>
-        <h2 style={{ margin: "2px 0 0" }}>{promptPresentation?.cue ?? ""}</h2>
-        {item?.context_clue && (
-          <p className="small faint" style={{ margin: 0 }}>{item.context_clue}</p>
-        )}
 
         {sessionMode === "misses" && item?.feedback && (
           <div className="alert" style={{ margin: "8px 0 0", textAlign: "left" }}>
