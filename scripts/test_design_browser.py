@@ -137,7 +137,13 @@ def attach_read_only_guard(page: Page, log: dict) -> None:
             try:
                 response = route.fetch(url=target)
                 if not page.is_closed():
-                    route.fulfill(response=response)
+                    # A genuine same-origin preview proxy: do not carry the
+                    # upstream URL metadata into WebKit's local response.
+                    route.fulfill(status=response.status, body=response.body(), headers={
+                        "content-type": response.headers.get("content-type", "application/json"),
+                        "access-control-allow-origin": f"{parsed.scheme}://{parsed.netloc}",
+                        "access-control-allow-credentials": "true",
+                    })
             except Exception:
                 # Astro can leave read-only background requests pending when
                 # a screenshot context is closed. Never mask a live-page error.

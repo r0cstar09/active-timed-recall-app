@@ -19,6 +19,7 @@
 }
 
 html[data-theme="dark"] .daily-home {
+  --daily-moss: #b8d8a0;
   --daily-paper: #1d312b;
   --daily-soft: #253b34;
   --daily-line: #385149;
@@ -47,7 +48,7 @@ html[data-theme="dark"] .daily-home {
 .daily-page-header h1 {
   margin: 4px 0 0;
   color: var(--text, var(--daily-forest));
-  font-size: clamp(2.35rem, 5vw, 4.65rem);
+  font-size: clamp(2.35rem, 4vw, 3.65rem);
   font-weight: 560;
   line-height: 0.96;
   letter-spacing: -0.052em;
@@ -132,10 +133,10 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-hero-copy h2 {
-  max-width: 13ch;
+  max-width: 16ch;
   margin: 12px 0 14px;
   color: #ffffff;
-  font-size: clamp(2.35rem, 5.3vw, 4.65rem);
+  font-size: clamp(2.15rem, 4vw, 3.5rem);
   font-weight: 510;
   line-height: 0.98;
   letter-spacing: -0.05em;
@@ -267,7 +268,8 @@ html[data-theme="dark"] .daily-home {
 
 .daily-goal-ring strong {
   color: #ffffff;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
   font-size: 2.45rem;
   font-weight: 600;
   letter-spacing: -0.06em;
@@ -980,9 +982,9 @@ html[data-theme="dark"] .daily-home {
   }
 
   .daily-hero-copy h2 {
-    max-width: 11ch;
+    max-width: 15ch;
     margin-top: 10px;
-    font-size: 2.45rem;
+    font-size: 2.15rem;
   }
 
   .daily-primary-action {
