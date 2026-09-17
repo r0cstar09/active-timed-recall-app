@@ -46,6 +46,9 @@ jobs:
       - name: Test manual curation workflow
         run: npm run test:curation
 
+      - name: Test Core 60 selector ordering and completion preservation
+        run: npm run test:verbs
+
       - name: Test ingestion job deletion
         run: npm run test:ingestion
 

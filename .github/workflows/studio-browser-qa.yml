@@ -1,7 +1,7 @@
 name: Studio Browser QA
 on:
   push:
-    branches: [main, feat/recall-studio-redesign]
+    branches: [main, feat/recall-studio-redesign, feat/core60-verb-order]
   workflow_dispatch:
     inputs:
       base:

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, type StudyGradeResponse, type VerbCatalog, type VerbCatalogAssignment, type VerbProgress, type VerbPromptProgress, type LessonPromptProgress, type VerbUsagePrompt } from "../../lib/api";
 import LessonSentencePacks from "../lessons/LessonSentencePacks";
+import { CORE_SPANISH_VERBS, coreVerbRank, groupVerbCatalog } from "../../lib/verbSelection";
+import "../../styles/verb-curriculum.css";
 
 type Assignment = VerbCatalogAssignment;
 type VerbData = VerbCatalog;
@@ -47,6 +49,8 @@ export default function VerbTrainer() {
   const [promotingMissId, setPromotingMissId] = useState<number | null>(null);
   const [promotionStatus, setPromotionStatus] = useState<Record<number, string>>({});
   const [verbProgress, setVerbProgress] = useState<Record<string, VerbProgress>>({});
+  const [progressStatus, setProgressStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [progressReload, setProgressReload] = useState(0);
   const [promptProgress, setPromptProgress] = useState<Record<string, VerbPromptProgress>>({});
   const [resetting, setResetting] = useState(false);
   const [newVerb, setNewVerb] = useState("");
@@ -119,14 +123,25 @@ export default function VerbTrainer() {
   const conjugationRoundSealed = rows.length > 0 && visibleRows.length === 0;
   const needsAnotherConjugationRound = conjugationRoundSealed && !verbComplete;
 
+  const verbGroups = useMemo(() => groupVerbCatalog(data.verbs, verbProgress), [data.verbs, verbProgress]);
+  const progressReady = progressStatus === "ready";
+  const selectedCoreRank = verb ? coreVerbRank(verb.verb) : undefined;
+  const selectorGroups = [
+    { id: "completed", label: "Completed / mastered", entries: verbGroups.completed },
+    { id: "core", label: "Core 60 — still to master", entries: verbGroups.core },
+    { id: "other", label: "Other verbs — later", entries: verbGroups.other },
+  ];
+
   useEffect(() => {
     let cancelled = false;
+    setProgressStatus("loading");
     api.listVerbProgress().then((items) => {
       if (cancelled) return;
       setVerbProgress(Object.fromEntries(items.map((p) => [p.verb, p])));
-    }).catch(() => undefined);
+      setProgressStatus("ready");
+    }).catch(() => { if (!cancelled) setProgressStatus("error"); });
     return () => { cancelled = true; };
-  }, []);
+  }, [progressReload]);
 
   async function refreshPromptProgress(targetVerb?: string) {
     const name = targetVerb || verb?.verb;
@@ -474,27 +489,64 @@ export default function VerbTrainer() {
   return (
     <div className="stack">
       <div className="card card-tile stack">
+        <section className="verb-curriculum" aria-labelledby="core60-heading" aria-busy={!progressReady && progressStatus !== "error"}>
+          <div className="row between wrap">
+            <div>
+              <div className="spanish-kicker">your learning priority</div>
+              <h2 id="core60-heading">Your Core 60</h2>
+            </div>
+            <span className="pill pill-good" aria-live="polite">
+              {progressReady ? `${verbGroups.coreCompleted} / ${CORE_SPANISH_VERBS.length} completed` : progressStatus === "loading" ? "Loading completion…" : "Completion unavailable"}
+            </span>
+          </div>
+          <p className="muted small">Go deep on these 60 before expanding. Your completed verbs come first; the remaining core follows your paper’s ranking.</p>
+          {progressReady && <progress className="verb-core-progress" max={CORE_SPANISH_VERBS.length} value={verbGroups.coreCompleted} aria-label="Core 60 conjugation completion" />}
+          <ol className="verb-group-key" aria-label="Verb list sections">
+            {selectorGroups.map((group, index) => (
+              <li key={group.id} data-verb-group={group.id}>
+                <span className="verb-group-number">0{index + 1}</span>
+                <span>{group.label}</span>
+                <strong>{progressReady ? group.entries.length : "—"}</strong>
+              </li>
+            ))}
+          </ol>
+          <p className="small faint">Completed means your saved conjugation threshold is met. Usage practice remains separate; other verbs stay available for later.</p>
+          {progressStatus === "loading" && <p role="status" className="small muted">Loading saved completion…</p>}
+          {progressStatus === "error" && (
+            <div className="alert alert-danger" role="alert">
+              <p>Saved completion couldn’t be loaded. Your progress hasn’t changed.</p>
+              <button className="btn btn-small" type="button" onClick={() => { setProgressStatus("loading"); setProgressReload((value) => value + 1); }}>Retry progress</button>
+            </div>
+          )}
+          {progressReady && verbGroups.missingCore.length > 0 && (
+            <p className="alert" role="status">Missing from this catalog: {verbGroups.missingCore.join(", ")}. They are not counted as completed.</p>
+          )}
+        </section>
         <div className="row between wrap">
           <div>
             <div className="spanish-kicker">selected verb</div>
             <h2 style={{ margin: 0 }}>{verb?.verb || "—"}</h2>
             <p className="muted" style={{ margin: 0 }}>{verb?.englishBase} · {verb?.category}</p>
           </div>
-          <span className={verbComplete ? "pill pill-good" : "pill"}>
-            {verbComplete ? "mastered" : `${fullPassCount}/${requiredPasses} perfect`}
-          </span>
+          <div className="row wrap">
+            {selectedCoreRank && <span className="pill">Core 60 · #{selectedCoreRank}</span>}
+            <span className={progressReady && verbComplete ? "pill pill-good" : "pill"}>
+              {!progressReady ? "Completion unavailable" : verbComplete ? "mastered" : `${fullPassCount}/${requiredPasses} perfect`}
+            </span>
+          </div>
         </div>
         <label className="field">
           <span>Choose verb</span>
-          <select className="input" value={verbName} onChange={(e) => { setVerbName(e.target.value); clearAnswers(); }}>
-            {data.verbs.map((v) => {
-              const complete = Boolean(verbProgress[v.verb]?.completed);
-              return (
-                <option key={v.verb} value={v.verb}>
-                  {complete ? "✓ " : "○ "}{v.verb} — {v.englishBase || v.category}
-                </option>
-              );
-            })}
+          <select className="input" value={progressReady ? verbName : ""} disabled={!progressReady} onChange={(e) => { setVerbName(e.target.value); clearAnswers(); }}>
+            {!progressReady ? <option value="">{progressStatus === "loading" ? "Loading saved completion…" : "Retry progress to organize your verbs"}</option> : selectorGroups.map((group) => (
+              <optgroup key={group.id} label={`${group.label} (${group.entries.length})`}>
+                {group.entries.map((v) => (
+                  <option key={v.verb} value={v.verb}>
+                    {group.id === "completed" ? "✓ " : ""}{coreVerbRank(v.verb) ? `#${coreVerbRank(v.verb)} · ` : ""}{v.verb} — {v.englishBase || v.category}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
           </select>
         </label>
 
@@ -541,22 +593,21 @@ export default function VerbTrainer() {
         <div className={verbComplete ? "alert alert-ok" : "alert"}>
           <div className="row between wrap">
             <span>
-              <strong>Verb progress:</strong> {fullPassCount}/{requiredPasses} perfect full-grid runs
-              {isIrregular ? " required for irregulars" : ""}
+              <strong>Verb progress:</strong> {progressReady ? `${fullPassCount}/${requiredPasses} perfect full-grid runs${isIrregular ? " required for irregulars" : ""}` : "Saved completion unavailable"}
             </span>
-            <span>{verbComplete ? "Complete" : "Incomplete"}</span>
+            <span>{!progressReady ? "Unknown" : verbComplete ? "Complete" : "Incomplete"}</span>
           </div>
           <p className="muted small" style={{ margin: "0.5rem 0" }}>
             Reset is destructive. Use “Start next round” below after a perfect grid; reset only if you want to erase this verb’s pass count.
           </p>
-          <button className="btn btn-small" type="button" disabled={resetting || !verb} onClick={resetVerb}>
+          <button className="btn btn-small" type="button" disabled={resetting || !verb || !progressReady} onClick={resetVerb}>
             {resetting ? "Resetting…" : `Hard reset to 0/${requiredPasses}`}
           </button>
         </div>
 
         <div className="row between small faint">
           <span>{filled}/{visibleRows.length} open prompts answered</span>
-          <span>{hiddenPassedCount ? `${hiddenPassedCount} completed hidden` : `${data.count} verbs · ${data.rotationCount} daily · ${verb?.category}`}</span>
+          <span>{hiddenPassedCount ? `${hiddenPassedCount} completed hidden` : `${data.count} verbs · Core 60 focus · ${verb?.category}`}</span>
         </div>
       </div>
 
