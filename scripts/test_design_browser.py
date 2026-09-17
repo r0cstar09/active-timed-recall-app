@@ -351,17 +351,21 @@ def main() -> int:
                     context.add_init_script(
                         "localStorage.setItem('atr-theme', " + json.dumps(theme_value) + ")"
                     )
-                    page = context.new_page()
-                    log = {
-                        "blocked_mutations": [],
-                        "console": [],
-                        "page_errors": [],
-                        "request_failures": [],
-                        "http_errors": [],
-                    }
-                    attach_read_only_guard(page, log)
-                    attach_observers(page, log)
                     for route in ROUTES:
+                        # Isolate full-document screenshots. A slow read from
+                        # the previous document can otherwise be reported by
+                        # WebKit as an access-control error on the next page.
+                        # SPA navigation is tested separately below.
+                        page = context.new_page()
+                        log = {
+                            "blocked_mutations": [],
+                            "console": [],
+                            "page_errors": [],
+                            "request_failures": [],
+                            "http_errors": [],
+                        }
+                        attach_read_only_guard(page, log)
+                        attach_observers(page, log)
                         slug = "home" if route == "/" else route.strip("/").replace("/", "-")
                         filename = f"{args.browser}-{device_name}-{theme_name}-{slug}.png"
                         destination = args.output / filename
@@ -384,6 +388,7 @@ def main() -> int:
                         for key, values in log.items():
                             capture[key] = values[before_counts[key] :]
                         report["captures"].append(capture)
+                        page.close()
                     context.close()
             for device_name in DEVICES:
                 report["behavior_checks"].append(
