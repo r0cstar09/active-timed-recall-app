@@ -47,6 +47,13 @@ jobs:
             for attempt in 1 2 3 4 5; do curl --silent --fail http://127.0.0.1:18764/ >/dev/null && break; sleep 1; done
             /tmp/studio-qa/bin/python scripts/test_design_browser.py --base http://127.0.0.1:18764 --api-origin https://api-spanish.tonymuzo.dev --browser ${{ matrix.browser }} --all-routes --output /tmp/studio-results/${{ matrix.browser }}
           fi
+      - name: Core 60 selector groups, fallback, progress retry and keyboard selection
+        run: |
+          python3 -m http.server 18764 --bind 127.0.0.1 --directory dist >/tmp/studio-verbs-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for attempt in 1 2 3 4 5; do curl --silent --fail http://127.0.0.1:18764/ >/dev/null && break; sleep 1; done
+          /tmp/studio-qa/bin/python scripts/test_verb_selector_browser.py --base http://127.0.0.1:18764 --browser ${{ matrix.browser }} --output /tmp/studio-results/verb-selector-${{ matrix.browser }}
       - name: Dashboard states, keyboard accessibility, narrow phones and axe checks
         if: matrix.browser == 'chromium'
         run: |

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type StudyGradeResponse, type VerbCatalog, type VerbCatalogAssignment, type VerbProgress, type VerbPromptProgress, type LessonPromptProgress, type VerbUsagePrompt } from "../../lib/api";
 import LessonSentencePacks from "../lessons/LessonSentencePacks";
 import { CORE_SPANISH_VERBS, coreVerbRank, groupVerbCatalog } from "../../lib/verbSelection";
@@ -51,6 +51,9 @@ export default function VerbTrainer() {
   const [verbProgress, setVerbProgress] = useState<Record<string, VerbProgress>>({});
   const [progressStatus, setProgressStatus] = useState<"loading" | "ready" | "error">("loading");
   const [progressReload, setProgressReload] = useState(0);
+  const verbSelectRef = useRef<HTMLSelectElement>(null);
+  const progressRetryRef = useRef<HTMLButtonElement>(null);
+  const restoreProgressFocus = useRef(false);
   const [promptProgress, setPromptProgress] = useState<Record<string, VerbPromptProgress>>({});
   const [resetting, setResetting] = useState(false);
   const [newVerb, setNewVerb] = useState("");
@@ -142,6 +145,13 @@ export default function VerbTrainer() {
     }).catch(() => { if (!cancelled) setProgressStatus("error"); });
     return () => { cancelled = true; };
   }, [progressReload]);
+
+  useEffect(() => {
+    if (progressStatus !== "loading" && restoreProgressFocus.current) {
+      restoreProgressFocus.current = false;
+      (progressStatus === "ready" ? verbSelectRef.current : progressRetryRef.current)?.focus();
+    }
+  }, [progressStatus]);
 
   async function refreshPromptProgress(targetVerb?: string) {
     const name = targetVerb || verb?.verb;
@@ -515,7 +525,7 @@ export default function VerbTrainer() {
           {progressStatus === "error" && (
             <div className="alert alert-danger" role="alert">
               <p>Saved completion couldn’t be loaded. Your progress hasn’t changed.</p>
-              <button className="btn btn-small" type="button" onClick={() => { setProgressStatus("loading"); setProgressReload((value) => value + 1); }}>Retry progress</button>
+              <button ref={progressRetryRef} className="btn btn-small" type="button" onClick={() => { restoreProgressFocus.current = true; setProgressStatus("loading"); setProgressReload((value) => value + 1); }}>Retry progress</button>
             </div>
           )}
           {progressReady && verbGroups.missingCore.length > 0 && (
@@ -537,7 +547,7 @@ export default function VerbTrainer() {
         </div>
         <label className="field">
           <span>Choose verb</span>
-          <select className="input" value={progressReady ? verbName : ""} disabled={!progressReady} onChange={(e) => { setVerbName(e.target.value); clearAnswers(); }}>
+          <select ref={verbSelectRef} className="input" value={progressReady ? verbName : ""} disabled={!progressReady} onChange={(e) => { setVerbName(e.target.value); clearAnswers(); }}>
             {!progressReady ? <option value="">{progressStatus === "loading" ? "Loading saved completion…" : "Retry progress to organize your verbs"}</option> : selectorGroups.map((group) => (
               <optgroup key={group.id} label={`${group.label} (${group.entries.length})`}>
                 {group.entries.map((v) => (
