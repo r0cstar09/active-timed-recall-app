@@ -880,7 +880,7 @@ export default function RecallSession() {
                 <span className="btn btn-primary btn-block">Review due cards</span>
               </a>
 
-              <a className="card session-mode-choice" href="/session?mode=learn">
+              <a className="card session-mode-choice session-mode-learn" href="/session?mode=learn">
                 <div className="row between">
                   <span className="pill">LEARN FIRST</span>
                   <strong>{queueStats ? `${queueStats.new_count} new` : "New cards"}</strong>

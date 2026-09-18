@@ -3,7 +3,8 @@
 
 The dashboard's two API reads are intercepted with local fixtures. Every
 non-GET/HEAD/OPTIONS request is aborted before it can reach the network. Run
-Chromium on the Alienware browser worker, never on the VPS.
+the selected Playwright browser on the Alienware browser worker, never on the
+VPS.
 
 Example (on the browser worker):
   /home/rootadmin/.venvs/recall-design-qa/bin/python scripts/test_dashboard_browser.py \
@@ -27,6 +28,7 @@ from urllib.parse import urlparse
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+DOCUMENT_THEMES = {"light": "paper", "dark": "dark"}
 DEVICES: dict[str, dict[str, Any]] = {
     "desktop": {
         "viewport": {"width": 1440, "height": 1000},
@@ -212,6 +214,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--base", default="http://127.0.0.1:18764", help="Alienware preview origin")
     parser.add_argument("--output", required=True, type=Path, help="Evidence directory")
     parser.add_argument("--axe-script", type=Path, help="Pinned local axe.min.js (optional)")
+    parser.add_argument("--theme", choices=("light", "dark"), default="light", help="Requested color scheme")
+    parser.add_argument("--browser", choices=("chromium", "webkit"), default="chromium", help="Playwright browser")
     parser.add_argument("--timeout", type=int, default=12_000, help="Per-operation timeout in milliseconds")
     return parser.parse_args()
 
@@ -463,6 +467,62 @@ def add_layout_checks(page: Page, run: dict[str, Any], device_name: str) -> None
         )
 
 
+def add_theme_checks(page: Page, run: dict[str, Any], requested_theme: str, device_name: str) -> None:
+    expected_document_theme = DOCUMENT_THEMES[requested_theme]
+    actual = page.evaluate(
+        """() => {
+          const preferredColorScheme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          const matchingMeta = [...document.querySelectorAll('meta[name="theme-color"]')]
+            .find((meta) => {
+              const media = meta.getAttribute('media');
+              return !media || matchMedia(media).matches;
+            });
+          const colorProbe = document.createElement('span');
+          colorProbe.style.color = matchingMeta?.content || '';
+          document.body.append(colorProbe);
+          const normalizedMetaThemeColor = matchingMeta ? getComputedStyle(colorProbe).color : null;
+          colorProbe.remove();
+          return {
+            documentTheme: document.documentElement.dataset.theme || null,
+            storageTheme: localStorage.getItem('atr-theme'),
+            preferredColorScheme,
+            metaThemeColor: matchingMeta?.content || null,
+            normalizedMetaThemeColor,
+            bodyBackgroundColor: getComputedStyle(document.body).backgroundColor,
+          };
+        }"""
+    )
+    expected = {
+        "documentTheme": expected_document_theme,
+        "storageTheme": expected_document_theme,
+        "preferredColorScheme": requested_theme,
+    }
+    add_check(
+        run,
+        "theme.requested-scheme-applied",
+        all(actual[key] == value for key, value in expected.items()),
+        category="Visual",
+        severity="high",
+        expected=expected,
+        actual=actual,
+    )
+    if device_name != "desktop":
+        add_check(
+            run,
+            "theme.mobile-meta-background-aligned",
+            actual["normalizedMetaThemeColor"] is not None
+            and actual["normalizedMetaThemeColor"] == actual["bodyBackgroundColor"],
+            category="Visual",
+            severity="high",
+            expected="the active color-scheme theme-color meta value matches the computed body background",
+            actual={
+                "meta_theme_color": actual["metaThemeColor"],
+                "normalized_meta_theme_color": actual["normalizedMetaThemeColor"],
+                "body_background_color": actual["bodyBackgroundColor"],
+            },
+        )
+
+
 def assert_ready_contract(page: Page, run: dict[str, Any], scenario: dict[str, Any]) -> None:
     primary = page.locator(".daily-primary-action")
     actual_label = text(page, ".daily-primary-action strong")
@@ -568,7 +628,13 @@ def assert_goal_contract(page: Page, run: dict[str, Any], scenario_name: str, sc
         )
 
 
-def run_keyboard_checks(page: Page, run: dict[str, Any], device_name: str, output: Path) -> None:
+def run_keyboard_checks(
+    page: Page,
+    run: dict[str, Any],
+    device_name: str,
+    output: Path,
+    requested_theme: str,
+) -> None:
     page.evaluate("document.activeElement instanceof HTMLElement && document.activeElement.blur()")
     page.keyboard.press("Tab")
     focused = page.evaluate("document.activeElement?.className || document.activeElement?.tagName")
@@ -615,25 +681,43 @@ def run_keyboard_checks(page: Page, run: dict[str, Any], device_name: str, outpu
 
     toggle = page.locator("[data-theme-toggle]").first
     toggle.focus()
+    expected_before = DOCUMENT_THEMES[requested_theme]
+    toggled_theme = "dark" if requested_theme == "light" else "light"
+    expected_after = DOCUMENT_THEMES[toggled_theme]
     before = page.locator("html").get_attribute("data-theme")
+    before_overflow = inspect_layout(page)["horizontalOverflow"]
     page.keyboard.press("Enter")
     page.wait_for_timeout(100)
     after = page.locator("html").get_attribute("data-theme")
     pressed = toggle.get_attribute("aria-pressed")
     label = toggle.get_attribute("aria-label")
+    stored = page.evaluate("localStorage.getItem('atr-theme')")
+    expected_pressed = str(toggled_theme == "dark").lower()
+    expected_label = "Switch to light theme" if toggled_theme == "dark" else "Switch to dark theme"
     add_check(
         run,
         "keyboard.theme-toggle",
-        before == "paper" and after == "dark" and pressed == "true" and label == "Switch to light theme",
+        before == expected_before
+        and after == expected_after
+        and stored == expected_after
+        and pressed == expected_pressed
+        and label == expected_label,
         category="Functional",
         severity="high",
-        expected={"before": "paper", "after": "dark", "aria-pressed": "true", "aria-label": "Switch to light theme"},
-        actual={"before": before, "after": after, "aria-pressed": pressed, "aria-label": label},
+        expected={
+            "before": expected_before,
+            "after": expected_after,
+            "stored": expected_after,
+            "aria-pressed": expected_pressed,
+            "aria-label": expected_label,
+        },
+        actual={"before": before, "after": after, "stored": stored, "aria-pressed": pressed, "aria-label": label},
     )
-    dark_name = f"{run['scenario']}--{device_name}--dark.png"
-    page.screenshot(path=str(output / dark_name), full_page=True)
-    run["dark_screenshot"] = dark_name
-    dark_overflow = inspect_layout(page)["horizontalOverflow"]
+    toggled_name = f"{run['scenario']}--{device_name}--{toggled_theme}.png"
+    page.screenshot(path=str(output / toggled_name), full_page=True)
+    run[f"{toggled_theme}_screenshot"] = toggled_name
+    after_overflow = inspect_layout(page)["horizontalOverflow"]
+    dark_overflow = after_overflow if toggled_theme == "dark" else before_overflow
     add_check(
         run,
         "layout.dark-theme-no-horizontal-overflow",
@@ -645,6 +729,19 @@ def run_keyboard_checks(page: Page, run: dict[str, Any], device_name: str, outpu
     )
     page.keyboard.press("Enter")
     page.wait_for_timeout(100)
+    restored = {
+        "document_theme": page.locator("html").get_attribute("data-theme"),
+        "storage_theme": page.evaluate("localStorage.getItem('atr-theme')"),
+    }
+    add_check(
+        run,
+        "keyboard.theme-toggle-restores-requested",
+        restored["document_theme"] == expected_before and restored["storage_theme"] == expected_before,
+        category="Functional",
+        severity="high",
+        expected={"document_theme": expected_before, "storage_theme": expected_before},
+        actual=restored,
+    )
 
     if device_name != "desktop":
         menu = page.locator("[data-nav-more]")
@@ -729,11 +826,13 @@ def exercise_scenario(
     scenario: dict[str, Any],
     timeout: int,
     axe_script: Path | None,
+    requested_theme: str,
 ) -> dict[str, Any]:
     run: dict[str, Any] = {
         "scenario": scenario_name,
         "description": scenario["description"],
         "device": device_name,
+        "theme": requested_theme,
         "viewport": DEVICES[device_name]["viewport"],
         "checks": [],
     }
@@ -746,13 +845,18 @@ def exercise_scenario(
         "page_errors": [],
         "request_failures": [],
     }
-    context = browser.new_context(**DEVICES[device_name], service_workers="block")
+    context = browser.new_context(
+        **DEVICES[device_name],
+        service_workers="block",
+        color_scheme=requested_theme,
+    )
+    document_theme = json.dumps(DOCUMENT_THEMES[requested_theme])
     context.add_init_script(
-        """() => {
-          localStorage.setItem('atr-theme', 'paper');
+        f"""(() => {{
+          localStorage.setItem('atr-theme', {document_theme});
           localStorage.setItem('atr.apiBaseUrl', location.origin);
           localStorage.removeItem('atr.activeApiBase');
-        }"""
+        }})()"""
     )
     page = context.new_page()
     attach_observers(page, log)
@@ -769,6 +873,7 @@ def exercise_scenario(
             expected="2xx preview response",
             actual=run["navigation"],
         )
+        add_theme_checks(page, run, requested_theme, device_name)
 
         if scenario["kind"] == "loading":
             page.locator('[aria-busy="true"]').wait_for(state="visible", timeout=timeout)
@@ -849,7 +954,7 @@ def exercise_scenario(
         run["screenshot"] = screenshot_name
 
         if scenario_name == "due":
-            run_keyboard_checks(page, run, device_name, output)
+            run_keyboard_checks(page, run, device_name, output, requested_theme)
         run_axe(page, run, axe_script)
     except Exception as exc:
         run["execution_error"] = f"{type(exc).__name__}: {exc}"
@@ -934,7 +1039,8 @@ def markdown_report(report: dict[str, Any]) -> str:
         f"- **Status:** {report['status'].upper()}",
         f"- **Target:** `{report['base']}`",
         f"- **Browser host:** `{report['browser_execution_host']}`",
-        f"- **Chromium:** `{report['browser_version']}`",
+        f"- **Browser:** `{report['browser']} {report['browser_version']}`",
+        f"- **Theme:** `{report['theme']}`",
         f"- **Scenario/device runs:** {summary['run_count']}",
         f"- **Checks:** {summary['check_count']} ({summary['passed_checks']} passed, {summary['failed_checks']} failed)",
         f"- **Screenshots:** {summary['screenshot_count']}",
@@ -1004,7 +1110,9 @@ def main() -> int:
         "base": base,
         "output": str(args.output.resolve()),
         "browser_execution_host": socket.gethostname(),
+        "browser": args.browser,
         "browser_version": None,
+        "theme": args.theme,
         "safety": {
             "allowed_methods": sorted(SAFE_METHODS),
             "intercepted_endpoints": ["/api/stats", "/api/sources"],
@@ -1018,7 +1126,7 @@ def main() -> int:
     }
 
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
+        browser = getattr(playwright, args.browser).launch(headless=True)
         report["browser_version"] = browser.version
         try:
             for device_name in DEVICES:
@@ -1033,6 +1141,7 @@ def main() -> int:
                             scenario,
                             args.timeout,
                             args.axe_script,
+                            args.theme,
                         )
                     )
         finally:
@@ -1042,6 +1151,8 @@ def main() -> int:
     screenshot_files = sorted(args.output.glob("*.png"))
     blocked_mutations = sum(len(run["network"]["blocked_mutations"]) for run in report["runs"])
     report["summary"] = {
+        "browser": args.browser,
+        "theme": args.theme,
         "run_count": len(report["runs"]),
         "check_count": len(all_checks),
         "passed_checks": sum(check["passed"] for check in all_checks),

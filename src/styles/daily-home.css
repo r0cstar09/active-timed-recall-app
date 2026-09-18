@@ -1,14 +1,14 @@
-/* Editorial daily dashboard ------------------------------------------------ */
+/* Sunny daily dashboard; color is presentation, never scheduling state. ----- */
 .daily-home {
-  --daily-forest: #182b25;
-  --daily-moss: #38634c;
-  --daily-lime: #d7f568;
-  --daily-canvas: #f7f8f2;
-  --daily-paper: #ffffff;
-  --daily-soft: #edf1e9;
-  --daily-line: #dce4da;
-  --daily-muted: #647368;
-  --daily-shadow: 0 18px 54px rgba(24, 43, 37, 0.09);
+  --daily-forest: var(--forest);
+  --daily-moss: var(--accent);
+  --daily-lime: var(--sun);
+  --daily-canvas: var(--bg);
+  --daily-paper: var(--paper);
+  --daily-soft: var(--bg-elev-2);
+  --daily-line: var(--border);
+  --daily-muted: var(--text-dim);
+  --daily-shadow: var(--shadow);
   display: grid;
   gap: clamp(22px, 3vw, 34px);
   width: 100%;
@@ -18,14 +18,6 @@
   color: var(--text, var(--daily-forest));
 }
 
-html[data-theme="dark"] .daily-home {
-  --daily-moss: #b8d8a0;
-  --daily-paper: #1d312b;
-  --daily-soft: #253b34;
-  --daily-line: #385149;
-  --daily-muted: #a9b7ae;
-  --daily-shadow: 0 20px 58px rgba(0, 0, 0, 0.24);
-}
 
 .daily-home svg {
   width: 1.25rem;
@@ -80,11 +72,11 @@ html[data-theme="dark"] .daily-home {
   isolation: isolate;
   overflow: hidden;
   padding: clamp(22px, 4.2vw, 48px);
-  border: 1px solid rgba(215, 245, 104, 0.13);
+  border: 1px solid color-mix(in srgb, var(--sun) 60%, var(--border));
   border-radius: clamp(25px, 3vw, 36px);
-  background: var(--daily-forest);
-  color: #f7f8f2;
-  box-shadow: 0 26px 72px rgba(24, 43, 37, 0.2);
+  background: var(--hero-bg);
+  color: var(--hero-ink);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--sun) 30%, transparent);
 }
 
 .daily-hero::before,
@@ -96,23 +88,22 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-hero::before {
-  top: -84px;
-  right: -72px;
+  top: -120px;
+  right: -100px;
   width: 260px;
   height: 260px;
-  border: 1px solid rgba(215, 245, 104, 0.12);
+  border: 28px solid color-mix(in srgb, var(--coral) 36%, transparent);
   border-radius: 50%;
-  box-shadow: 0 0 0 42px rgba(215, 245, 104, 0.025), 0 0 0 84px rgba(215, 245, 104, 0.018);
+  box-shadow: 0 0 0 20px color-mix(in srgb, var(--sun) 30%, transparent);
 }
 
 .daily-hero::after {
-  right: 25%;
-  bottom: -100px;
-  width: 190px;
-  height: 190px;
-  border-radius: 50%;
-  background: rgba(56, 99, 76, 0.3);
-  filter: blur(2px);
+  right: 0;
+  bottom: 0;
+  width: 144px;
+  height: 48px;
+  background: var(--tile-pattern);
+  opacity: .6;
 }
 
 .daily-hero-main {
@@ -129,13 +120,13 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-hero-kicker {
-  color: var(--daily-lime);
+  color: var(--hero-ink);
 }
 
 .daily-hero-copy h2 {
   max-width: 16ch;
   margin: 12px 0 14px;
-  color: #ffffff;
+  color: var(--hero-ink);
   font-size: clamp(2.15rem, 4vw, 3.5rem);
   font-weight: 510;
   line-height: 0.98;
@@ -145,7 +136,7 @@ html[data-theme="dark"] .daily-home {
 .daily-hero-copy > p {
   max-width: 56ch;
   margin: 0;
-  color: rgba(247, 248, 242, 0.72);
+  color: var(--hero-muted);
   font-size: clamp(0.9rem, 1.5vw, 1.01rem);
   line-height: 1.65;
 }
@@ -159,26 +150,26 @@ html[data-theme="dark"] .daily-home {
   gap: 18px;
   margin-top: clamp(22px, 3vw, 30px);
   padding: 11px 13px 11px 20px;
-  border: 1px solid var(--daily-lime);
+  border: 1px solid var(--ocean);
   border-radius: 18px;
-  background: var(--daily-lime);
-  color: var(--daily-forest);
-  box-shadow: 0 14px 32px rgba(9, 20, 16, 0.22);
+  background: var(--ocean);
+  color: #ffffff;
+  box-shadow: 0 4px 0 #094871;
   text-decoration: none;
   transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
 .daily-primary-action:hover {
-  background: #e1fa86;
-  color: var(--daily-forest);
-  box-shadow: 0 18px 36px rgba(9, 20, 16, 0.3);
+  background: #0d598e;
+  color: #ffffff;
+  box-shadow: 0 6px 0 #094871;
   transform: translateY(-2px);
 }
 
 .daily-primary-action:focus-visible,
 .daily-mode-card:focus-visible,
 .daily-focus-grid a:focus-visible {
-  outline: 3px solid var(--daily-lime);
+  outline: 3px solid var(--text);
   outline-offset: 3px;
 }
 
@@ -195,7 +186,7 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-primary-action small {
-  color: rgba(24, 43, 37, 0.72);
+  color: #e6f5ff;
   font-size: 0.67rem;
   font-weight: 760;
   letter-spacing: 0.08em;
@@ -207,8 +198,8 @@ html[data-theme="dark"] .daily-home {
   height: 2.5rem;
   padding: 9px;
   border-radius: 50%;
-  background: var(--daily-forest);
-  color: var(--daily-lime);
+  background: var(--sun);
+  color: var(--forest);
 }
 
 .daily-goal-panel {
@@ -218,9 +209,9 @@ html[data-theme="dark"] .daily-home {
   justify-items: center;
   gap: 13px;
   padding: 22px 18px 19px;
-  border: 1px solid rgba(247, 248, 242, 0.13);
+  border: 1px solid color-mix(in srgb, var(--hero-ink) 16%, transparent);
   border-radius: 25px;
-  background: rgba(247, 248, 242, 0.055);
+  background: var(--hero-panel);
   text-align: center;
 }
 
@@ -247,17 +238,17 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-goal-ring-track {
-  stroke: rgba(247, 248, 242, 0.12);
+  stroke: color-mix(in srgb, var(--hero-ink) 15%, var(--hero-panel));
 }
 
 .daily-goal-ring-value {
-  stroke: var(--daily-lime);
+  stroke: var(--accent-2);
   stroke-linecap: round;
   transition: stroke-dasharray 300ms ease;
 }
 
 .daily-goal-panel.is-unavailable .daily-goal-ring-value {
-  stroke: rgba(247, 248, 242, 0.18);
+  stroke: color-mix(in srgb, var(--hero-ink) 25%, var(--hero-panel));
 }
 
 .daily-goal-ring > span {
@@ -267,7 +258,7 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-goal-ring strong {
-  color: #ffffff;
+  color: var(--hero-ink);
   font-family: var(--font-body);
   font-variant-numeric: tabular-nums;
   font-size: 2.45rem;
@@ -277,7 +268,7 @@ html[data-theme="dark"] .daily-home {
 
 .daily-goal-ring small {
   margin-top: 7px;
-  color: rgba(247, 248, 242, 0.58);
+  color: var(--hero-muted);
   font-size: 0.66rem;
   font-weight: 780;
   letter-spacing: 0.1em;
@@ -291,7 +282,7 @@ html[data-theme="dark"] .daily-home {
 
 .daily-goal-copy > span,
 .daily-goal-copy > small {
-  color: rgba(247, 248, 242, 0.56);
+  color: var(--hero-muted);
   font-size: 0.66rem;
   font-weight: 760;
   letter-spacing: 0.1em;
@@ -299,7 +290,7 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-goal-copy strong {
-  color: #ffffff;
+  color: var(--hero-ink);
   font-size: 0.84rem;
   line-height: 1.3;
 }
@@ -313,15 +304,15 @@ html[data-theme="dark"] .daily-home {
   gap: 11px;
   margin-top: clamp(24px, 4vw, 38px);
   padding-top: 18px;
-  border-top: 1px solid rgba(247, 248, 242, 0.12);
-  color: rgba(247, 248, 242, 0.64);
+  border-top: 1px solid color-mix(in srgb, var(--hero-ink) 18%, transparent);
+  color: var(--hero-muted);
 }
 
 .daily-scheduling-note svg {
   width: 1rem;
   height: 1rem;
   margin-top: 2px;
-  color: var(--daily-lime);
+  color: var(--hero-ink);
 }
 
 .daily-scheduling-note p {
@@ -332,7 +323,7 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-scheduling-note strong {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--hero-ink);
 }
 
 /* Mode choices ------------------------------------------------------------ */
@@ -369,7 +360,7 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-mode-card {
-  --mode-accent: var(--daily-forest);
+  --mode-accent: var(--accent);
   position: relative;
   overflow: hidden;
   min-width: 0;
@@ -379,7 +370,7 @@ html[data-theme="dark"] .daily-home {
   padding: clamp(18px, 2.5vw, 25px);
   border: 1px solid var(--daily-line);
   border-radius: 24px;
-  background: var(--daily-paper);
+  background: var(--sky-soft);
   color: var(--text, var(--daily-forest));
   box-shadow: 0 9px 30px rgba(24, 43, 37, 0.05);
   text-decoration: none;
@@ -395,12 +386,13 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-mode-card.learn {
-  --mode-accent: var(--daily-lime);
+  --mode-accent: var(--coral);
+  background: var(--coral-soft);
 }
 
 .daily-mode-card.practice {
-  --mode-accent: var(--daily-moss);
-  background: color-mix(in srgb, var(--daily-paper) 90%, var(--daily-soft));
+  --mode-accent: var(--sun);
+  background: var(--sun-soft);
 }
 
 .daily-mode-card:hover {
@@ -428,8 +420,8 @@ html[data-theme="dark"] .daily-home {
 }
 
 .daily-mode-card.learn .daily-mode-icon {
-  background: color-mix(in srgb, var(--daily-lime) 38%, var(--daily-paper));
-  color: var(--daily-forest);
+  background: var(--paper);
+  color: var(--accent-2);
 }
 
 .daily-mode-tag {
@@ -526,7 +518,7 @@ html[data-theme="dark"] .daily-home {
   display: grid;
   place-items: center;
   border-radius: 14px;
-  background: var(--daily-soft);
+  background: var(--sun-soft);
   color: var(--daily-moss);
 }
 
@@ -600,7 +592,7 @@ html[data-theme="dark"] .daily-home {
 .habit-day.goal .habit-day-state {
   border-color: var(--daily-moss);
   background: var(--daily-moss);
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 .habit-day.today .habit-day-state {

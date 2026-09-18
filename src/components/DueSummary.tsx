@@ -270,7 +270,7 @@ export default function DueSummary() {
       <header className="daily-page-header">
         <div>
           <span className="daily-eyebrow">Today</span>
-          <h1>Your Spanish, in focus.</h1>
+          <h1>A little Spanish, every day.</h1>
         </div>
         <time className="daily-date" dateTime={habit.local_date}>{longDate(habit.local_date)}</time>
       </header>

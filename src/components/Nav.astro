@@ -27,7 +27,7 @@ const active = (id: string) => current === id || (id === "misses" && current ===
 ---
 <aside class="studio-sidebar" aria-label="App sidebar">
   <a class="studio-wordmark" href="/" aria-label="Recall home">
-    <img src="/icons/icon.svg?v=recall-studio-1" width="38" height="38" alt="" />
+    <img src="/icons/icon.svg?v=recall-summer-1" width="38" height="38" alt="" />
     <span>Recall<small>SPANISH, EVERY DAY.</small></span>
   </a>
   <nav class="studio-navigation" aria-label="Main navigation">
@@ -37,7 +37,7 @@ const active = (id: string) => current === id || (id === "misses" && current ===
     {collection.map(t => <a href={t.href} aria-current={active(t.id) ? "page" : undefined}><Glyph name={t.icon} /><span>{t.label}</span>{active(t.id) && <i aria-hidden="true" />}</a>)}
   </nav>
   <div class="studio-sidebar-footer">
-    <div class="sidebar-note"><span aria-hidden="true">Aa.</span><p>A little practice.<br />A little more you.</p></div>
+    <div class="sidebar-note"><span lang="es" aria-hidden="true">¡Hola!</span><p>A little practice.<br />A world of possibility.</p></div>
     <a class="sidebar-settings" href="/settings" aria-current={active("settings") ? "page" : undefined}><Glyph name="settings" /><span>Settings</span></a>
   </div>
 </aside>

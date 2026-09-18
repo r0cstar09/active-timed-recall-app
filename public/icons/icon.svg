@@ -1,5 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Recall">
-  <rect width="512" height="512" rx="112" fill="#182b25"/>
-  <path d="M170 352V160h90c48 0 77 25 77 65s-29 65-77 65h-90m87 0 83 62" fill="none" stroke="#d7f568" stroke-width="31" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="364" cy="146" r="15" fill="#f7f8f2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Recall — Spanish, every day">
+  <rect width="512" height="512" fill="#1266a1"/>
+  <path d="M82 80L105 103" stroke="#e96b50" stroke-width="18" stroke-linecap="round"/>
+  <path d="M256 47L256 80" stroke="#fffaf0" stroke-width="18" stroke-linecap="round"/>
+  <path d="M407 80L384 103" stroke="#e96b50" stroke-width="18" stroke-linecap="round"/>
+  <path d="M439 229L406 229" stroke="#fffaf0" stroke-width="18" stroke-linecap="round"/>
+  <path d="M407 378L384 355" stroke="#e96b50" stroke-width="18" stroke-linecap="round"/>
+  <path d="M256 411L256 378" stroke="#fffaf0" stroke-width="18" stroke-linecap="round"/>
+  <path d="M73 229L106 229" stroke="#e96b50" stroke-width="18" stroke-linecap="round"/>
+  <path d="M184 309 139 386 232 340Z" fill="#ffd34d"/>
+  <circle cx="256" cy="229" r="118" fill="#ffd34d"/>
+  <path d="M211 293V176h55c35 0 57 18 57 46s-22 46-57 46h-55m61 0 56 50" fill="none" stroke="#112c40" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="322" cy="166" r="13" fill="#e96b50"/>
 </svg>
