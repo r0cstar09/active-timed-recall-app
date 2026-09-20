@@ -67,6 +67,9 @@ jobs:
       - name: Test Written Recall queue contract
         run: npm run test:written-recall
 
+      - name: Test learned-deck practice topic contract
+        run: npm run test:practice-topics
+
       - name: Test deployment safety contract
         run: npm run test:deploy-workflow
 

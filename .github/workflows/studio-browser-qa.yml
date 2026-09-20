@@ -1,7 +1,7 @@
 name: Studio Browser QA
 on:
   push:
-    branches: [main, feat/recall-studio-redesign, feat/core60-verb-order, feat/spanish-summer]
+    branches: [main, feat/recall-studio-redesign, feat/core60-verb-order, feat/spanish-summer, feat/practice-topics]
   workflow_dispatch:
     inputs:
       base:
@@ -65,6 +65,8 @@ jobs:
           for theme in light dark; do
             /tmp/studio-qa/bin/python scripts/test_dashboard_browser.py --base http://127.0.0.1:18764 --theme "$theme" --browser chromium --output "/tmp/studio-results/dashboard-$theme" --axe-script /tmp/axe-4.10.3.min.js
           done
+      - name: Topic selection and exact-card practice without learner writes
+        run: /tmp/studio-qa/bin/python scripts/test_practice_topics_browser.py --browser ${{ matrix.browser }} --output /tmp/studio-results/topics-${{ matrix.browser }}
       - name: Recording recovery with isolated API fixtures
         if: matrix.browser == 'chromium'
         env:

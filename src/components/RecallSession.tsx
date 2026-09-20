@@ -19,6 +19,8 @@ import AudioPlayer from "./AudioPlayer";
 import { recallPromptPresentation } from "../lib/recallPrompt";
 import { correctionPhraseIds, latestSessionItems } from "../lib/sessionCorrections";
 import { isIncompleteRecordingError } from "../lib/recordingRecovery";
+import { requirePracticeTopicPhraseIds } from "../lib/practiceTopics";
+import PracticeTopicPicker, { type PracticeTopicPickerStatus } from "./PracticeTopicPicker";
 
 type Status = "idle" | "active" | "error";
 
@@ -54,6 +56,26 @@ function explicitModeFromUrl(): SessionMode | null {
   return raw && VALID_MODES.has(raw as SessionMode) ? (raw as SessionMode) : null;
 }
 
+function topicFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  const value = new URLSearchParams(window.location.search).get("topic")?.trim();
+  return value || null;
+}
+
+function setTopicInUrl(topicId: string | null) {
+  if (typeof window === "undefined") return;
+  const next = new URL(window.location.href);
+  if (topicId) next.searchParams.set("topic", topicId);
+  else next.searchParams.delete("topic");
+  window.history.replaceState({}, "", next);
+}
+
+function writtenPracticeHref(topicId: string | null): string {
+  const params = new URLSearchParams({ mode: "practice" });
+  if (topicId) params.set("topic", topicId);
+  return `/write?${params.toString()}`;
+}
+
 function modeLabel(mode: SessionMode): string {
   return {
     learn: "Learn queue · no FSRS yet",
@@ -85,6 +107,8 @@ export default function RecallSession() {
   const [queueStats, setQueueStats] = useState<ServerDashboardStats | null>(null);
   const [serverResumable, setServerResumable] = useState<ResumableSessionSummary | null>(null);
   const [launching, setLaunching] = useState(false);
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const [topicSelectionReady, setTopicSelectionReady] = useState(false);
   const [advancingLearn, setAdvancingLearn] = useState(false);
   const [noisyMode, setNoisyMode] = useState(false);
   const [micLevels, setMicLevels] = useState<number[]>(Array.from({ length: WAVE_BARS }, () => 0.35));
@@ -104,6 +128,8 @@ export default function RecallSession() {
   const learnAdvanceInFlightRef = useRef(false);
   const itemStartTokenRef = useRef(0);
   const microphoneStartInFlightRef = useRef(false);
+  const selectedTopicIdRef = useRef<string | null>(null);
+  const topicLaunchVersionRef = useRef(0);
   const supported = isRecordingSupported();
 
   const item = items[index];
@@ -141,6 +167,10 @@ export default function RecallSession() {
     sessionModeRef.current = mode;
     setSessionMode(mode);
     setShowModePicker(explicitMode == null);
+    const topicId = mode === "practice" ? topicFromUrl() : null;
+    selectedTopicIdRef.current = topicId;
+    setSelectedTopicId(topicId);
+    setTopicSelectionReady(mode !== "practice");
     setRouteReady(true);
     if (explicitMode == null) {
       void api.getDashboardCounts().then(setQueueStats).catch(() => setQueueStats(null));
@@ -162,6 +192,20 @@ export default function RecallSession() {
       setResumable(saved?.phase === "summary" && explicitMode && saved.mode !== explicitMode ? null : saved);
     }
   }, [status]);
+
+  const choosePracticeTopic = useCallback((topicId: string | null) => {
+    if (launchInFlightRef.current) return;
+    topicLaunchVersionRef.current += 1;
+    selectedTopicIdRef.current = topicId;
+    setSelectedTopicId(topicId);
+    setTopicSelectionReady(false);
+    setError(null);
+    setTopicInUrl(topicId);
+  }, []);
+
+  const receiveTopicPickerStatus = useCallback((picker: PracticeTopicPickerStatus) => {
+    setTopicSelectionReady(!picker.loading && !picker.loadError && picker.selectionValid);
+  }, []);
 
   // ── countdown tick + auto-resync on visibility/refocus ───────────────────
   useEffect(() => {
@@ -343,12 +387,17 @@ export default function RecallSession() {
   async function start() {
     if (launchInFlightRef.current) return;
     launchInFlightRef.current = true;
+    const launchVersion = ++topicLaunchVersionRef.current;
     setLaunching(true);
     try {
       const mode = explicitModeFromUrl() ?? sessionMode;
       sessionModeRef.current = mode;
       setSessionMode(mode);
       setError(null);
+      if (mode === "practice" && !topicSelectionReady) {
+        setError("Wait for the practice topics to load, then choose a valid focus.");
+        return;
+      }
       if (mode !== "learn") {
         if (!supported) {
           setError("This browser does not support audio recording.");
@@ -356,7 +405,17 @@ export default function RecallSession() {
         }
         if (!(await armRecorder())) return;
       }
-      const session = await api.createSession(mode);
+      let phraseIds: number[] | undefined;
+      const chosenTopicId = mode === "practice" ? selectedTopicIdRef.current : null;
+      if (chosenTopicId) {
+        const topicCards = await api.getPracticeTopicCards(chosenTopicId, 10);
+        if (launchVersion !== topicLaunchVersionRef.current || selectedTopicIdRef.current !== chosenTopicId) return;
+        phraseIds = requirePracticeTopicPhraseIds(topicCards, chosenTopicId);
+      }
+      const session = phraseIds
+        ? await api.createSession("practice", phraseIds.length, phraseIds)
+        : await api.createSession(mode);
+      if (launchVersion !== topicLaunchVersionRef.current) return;
       if (!session.items?.length) {
         clearSession();
         setServerResumable(session.resumable_session ?? null);
@@ -399,7 +458,11 @@ export default function RecallSession() {
       }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
-      setStatus("error");
+      // Topic lookups fail closed on the launcher. Never reinterpret a failed
+      // filtered request as an unfiltered Mix all session.
+      recorderRef.current?.dispose();
+      recorderRef.current = null;
+      if (sessionModeRef.current !== "practice") setStatus("error");
     } finally {
       launchInFlightRef.current = false;
       setLaunching(false);
@@ -607,6 +670,7 @@ export default function RecallSession() {
       if (typeof window !== "undefined") {
         const nextUrl = new URL(window.location.href);
         nextUrl.searchParams.set("mode", "practice");
+        nextUrl.searchParams.delete("topic");
         window.history.replaceState({}, "", nextUrl);
       }
       await beginItem(0, practice.items, null);
@@ -833,7 +897,7 @@ export default function RecallSession() {
             Audio recording isn’t supported here. Open the app in iPhone Safari.
           </div>
         )}
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && <div className="alert alert-error" role="alert">{error}</div>}
         {resumable ? (
           <div className="card hero-card stack center">
             <div className="spanish-kicker">Right where you left off</div>
@@ -924,6 +988,15 @@ export default function RecallSession() {
                 Numbers can be spoken in English, Spanish, or digits. The numeric value and any stated currency must match.
               </p>
             )}
+            {sessionMode === "practice" && (
+              <PracticeTopicPicker
+                idPrefix="spoken-practice-topic"
+                selectedTopicId={selectedTopicId}
+                onChange={choosePracticeTopic}
+                onStatusChange={receiveTopicPickerStatus}
+                disabled={launching}
+              />
+            )}
             {sessionMode !== "learn" && (
               <label className="alert row between" style={{ margin: 0, width: "100%", textAlign: "left", cursor: "pointer" }}>
                 <span>
@@ -943,7 +1016,7 @@ export default function RecallSession() {
             <button
               className="btn btn-primary btn-lg btn-block"
               onClick={start}
-              disabled={launching || (sessionMode !== "learn" && !supported)}
+              disabled={launching || (sessionMode !== "learn" && !supported) || (sessionMode === "practice" && !topicSelectionReady)}
             >
               {launching
                 ? "Opening session…"
@@ -957,6 +1030,11 @@ export default function RecallSession() {
                       ? "Start misses workout · FSRS ON"
                       : "Start scheduled recall · FSRS ON"}
             </button>
+            {sessionMode === "practice" && (
+              <a className="practice-topic-modality-link small" href={writtenPracticeHref(selectedTopicId)}>
+                Write this practice focus instead
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -990,6 +1068,15 @@ export default function RecallSession() {
         serverResumable={serverResumable}
         onContinueServerSession={() => void continueServerSession()}
         onCorrectBatch={(phraseIds) => void correctBatch(phraseIds)}
+        onPracticeAgain={() => {
+          clearSession();
+          setItems([]);
+          setGraded(null);
+          setResumable(null);
+          setServerResumable(null);
+          setError(null);
+          setStatus("idle");
+        }}
         correcting={launching}
         correctionError={error}
         onRefresh={(g) => {
@@ -1632,6 +1719,7 @@ function Summary({
   serverResumable,
   onContinueServerSession,
   onCorrectBatch,
+  onPracticeAgain,
   correcting,
   correctionError,
   onRefresh,
@@ -1642,6 +1730,7 @@ function Summary({
   serverResumable?: ResumableSessionSummary | null;
   onContinueServerSession?: () => void;
   onCorrectBatch: (phraseIds: number[]) => void;
+  onPracticeAgain: () => void;
   correcting: boolean;
   correctionError: string | null;
   onRefresh?: (fresh: Session) => void;
@@ -1935,7 +2024,12 @@ function Summary({
       })}
 
       <div className="btn-row">
-        <a className={`btn ${misses.length ? "" : "btn-primary"}`} href="/session?mode=learn">Learn next batch</a>
+        {graded?.mode === "practice" && (
+          <button className={`btn ${misses.length ? "" : "btn-primary"}`} type="button" onClick={onPracticeAgain}>
+            Choose or repeat a practice topic
+          </button>
+        )}
+        <a className={`btn ${misses.length || graded?.mode === "practice" ? "" : "btn-primary"}`} href="/session?mode=learn">Learn next batch</a>
         <a className="btn" href="/">Home</a>
       </div>
     </div>

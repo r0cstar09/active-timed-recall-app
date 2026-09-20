@@ -16,6 +16,32 @@ export type PromptType = "learn" | "english" | "context" | "cloze" | "audio" | "
 export type ItemResult = "pass" | "fail" | "partial" | "pending";
 export type FsrsRating = 1 | 2 | 3 | 4;
 
+export type PracticeTopicKind = "grammar" | "verb" | "lesson" | "source";
+
+export interface PracticeTopic {
+  id: string;
+  label: string;
+  kind: PracticeTopicKind;
+  description: string;
+  learned_count: number;
+  available_count: number;
+  /** English-only recall cues supplied by the practice-topic catalog. */
+  examples: string[];
+}
+
+export interface PracticeTopicsResponse {
+  topics: PracticeTopic[];
+  learned_count: number;
+  available_count: number;
+}
+
+export interface PracticeTopicCardsResponse {
+  topic_id: string;
+  phrase_ids: number[];
+  learned_count: number;
+  available_count: number;
+}
+
 export interface LearningCard {
   english_meaning?: string;
   spanish_logic?: string;

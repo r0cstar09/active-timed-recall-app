@@ -54,10 +54,13 @@ import type {
   RemoveIngestCardsResponse,
   Source,
   Phrase,
+  PracticeTopicCardsResponse,
+  PracticeTopicsResponse,
   ServerDashboardStats,
 } from "./types";
 import { isJobComplete, isJobFailed } from "./types";
 import { assertTargetedSession, targetedPhraseIds } from "./sessionCorrections";
+import { normalizePracticeTopicCardsResponse, normalizePracticeTopicsResponse } from "./practiceTopics";
 
 export type AppSettings = {
   daily_practice_target: number;
@@ -746,6 +749,23 @@ export const api = {
 
   getJob(jobId: number | string): Promise<Job> {
     return request<Job>(`/api/jobs/${encodeURIComponent(String(jobId))}`);
+  },
+
+  // ── Free Practice topics (read-only selection) ───────────────────────────
+  async getPracticeTopics(): Promise<PracticeTopicsResponse> {
+    return normalizePracticeTopicsResponse(await request<unknown>("/api/practice/topics"));
+  },
+
+  async getPracticeTopicCards(topicId: string, limit = 10): Promise<PracticeTopicCardsResponse> {
+    const topic_id = topicId.trim();
+    if (!topic_id) throw new Error("Choose a valid practice topic.");
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 50) {
+      throw new Error("Practice topic size must be between 1 and 50 cards.");
+    }
+    const params = new URLSearchParams({ topic_id, limit: String(limit) });
+    return normalizePracticeTopicCardsResponse(
+      await request<unknown>(`/api/practice/topic-cards?${params.toString()}`),
+    );
   },
 
   // ── Health / stats (real) ────────────────────────────────────────────────

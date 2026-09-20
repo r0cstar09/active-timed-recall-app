@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type WrittenAttempt } from "../lib/api";
 import type { Session, SessionItem } from "../lib/types";
 import { correctionPhraseIds } from "../lib/sessionCorrections";
+import { requirePracticeTopicPhraseIds } from "../lib/practiceTopics";
 import { clearWrittenSession, loadWrittenSession, reconcileWrittenSession, saveWrittenSession, type SavedAnswer, type WrittenMode, type WrittenPhase, type WrittenSnapshot } from "../lib/writtenSession";
+import PracticeTopicPicker, { type PracticeTopicPickerStatus } from "./PracticeTopicPicker";
 
 type Phase = "setup" | "restoring" | "restore-error" | WrittenPhase;
 
@@ -35,10 +37,36 @@ function targetAnswer(item: SessionItem) {
   return item.target_spanish || item.spanish || "";
 }
 
+function writtenSetupFromUrl(): { mode: WrittenMode; topicId: string | null } {
+  if (typeof window === "undefined") return { mode: "review", topicId: null };
+  const params = new URLSearchParams(window.location.search);
+  const rawMode = params.get("mode");
+  const mode: WrittenMode = rawMode === "learn" || rawMode === "review" || rawMode === "practice" ? rawMode : "review";
+  const topicId = mode === "practice" ? params.get("topic")?.trim() || null : null;
+  return { mode, topicId };
+}
+
+function updateWrittenSetupUrl(mode: WrittenMode, topicId: string | null) {
+  if (typeof window === "undefined") return;
+  const next = new URL(window.location.href);
+  next.searchParams.set("mode", mode);
+  if (mode === "practice" && topicId) next.searchParams.set("topic", topicId);
+  else next.searchParams.delete("topic");
+  window.history.replaceState({}, "", next);
+}
+
+function spokenPracticeHref(topicId: string | null): string {
+  const params = new URLSearchParams({ mode: "practice" });
+  if (topicId) params.set("topic", topicId);
+  return `/session?${params.toString()}`;
+}
+
 export default function WrittenRecall() {
   const [mode, setMode] = useState<WrittenMode>("review");
   const [targetVerb, setTargetVerb] = useState("");
   const [verbs, setVerbs] = useState<Array<{ verb: string; englishBase: string }>>([]);
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const [topicSelectionReady, setTopicSelectionReady] = useState(false);
   const [phase, setPhase] = useState<Phase>("restoring");
   const [session, setSession] = useState<Session | null>(null);
   const [index, setIndex] = useState(0);
@@ -50,6 +78,8 @@ export default function WrittenRecall() {
   const promptStartedAt = useRef(Date.now());
   const answerInput = useRef<HTMLTextAreaElement | null>(null);
   const launchInFlight = useRef(false);
+  const selectedTopicIdRef = useRef<string | null>(null);
+  const topicLaunchVersion = useRef(0);
   const restoredDraft = useRef<string | null>(null);
   const [restoreAttempt, setRestoreAttempt] = useState(0);
 
@@ -59,8 +89,20 @@ export default function WrittenRecall() {
     setError(null);
     void (async () => {
       try {
+        const setup = writtenSetupFromUrl();
+        selectedTopicIdRef.current = setup.topicId;
+        setSelectedTopicId(setup.topicId);
         const saved = loadWrittenSession();
-        if (!saved) { if (!cancelled) setPhase("setup"); return; }
+        if (!saved) {
+          if (!cancelled) {
+            const setup = writtenSetupFromUrl();
+            setMode(setup.mode);
+            selectedTopicIdRef.current = setup.topicId;
+            setSelectedTopicId(setup.topicId);
+            setPhase("setup");
+          }
+          return;
+        }
         let fresh = await api.getSession(saved.sessionId);
         // Reconnect a committed grade, but never automatically submit/grade answers.
         for (let attempt = 0; fresh.status === "grading" && attempt < 40 && !cancelled; attempt++) {
@@ -160,14 +202,51 @@ export default function WrittenRecall() {
     setPhase(nextPhase);
   }
 
+  const choosePracticeTopic = useCallback((topicId: string | null) => {
+    if (launchInFlight.current) return;
+    topicLaunchVersion.current += 1;
+    selectedTopicIdRef.current = topicId;
+    setSelectedTopicId(topicId);
+    setTopicSelectionReady(false);
+    setError(null);
+    updateWrittenSetupUrl("practice", topicId);
+  }, []);
+
+  const receiveTopicPickerStatus = useCallback((picker: PracticeTopicPickerStatus) => {
+    setTopicSelectionReady(!picker.loading && !picker.loadError && picker.selectionValid);
+  }, []);
+
+  function chooseMode(nextMode: WrittenMode) {
+    if (launchInFlight.current) return;
+    topicLaunchVersion.current += 1;
+    setMode(nextMode);
+    setError(null);
+    setEmptyMessage(null);
+    updateWrittenSetupUrl(nextMode, selectedTopicIdRef.current);
+  }
+
   async function startPack(nextMode: WrittenMode = mode) {
     if (launchInFlight.current) return;
+    if (nextMode === "practice" && phase === "setup" && !topicSelectionReady) {
+      setError("Choose an available practice topic before starting.");
+      return;
+    }
     launchInFlight.current = true;
+    const launchVersion = ++topicLaunchVersion.current;
     setBusy(true);
     setError(null);
     setEmptyMessage(null);
     try {
-      let next = await api.createWrittenSession(nextMode, 10, selectedVerb || undefined);
+      const topicId = nextMode === "practice" ? selectedTopicIdRef.current : null;
+      let phraseIds: number[] | undefined;
+      if (topicId) {
+        const selection = await api.getPracticeTopicCards(topicId, 10);
+        if (launchVersion !== topicLaunchVersion.current || topicId !== selectedTopicIdRef.current) return;
+        phraseIds = requirePracticeTopicPhraseIds(selection, topicId);
+      }
+      let next = await api.createWrittenSession(nextMode, 10,
+        nextMode === "practice" ? undefined : selectedVerb || undefined, phraseIds);
+      if (launchVersion !== topicLaunchVersion.current) return;
       if (!next.session_id && next.resumable_session?.session_id) {
         next = await api.getSession(next.resumable_session.session_id);
       }
@@ -476,7 +555,7 @@ export default function WrittenRecall() {
           <button className={`btn ${misses.length ? "" : "btn-primary"} btn-lg btn-block`} type="button" disabled={busy} onClick={() => startPack(mode)}>
             {mode === "learn" ? "Learn next batch" : `Another ${mode === "review" ? "due" : mode} pack`}
           </button>
-          <button className="btn btn-block" type="button" disabled={busy} onClick={returnToSetup}>Change mode or verb</button>
+          <button className="btn btn-block" type="button" disabled={busy} onClick={returnToSetup}>Change mode or focus</button>
         </div>
       </section>
     );
@@ -496,12 +575,17 @@ export default function WrittenRecall() {
           <legend>Choose a queue</legend>
           {(Object.keys(MODE_COPY) as WrittenMode[]).map((itemMode) => (
             <label className={mode === itemMode ? "selected" : ""} key={itemMode}>
-              <input type="radio" name="written-mode" value={itemMode} checked={mode === itemMode} onChange={() => setMode(itemMode)} />
+              <input type="radio" name="written-mode" value={itemMode} checked={mode === itemMode} disabled={busy} onChange={() => chooseMode(itemMode)} />
               <span><strong>{MODE_COPY[itemMode].title}</strong><small>{MODE_COPY[itemMode].description}</small></span>
             </label>
           ))}
         </fieldset>
 
+        {mode === "practice" ? <>
+          <PracticeTopicPicker selectedTopicId={selectedTopicId} onChange={choosePracticeTopic}
+            onStatusChange={receiveTopicPickerStatus} disabled={busy} idPrefix="written-practice-topic" />
+          <p className="practice-topic-modality-link small"><a href={spokenPracticeHref(selectedTopicId)}>Speak this same focus instead →</a></p>
+        </> : <>
         <label className="written-label" htmlFor="target-verb">Verb focus <span className="muted">(optional)</span></label>
         <input
           id="target-verb"
@@ -517,13 +601,14 @@ export default function WrittenRecall() {
         <datalist id="written-verbs">
           {verbs.map((verb) => <option key={verb.verb} value={verb.verb}>{verb.englishBase}</option>)}
         </datalist>
+        </>}
 
         <div className="written-contract">
           <strong>{MODE_COPY[mode].schedule}</strong>
           <span>Typed success never claims pronunciation or spoken-speed mastery.</span>
         </div>
 
-        <button className="btn btn-primary btn-lg btn-block" type="button" disabled={busy} onClick={() => startPack()}>
+        <button className="btn btn-primary btn-lg btn-block" type="button" disabled={busy || (mode === "practice" && !topicSelectionReady)} onClick={() => startPack()}>
           {busy ? "Loading queue…" : `Start 10-card ${MODE_COPY[mode].title.toLowerCase()}`}
         </button>
       </div>
