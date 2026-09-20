@@ -10,6 +10,8 @@ export type WrittenSnapshot = {
   phraseIds: number[];
   mode: WrittenMode;
   targetVerb: string;
+  /** null = deliberate Mix all; absent = legacy/unknown practice scope. */
+  practiceTopicId?: string | null;
   index: number;
   phase: WrittenPhase;
   answers: Record<number, SavedAnswer>;
@@ -30,6 +32,8 @@ export function loadWrittenSession(): WrittenSnapshot | null {
         !["learn", "answer", "grading", "results"].includes(saved.phase) ||
         !Number.isInteger(saved.index) || saved.index < 0 || saved.index >= saved.phraseIds.length ||
         typeof saved.draft !== "string" || typeof saved.targetVerb !== "string" ||
+        (saved.practiceTopicId !== undefined && saved.practiceTopicId !== null &&
+          (typeof saved.practiceTopicId !== "string" || !saved.practiceTopicId.trim())) ||
         !Number.isFinite(saved.promptStartedAt) || saved.promptStartedAt < 0 ||
         !saved.answers || typeof saved.answers !== "object" ||
         Object.values(saved.answers).some(answer => !answer || typeof answer.answer !== "string" ||

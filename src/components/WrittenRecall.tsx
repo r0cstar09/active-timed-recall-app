@@ -66,6 +66,7 @@ export default function WrittenRecall() {
   const [targetVerb, setTargetVerb] = useState("");
   const [verbs, setVerbs] = useState<Array<{ verb: string; englishBase: string }>>([]);
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const restoredPracticeScopeUnknown = useRef(false);
   const [topicSelectionReady, setTopicSelectionReady] = useState(false);
   const [phase, setPhase] = useState<Phase>("restoring");
   const [session, setSession] = useState<Session | null>(null);
@@ -95,7 +96,6 @@ export default function WrittenRecall() {
         const saved = loadWrittenSession();
         if (!saved) {
           if (!cancelled) {
-            const setup = writtenSetupFromUrl();
             setMode(setup.mode);
             selectedTopicIdRef.current = setup.topicId;
             setSelectedTopicId(setup.topicId);
@@ -113,6 +113,11 @@ export default function WrittenRecall() {
         if (cancelled) return;
         if (fresh.status === "grading") throw new Error("This batch is still grading. Retry restore shortly; your answers are saved.");
         const restored = reconcileWrittenSession(saved, fresh);
+        const restoredTopic = restored.mode === "practice" ? restored.practiceTopicId : null;
+        restoredPracticeScopeUnknown.current = restored.mode === "practice" && restoredTopic === undefined;
+        selectedTopicIdRef.current = restoredTopic ?? null;
+        setSelectedTopicId(restoredTopic ?? null);
+        updateWrittenSetupUrl(restored.mode, restoredTopic ?? null);
         saveWrittenSession(restored);
         setMode(restored.mode);
         setTargetVerb(restored.targetVerb);
@@ -137,6 +142,7 @@ export default function WrittenRecall() {
     if (!session || phase === "setup" || phase === "restoring" || phase === "restore-error") return;
     saveWrittenSession({ version: 1, sessionId: session.session_id, phraseIds: session.items.map(item => item.phrase_id),
       mode, targetVerb: session.target_verb || "", index, phase, answers: savedAnswers, draft,
+      practiceTopicId: mode === "practice" ? (restoredPracticeScopeUnknown.current ? undefined : selectedTopicIdRef.current) : null,
       promptStartedAt: promptStartedAt.current, ...overrides });
   }
 
@@ -191,6 +197,7 @@ export default function WrittenRecall() {
     promptStartedAt.current = startedAt;
     saveWrittenSession({ version: 1, sessionId: next.session_id, phraseIds: next.items.map(item => item.phrase_id),
       mode: originMode, targetVerb: next.target_verb || "", index: nextIndex, phase: nextPhase,
+      practiceTopicId: originMode === "practice" ? selectedTopicIdRef.current : null,
       answers: {}, draft: "", promptStartedAt: startedAt });
     restoredDraft.current = null;
     setMode(originMode);
@@ -227,6 +234,11 @@ export default function WrittenRecall() {
 
   async function startPack(nextMode: WrittenMode = mode) {
     if (launchInFlight.current) return;
+    if (nextMode === "practice" && phase !== "setup" && restoredPracticeScopeUnknown.current) {
+      returnToSetup();
+      setError("This older batch has no saved practice focus. Choose a topic or Mix all before starting another pack.");
+      return;
+    }
     if (nextMode === "practice" && phase === "setup" && !topicSelectionReady) {
       setError("Choose an available practice topic before starting.");
       return;
@@ -390,6 +402,8 @@ export default function WrittenRecall() {
 
   function returnToSetup() {
     clearWrittenSession();
+    restoredPracticeScopeUnknown.current = false;
+    setTopicSelectionReady(false);
     restoredDraft.current = null;
     setPhase("setup");
     setSession(null);

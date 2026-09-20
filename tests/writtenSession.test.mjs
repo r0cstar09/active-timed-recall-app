@@ -30,6 +30,29 @@ test('fully introduced Learn restores the handoff instead of unrelated default R
   assert.equal(restored.phase, 'learn');
   assert.equal(restored.index, 1);
 });
+test('practice scope survives storage and reconciliation, including deliberate Mix all', () => {
+  for (const practiceTopicId of ['grammar:giving-it', null]) {
+    const data = new Map();
+    globalThis.localStorage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+    const focused = { ...snapshot, mode: 'practice', practiceTopicId };
+    saveWrittenSession(focused);
+    const restored = reconcileWrittenSession(loadWrittenSession(), session);
+    assert.equal(restored.practiceTopicId, practiceTopicId);
+    assert.deepEqual(restored.phraseIds, snapshot.phraseIds);
+  }
+});
+test('legacy unknown scope is not silently converted to deliberate Mix all', () => {
+  const legacy = { ...snapshot, mode: 'practice' };
+  saveWrittenSession(legacy);
+  assert.equal(reconcileWrittenSession(loadWrittenSession(), session).practiceTopicId, undefined);
+});
+test('invalid persisted practice scope fails closed', () => {
+  for (const practiceTopicId of ['', '   ', false, 123, {}]) {
+    saveWrittenSession({ ...snapshot, mode: 'practice', practiceTopicId });
+    assert.throws(() => loadWrittenSession(), /could not be restored/);
+  }
+  clearWrittenSession();
+});
 test('reconciliation rejects a different session, batch, order, modality or verb', () => {
   for (const change of [{ session_id: 22 }, { response_mode: 'spoken' }, { target_verb: 'ir' }, { items: [...session.items].reverse() }, { items: [{ sprint_item_id: 212, phrase_id: 999 }] }]) {
     assert.throws(() => reconcileWrittenSession(snapshot, { ...session, ...change }), /saved written batch/);

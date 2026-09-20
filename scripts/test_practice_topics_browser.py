@@ -39,6 +39,11 @@ with sync_playwright() as pw:
     def case(route,theme='paper',width=390,scenario='normal'):
         context=browser.new_context(viewport={'width':width,'height':900},service_workers='block',**({'permissions':['microphone']} if a.browser=='chromium' else {}))
         context.add_init_script('localStorage.setItem("atr-theme",'+json.dumps(theme)+');')
+        if scenario.startswith('resume-'):
+            saved: dict = dict(version=1,sessionId=990001,phraseIds=IDS,mode='practice',targetVerb='',index=0,phase='results',answers={},draft='',promptStartedAt=1000)
+            if scenario=='resume-focused': saved['practiceTopicId']='grammar:giving-it'
+            if scenario=='resume-mix': saved['practiceTopicId']=None
+            context.add_init_script('localStorage.setItem("atr.writtenSession",'+json.dumps(json.dumps(saved))+');')
         requests=[]; blocked=[]; errors=[]; state={'catalog_calls':0}
         def guard(r):
             req=r.request; parsed=urlparse(req.url); path=parsed.path
@@ -61,9 +66,13 @@ with sync_playwright() as pw:
                 topic_id=parse_qs(parsed.query)['topic_id'][0]
                 if scenario=='selection-error':reply({'detail':'Fixture selection unavailable'},503); return
                 reply(dict(topic_id=topic_id,phrase_ids=[] if scenario=='empty' else IDS,learned_count=3,available_count=0 if scenario=='empty' else 3)); return
+            if path=='/api/sessions/990001' and req.method=='GET' and scenario.startswith('resume-'):
+                reply(dict(session_id=990001,status='complete',mode='practice',response_mode='written',affects_fsrs=False,items=[dict(item,result='pass',answer_visible=True) for item in ITEMS])); return
             if path=='/api/sessions' and req.method=='POST':
                 body=req.post_data_json
-                assert body['mode']=='practice' and body['phrase_ids']==IDS and body['size']==3, body
+                assert body['mode']=='practice', body
+                if scenario=='resume-mix': assert 'phrase_ids' not in body and body['size']==10, body
+                else: assert body['phrase_ids']==IDS and body['size']==3, body
                 assert 'target_verb' not in body
                 reply(dict(session_id=990001,status='awaiting_recordings',mode='practice',response_mode=body.get('response_mode','spoken'),affects_fsrs=False,items=ITEMS)); return
             if path=='/api/study/verbs':reply({'verbs':[]}); return
@@ -133,6 +142,29 @@ with sync_playwright() as pw:
             assert not errors and not blocked,(errors,blocked)
             report['checks'].append(f'{modality} {scenario}: '+('launch verified' if modality=='written' or a.browser=='chromium' else 'picker verified; no WebKit microphone simulation'))
             ctx.close()
+    for scenario,route in [('resume-focused','/write/'),('resume-focused','/write/?mode=practice'),('resume-focused','/write/?mode=practice&topic=verb%3Adar'),('resume-mix','/write/?mode=practice&topic=verb%3Adar'),('resume-legacy','/write/?mode=practice&topic=verb%3Adar')]:
+        ctx,page,requests,blocked,errors=case(route,scenario=scenario)
+        another=page.get_by_role('button',name='Another practice pack',exact=True)
+        expect(another).to_be_visible()
+        stored=page.evaluate("JSON.parse(localStorage.getItem('atr.writtenSession'))")
+        if scenario=='resume-focused': assert stored['practiceTopicId']=='grammar:giving-it'
+        if scenario=='resume-legacy': assert 'practiceTopicId' not in stored
+        another.click()
+        if scenario=='resume-legacy':
+            expect(page.get_by_role('combobox',name='Topic',exact=True)).to_be_visible()
+            expect(page.locator('.alert-error')).to_contain_text('no saved practice focus')
+            assert not any(r['method']=='POST' for r in requests), requests
+        else:
+            expect(page.get_by_role('heading',name='She gave it to you.',exact=True)).to_be_visible()
+            assert len([r for r in requests if r['method']=='POST'])==1
+            topic_calls=[r for r in requests if r['path']=='/api/practice/topic-cards']
+            assert bool(topic_calls)==(scenario=='resume-focused'), requests
+            if scenario=='resume-focused': assert 'topic=grammar%3Agiving-it' in page.url
+            saved=page.evaluate("JSON.parse(localStorage.getItem('atr.writtenSession'))")
+            assert saved['practiceTopicId']==('grammar:giving-it' if scenario=='resume-focused' else None), saved
+        assert not errors and not blocked,(errors,blocked)
+        report['checks'].append(f'written {scenario} from {route}: next-pack scope preserved or fails closed')
+        ctx.close()
     browser.close()
 report['status']='passed'
 (out/'report.json').write_text(json.dumps(report,indent=2)+'\n')
