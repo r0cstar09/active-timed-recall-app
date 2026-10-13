@@ -21,7 +21,8 @@
     "test:ingestion": "node --experimental-strip-types --test tests/ingestJobs.test.mjs",
     "test:timer": "node --experimental-strip-types --test tests/recallDuration.test.mjs",
     "test:prompt": "node --experimental-strip-types --test tests/recallPrompt.test.mjs",
-    "test:deploy-workflow": "node scripts/test_deploy_workflow.mjs"
+    "test:deploy-workflow": "node scripts/test_deploy_workflow.mjs",
+    "test:shadow": "node --experimental-strip-types --test tests/shadow*.test.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.0",

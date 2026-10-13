@@ -67,6 +67,7 @@ function stripTrailingSlash(url: string): string {
 
 /** Read the runtime override (browser only). */
 export function getApiBaseOverride(): string | null {
+  try {
   if (typeof localStorage === "undefined") return null;
   const v = localStorage.getItem(STORAGE_KEY);
   const clean = v && v.trim() ? stripTrailingSlash(v.trim()) : null;
@@ -76,6 +77,10 @@ export function getApiBaseOverride(): string | null {
     return null;
   }
   return clean;
+  } catch {
+    // Storage can be denied by browser privacy settings. Use the build default.
+    return null;
+  }
 }
 
 /** Persist (or clear) the runtime override. */
