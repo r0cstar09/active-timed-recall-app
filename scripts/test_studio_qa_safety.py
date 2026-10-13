@@ -6,7 +6,9 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Callable, cast
+from urllib.parse import urlparse
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -236,20 +238,130 @@ class WorkflowArtifactTests(unittest.TestCase):
                 for token in required_tokens:
                     self.assertIn(token, source)
 
-    def test_keyboard_contract_covers_both_actions_with_a_bound(self) -> None:
-        source = DASHBOARD_PATH.read_text(encoding="utf-8")
-        self.assertIn('"keyboard.shadowing-focus-visible"', source)
-        self.assertIn('focused_control("#today-shadow")', source)
-        self.assertIn('focused_control(".daily-primary-action")', source)
-        tree = ast.parse(source)
-        limit = next(
-            ast.literal_eval(node.value)
-            for node in tree.body
-            if isinstance(node, ast.Assign)
-            and any(isinstance(target, ast.Name) and target.id == "PRIMARY_ACTION_TAB_LIMIT" for target in node.targets)
-        )
-        self.assertGreaterEqual(limit, 2)
-        self.assertLessEqual(limit, 6)
+class MutationGateTests(unittest.TestCase):
+    def guarded_request(self, method: str, url: str) -> dict[str, Any]:
+        tree = ast.parse(DESIGN_PATH.read_text(encoding="utf-8"))
+        guard = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "attach_read_only_guard")
+        namespace = {"Page": object, "urlparse": urlparse, "API_ORIGIN": None, "SAFE_METHODS": {"GET", "HEAD", "OPTIONS"}}
+        exec(compile(ast.Module(body=[guard], type_ignores=[]), "<real guard>", "exec"), namespace)
+        handlers: list[Any] = []
+        page = SimpleNamespace(url="https://app.example.test/library", on=lambda *_: None, route=lambda _, handler: handlers.append(handler))
+        log: dict[str, Any] = {"blocked_mutations": []}
+        namespace["attach_read_only_guard"](page, log)
+        aborted: list[str] = []
+        request = SimpleNamespace(method=method, url=url)
+        route = SimpleNamespace(request=request, abort=aborted.append)
+        handlers[0](route)
+        self.assertEqual(aborted, ["blockedbyclient"])
+        self.assertEqual(len(log["blocked_mutations"]), 1)
+        privacy_function("assert_privacy_safe_report")(log)
+        self.assertNotIn("example.test", json.dumps(log))
+        return log["blocked_mutations"][0]
+
+    def real_status(self, event: dict[str, Any], scope: str) -> dict[str, Any]:
+        main = next(node for node in ast.parse(DESIGN_PATH.read_text(encoding="utf-8")).body if isinstance(node, ast.FunctionDef) and node.name == "main")
+        assignments = {ast.unparse(node.targets[0]): node for node in main.body if isinstance(node, ast.Assign)}
+        summary_node = assignments["report['summary']"].value
+        assert isinstance(summary_node, ast.Dict)
+        observed = {"blocked_mutations": [event]}
+        captures = [observed] if scope == "captures" else []
+        behavior = [observed] if scope == "behavior_checks" else []
+        summary: dict[str, Any] = {
+            "expected_capture_count": 1, "screenshots_written": 1,
+            "navigation_failures": 0, "horizontal_overflow_cases": 0,
+            "page_error_count": 0, "http_error_count": 0,
+            "unexpected_console_count": 0, "unexpected_request_failure_count": 0,
+            "theme_behavior_passed": True, "navigation_behavior_passed": True,
+            "theme_after_navigation_passed": True, "more_menu_passed": True,
+        }
+        report = {"summary": summary, "behavior_checks": behavior}
+        namespace = {"captures": captures, "observed_runs": [*captures, *behavior], "report": report}
+        for key, value in zip(summary_node.keys, summary_node.values):
+            if isinstance(key, ast.Constant) and key.value in {"blocked_mutation_count", "blocked_telemetry_count"}:
+                summary[key.value] = eval(compile(ast.Expression(value), "<real counter>", "eval"), namespace)
+        exec(compile(ast.Module(body=[assignments["report['status']"]], type_ignores=[]), "<real status gate>", "exec"), namespace)
+        return report
+
+    def test_every_blocked_non_telemetry_mutation_fails_both_scopes(self) -> None:
+        for method in ("POST", "PUT", "PATCH", "DELETE", "TRACE"):
+            event = self.guarded_request(method, "https://app.example.test/api/cards")
+            for scope in ("captures", "behavior_checks"):
+                with self.subTest(method=method, scope=scope):
+                    result = self.real_status(event, scope)
+                    self.assertEqual(result["summary"]["blocked_mutation_count"], 1)
+                    self.assertEqual(result["status"], "failed")
+
+    def test_only_exact_same_origin_telemetry_is_counted_separately(self) -> None:
+        event = self.guarded_request("POST", "https://app.example.test/cdn-cgi/rum")
+        for scope in ("captures", "behavior_checks"):
+            with self.subTest(scope=scope):
+                result = self.real_status(event, scope)
+                self.assertEqual(result["summary"]["blocked_mutation_count"], 0)
+                self.assertEqual(result["summary"]["blocked_telemetry_count"], 1)
+                self.assertEqual(result["status"], "passed")
+                privacy_function("assert_privacy_safe_report")(result)
+
+    def test_near_match_telemetry_remains_a_fatal_mutation(self) -> None:
+        for method, url in (
+            ("PUT", "https://app.example.test/cdn-cgi/rum"),
+            ("POST", "https://other.example.test/cdn-cgi/rum"),
+            ("POST", "http://app.example.test/cdn-cgi/rum"),
+            ("POST", "https://app.example.test:8443/cdn-cgi/rum"),
+            ("POST", "https://app.example.test/cdn-cgi/rum/"),
+            ("POST", "https://app.example.test/cdn-cgi/rum?override=1"),
+        ):
+            with self.subTest(method=method, url=url):
+                result = self.real_status(self.guarded_request(method, url), "captures")
+                self.assertEqual(result["status"], "failed")
+                self.assertEqual(result["summary"]["blocked_mutation_count"], 1)
+
+
+class KeyboardOrderTests(unittest.TestCase):
+    def run_focus_prefix(self, controls: list[str], *, outline: bool = True) -> dict[str, bool]:
+        node = next(node for node in ast.parse(DASHBOARD_PATH.read_text(encoding="utf-8")).body if isinstance(node, ast.FunctionDef) and node.name == "run_keyboard_checks")
+        # Execute the actual keyboard sequence through primary focus; the theme
+        # toggle checks that follow require the real browser and are not mocked.
+        end = next(index for index, item in enumerate(node.body) if isinstance(item, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "toggle" for t in item.targets))
+        node.body = node.body[:end]
+        checks: dict[str, bool] = {}
+        active = ""
+        tabs = 0
+
+        def press(key: str) -> None:
+            nonlocal active, tabs
+            if key == "Enter":
+                active = "main-content"
+            else:
+                active = "skip-link" if tabs == 0 else controls[min(tabs - 1, len(controls) - 1)]
+                tabs += 1
+
+        def evaluate(script: str, selector: str | None = None) -> Any:
+            if selector is not None:
+                return {"matches": active == selector, "outline_visible": outline}
+            if "blur()" in script:
+                return None
+            return active
+
+        page = SimpleNamespace(evaluate=evaluate, keyboard=SimpleNamespace(press=press), locator=lambda _: SimpleNamespace(is_visible=lambda: True))
+        namespace = {"Page": object, "Path": Path, "Any": Any,
+                     "add_check": lambda run, name, passed, **_: checks.update({name: passed})}
+        exec(compile(ast.Module(body=[node], type_ignores=[]), "<real keyboard sequence>", "exec"), namespace)
+        namespace["run_keyboard_checks"](page, {}, "desktop", Path("unused"), "light")
+        self.assertEqual(set(checks), {"keyboard.skip-link-first", "keyboard.skip-link-target", "keyboard.shadowing-focus-visible", "keyboard.primary-focus-visible"})
+        return checks
+
+    def test_expected_adjacent_controls_pass(self) -> None:
+        self.assertTrue(all(self.run_focus_prefix(["#today-shadow", ".daily-primary-action"]).values()))
+
+    def test_inserted_tab_stop_is_not_silently_skipped(self) -> None:
+        result = self.run_focus_prefix(["#today-shadow", "unexpected-control", ".daily-primary-action"])
+        self.assertTrue(result["keyboard.shadowing-focus-visible"])
+        self.assertFalse(result["keyboard.primary-focus-visible"])
+
+    def test_each_control_requires_visible_focus(self) -> None:
+        result = self.run_focus_prefix(["#today-shadow", ".daily-primary-action"], outline=False)
+        self.assertFalse(result["keyboard.shadowing-focus-visible"])
+        self.assertFalse(result["keyboard.primary-focus-visible"])
 
 
 if __name__ == "__main__":

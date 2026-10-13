@@ -63,7 +63,6 @@ DEVICES: dict[str, dict[str, Any]] = {
     },
 }
 CORE_SCENARIOS = frozenset({"due", "new", "free_practice", "completed"})
-PRIMARY_ACTION_TAB_LIMIT = 4
 
 
 def habit(**overrides: Any) -> dict[str, Any]:
@@ -688,21 +687,16 @@ def run_keyboard_checks(
         actual=shadow_focus,
     )
 
-    primary_focus = {"matches": False, "outline_visible": False}
-    primary_tab_presses = 0
-    for primary_tab_presses in range(1, PRIMARY_ACTION_TAB_LIMIT + 1):
-        page.keyboard.press("Tab")
-        primary_focus = focused_control(".daily-primary-action")
-        if primary_focus["matches"]:
-            break
+    page.keyboard.press("Tab")
+    primary_focus = focused_control(".daily-primary-action")
     add_check(
         run,
         "keyboard.primary-focus-visible",
         primary_focus["matches"] and primary_focus["outline_visible"],
         category="Accessibility",
         severity="high",
-        expected=f"primary action is reachable within {PRIMARY_ACTION_TAB_LIMIT} Tabs after the shadowing action and has a visible outline",
-        actual={**primary_focus, "tab_presses_after_shadowing": primary_tab_presses},
+        expected="primary action immediately follows shadowing with one Tab and has a visible outline",
+        actual={**primary_focus, "tab_presses_after_shadowing": 1},
     )
 
     toggle = page.locator("[data-theme-toggle]").first

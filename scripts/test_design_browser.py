@@ -62,6 +62,7 @@ REPORT_ALLOWED_KEYS = frozenset(
         "behavior_error_type",
         "blocked_methods",
         "blocked_mutation_count",
+        "blocked_telemetry_count",
         "blocked_mutations",
         "browser_requested",
         "browser_version",
@@ -313,7 +314,15 @@ def attach_read_only_guard(page: Page, log: dict) -> None:
         request = route.request
         method = request.method.upper()
         if method not in SAFE_METHODS:
-            log["blocked_mutations"].append({"method": method})
+            parsed = urlparse(request.url)
+            category = "mutation_attempt"
+            # Telemetry is still aborted, but only this exact same-origin POST
+            # may be reported separately from a fatal application mutation.
+            if method == "POST" and parsed.path == "/cdn-cgi/rum" and not parsed.query and not parsed.fragment:
+                origin = urlparse(page.url)
+                if parsed.scheme in {"http", "https"} and (parsed.scheme, parsed.netloc) == (origin.scheme, origin.netloc):
+                    category = "expected_telemetry"
+            log["blocked_mutations"].append({"method": method, "category": category})
             route.abort("blockedbyclient")
             return
         parsed = urlparse(request.url)
@@ -607,8 +616,14 @@ def main() -> int:
             for run in observed_runs
             for item in run["request_failures"]
         ),
-        "blocked_mutation_count": sum(len(item["blocked_mutations"]) for item in captures)
-        + sum(len(item["blocked_mutations"]) for item in report["behavior_checks"]),
+        "blocked_mutation_count": sum(
+            event.get("category") != "expected_telemetry"
+            for item in observed_runs for event in item["blocked_mutations"]
+        ),
+        "blocked_telemetry_count": sum(
+            event.get("category") == "expected_telemetry"
+            for item in observed_runs for event in item["blocked_mutations"]
+        ),
         "theme_behavior_passed": all(
             item["theme_toggle"]["passed"] for item in report["behavior_checks"]
         ),
@@ -627,6 +642,7 @@ def main() -> int:
         and report["summary"]["http_error_count"] == 0
         and report["summary"]["unexpected_console_count"] == 0
         and report["summary"]["unexpected_request_failure_count"] == 0
+        and report["summary"]["blocked_mutation_count"] == 0
         and report["summary"]["theme_behavior_passed"]
         and report["summary"]["navigation_behavior_passed"]
         and report["summary"]["theme_after_navigation_passed"]
