@@ -659,24 +659,44 @@ def run_keyboard_checks(
         expected="main-content",
         actual=main_focused,
     )
+
+    def focused_control(selector: str) -> dict[str, Any]:
+        return page.evaluate(
+            """(selector) => {
+              const el = document.activeElement;
+              const expected = document.querySelector(selector);
+              if (!(el instanceof HTMLElement)) return {matches: false, outline_visible: false};
+              const s = getComputedStyle(el);
+              return {
+                matches: el === expected,
+                outline_visible: s.outlineStyle !== 'none' && s.outlineWidth !== '0px',
+              };
+            }""",
+            selector,
+        )
+
     page.keyboard.press("Tab")
-    primary_focused = page.evaluate("document.activeElement?.classList?.contains('daily-primary-action') || false")
-    outline = page.evaluate(
-        """() => {
-          const el = document.activeElement;
-          if (!(el instanceof HTMLElement)) return null;
-          const s = getComputedStyle(el);
-          return {style: s.outlineStyle, width: s.outlineWidth, color: s.outlineColor};
-        }"""
+    shadow_focus = focused_control("#today-shadow")
+    add_check(
+        run,
+        "keyboard.shadowing-focus-visible",
+        shadow_focus["matches"] and shadow_focus["outline_visible"],
+        category="Accessibility",
+        severity="high",
+        expected="shadowing quick action follows main and has a visible outline",
+        actual=shadow_focus,
     )
+
+    page.keyboard.press("Tab")
+    primary_focus = focused_control(".daily-primary-action")
     add_check(
         run,
         "keyboard.primary-focus-visible",
-        bool(primary_focused) and outline is not None and outline["style"] != "none" and outline["width"] != "0px",
+        primary_focus["matches"] and primary_focus["outline_visible"],
         category="Accessibility",
         severity="high",
-        expected="primary action follows main and has a visible outline",
-        actual={"primary_focused": primary_focused, "outline": outline},
+        expected="primary action immediately follows shadowing with one Tab and has a visible outline",
+        actual={**primary_focus, "tab_presses_after_shadowing": 1},
     )
 
     toggle = page.locator("[data-theme-toggle]").first

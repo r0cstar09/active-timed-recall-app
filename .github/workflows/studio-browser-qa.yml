@@ -28,7 +28,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: python3 scripts/test_design_guard.py && python3 scripts/test_brand_cache.py && npm test && npm run test:timer && npm run test:prompt && npm run build
+      - run: python3 scripts/test_design_guard.py && python3 scripts/test_studio_qa_safety.py && python3 scripts/test_brand_cache.py && npm test && npm run test:timer && npm run test:prompt && npm run build
       - name: Install browser test runtime
         run: |
           python3 -m venv /tmp/studio-qa
@@ -39,13 +39,13 @@ jobs:
           QA_BASE: ${{ inputs.base }}
         run: |
           if [ -n "$QA_BASE" ]; then
-            /tmp/studio-qa/bin/python scripts/test_design_browser.py --base "$QA_BASE" --browser ${{ matrix.browser }} --all-routes --output /tmp/studio-results/${{ matrix.browser }}
+            /tmp/studio-qa/bin/python scripts/test_design_browser.py --base "$QA_BASE" --browser ${{ matrix.browser }} --all-routes --output /tmp/studio-private/live-design-${{ matrix.browser }}
           else
             python3 -m http.server 18764 --bind 127.0.0.1 --directory dist >/tmp/studio-server.log 2>&1 &
             server=$!
             trap 'kill "$server" 2>/dev/null || true' EXIT
             for attempt in 1 2 3 4 5; do curl --silent --fail http://127.0.0.1:18764/ >/dev/null && break; sleep 1; done
-            /tmp/studio-qa/bin/python scripts/test_design_browser.py --base http://127.0.0.1:18764 --api-origin https://api-spanish.tonymuzo.dev --browser ${{ matrix.browser }} --all-routes --output /tmp/studio-results/${{ matrix.browser }}
+            /tmp/studio-qa/bin/python scripts/test_design_browser.py --base http://127.0.0.1:18764 --api-origin https://api-spanish.tonymuzo.dev --browser ${{ matrix.browser }} --all-routes --output /tmp/studio-private/live-design-${{ matrix.browser }}
           fi
       - name: Core 60 selector groups, fallback, progress retry and keyboard selection
         run: |
@@ -84,6 +84,15 @@ jobs:
         if: always()
         with:
           name: studio-${{ matrix.browser }}-evidence
-          path: /tmp/studio-results
-          if-no-files-found: warn
+          # Public Actions artifacts are an explicit allowlist of suites whose
+          # API/content is synthetic. Live-design captures/reports stay under
+          # /tmp/studio-private and are never uploaded.
+          path: |
+            /tmp/studio-results/verb-selector-${{ matrix.browser }}
+            /tmp/studio-results/dashboard-light
+            /tmp/studio-results/dashboard-dark
+            /tmp/studio-results/topics-${{ matrix.browser }}
+            /tmp/studio-results/bilingual-${{ matrix.browser }}
+            /tmp/studio-results/capture
+          if-no-files-found: error
           retention-days: 7
