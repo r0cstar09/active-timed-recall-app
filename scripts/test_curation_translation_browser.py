@@ -230,8 +230,19 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         adjacent_line.press("Space")
     expect(adjacent_line).to_be_checked()
     expect(english).to_have_attribute("placeholder", "English remains editable", timeout=10_000)
-    page.get_by_text("English meaning kept because you edited it.", exact=True).wait_for(timeout=5_000)
-    assert english.input_value() == "My own editable meaning"
+    try:
+        page.get_by_text("English meaning kept because you edited it.", exact=True).wait_for(timeout=5_000)
+        assert english.input_value() == "My own editable meaning"
+    except Exception:
+        evidence["failure_state"] = {
+            "english": english.input_value(),
+            "spanish": page.get_by_label("Selected phrase", exact=True).input_value(),
+            "statuses": page.get_by_role("status").all_text_contents(),
+        }
+        page.screenshot(path=str(output / f"bilingual-{name}-failure.png"), full_page=True)
+        (output / f"bilingual-{name}-failure.json").write_text(json.dumps(evidence, indent=2) + "\n")
+        print(json.dumps(evidence["failure_state"]))
+        raise
     assert adjacent_request_info.value.post_data_json["source_text"] == (
         "Me quedé en blanco cuando me hizo la pregunta. Después respiré y pude responder."
     ), adjacent_request_info.value.post_data_json
