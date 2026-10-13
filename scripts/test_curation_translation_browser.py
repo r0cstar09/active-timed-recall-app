@@ -473,11 +473,22 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     page.screenshot(path=str(removal_screenshot), full_page=True)
     assert not evidence["page_errors"], evidence
     expected_failure_paths = {"/api/curation/imports/91", "/api/ingest/501"}
+    # Public Cloudflare HTML injects analytics; the fixture deliberately blocks
+    # it. Retain this evidence separately, never suppress app/API failures.
+    blocked_telemetry = {
+        item["url"] for item in evidence["blocked_external"]
+        if urlparse(item["url"]).netloc == "static.cloudflareinsights.com"
+        and urlparse(item["url"]).path.startswith("/beacon.min.js/")
+    }
+    evidence["blocked_telemetry"] = sorted(blocked_telemetry)
     evidence["unexpected_console_errors"] = [
         item for item in evidence["console"]
         if not (
             "503" in item["text"] and "Failed to load resource" in item["text"]
             and urlparse(item.get("location", {}).get("url", "")).path in expected_failure_paths
+        ) and not (
+            "Failed to load resource" in item["text"]
+            and item.get("location", {}).get("url", "") in blocked_telemetry
         )
     ]
     assert not evidence["unexpected_console_errors"], evidence

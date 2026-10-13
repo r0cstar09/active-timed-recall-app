@@ -6,7 +6,9 @@ import {
   canonicalYouTubeVideoId,
   createActionGate,
   createDraftEditorState,
+  hasUnsavedCurationWork,
   mergeImportSnapshot,
+  promotableApprovedDrafts,
   reconcileDraftEditor,
   selectedSegmentText,
   toggleContiguousSegment,
@@ -107,6 +109,27 @@ test("synchronous action gate blocks same-tick duplicate requests", () => {
   assert.equal(gate.tryAcquire("prepare:7"), true);
 });
 
+test("an open split is unsaved work and synchronously removes only its original from promotion", () => {
+  const ordinaryDirty = new Set([8]);
+  const openSplits = new Set([7]);
+  const drafts = [
+    draft({ id: 7, approved: true, status: "ready" }),
+    draft({ id: 8, approved: true, status: "ready" }),
+    draft({ id: 9, approved: true, status: "ready" }),
+    draft({ id: 10, approved: true, status: "added" }),
+  ];
+
+  assert.equal(hasUnsavedCurationWork(ordinaryDirty, openSplits, 0), true);
+  assert.deepEqual(promotableApprovedDrafts(drafts, ordinaryDirty, openSplits).map((item) => item.id), [9]);
+
+  openSplits.delete(7);
+  assert.equal(hasUnsavedCurationWork(ordinaryDirty, openSplits, 0), true, "cancelling split must not clear ordinary edits");
+  assert.deepEqual(promotableApprovedDrafts(drafts, ordinaryDirty, openSplits).map((item) => item.id), [7, 9]);
+
+  ordinaryDirty.clear();
+  assert.equal(hasUnsavedCurationWork(ordinaryDirty, openSplits, 0), false);
+});
+
 test("curation API uses the exact shared HTTP contract and hydrates relative audio", async () => {
   const compiled = await build({
     entryPoints: [new URL("../src/lib/curationApi.ts", import.meta.url).pathname],
@@ -130,6 +153,10 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
     else if (path.endsWith("/translations/retry")) body = curationImport({ translation_status: "queued" });
     else if (path.endsWith("/translations/selection")) body = { english: "Good morning" };
     else if (path.endsWith("/drafts")) body = { drafts: [draft()] };
+    else if (path.endsWith("/api/curation/drafts/7/split")) body = { drafts: [
+      draft({ spanish: "Buenos", english: "", start_time: 0, end_time: 0.9, status: "queued", audio_url: null, manual_timing: true, revision: 2 }),
+      draft({ id: 8, spanish: "días", english: "", start_time: 0.9, end_time: 1.8, status: "queued", audio_url: null, manual_timing: true, revision: 1 }),
+    ] };
     else if (path.endsWith("/api/curation/drafts/7")) body = draft();
     else if (path.endsWith("/api/curation/prepare")) body = { drafts: [draft({ status: "queued" })] };
     else if (path.endsWith("/api/curation/promote")) body = { results: [], drafts: [draft({ status: "added" })] };
@@ -150,6 +177,13 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
       context_after: "¿Cómo estás?",
     });
     await curationApi.createDrafts(2, [{ segment_indices: [0, 1], spanish: "Buenos días" }]);
+    const splitPayload = {
+      revision: 1,
+      split_time: 0.9,
+      left: { spanish: "Buenos", english: "" },
+      right: { spanish: "días", english: "" },
+    };
+    const split = await curationApi.splitDraft(7, splitPayload);
     await curationApi.patchDraft(7, { revision: 1, english: "Good morning" });
     await curationApi.deleteDraft(7, 2);
     await curationApi.prepareDrafts([{ id: 7, revision: 2 }]);
@@ -161,6 +195,12 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
     assert.equal(loaded.source_audio_url, "/api/audio/source/original.m4a");
     assert.deepEqual(discarded, { import_id: 2, removed: true, history_preserved: true });
     assert.equal(translated.english, "Good morning");
+    assert.deepEqual(split.map((item) => [item.id, item.start_time, item.end_time, item.manual_timing]), [
+      [7, 0, 0.9, true],
+      [8, 0.9, 1.8, true],
+    ]);
+    const splitCall = calls.find(({ url }) => String(url).endsWith("/api/curation/drafts/7/split"));
+    assert.deepEqual(JSON.parse(splitCall.options.body), splitPayload);
     const summary = calls.map(({ url, options }) => `${options.method ?? "GET"} ${new URL(url, "https://local.test").pathname}${new URL(url, "https://local.test").search}`);
     assert.deepEqual(summary, [
       "POST /api/curation/imports",
@@ -170,6 +210,7 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
       "POST /api/curation/imports/2/translations/retry",
       "POST /api/curation/imports/2/translations/selection",
       "POST /api/curation/imports/2/drafts",
+      "POST /api/curation/drafts/7/split",
       "PATCH /api/curation/drafts/7",
       "DELETE /api/curation/drafts/7?revision=2",
       "POST /api/curation/prepare",
