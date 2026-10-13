@@ -1,5 +1,7 @@
 name: Bilingual Selection QA
 on:
+  push:
+    branches: [feat/bilingual-manual-selection]
   workflow_dispatch:
     inputs:
       base:
