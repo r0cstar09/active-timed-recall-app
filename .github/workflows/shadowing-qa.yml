@@ -31,6 +31,8 @@ jobs:
         env:
           PUBLIC_API_BASE_URL: https://api-spanish.tonymuzo.dev
         run: npm test && npm run test:shadow && npm run test:timer && npm run test:prompt && npm run test:deploy-workflow
+      - name: Focused harness privacy and evidence tests
+        run: python3 -m unittest -v tests/test_shadowing_browser_harness.py
       - name: Install browser on ephemeral runner
         run: |
           python3 -m venv /tmp/shadow-qa
@@ -47,13 +49,48 @@ jobs:
       - name: Public hydrated playback (GET-only)
         if: ${{ inputs.live }}
         run: /tmp/shadow-qa/bin/python scripts/test_shadowing_browser.py --base https://spanish-app.tonymuzo.dev --live --browser ${{ matrix.browser }} --output /tmp/shadow-results
+      - name: Reject private live evidence before public upload
+        if: ${{ always() && inputs.live }}
+        shell: bash
+        run: |
+          shopt -s nullglob dotglob
+          files=(/tmp/shadow-results/*)
+          if (( ${#files[@]} != 2 )); then
+            echo '::error::Live evidence must contain exactly report.json and report.md.'
+            exit 1
+          fi
+          for file in "${files[@]}"; do
+            case "${file##*/}" in
+              report.json|report.md)
+                if [[ ! -f "$file" || -L "$file" ]]; then
+                  echo '::error::Live evidence reports must be regular non-symlink files.'
+                  exit 1
+                fi
+                ;;
+              *)
+                echo '::error::Live evidence included a prohibited non-report artifact.'
+                exit 1
+                ;;
+            esac
+          done
+          test -f /tmp/shadow-results/report.json
+          test -f /tmp/shadow-results/report.md
       - uses: actions/upload-artifact@v6
-        if: always()
+        if: ${{ always() && !inputs.live }}
         with:
           name: shadowing-${{ matrix.browser }}
           path: /tmp/shadow-results
           retention-days: 7
           if-no-files-found: warn
+      - uses: actions/upload-artifact@v6
+        if: ${{ always() && inputs.live }}
+        with:
+          name: shadowing-${{ matrix.browser }}
+          path: |
+            /tmp/shadow-results/report.json
+            /tmp/shadow-results/report.md
+          retention-days: 7
+          if-no-files-found: error
       - name: Retain exercised production build (not a deployment)
         uses: actions/upload-artifact@v6
         if: ${{ matrix.browser == 'chromium' && !inputs.live }}
