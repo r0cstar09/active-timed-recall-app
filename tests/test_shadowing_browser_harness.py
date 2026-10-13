@@ -248,6 +248,47 @@ class LiveEvidenceTests(unittest.TestCase):
                     )
                 )
 
+    def test_today_entry_cancellation_allowance_requires_exact_proven_click(self) -> None:
+        context = {
+            "base_netloc": "spanish-app.tonymuzo.dev",
+            "today_document_proven_success": True,
+            "today_entry_click_proven_success": True,
+            "today_entry_page_lifetime": "today-entry",
+            "today_entry_started_at": 4.0,
+            "today_entry_completed_at": 6.0,
+        }
+        item = {
+            "page_lifetime": "today-entry",
+            "method": "GET",
+            "path": "/shadow/",
+            "host": "spanish-app.tonymuzo.dev",
+            "_url": "https://spanish-app.tonymuzo.dev/shadow/",
+            "resource_type": "other",
+            "is_navigation_request": False,
+            "observed_at": 5.0,
+            "failure": "Load request cancelled",
+        }
+        self.assertEqual(
+            HARNESS.request_failure_expected_reason(item, "live_read_only", context),
+            "exact Shadow document GET cancelled during proven Today entry click",
+        )
+        rejected = [
+            ({**item, "observed_at": 7.0}, context),
+            ({**item, "resource_type": "document"}, context),
+            ({**item, "is_navigation_request": True}, context),
+            ({**item, "page_lifetime": "other-page"}, context),
+            ({**item, "_url": "https://spanish-app.tonymuzo.dev/_astro/app.js"}, context),
+            (item, {**context, "today_document_proven_success": False}),
+            (item, {**context, "today_entry_click_proven_success": False}),
+        ]
+        for changed_item, changed_context in rejected:
+            with self.subTest(item=changed_item, context=changed_context):
+                self.assertIsNone(
+                    HARNESS.request_failure_expected_reason(
+                        changed_item, "live_read_only", changed_context
+                    )
+                )
+
     def test_runtime_clean_requires_observations_from_both_page_lifetimes(self) -> None:
         class StubRouter:
             mutation_attempts: list[dict[str, str]] = []
@@ -305,7 +346,10 @@ class LiveEvidenceTests(unittest.TestCase):
 
         self.assertIn('page_lifetime="today-entry"', source)
         self.assertIn('page_lifetime="shadow-playback-exit"', live_run_source)
-        self.assertIn('today_page.wait_for_load_state("networkidle"', live_run_source)
+        self.assertIn("document.readyState === 'complete'", live_run_source)
+        self.assertIn("today_page.wait_for_timeout(750)", live_run_source)
+        self.assertNotIn('today_page.wait_for_load_state("networkidle"', live_run_source)
+        self.assertIn('live_context["today_entry_started_at"] = time.monotonic()', live_run_source)
         self.assertIn("today_entry.click()", live_run_source)
         self.assertIn(
             'today_page.get_by_role(\n            "region", name="Shadowing player", exact=True',

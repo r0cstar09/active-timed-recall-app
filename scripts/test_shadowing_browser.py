@@ -910,6 +910,14 @@ def safe_live_request_diagnostic(item: dict[str, Any], live_context: dict[str, A
     else:
         failure_kind = "other-failure"
     observed_at = float(item.get("observed_at", 0))
+    today_entry_started = float(live_context.get("today_entry_started_at", 0))
+    today_entry_completed = float(live_context.get("today_entry_completed_at", 0))
+    during_today_entry = bool(
+        today_entry_started
+        and today_entry_started
+        <= observed_at
+        <= max(today_entry_completed, today_entry_started) + 0.5
+    )
     shadow_started = float(live_context.get("shadow_navigation_started_at", 0))
     shadow_completed = float(live_context.get("shadow_navigation_completed_at", 0))
     during_shadow_navigation = bool(
@@ -925,6 +933,7 @@ def safe_live_request_diagnostic(item: dict[str, Any], live_context: dict[str, A
         "resource_type": item.get("resource_type", "unknown"),
         "is_navigation_request": bool(item.get("is_navigation_request")),
         "failure_kind": failure_kind,
+        "during_today_entry": during_today_entry,
         "during_shadow_navigation": during_shadow_navigation,
         "during_exit_navigation": during_exit,
         "raw_url_or_failure_logged": False,
@@ -981,6 +990,18 @@ def request_failure_expected_reason(
             return "discarding exact failed synthetic media after intercepted 404"
         if scenario == "live_read_only":
             diagnostic = safe_live_request_diagnostic(item, live_context)
+            if (
+                diagnostic["url_relation"] == "shadow-document"
+                and diagnostic["resource_type"] == "other"
+                and diagnostic["failure_kind"] == "exact-cancellation"
+                and diagnostic["during_today_entry"]
+                and not diagnostic["is_navigation_request"]
+                and diagnostic["page_lifetime"]
+                == live_context.get("today_entry_page_lifetime")
+                and bool(live_context.get("today_document_proven_success"))
+                and bool(live_context.get("today_entry_click_proven_success"))
+            ):
+                return "exact Shadow document GET cancelled during proven Today entry click"
             if (
                 diagnostic["url_relation"]
                 in {"today-dashboard-stats-api", "today-source-count-api"}
@@ -2444,6 +2465,9 @@ def live_run(
         "selected_media_proven_success": False,
         "today_document_proven_success": False,
         "today_entry_click_proven_success": False,
+        "today_entry_page_lifetime": "today-entry",
+        "today_entry_started_at": 0.0,
+        "today_entry_completed_at": 0.0,
         "shadow_document_proven_success": False,
         "shadow_navigation_page_lifetime": "shadow-playback-exit",
         "shadow_navigation_started_at": 0.0,
@@ -2464,7 +2488,15 @@ def live_run(
             "link", name=re.compile(r"^(Start|Resume) shadowing$"), exact=True
         )
         today_entry.wait_for(state="visible", timeout=timeout)
-        today_page.wait_for_load_state("networkidle", timeout=timeout)
+        today_page.wait_for_function(
+            "document.readyState === 'complete'", timeout=timeout
+        )
+        # Network-idle is not a valid readiness condition on the live page:
+        # Cloudflare RUM can retry while the fully loaded, hydrated control is
+        # already stable. Require the actual accessible entry to remain visible
+        # across a bounded quiet window before the user click instead.
+        today_page.wait_for_timeout(750)
+        today_entry.wait_for(state="visible", timeout=timeout)
         today_href = today_entry.get_attribute("href") or ""
         today_label_valid = today_entry.inner_text().strip() in {
             "Start shadowing",
@@ -2475,6 +2507,7 @@ def live_run(
             today_response and today_response.ok and today_label_valid and today_href_valid
         )
 
+        live_context["today_entry_started_at"] = time.monotonic()
         today_entry.click()
         today_page.wait_for_url(
             re.compile(r"/shadow/?$"), wait_until="domcontentloaded", timeout=timeout
@@ -2488,7 +2521,7 @@ def live_run(
         today_heading.wait_for(state="visible", timeout=timeout)
         today_shadow_region.wait_for(state="visible", timeout=timeout)
         wait_ready(today_page, timeout)
-        today_page.wait_for_load_state("networkidle", timeout=timeout)
+        today_page.wait_for_timeout(500)
         today_entry_path_valid = urlparse(today_page.url).path.rstrip("/") == "/shadow"
         live_context["today_entry_click_proven_success"] = bool(
             live_context["today_document_proven_success"]
@@ -2496,6 +2529,7 @@ def live_run(
             and today_heading.is_visible()
             and today_shadow_region.is_visible()
         )
+        live_context["today_entry_completed_at"] = time.monotonic()
 
         # Playback starts in an independently observed Page. A direct document
         # load here cannot terminate the settled Today-entry Page lifetime.
