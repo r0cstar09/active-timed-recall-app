@@ -7,6 +7,7 @@ import importlib.util
 import json
 import unittest
 from pathlib import Path
+from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +16,30 @@ SPEC = importlib.util.spec_from_file_location("shadowing_browser_harness", HARNE
 assert SPEC and SPEC.loader
 HARNESS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(HARNESS)
+
+
+class StubRequest:
+    def __init__(self, method: str, url: str) -> None:
+        self.method = method
+        self.url = url
+        self.resource_type = "fetch"
+
+    @staticmethod
+    def is_navigation_request() -> bool:
+        return False
+
+
+class StubRoute:
+    def __init__(self, method: str, url: str) -> None:
+        self.request = StubRequest(method, url)
+        self.aborted_with: str | None = None
+        self.continued = False
+
+    def abort(self, reason: str) -> None:
+        self.aborted_with = reason
+
+    def continue_(self) -> None:
+        self.continued = True
 
 
 class LiveEvidenceTests(unittest.TestCase):
@@ -59,19 +84,31 @@ class LiveEvidenceTests(unittest.TestCase):
 
     def test_live_runtime_diagnostics_never_emit_raw_console_or_media_url(self) -> None:
         selected = "https://api-spanish.tonymuzo.dev/api/media/private-token.wav?private=1"
-        secret_console = (
-            "Fetch API cannot load https://spanish-app.tonymuzo.dev/cdn-cgi/rum "
-            "due to access control checks. PRIVATE_LEARNER_TEXT"
-        )
+        rum_url = "https://spanish-app.tonymuzo.dev/cdn-cgi/rum"
+        secret_console = f"Unrelated PRIVATE_LEARNER_TEXT failure mentioning {rum_url}"
+        guard_block = {
+            "page_lifetime": "today-entry",
+            "method": "POST",
+            "_url": rum_url,
+            "kind": "cloudflare-rum",
+            "guard_action": "blockedbyclient",
+        }
         raw = {
             "console": [
                 {
+                    "page_lifetime": "today-entry",
                     "type": "error",
-                    "text": secret_console,
+                    "text": f"Fetch API cannot load {rum_url} due to access control checks.",
                     "location": {
                         "url": "https://static.cloudflareinsights.com/beacon.min.js/version"
                     },
-                }
+                },
+                {
+                    "page_lifetime": "today-entry",
+                    "type": "error",
+                    "text": secret_console,
+                    "location": {"url": rum_url},
+                },
             ],
             "page_errors": [],
             "request_failures": [
@@ -108,7 +145,9 @@ class LiveEvidenceTests(unittest.TestCase):
             "live_read_only",
             live=True,
             live_context={
+                "base_origin": "https://spanish-app.tonymuzo.dev",
                 "base_netloc": "spanish-app.tonymuzo.dev",
+                "expected_telemetry_guard_blocks": [guard_block],
                 "selected_media_url": selected,
                 "selected_media_proven_success": True,
                 "exit_page_lifetime": "shadow-playback-exit",
@@ -118,7 +157,7 @@ class LiveEvidenceTests(unittest.TestCase):
         )
 
         serialized = json.dumps(runtime)
-        self.assertEqual(counts["unexpected_console"], 0)
+        self.assertEqual(counts["unexpected_console"], 1)
         self.assertEqual(counts["unexpected_request_failures"], 0)
         self.assertEqual(counts["unexpected_http_errors"], 1)
         self.assertNotIn("PRIVATE_LEARNER_TEXT", serialized)
@@ -132,6 +171,7 @@ class LiveEvidenceTests(unittest.TestCase):
         self.assertEqual(console_diagnostic["location_relation"], "exact-cloudflare-beacon")
         self.assertEqual(console_diagnostic["referenced_url_relations"], ["exact-cloudflare-rum"])
         self.assertIn("fetch-api-cannot-load", console_diagnostic["message_features"])
+        self.assertIsNone(runtime["console"][1]["classification"])
         request_diagnostic = runtime["request_failures"][0]["diagnostic"]
         self.assertEqual(
             runtime["request_failures"][0]["classification"],
@@ -141,6 +181,259 @@ class LiveEvidenceTests(unittest.TestCase):
         self.assertEqual(request_diagnostic["failure_kind"], "exact-cancellation")
         self.assertEqual(request_diagnostic["page_lifetime"], "shadow-playback-exit")
         self.assertTrue(request_diagnostic["during_exit_navigation"])
+
+    def test_live_router_only_separates_exact_same_origin_post_rum(self) -> None:
+        base = "https://spanish-app.tonymuzo.dev"
+        router = HARNESS.LiveRouter(base)
+        exact = StubRoute("POST", base + "/cdn-cgi/rum")
+
+        router.handle(exact, page_lifetime="today-entry")
+
+        self.assertEqual(exact.aborted_with, "blockedbyclient")
+        self.assertFalse(exact.continued)
+        self.assertEqual(router.mutation_attempts, [])
+        self.assertEqual(len(router.expected_telemetry_attempts), 1)
+        self.assertEqual(router.expected_telemetry_attempts[0]["method"], "POST")
+        self.assertEqual(
+            router.expected_telemetry_attempts[0]["page_lifetime"], "today-entry"
+        )
+        public_evidence = router.evidence()
+        self.assertEqual(public_evidence["expected_telemetry_attempt_count"], 1)
+        self.assertEqual(public_evidence["expected_telemetry_methods"], ["POST"])
+        self.assertNotIn("_url", json.dumps(public_evidence))
+
+        fatal_cases = (
+            ("PATCH", base + "/cdn-cgi/rum"),
+            ("PUT", base + "/cdn-cgi/rum"),
+            ("DELETE", base + "/cdn-cgi/rum"),
+            ("CONNECT", base + "/cdn-cgi/rum"),
+            ("POST", "http://spanish-app.tonymuzo.dev/cdn-cgi/rum"),
+            ("POST", "https://other.example/cdn-cgi/rum"),
+            ("POST", "https://spanish-app.tonymuzo.dev:444/cdn-cgi/rum"),
+            ("POST", base + "/cdn-cgi/rum/extra"),
+            ("POST", base + "/cdn-cgi/rum?"),
+            ("POST", base + "/cdn-cgi/rum?token=private"),
+        )
+        for method, url in fatal_cases:
+            with self.subTest(method=method, url=url):
+                candidate = HARNESS.LiveRouter(base)
+                route = StubRoute(method, url)
+                candidate.handle(route, page_lifetime="shadow-playback-exit")
+                self.assertEqual(route.aborted_with, "blockedbyclient")
+                self.assertEqual(candidate.expected_telemetry_attempts, [])
+                self.assertEqual(len(candidate.mutation_attempts), 1)
+                self.assertEqual(candidate.mutation_attempts[0]["method"], method)
+
+    def test_live_finish_binds_guarded_rum_and_fails_other_unsafe_methods(self) -> None:
+        base = "https://spanish-app.tonymuzo.dev"
+        context = {
+            "base_origin": base,
+            "base_netloc": "spanish-app.tonymuzo.dev",
+        }
+        selected = {
+            "exact_selected_get_count": 1,
+            "successful_response_count": 1,
+            "media_content_type_count": 1,
+            "performance_entry_count": 1,
+            "performance_completed_count": 1,
+        }
+
+        def finish(router: Any, route: StubRoute) -> dict[str, Any]:
+            router.api_get_count = 1
+            raw = {
+                "console": [],
+                "page_errors": [],
+                "request_failures": [
+                    {
+                        **HARNESS.private_request_record(route.request),
+                        "page_lifetime": "today-entry",
+                        "failure": "net::ERR_BLOCKED_BY_CLIENT",
+                    }
+                ],
+                "http_errors": [],
+                "responses": [
+                    {"page_lifetime": "today-entry"},
+                    {"page_lifetime": "shadow-playback-exit"},
+                ],
+            }
+            run = {
+                "scenario": "live_read_only",
+                "selected_media_evidence": dict(selected),
+                "checks": [],
+            }
+            HARNESS.finish_live_run(run, router, raw, context)
+            return run
+
+        expected_router = HARNESS.LiveRouter(base)
+        expected_route = StubRoute("POST", base + "/cdn-cgi/rum")
+        expected_router.handle(expected_route, page_lifetime="today-entry")
+        expected_run = finish(expected_router, expected_route)
+        expected_safety = next(
+            check
+            for check in expected_run["checks"]
+            if check["id"] == "live.safety-no-writes"
+        )
+        expected_runtime = next(
+            check
+            for check in expected_run["checks"]
+            if check["id"] == "live.runtime-clean"
+        )
+        self.assertTrue(expected_safety["passed"])
+        self.assertTrue(expected_runtime["passed"])
+
+        fatal_router = HARNESS.LiveRouter(base)
+        fatal_route = StubRoute("PATCH", base + "/cdn-cgi/rum")
+        fatal_router.handle(fatal_route, page_lifetime="today-entry")
+        fatal_run = finish(fatal_router, fatal_route)
+        fatal_safety = next(
+            check
+            for check in fatal_run["checks"]
+            if check["id"] == "live.safety-no-writes"
+        )
+        fatal_runtime = next(
+            check
+            for check in fatal_run["checks"]
+            if check["id"] == "live.runtime-clean"
+        )
+        self.assertFalse(fatal_safety["passed"])
+        self.assertFalse(fatal_runtime["passed"])
+
+    def test_rum_request_failure_requires_exact_guard_evidence_and_lifetime(self) -> None:
+        rum_url = "https://spanish-app.tonymuzo.dev/cdn-cgi/rum"
+        item = {
+            "page_lifetime": "today-entry",
+            "method": "POST",
+            "path": "/cdn-cgi/rum",
+            "host": "spanish-app.tonymuzo.dev",
+            "_url": rum_url,
+            "resource_type": "fetch",
+            "is_navigation_request": False,
+            "observed_at": 5.0,
+            "failure": "net::ERR_BLOCKED_BY_CLIENT",
+        }
+        guard = {
+            "page_lifetime": "today-entry",
+            "method": "POST",
+            "_url": rum_url,
+            "kind": "cloudflare-rum",
+            "guard_action": "blockedbyclient",
+        }
+        context = {
+            "base_origin": "https://spanish-app.tonymuzo.dev",
+            "base_netloc": "spanish-app.tonymuzo.dev",
+            "expected_telemetry_guard_blocks": [guard],
+        }
+        self.assertEqual(
+            HARNESS.request_failure_expected_reason(item, "live_read_only", context),
+            "exact same-origin Cloudflare RUM POST blocked by live guard",
+        )
+
+        rejected = (
+            (item, "ready", context),
+            ({**item, "method": "GET"}, "live_read_only", context),
+            ({**item, "method": "PATCH"}, "live_read_only", context),
+            (
+                {**item, "_url": "http://spanish-app.tonymuzo.dev/cdn-cgi/rum"},
+                "live_read_only",
+                context,
+            ),
+            (
+                {**item, "_url": "https://other.example/cdn-cgi/rum"},
+                "live_read_only",
+                context,
+            ),
+            (
+                {**item, "_url": rum_url + "?token=private"},
+                "live_read_only",
+                context,
+            ),
+            ({**item, "page_lifetime": "other-page"}, "live_read_only", context),
+            ({**item, "failure": "net::ERR_FAILED"}, "live_read_only", context),
+            (item, "live_read_only", {**context, "expected_telemetry_guard_blocks": []}),
+            (
+                item,
+                "live_read_only",
+                {
+                    **context,
+                    "expected_telemetry_guard_blocks": [
+                        {**guard, "page_lifetime": "shadow-playback-exit"}
+                    ],
+                },
+            ),
+        )
+        for changed_item, scenario, changed_context in rejected:
+            with self.subTest(item=changed_item, scenario=scenario, context=changed_context):
+                self.assertIsNone(
+                    HARNESS.request_failure_expected_reason(
+                        changed_item, scenario, changed_context
+                    )
+                )
+
+    def test_rum_console_allowance_requires_exact_guard_and_message_shape(self) -> None:
+        rum_url = "https://spanish-app.tonymuzo.dev/cdn-cgi/rum"
+        guard = {
+            "page_lifetime": "today-entry",
+            "method": "POST",
+            "_url": rum_url,
+            "kind": "cloudflare-rum",
+            "guard_action": "blockedbyclient",
+        }
+        context = {
+            "base_origin": "https://spanish-app.tonymuzo.dev",
+            "base_netloc": "spanish-app.tonymuzo.dev",
+            "expected_telemetry_guard_blocks": [guard],
+        }
+        browser_error = {
+            "page_lifetime": "today-entry",
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+            "location": {"url": rum_url},
+        }
+        fetch_error = {
+            "page_lifetime": "today-entry",
+            "type": "error",
+            "text": f"Fetch API cannot load {rum_url} due to access control checks.",
+            "location": {
+                "url": "https://static.cloudflareinsights.com/beacon.min.js/version"
+            },
+        }
+        for item in (browser_error, fetch_error):
+            with self.subTest(item=item):
+                self.assertIsNotNone(
+                    HARNESS.console_expected_reason(item, "live_read_only", context)
+                )
+
+        rejected = (
+            {**browser_error, "text": f"Unrelated fatal error mentioning {rum_url}"},
+            {**browser_error, "page_lifetime": "other-page"},
+            {
+                **fetch_error,
+                "text": f"Fetch API cannot load {rum_url}?token=private due to access control checks.",
+            },
+        )
+        for item in rejected:
+            with self.subTest(item=item):
+                self.assertIsNone(
+                    HARNESS.console_expected_reason(item, "live_read_only", context)
+                )
+        self.assertIsNone(
+            HARNESS.console_expected_reason(
+                browser_error,
+                "live_read_only",
+                {**context, "expected_telemetry_guard_blocks": []},
+            )
+        )
+        self.assertIsNone(
+            HARNESS.console_expected_reason(
+                {
+                    "type": "error",
+                    "text": "Unrelated application error was blocked",
+                    "location": {"url": rum_url},
+                },
+                "ready",
+                context,
+            )
+        )
 
     def test_live_cancellation_allowance_is_relational_and_fail_closed(self) -> None:
         selected = "https://api-spanish.tonymuzo.dev/api/media/private-token.wav?private=1"
@@ -292,6 +585,7 @@ class LiveEvidenceTests(unittest.TestCase):
     def test_runtime_clean_requires_observations_from_both_page_lifetimes(self) -> None:
         class StubRouter:
             mutation_attempts: list[dict[str, str]] = []
+            expected_telemetry_attempts: list[dict[str, str]] = []
             api_get_count = 1
             media_get_count = 1
 
@@ -367,7 +661,12 @@ class LiveEvidenceTests(unittest.TestCase):
         self.assertIn("Live evidence must contain exactly report.json and report.md", workflow)
         self.assertIn("/tmp/shadow-results/report.json", workflow)
         self.assertIn("/tmp/shadow-results/report.md", workflow)
-        self.assertIn("if: ${{ always() && inputs.live }}", workflow)
+        self.assertIn("id: live_evidence_privacy", workflow)
+        self.assertIn(
+            "if: ${{ always() && inputs.live && "
+            "steps.live_evidence_privacy.outcome == 'success' }}",
+            workflow,
+        )
         self.assertNotIn("Live screenshots are explicitly private", HARNESS_PATH.read_text(encoding="utf-8"))
 
 

@@ -53,6 +53,8 @@ except ImportError as exc:  # pragma: no cover - depends on runner provisioning
 
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+LIVE_PAGE_LIFETIMES = frozenset({"today-entry", "shadow-playback-exit"})
+GUARD_BLOCK_FAILURES = frozenset({"net::ERR_BLOCKED_BY_CLIENT", "Load request cancelled"})
 THEMES = {"light": "paper", "dark": "dark"}
 DEVICES: dict[str, dict[str, Any]] = {
     "desktop": {
@@ -442,6 +444,37 @@ def is_cloudflare_beacon(parsed: Any) -> bool:
     )
 
 
+def http_origin(url: str) -> tuple[str, str, int] | None:
+    """Return a normalized HTTP origin tuple, including the effective port."""
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        return None
+    if parsed.username or parsed.password:
+        return None
+    try:
+        port = parsed.port
+    except ValueError:
+        return None
+    return (
+        parsed.scheme.casefold(),
+        parsed.hostname.casefold(),
+        port if port is not None else (443 if parsed.scheme == "https" else 80),
+    )
+
+
+def is_exact_same_origin_rum(url: str, base_origin: str) -> bool:
+    parsed = urlparse(url)
+    return bool(
+        http_origin(url) == http_origin(base_origin)
+        and parsed.path == "/cdn-cgi/rum"
+        and not parsed.params
+        and not parsed.query
+        and not parsed.fragment
+        and "?" not in url
+        and "#" not in url
+    )
+
+
 class FixtureRouter:
     """Fail-closed, page-local fixture router for API and media reads."""
 
@@ -657,32 +690,61 @@ class LiveRouter:
     """Read-only live guard. It changes no GET response and stores no query/text."""
 
     def __init__(self, base: str) -> None:
+        self.base_origin = base.rstrip("/")
         self.base_netloc = urlparse(base).netloc
         self.reads: list[dict[str, Any]] = []
         self.api_get_count = 0
         self.media_get_count = 0
         self.mutation_attempts: list[dict[str, Any]] = []
+        self.expected_telemetry_attempts: list[dict[str, Any]] = []
         self.telemetry: list[dict[str, Any]] = []
 
-    def install(self, page: Page) -> None:
-        page.route("**/*", self.handle)
+    def install(self, page: Page, *, page_lifetime: str) -> None:
+        page.route(
+            "**/*",
+            lambda route: self.handle(route, page_lifetime=page_lifetime),
+        )
 
-    def handle(self, route: Any) -> None:
+    def handle(self, route: Any, *, page_lifetime: str = "unknown") -> None:
         request = route.request
         method = request.method.upper()
         parsed = urlparse(request.url)
-        record = private_request_record(request)
-        public_record = request_record(request)
-        if is_cloudflare_beacon(parsed):
-            self.telemetry.append({**public_record, "kind": "cloudflare-beacon", "action": "GET-allowed" if method in SAFE_METHODS else "blocked"})
-        if parsed.netloc == self.base_netloc and parsed.path == "/cdn-cgi/rum":
-            self.telemetry.append({**public_record, "kind": "cloudflare-rum", "action": "blocked"})
-            route.abort("blockedbyclient")
-            return
+        record = {**private_request_record(request), "page_lifetime": page_lifetime}
+        public_record = {**request_record(request), "page_lifetime": page_lifetime}
+
+        # Account for every unsafe method before any broad telemetry handling.
+        # Cloudflare's exact same-origin RUM POST is the sole expected exception:
+        # it is separately counted, blocked by this guard, and never dispatched.
         if method not in SAFE_METHODS:
-            self.mutation_attempts.append(record)
+            if method == "POST" and is_exact_same_origin_rum(
+                request.url, self.base_origin
+            ):
+                guard_record = {
+                    **record,
+                    "kind": "cloudflare-rum",
+                    "guard_action": "blockedbyclient",
+                }
+                self.expected_telemetry_attempts.append(guard_record)
+                self.telemetry.append(
+                    {
+                        **public_record,
+                        "kind": "cloudflare-rum",
+                        "action": "expected-POST-blocked",
+                    }
+                )
+            else:
+                self.mutation_attempts.append(record)
             route.abort("blockedbyclient")
             return
+
+        if is_cloudflare_beacon(parsed):
+            self.telemetry.append(
+                {
+                    **public_record,
+                    "kind": "cloudflare-beacon",
+                    "action": "safe-method-allowed",
+                }
+            )
         if method == "GET" and parsed.netloc in {self.base_netloc, "api-spanish.tonymuzo.dev"} and parsed.path.startswith("/api/"):
             self.api_get_count += 1
         if method == "GET" and request.resource_type == "media":
@@ -703,6 +765,13 @@ class LiveRouter:
             "media_get_count": self.media_get_count,
             "mutation_attempt_count": len(self.mutation_attempts),
             "mutation_methods": sorted({item["method"] for item in self.mutation_attempts}),
+            "expected_telemetry_attempt_count": len(self.expected_telemetry_attempts),
+            "expected_telemetry_methods": sorted(
+                {item["method"] for item in self.expected_telemetry_attempts}
+            ),
+            "expected_telemetry_page_lifetimes": sorted(
+                {item["page_lifetime"] for item in self.expected_telemetry_attempts}
+            ),
             "telemetry": self.telemetry,
             "paths_queries_bodies_and_text_logged": False,
         }
@@ -845,7 +914,10 @@ def live_url_relation(url: str, live_context: dict[str, Any]) -> str:
         return "exact-selected-media"
     parsed = urlparse(url)
     base_host = urlparse(f"https://{live_context.get('base_netloc', '')}").hostname
-    if parsed.hostname == base_host and parsed.path == "/cdn-cgi/rum":
+    base_origin = live_context.get("base_origin") or (
+        f"https://{live_context.get('base_netloc', '')}"
+    )
+    if is_exact_same_origin_rum(url, base_origin):
         return "exact-cloudflare-rum"
     if is_cloudflare_beacon(parsed):
         return "exact-cloudflare-beacon"
@@ -940,6 +1012,80 @@ def safe_live_request_diagnostic(item: dict[str, Any], live_context: dict[str, A
     }
 
 
+def expected_rum_guard_block(
+    url: str,
+    method: str,
+    page_lifetime: str,
+    live_context: dict[str, Any],
+) -> dict[str, Any] | None:
+    base_origin = live_context.get("base_origin") or (
+        f"https://{live_context.get('base_netloc', '')}"
+    )
+    if (
+        method != "POST"
+        or page_lifetime not in LIVE_PAGE_LIFETIMES
+        or not is_exact_same_origin_rum(url, base_origin)
+    ):
+        return None
+    return next(
+        (
+            block
+            for block in live_context.get("expected_telemetry_guard_blocks", [])
+            if block.get("_url") == url
+            and block.get("method") == method
+            and block.get("page_lifetime") == page_lifetime
+            and block.get("kind") == "cloudflare-rum"
+            and block.get("guard_action") == "blockedbyclient"
+        ),
+        None,
+    )
+
+
+def exact_rum_console_guard_url(
+    item: dict[str, Any], live_context: dict[str, Any]
+) -> str | None:
+    """Return the guarded RUM URL only for exact browser block diagnostics."""
+    text = item.get("text", "")
+    location_url = item.get("location", {}).get("url", "")
+    page_lifetime = item.get("page_lifetime", "unknown")
+    referenced_urls = [
+        match.rstrip(".,);]}>")
+        for match in re.findall(r"https?://[^\s\"'<>]+", text)
+    ]
+
+    if text in {
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+        "Load failed",
+    } and expected_rum_guard_block(
+        location_url, "POST", page_lifetime, live_context
+    ):
+        return location_url
+
+    if len(referenced_urls) != 1:
+        return None
+    rum_url = referenced_urls[0]
+    exact_fetch_messages = {
+        f"Fetch API cannot load {rum_url} due to access control checks.",
+        f"Fetch API cannot load {rum_url} due to access control checks",
+        f"Fetch API cannot load {rum_url}. Load failed",
+        f"Fetch API cannot load {rum_url}. Load failed.",
+    }
+    location_is_expected = bool(
+        not location_url
+        or location_url == rum_url
+        or is_cloudflare_beacon(urlparse(location_url))
+    )
+    if (
+        text in exact_fetch_messages
+        and location_is_expected
+        and expected_rum_guard_block(
+            rum_url, "POST", page_lifetime, live_context
+        )
+    ):
+        return rum_url
+    return None
+
+
 def console_expected_reason(
     item: dict[str, Any],
     scenario: str,
@@ -954,21 +1100,13 @@ def console_expected_reason(
     if scenario == "error_retry" and location_path == ERROR_MEDIA:
         if text.startswith("Failed to load resource:") and "404" in text:
             return "exact synthetic media 404"
-    if location_path == "/cdn-cgi/rum" and (
-        "ERR_BLOCKED_BY_CLIENT" in text or "Load failed" in text or "blocked" in text.casefold()
-    ):
+    if scenario != "live_read_only" and location_path == "/cdn-cgi/rum" and text in {
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+        "Load failed",
+    }:
         return "exact blocked Cloudflare RUM"
     if scenario == "live_read_only" and item.get("type") == "error":
-        referenced_urls = [
-            match.rstrip(".,);]}>")
-            for match in re.findall(r"https?://[^\s\"'<>]+", text)
-        ]
-        location_relation = live_url_relation(location_url, live_context)
-        if (
-            len(referenced_urls) == 1
-            and live_url_relation(referenced_urls[0], live_context) == "exact-cloudflare-rum"
-            and location_relation in {"none", "exact-cloudflare-rum", "exact-cloudflare-beacon"}
-        ):
+        if exact_rum_console_guard_url(item, live_context):
             return "exact blocked Cloudflare RUM URL reported by browser console"
     return None
 
@@ -979,8 +1117,17 @@ def request_failure_expected_reason(
     live_context: dict[str, Any] | None = None,
 ) -> str | None:
     live_context = live_context or {}
-    if item["path"] == "/cdn-cgi/rum":
-        return "exact blocked Cloudflare RUM"
+    if (
+        scenario == "live_read_only"
+        and item.get("failure") in GUARD_BLOCK_FAILURES
+        and expected_rum_guard_block(
+            item.get("_url", ""),
+            item.get("method", ""),
+            item.get("page_lifetime", "unknown"),
+            live_context,
+        )
+    ):
+        return "exact same-origin Cloudflare RUM POST blocked by live guard"
     if scenario == "pending_source_switch" and item["path"] == PENDING_MEDIA:
         return "source switch cancelled exact pending media request"
     if item.get("method") == "GET" and item.get("failure") in {"net::ERR_ABORTED", "Load request cancelled"}:
@@ -1250,7 +1397,7 @@ def create_observed_live_page(
     page = context.new_page()
     page.set_default_timeout(timeout)
     attach_observers(page, raw, page_lifetime=page_lifetime)
-    router.install(page)
+    router.install(page, page_lifetime=page_lifetime)
     return page
 
 
@@ -2367,8 +2514,12 @@ def finish_live_run(
     live_context: dict[str, Any],
 ) -> None:
     run["network"] = router.evidence()
+    runtime_context = {
+        **live_context,
+        "expected_telemetry_guard_blocks": router.expected_telemetry_attempts,
+    }
     runtime, counts = public_runtime(
-        raw, run["scenario"], live=True, live_context=live_context
+        raw, run["scenario"], live=True, live_context=runtime_context
     )
     lifetime_observations = {
         lifetime: {
@@ -2402,10 +2553,14 @@ def finish_live_run(
         run,
         "live.safety-no-writes",
         not router.mutation_attempts,
-        expected="zero attempted non-GET/HEAD/OPTIONS requests; every attempt would be blocked",
+        expected=(
+            "zero unexpected non-GET/HEAD/OPTIONS requests; the only expected exception is "
+            "an exact same-origin Cloudflare RUM POST blocked before dispatch"
+        ),
         actual={
             "count": len(router.mutation_attempts),
             "methods": sorted({item["method"] for item in router.mutation_attempts}),
+            "expected_blocked_rum_posts": len(router.expected_telemetry_attempts),
         },
     )
     selected = run.get("selected_media_evidence", {})
@@ -2460,6 +2615,7 @@ def live_run(
     run["artifact_privacy"] = "No live screenshots or learner text are written."
     context, today_page, router, raw = create_live_page(browser, base, timeout, device)
     live_context: dict[str, Any] = {
+        "base_origin": base.rstrip("/"),
         "base_netloc": urlparse(base).netloc,
         "selected_media_url": "",
         "selected_media_proven_success": False,
@@ -2763,7 +2919,8 @@ def markdown_report(report: dict[str, Any]) -> str:
         lines.extend(
             [
                 "- Actual API/media reads were GET/HEAD/OPTIONS only.",
-                "- Every non-safe method was blocked before dispatch and would fail the run.",
+                "- The exact same-origin Cloudflare RUM POST was separately counted and blocked before dispatch.",
+                "- Every other non-safe method was blocked before dispatch and would fail the run.",
                 "- JSON excludes selected source text, option labels, query strings, response bodies, localStorage values, and console text.",
                 "- Live mode writes no screenshots; public artifacts contain sanitized reports only.",
             ]

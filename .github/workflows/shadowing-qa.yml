@@ -49,7 +49,8 @@ jobs:
       - name: Public hydrated playback (GET-only)
         if: ${{ inputs.live }}
         run: /tmp/shadow-qa/bin/python scripts/test_shadowing_browser.py --base https://spanish-app.tonymuzo.dev --live --browser ${{ matrix.browser }} --output /tmp/shadow-results
-      - name: Reject private live evidence before public upload
+      - name: Validate live evidence artifact allowlist
+        id: live_evidence_privacy
         if: ${{ always() && inputs.live }}
         shell: bash
         run: |
@@ -83,7 +84,7 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
       - uses: actions/upload-artifact@v6
-        if: ${{ always() && inputs.live }}
+        if: ${{ always() && inputs.live && steps.live_evidence_privacy.outcome == 'success' }}
         with:
           name: shadowing-${{ matrix.browser }}
           path: |
