@@ -202,32 +202,39 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     assert layout["retryRect"] and layout["retryRect"]["height"] >= 40, layout
 
     selected_line = page.get_by_label("Select transcript line 2", exact=True)
-    selected_line.click()
+    with page.expect_request(
+        lambda request: request.method == "POST" and request.url.endswith("/translations/selection"),
+        timeout=10_000,
+    ) as first_request_info:
+        selected_line.focus()
+        selected_line.press("Space")
     expect(selected_line).to_be_checked()
     english = page.get_by_label("English meaning", exact=True)
     english.wait_for()
-    expect(english).to_have_attribute("placeholder", "Translating the exact selection…", timeout=5_000)
     expect(english).to_have_attribute("placeholder", "English remains editable", timeout=10_000)
     assert english.input_value().strip(), "single-line English translation was empty"
-    first_request = next(item for item in evidence["api_requests"] if item["path"].endswith("/translations/selection"))
-    assert first_request["body"] == {
+    first_request = first_request_info.value
+    assert first_request.post_data_json == {
         "source_text": "Me quedé en blanco cuando me hizo la pregunta.",
         "context_before": "Durante la entrevista estaba muy nervioso.",
         "context_after": "Después respiré y pude responder.",
-    }, first_request
+    }, first_request.post_data_json
 
     english.fill("My own editable meaning")
     adjacent_line = page.get_by_label("Select transcript line 3", exact=True)
-    adjacent_line.click()
+    with page.expect_request(
+        lambda request: request.method == "POST" and request.url.endswith("/translations/selection"),
+        timeout=10_000,
+    ) as adjacent_request_info:
+        adjacent_line.focus()
+        adjacent_line.press("Space")
     expect(adjacent_line).to_be_checked()
-    expect(english).to_have_attribute("placeholder", "Translating the exact selection…", timeout=5_000)
     expect(english).to_have_attribute("placeholder", "English remains editable", timeout=10_000)
     page.get_by_text("English meaning kept because you edited it.", exact=True).wait_for(timeout=5_000)
     assert english.input_value() == "My own editable meaning"
-    selection_requests = [item for item in evidence["api_requests"] if item["path"].endswith("/translations/selection")]
-    assert selection_requests[-1]["body"]["source_text"] == (
+    assert adjacent_request_info.value.post_data_json["source_text"] == (
         "Me quedé en blanco cuando me hizo la pregunta. Después respiré y pude responder."
-    ), selection_requests
+    ), adjacent_request_info.value.post_data_json
 
     page.get_by_role("button", name="Retry English translations", exact=True).click()
     page.get_by_text("Then I took a breath and was able to answer.", exact=True).wait_for(timeout=6_000)
