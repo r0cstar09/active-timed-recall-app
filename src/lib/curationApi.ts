@@ -7,6 +7,7 @@ import type {
   DraftRevisionRef,
   DraftSelection,
   PromoteResponse,
+  SelectionTranslationRequest,
 } from "./curationTypes";
 
 export class CurationApiError extends Error {
@@ -77,9 +78,21 @@ function hydrateDraft(item: CurationDraft): CurationDraft {
 }
 
 function hydrateImport(item: CurationImport): CurationImport {
+  const transcript = Array.isArray(item.transcript)
+    ? item.transcript.map((segment) => ({
+      ...segment,
+      english: typeof segment.english === "string" && segment.english.trim() ? segment.english : null,
+    }))
+    : [];
   return {
     ...item,
-    transcript: Array.isArray(item.transcript) ? item.transcript : [],
+    transcript,
+    translation_status: item.translation_status ?? "pending",
+    translation_error: item.translation_error ?? null,
+    translation_completed: Number.isFinite(item.translation_completed)
+      ? item.translation_completed
+      : transcript.filter((segment) => segment.english).length,
+    translation_total: Number.isFinite(item.translation_total) ? item.translation_total : transcript.length,
     drafts: Array.isArray(item.drafts) ? item.drafts.map(hydrateDraft) : [],
     source_audio_url: item.source_audio_url ? resolveUrl(item.source_audio_url) : null,
   };
@@ -115,6 +128,24 @@ export const curationApi = {
     return hydrateImport(await request<CurationImport>(
       `/api/curation/imports/${encodeURIComponent(String(importId))}`,
     ));
+  },
+
+  async retryImportTranslation(importId: number | string): Promise<CurationImport> {
+    return hydrateImport(await request<CurationImport>(
+      `/api/curation/imports/${encodeURIComponent(String(importId))}/translations/retry`,
+      { method: "POST" },
+    ));
+  },
+
+  translateSelection(
+    importId: number | string,
+    selection: SelectionTranslationRequest,
+  ): Promise<{ english: string }> {
+    return requestJson<{ english: string }>(
+      `/api/curation/imports/${encodeURIComponent(String(importId))}/translations/selection`,
+      "POST",
+      selection,
+    );
   },
 
   async createDrafts(importId: number | string, selections: DraftSelection[]): Promise<CurationDraft[]> {

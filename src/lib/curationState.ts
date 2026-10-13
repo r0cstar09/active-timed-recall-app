@@ -156,6 +156,9 @@ export function importNeedsPolling(item: CurationImport | null | undefined): boo
   return Boolean(item && (
     item.status === "queued"
     || item.status === "loading"
+    || item.translation_status === "pending"
+    || item.translation_status === "queued"
+    || item.translation_status === "translating"
     || item.drafts?.some((draft) => draft.status === "queued" || draft.status === "preparing")
   ));
 }

@@ -44,7 +44,14 @@ const curationImport = (extra = {}) => ({
   title: "Conversation",
   status: "ready",
   error_message: null,
-  transcript: [segment(0, "Buenos días"), segment(1, "¿Cómo estás?")],
+  translation_status: "ready",
+  translation_error: null,
+  translation_completed: 2,
+  translation_total: 2,
+  transcript: [
+    { ...segment(0, "Buenos días"), english: "Good morning" },
+    { ...segment(1, "¿Cómo estás?"), english: "How are you?" },
+  ],
   drafts: [draft()],
   source_audio_url: "/api/audio/source/original.m4a",
   created_at: "2026-09-08T12:00:00Z",
@@ -119,6 +126,8 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
     if (path.endsWith("/api/curation/imports")) body = curationImport();
     else if (path.includes("/api/curation/imports?") ) body = { imports: [curationImport()], total: 1 };
     else if (/\/api\/curation\/imports\/2$/.test(path)) body = curationImport();
+    else if (path.endsWith("/translations/retry")) body = curationImport({ translation_status: "queued" });
+    else if (path.endsWith("/translations/selection")) body = { english: "Good morning" };
     else if (path.endsWith("/drafts")) body = { drafts: [draft()] };
     else if (path.endsWith("/api/curation/drafts/7")) body = draft();
     else if (path.endsWith("/api/curation/prepare")) body = { drafts: [draft({ status: "queued" })] };
@@ -132,6 +141,12 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
     await curationApi.createImport("https://youtu.be/abcdefghijk");
     await curationApi.listImports(50, 0);
     const loaded = await curationApi.getImport(2);
+    await curationApi.retryImportTranslation(2);
+    const translated = await curationApi.translateSelection(2, {
+      source_text: "Buenos días",
+      context_before: "",
+      context_after: "¿Cómo estás?",
+    });
     await curationApi.createDrafts(2, [{ segment_indices: [0, 1], spanish: "Buenos días" }]);
     await curationApi.patchDraft(7, { revision: 1, english: "Good morning" });
     await curationApi.deleteDraft(7, 2);
@@ -142,11 +157,14 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
     await curationApi.reactivateCard(44);
 
     assert.equal(loaded.source_audio_url, "/api/audio/source/original.m4a");
+    assert.equal(translated.english, "Good morning");
     const summary = calls.map(({ url, options }) => `${options.method ?? "GET"} ${new URL(url, "https://local.test").pathname}${new URL(url, "https://local.test").search}`);
     assert.deepEqual(summary, [
       "POST /api/curation/imports",
       "GET /api/curation/imports?limit=50&offset=0",
       "GET /api/curation/imports/2",
+      "POST /api/curation/imports/2/translations/retry",
+      "POST /api/curation/imports/2/translations/selection",
       "POST /api/curation/imports/2/drafts",
       "PATCH /api/curation/drafts/7",
       "DELETE /api/curation/drafts/7?revision=2",
@@ -164,6 +182,12 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
 test("ingest UI makes manual curation primary while retaining legacy history and custom verbs", () => {
   const source = ["IngestForm", "ManualCuration"].map((name) => readFileSync(new URL(`../src/components/${name}.tsx`, import.meta.url), "utf8")).join("\n");
   assert.match(source, /curationApi\.createImport/);
+  assert.match(source, /line\.english/);
+  assert.match(source, /translation_status/);
+  assert.match(source, /Retry English translations/);
+  assert.match(source, /translateSelection/);
+  assert.match(source, /shouldApplySelectionTranslation/);
+  assert.match(source, /English meaning kept because you edited it/);
   assert.doesNotMatch(source, /api\.createIngest/);
   assert.match(source, /Save selection as draft/);
   assert.match(source, /Add approved/);

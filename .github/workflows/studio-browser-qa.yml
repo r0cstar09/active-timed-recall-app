@@ -67,6 +67,13 @@ jobs:
           done
       - name: Topic selection and exact-card practice without learner writes
         run: /tmp/studio-qa/bin/python scripts/test_practice_topics_browser.py --browser ${{ matrix.browser }} --output /tmp/studio-results/topics-${{ matrix.browser }}
+      - name: Bilingual transcript selection with intercepted disposable fixtures
+        run: |
+          python3 -m http.server 18764 --bind 127.0.0.1 --directory dist >/tmp/studio-curation-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for attempt in 1 2 3 4 5; do curl --silent --fail http://127.0.0.1:18764/ >/dev/null && break; sleep 1; done
+          /tmp/studio-qa/bin/python scripts/test_curation_translation_browser.py --base http://127.0.0.1:18764 --browser ${{ matrix.browser }} --output /tmp/studio-results/bilingual-${{ matrix.browser }}
       - name: Recording recovery with isolated API fixtures
         if: matrix.browser == 'chromium'
         env:
