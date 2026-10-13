@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   clipPositionFromSourceTime,
   createLineSplitSuggestions,
+  mediaSeekPositionFromSourceTime,
   partitionSpanishAtCursor,
   sourceTimeFromClipPosition,
   splitDraftEligibility,
@@ -43,6 +44,28 @@ test("clip-relative playhead maps to absolute source seconds and back", () => {
   assert.equal(sourceTimeFromClipPosition(100.8, 99, 8.4), 109.2);
   assert.equal(clipPositionFromSourceTime(100.8, 104.2, 8.4), 3.4);
   assert.equal(clipPositionFromSourceTime(100.8, 80, 8.4), 0);
+});
+
+test("native media seeks stay inside the encoded interval without changing saved cut math", () => {
+  // WebKit's WAV decoder requests byte EOF when currentTime is set to duration.
+  // A compliant 416 can then poison the element. Keep only the decoder seek
+  // just inside EOF; persisted intervals and source-time mappings stay exact.
+  const duration = 8.2;
+  const position = mediaSeekPositionFromSourceTime(9.8, 18, duration);
+  assert.ok(position < duration);
+  assert.ok(Math.abs(position - (duration - .001)) < 1e-9);
+  assert.equal(sourceTimeFromClipPosition(9.8, duration, duration), 18);
+  assert.equal(clipPositionFromSourceTime(9.8, 18, duration), duration);
+  assert.equal(mediaSeekPositionFromSourceTime(9.8, 13.2, duration), 3.4);
+  assert.equal(mediaSeekPositionFromSourceTime(9.8, 0, duration), 0);
+  assert.equal(mediaSeekPositionFromSourceTime(9.8, 999, duration), position);
+  for (const tiny of [.0000001, .0005, .001]) {
+    const seek = mediaSeekPositionFromSourceTime(0, tiny, tiny);
+    assert.ok(seek >= 0 && seek < tiny);
+  }
+  for (const invalid of [0, -1, NaN, Infinity]) {
+    assert.equal(mediaSeekPositionFromSourceTime(0, 99, invalid), 0);
+  }
 });
 
 test("an exact saved question and answer uses the next line start despite overlapping captions", () => {

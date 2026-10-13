@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { clipPositionFromSourceTime, sourceTimeFromClipPosition } from "../lib/clipEditing";
+import { mediaSeekPositionFromSourceTime, sourceTimeFromClipPosition } from "../lib/clipEditing";
 
 const stamp = (seconds: number) => `${Math.floor(seconds / 60)}:${(seconds % 60).toFixed(2).padStart(5, "0")}`;
 const clamp = (value: number, minimum: number, maximum: number) => Math.min(maximum, Math.max(minimum, value));
@@ -79,7 +79,7 @@ export default function AudioPlayhead({
   function seekTo(absoluteSourceSeconds: number) {
     const player = audio.current;
     if (!player) return;
-    const clipPosition = clipPositionFromSourceTime(audioSourceOffset, absoluteSourceSeconds, playerDuration(player));
+    const clipPosition = mediaSeekPositionFromSourceTime(audioSourceOffset, absoluteSourceSeconds, playerDuration(player));
     commandedSeek.current = clipPosition;
     player.currentTime = clipPosition;
   }
@@ -101,7 +101,8 @@ export default function AudioPlayhead({
     clearBoundaryTimers();
     stopAt.current = null;
     player.pause();
-    // Clamp any scheduler or decoder overshoot back to the exact audition/range end.
+    // Clamp overshoot to the selected end; decoder EOF seeks stay <=1ms inside
+    // the encoded interval so WebKit does not request an invalid EOF byte range.
     seekTo(target);
     onPlayheadChange(target);
   }

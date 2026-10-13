@@ -604,6 +604,12 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         bounded_stable = assert_media_ok(split_audio)["currentTime"] + 9.8
         assert abs(bounded_stop - 18.0) <= .03, bounded_stop
         assert abs(bounded_stable - bounded_stop) <= .005, (bounded_stop, bounded_stable)
+        # Explicit slider-to-end commands must also remain decoder-safe. The
+        # saved cut stays exactly 18.0; only the native seek is <=1ms inside EOF.
+        seek.fill("18")
+        eof_state = wait_for_media_time(page, split_audio, 18.0 - 9.8)
+        assert eof_state["currentTime"] < eof_state["duration"], eof_state
+        assert eof_state["duration"] - eof_state["currentTime"] <= .0011, eof_state
 
         # Overlapping captions deliberately prove the suggestion uses the next line's
         # start (12.559), never the prior line's end (14.759).
@@ -735,6 +741,7 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         assert not forbidden, forbidden
         assert not evidence["page_errors"], evidence
         assert not evidence["media_errors"], evidence
+        assert all(item["response_status"] in (200, 206) for item in evidence["media_requests"]), evidence["media_requests"]
         expected_failure_path = "/api/curation/drafts/701/split"
         blocked_telemetry = {
             item["url"] for item in evidence["blocked_external"]
@@ -768,6 +775,7 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
                 "trim_clock_seek_writes": trim_clock_writes,
                 "audition_stop_absolute": audition_stop,
                 "bounded_stop_absolute": bounded_stop,
+                "explicit_eof_seek": eof_state,
                 "split_advanced_seconds": split_mid - split_start,
                 "split_clock_seek_writes": split_clock_writes,
             },

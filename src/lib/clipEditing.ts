@@ -49,6 +49,23 @@ export function clipPositionFromSourceTime(
 }
 
 /**
+ * Decoder seeks use a half-open media interval. Some WebKit WAV decoders request
+ * byte EOF when currentTime is set to duration, and a valid 416 then poisons the
+ * player. Keep seeks at most 1ms inside EOF without changing saved cut times or
+ * the exact display/source conversion helpers above.
+ */
+export function mediaSeekPositionFromSourceTime(
+  clipStart: number,
+  sourceTime: number,
+  clipDuration: number,
+): number {
+  const duration = Number.isFinite(clipDuration) ? Math.max(0, clipDuration) : 0;
+  if (duration === 0) return 0;
+  const lastSeek = duration - Math.min(0.001, duration / 2);
+  return Math.min(clipPositionFromSourceTime(clipStart, sourceTime, duration), lastSeek);
+}
+
+/**
  * Offer caption-line boundaries only when the complete saved Spanish still maps
  * exactly to those lines. The next line's START is the timing suggestion: caption
  * windows can overlap, so the previous line's end is not a speaker handoff.
