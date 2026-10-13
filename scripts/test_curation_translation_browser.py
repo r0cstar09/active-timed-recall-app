@@ -204,10 +204,11 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     selected_line = page.get_by_label("Select transcript line 2", exact=True)
     selected_line.click()
     expect(selected_line).to_be_checked()
-    page.get_by_label("English meaning", exact=True).wait_for()
-    expect(page.get_by_label("English meaning", exact=True)).to_have_value(
-        "My mind went blank when he asked me the question.", timeout=10_000
-    )
+    english = page.get_by_label("English meaning", exact=True)
+    english.wait_for()
+    expect(english).to_have_attribute("placeholder", "Translating the exact selection…", timeout=5_000)
+    expect(english).to_have_attribute("placeholder", "English remains editable", timeout=10_000)
+    assert english.input_value().strip(), "single-line English translation was empty"
     first_request = next(item for item in evidence["api_requests"] if item["path"].endswith("/translations/selection"))
     assert first_request["body"] == {
         "source_text": "Me quedé en blanco cuando me hizo la pregunta.",
@@ -215,12 +216,18 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         "context_after": "Después respiré y pude responder.",
     }, first_request
 
-    page.get_by_label("English meaning", exact=True).fill("My own editable meaning")
+    english.fill("My own editable meaning")
     adjacent_line = page.get_by_label("Select transcript line 3", exact=True)
     adjacent_line.click()
     expect(adjacent_line).to_be_checked()
+    expect(english).to_have_attribute("placeholder", "Translating the exact selection…", timeout=5_000)
+    expect(english).to_have_attribute("placeholder", "English remains editable", timeout=10_000)
     page.get_by_text("English meaning kept because you edited it.", exact=True).wait_for(timeout=5_000)
-    assert page.get_by_label("English meaning", exact=True).input_value() == "My own editable meaning"
+    assert english.input_value() == "My own editable meaning"
+    selection_requests = [item for item in evidence["api_requests"] if item["path"].endswith("/translations/selection")]
+    assert selection_requests[-1]["body"]["source_text"] == (
+        "Me quedé en blanco cuando me hizo la pregunta. Después respiré y pude responder."
+    ), selection_requests
 
     page.get_by_role("button", name="Retry English translations", exact=True).click()
     page.get_by_text("Then I took a breath and was able to answer.", exact=True).wait_for(timeout=6_000)
