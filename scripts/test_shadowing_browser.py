@@ -838,6 +838,10 @@ def live_url_relation(url: str, live_context: dict[str, Any]) -> str:
         return "shadow-document"
     if parsed.hostname == base_host:
         return "same-origin-asset"
+    if parsed.hostname == "api-spanish.tonymuzo.dev" and parsed.path == "/api/stats":
+        return "today-dashboard-stats-api"
+    if parsed.hostname == "api-spanish.tonymuzo.dev" and parsed.path == "/api/sources":
+        return "today-source-count-api"
     if parsed.hostname == "api-spanish.tonymuzo.dev" and parsed.path.startswith("/api/"):
         return "production-api"
     return "external-or-unknown"
@@ -889,6 +893,12 @@ def safe_live_request_diagnostic(item: dict[str, Any], live_context: dict[str, A
     else:
         failure_kind = "other-failure"
     observed_at = float(item.get("observed_at", 0))
+    shadow_started = float(live_context.get("shadow_navigation_started_at", 0))
+    shadow_completed = float(live_context.get("shadow_navigation_completed_at", 0))
+    during_shadow_navigation = bool(
+        shadow_started
+        and shadow_started <= observed_at <= max(shadow_completed, shadow_started) + 0.5
+    )
     exit_started = float(live_context.get("exit_started_at", 0))
     exit_completed = float(live_context.get("exit_completed_at", 0))
     during_exit = bool(exit_started and exit_started <= observed_at <= max(exit_completed, exit_started) + 0.5)
@@ -897,6 +907,7 @@ def safe_live_request_diagnostic(item: dict[str, Any], live_context: dict[str, A
         "resource_type": item.get("resource_type", "unknown"),
         "is_navigation_request": bool(item.get("is_navigation_request")),
         "failure_kind": failure_kind,
+        "during_shadow_navigation": during_shadow_navigation,
         "during_exit_navigation": during_exit,
         "raw_url_or_failure_logged": False,
     }
@@ -952,6 +963,26 @@ def request_failure_expected_reason(
             return "discarding exact failed synthetic media after intercepted 404"
         if scenario == "live_read_only":
             diagnostic = safe_live_request_diagnostic(item, live_context)
+            if (
+                diagnostic["url_relation"]
+                in {"today-dashboard-stats-api", "today-source-count-api"}
+                and diagnostic["resource_type"] == "fetch"
+                and diagnostic["failure_kind"] == "exact-cancellation"
+                and diagnostic["during_shadow_navigation"]
+                and not diagnostic["is_navigation_request"]
+                and bool(live_context.get("today_document_proven_success"))
+                and bool(live_context.get("shadow_document_proven_success"))
+            ):
+                return "exact Today dashboard GET cancelled by proven fresh shadow navigation"
+            if (
+                diagnostic["url_relation"] == "today-document"
+                and diagnostic["resource_type"] == "other"
+                and diagnostic["failure_kind"] == "exact-cancellation"
+                and diagnostic["during_exit_navigation"]
+                and not diagnostic["is_navigation_request"]
+                and bool(live_context.get("exit_target_proven_success"))
+            ):
+                return "exact Today document GET cancelled after proven exit target restoration"
             if (
                 diagnostic["url_relation"] == "exact-selected-media"
                 and diagnostic["failure_kind"] == "exact-cancellation"
@@ -2321,8 +2352,13 @@ def live_run(
         "base_netloc": urlparse(base).netloc,
         "selected_media_url": "",
         "selected_media_proven_success": False,
+        "today_document_proven_success": False,
+        "shadow_document_proven_success": False,
+        "shadow_navigation_started_at": 0.0,
+        "shadow_navigation_completed_at": 0.0,
         "exit_started_at": 0.0,
         "exit_completed_at": 0.0,
+        "exit_target_proven_success": False,
     }
     try:
         today_response = page.goto(base + "/", wait_until="domcontentloaded", timeout=timeout)
@@ -2336,9 +2372,13 @@ def live_run(
             "Resume shadowing",
         }
         today_href_valid = urlparse(today_href).path.rstrip("/") == "/shadow"
+        live_context["today_document_proven_success"] = bool(
+            today_response and today_response.ok and today_label_valid and today_href_valid
+        )
         # Follow the verified destination as a fresh document. Chromium can cancel
         # Astro's client-router document fetch while changing history, leaving the
         # static shell visible but unhydrated; that is not a playback verdict.
+        live_context["shadow_navigation_started_at"] = time.monotonic()
         shadow_response = page.goto(
             base.rstrip("/") + "/shadow/", wait_until="domcontentloaded", timeout=timeout
         )
@@ -2371,6 +2411,12 @@ def live_run(
             },
         )
         wait_ready(page, timeout)
+        live_context["shadow_navigation_completed_at"] = time.monotonic()
+        live_context["shadow_document_proven_success"] = bool(
+            shadow_response
+            and shadow_response.ok
+            and urlparse(page.url).path.rstrip("/") == "/shadow"
+        )
 
         if device == "desktop":
             nav_links = page.get_by_role("link", name="Shadowing", exact=True)
@@ -2471,14 +2517,21 @@ def live_run(
         returned_href_valid = (
             urlparse(returned_entry.get_attribute("href") or "").path.rstrip("/") == "/shadow"
         )
+        returned_today_path = urlparse(page.url).path.rstrip("/") == ""
+        live_context["exit_target_proven_success"] = bool(
+            live_context["today_document_proven_success"]
+            and returned_href_valid
+            and returned_today_path
+        )
         add_check(
             run,
             "live.navigation-stops-playback-and-restores-today-entry",
-            pauses_after > pauses_before and returned_href_valid,
+            pauses_after > pauses_before and returned_href_valid and returned_today_path,
             expected="Exit stops live playback and restores the Today Start/Resume route",
             actual={
                 "pause_observed": pauses_after > pauses_before,
                 "today_entry_restored": returned_href_valid,
+                "today_path_restored": returned_today_path,
             },
         )
     except Exception as exc:

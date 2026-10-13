@@ -181,6 +181,60 @@ class LiveEvidenceTests(unittest.TestCase):
                     )
                 )
 
+    def test_navigation_cancellation_allowances_require_exact_target_success(self) -> None:
+        context = {
+            "base_netloc": "spanish-app.tonymuzo.dev",
+            "today_document_proven_success": True,
+            "shadow_document_proven_success": True,
+            "shadow_navigation_started_at": 4.0,
+            "shadow_navigation_completed_at": 6.0,
+            "exit_started_at": 10.0,
+            "exit_completed_at": 11.2,
+            "exit_target_proven_success": True,
+        }
+        stats_item = {
+            "method": "GET",
+            "path": "/api/stats",
+            "host": "api-spanish.tonymuzo.dev",
+            "_url": "https://api-spanish.tonymuzo.dev/api/stats",
+            "resource_type": "fetch",
+            "is_navigation_request": False,
+            "observed_at": 5.0,
+            "failure": "Load request cancelled",
+        }
+        today_item = {
+            "method": "GET",
+            "path": "/",
+            "host": "spanish-app.tonymuzo.dev",
+            "_url": "https://spanish-app.tonymuzo.dev/",
+            "resource_type": "other",
+            "is_navigation_request": False,
+            "observed_at": 11.0,
+            "failure": "net::ERR_ABORTED",
+        }
+        self.assertIsNotNone(
+            HARNESS.request_failure_expected_reason(stats_item, "live_read_only", context)
+        )
+        self.assertIsNotNone(
+            HARNESS.request_failure_expected_reason(today_item, "live_read_only", context)
+        )
+        rejected = [
+            ({**stats_item, "_url": "https://api-spanish.tonymuzo.dev/api/cards"}, context),
+            ({**stats_item, "resource_type": "xhr"}, context),
+            ({**stats_item, "observed_at": 7.0}, context),
+            (stats_item, {**context, "shadow_document_proven_success": False}),
+            ({**today_item, "observed_at": 9.0}, context),
+            ({**today_item, "resource_type": "document"}, context),
+            (today_item, {**context, "exit_target_proven_success": False}),
+        ]
+        for item, changed_context in rejected:
+            with self.subTest(item=item, context=changed_context):
+                self.assertIsNone(
+                    HARNESS.request_failure_expected_reason(
+                        item, "live_read_only", changed_context
+                    )
+                )
+
     def test_workflow_live_artifact_allowlist_is_report_only(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "shadowing-qa.yml").read_text(
             encoding="utf-8"
