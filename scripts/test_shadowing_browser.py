@@ -53,6 +53,8 @@ except ImportError as exc:  # pragma: no cover - depends on runner provisioning
 
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+LIVE_PAGE_LIFETIMES = frozenset({"today-entry", "shadow-playback-exit"})
+GUARD_BLOCK_FAILURES = frozenset({"net::ERR_BLOCKED_BY_CLIENT", "Load request cancelled"})
 THEMES = {"light": "paper", "dark": "dark"}
 DEVICES: dict[str, dict[str, Any]] = {
     "desktop": {
@@ -220,6 +222,10 @@ MEDIA_TRACKER_JS = r"""
     },
     resetTimers() {
       timerRecords = [];
+    },
+    selectedUrl() {
+      const element = media[media.length - 1];
+      return element ? (element.currentSrc || element.src || '') : '';
     },
     dispatch(index, type) {
       const element = media[index];
@@ -417,9 +423,55 @@ def request_record(request: Any) -> dict[str, Any]:
     return {"method": request.method.upper(), "path": parsed.path, "host": parsed.hostname or ""}
 
 
+def private_request_record(request: Any) -> dict[str, Any]:
+    """Retain exact request identity only in memory for relational checks.
+
+    ``_url`` must never be copied to a report. Live media URLs can identify
+    learner-selected material, so public evidence uses fixed relation labels.
+    """
+    return {
+        **request_record(request),
+        "_url": request.url,
+        "resource_type": request.resource_type,
+        "is_navigation_request": bool(request.is_navigation_request()),
+        "observed_at": time.monotonic(),
+    }
+
+
 def is_cloudflare_beacon(parsed: Any) -> bool:
     return parsed.hostname == "static.cloudflareinsights.com" and bool(
         re.fullmatch(r"/beacon\.min\.js(?:/.*)?", parsed.path)
+    )
+
+
+def http_origin(url: str) -> tuple[str, str, int] | None:
+    """Return a normalized HTTP origin tuple, including the effective port."""
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        return None
+    if parsed.username or parsed.password:
+        return None
+    try:
+        port = parsed.port
+    except ValueError:
+        return None
+    return (
+        parsed.scheme.casefold(),
+        parsed.hostname.casefold(),
+        port if port is not None else (443 if parsed.scheme == "https" else 80),
+    )
+
+
+def is_exact_same_origin_rum(url: str, base_origin: str) -> bool:
+    parsed = urlparse(url)
+    return bool(
+        http_origin(url) == http_origin(base_origin)
+        and parsed.path == "/cdn-cgi/rum"
+        and not parsed.params
+        and not parsed.query
+        and not parsed.fragment
+        and "?" not in url
+        and "#" not in url
     )
 
 
@@ -638,31 +690,61 @@ class LiveRouter:
     """Read-only live guard. It changes no GET response and stores no query/text."""
 
     def __init__(self, base: str) -> None:
+        self.base_origin = base.rstrip("/")
         self.base_netloc = urlparse(base).netloc
         self.reads: list[dict[str, Any]] = []
         self.api_get_count = 0
         self.media_get_count = 0
         self.mutation_attempts: list[dict[str, Any]] = []
+        self.expected_telemetry_attempts: list[dict[str, Any]] = []
         self.telemetry: list[dict[str, Any]] = []
 
-    def install(self, page: Page) -> None:
-        page.route("**/*", self.handle)
+    def install(self, page: Page, *, page_lifetime: str) -> None:
+        page.route(
+            "**/*",
+            lambda route: self.handle(route, page_lifetime=page_lifetime),
+        )
 
-    def handle(self, route: Any) -> None:
+    def handle(self, route: Any, *, page_lifetime: str = "unknown") -> None:
         request = route.request
         method = request.method.upper()
         parsed = urlparse(request.url)
-        record = request_record(request)
-        if is_cloudflare_beacon(parsed):
-            self.telemetry.append({**record, "kind": "cloudflare-beacon", "action": "GET-allowed" if method in SAFE_METHODS else "blocked"})
-        if parsed.netloc == self.base_netloc and parsed.path == "/cdn-cgi/rum":
-            self.telemetry.append({**record, "kind": "cloudflare-rum", "action": "blocked"})
-            route.abort("blockedbyclient")
-            return
+        record = {**private_request_record(request), "page_lifetime": page_lifetime}
+        public_record = {**request_record(request), "page_lifetime": page_lifetime}
+
+        # Account for every unsafe method before any broad telemetry handling.
+        # Cloudflare's exact same-origin RUM POST is the sole expected exception:
+        # it is separately counted, blocked by this guard, and never dispatched.
         if method not in SAFE_METHODS:
-            self.mutation_attempts.append(record)
+            if method == "POST" and is_exact_same_origin_rum(
+                request.url, self.base_origin
+            ):
+                guard_record = {
+                    **record,
+                    "kind": "cloudflare-rum",
+                    "guard_action": "blockedbyclient",
+                }
+                self.expected_telemetry_attempts.append(guard_record)
+                self.telemetry.append(
+                    {
+                        **public_record,
+                        "kind": "cloudflare-rum",
+                        "action": "expected-POST-blocked",
+                    }
+                )
+            else:
+                self.mutation_attempts.append(record)
             route.abort("blockedbyclient")
             return
+
+        if is_cloudflare_beacon(parsed):
+            self.telemetry.append(
+                {
+                    **public_record,
+                    "kind": "cloudflare-beacon",
+                    "action": "safe-method-allowed",
+                }
+            )
         if method == "GET" and parsed.netloc in {self.base_netloc, "api-spanish.tonymuzo.dev"} and parsed.path.startswith("/api/"):
             self.api_get_count += 1
         if method == "GET" and request.resource_type == "media":
@@ -683,8 +765,60 @@ class LiveRouter:
             "media_get_count": self.media_get_count,
             "mutation_attempt_count": len(self.mutation_attempts),
             "mutation_methods": sorted({item["method"] for item in self.mutation_attempts}),
+            "expected_telemetry_attempt_count": len(self.expected_telemetry_attempts),
+            "expected_telemetry_methods": sorted(
+                {item["method"] for item in self.expected_telemetry_attempts}
+            ),
+            "expected_telemetry_page_lifetimes": sorted(
+                {item["page_lifetime"] for item in self.expected_telemetry_attempts}
+            ),
             "telemetry": self.telemetry,
             "paths_queries_bodies_and_text_logged": False,
+        }
+
+    def selected_media_evidence(
+        self,
+        selected_url: str,
+        responses: list[dict[str, Any]],
+        performance_entries: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        reads = [
+            item
+            for item in self.reads
+            if item.get("method") == "GET" and item.get("_url") == selected_url
+        ]
+        selected_responses = [
+            item
+            for item in responses
+            if item.get("method") == "GET" and item.get("_url") == selected_url
+        ]
+        successful = [item for item in selected_responses if 200 <= item.get("status", 0) < 300]
+        media_typed = [
+            item
+            for item in successful
+            if item.get("content_type", "").startswith(("audio/", "video/"))
+        ]
+        return {
+            "exact_selected_get_count": len(reads),
+            "route_resource_types": sorted({item["resource_type"] for item in reads}),
+            "successful_response_count": len(successful),
+            "response_statuses": sorted({item["status"] for item in selected_responses}),
+            "media_content_type_count": len(media_typed),
+            "content_type_families": sorted(
+                {
+                    item.get("content_type", "").split("/", 1)[0]
+                    for item in selected_responses
+                    if "/" in item.get("content_type", "")
+                }
+            ),
+            "performance_entry_count": len(performance_entries),
+            "performance_initiator_types": sorted(
+                {str(item.get("initiator_type") or "unknown") for item in performance_entries}
+            ),
+            "performance_completed_count": sum(
+                bool(item.get("duration_positive")) for item in performance_entries
+            ),
+            "url_or_path_logged": False,
         }
 
 
@@ -718,11 +852,18 @@ def safe_error(exc: Exception, live: bool) -> str:
     return f"{type(exc).__name__}: {exc}"
 
 
-def attach_observers(page: Page, raw: dict[str, list[Any]]) -> None:
+def attach_observers(
+    page: Page,
+    raw: dict[str, list[Any]],
+    *,
+    page_lifetime: str | None = None,
+) -> None:
+    lifetime = {"page_lifetime": page_lifetime} if page_lifetime else {}
     page.on(
         "console",
         lambda message: raw["console"].append(
             {
+                **lifetime,
                 "type": message.type,
                 "text": message.text,
                 "location": message.location,
@@ -731,41 +872,262 @@ def attach_observers(page: Page, raw: dict[str, list[Any]]) -> None:
         if message.type in {"warning", "error"}
         else None,
     )
-    page.on("pageerror", lambda error: raw["page_errors"].append(str(error)))
     page.on(
-        "requestfailed",
-        lambda request: raw["request_failures"].append(
-            {**request_record(request), "failure": request.failure or ""}
+        "pageerror",
+        lambda error: raw["page_errors"].append(
+            {**lifetime, "error": str(error)} if page_lifetime else str(error)
         ),
     )
     page.on(
-        "response",
-        lambda response: raw["http_errors"].append(
-            {**request_record(response.request), "status": response.status}
-        )
-        if response.status >= 400
-        else None,
+        "requestfailed",
+        lambda request: raw["request_failures"].append(
+            {
+                **lifetime,
+                **private_request_record(request),
+                "failure": request.failure or "",
+            }
+        ),
+    )
+
+    def observe_response(response: Any) -> None:
+        try:
+            content_type = (response.header_value("content-type") or "").split(";", 1)[0].strip().casefold()
+        except Exception:
+            content_type = ""
+        private = {
+            **lifetime,
+            **private_request_record(response.request),
+            "status": response.status,
+            "content_type": content_type,
+        }
+        raw["responses"].append(private)
+        if response.status >= 400:
+            raw["http_errors"].append(private)
+
+    page.on("response", observe_response)
+
+
+def live_url_relation(url: str, live_context: dict[str, Any]) -> str:
+    if not url:
+        return "none"
+    if live_context.get("selected_media_url") and url == live_context["selected_media_url"]:
+        return "exact-selected-media"
+    parsed = urlparse(url)
+    base_host = urlparse(f"https://{live_context.get('base_netloc', '')}").hostname
+    base_origin = live_context.get("base_origin") or (
+        f"https://{live_context.get('base_netloc', '')}"
+    )
+    if is_exact_same_origin_rum(url, base_origin):
+        return "exact-cloudflare-rum"
+    if is_cloudflare_beacon(parsed):
+        return "exact-cloudflare-beacon"
+    if parsed.hostname == base_host and parsed.path.rstrip("/") == "":
+        return "today-document"
+    if parsed.hostname == base_host and parsed.path.rstrip("/") == "/shadow":
+        return "shadow-document"
+    if parsed.hostname == base_host:
+        return "same-origin-asset"
+    if parsed.hostname == "api-spanish.tonymuzo.dev" and parsed.path == "/api/stats":
+        return "today-dashboard-stats-api"
+    if parsed.hostname == "api-spanish.tonymuzo.dev" and parsed.path == "/api/sources":
+        return "today-source-count-api"
+    if parsed.hostname == "api-spanish.tonymuzo.dev" and parsed.path.startswith("/api/"):
+        return "production-api"
+    return "external-or-unknown"
+
+
+def console_message_features(text: str) -> list[str]:
+    lowered = text.casefold()
+    features = []
+    for feature, phrase in (
+        ("failed-to-load-resource", "failed to load resource"),
+        ("load-failed", "load failed"),
+        ("fetch-api-cannot-load", "fetch api cannot load"),
+        ("blocked-by-client", "blocked_by_client"),
+        ("access-control", "access control"),
+        ("cancelled", "cancel"),
+        ("service-worker-block", "service worker registration blocked by playwright"),
+    ):
+        if phrase in lowered:
+            features.append(feature)
+    return features or ["unrecognized"]
+
+
+def safe_live_console_diagnostic(item: dict[str, Any], live_context: dict[str, Any]) -> dict[str, Any]:
+    text = item.get("text", "")
+    referenced_urls = [
+        match.rstrip(".,);]}>")
+        for match in re.findall(r"https?://[^\s\"'<>]+", text)
+    ]
+    relations = [live_url_relation(url, live_context) for url in referenced_urls]
+    if "/cdn-cgi/rum" in text and "exact-cloudflare-rum" not in relations:
+        relations.append("exact-cloudflare-rum-relative-reference")
+    return {
+        "location_relation": live_url_relation(
+            item.get("location", {}).get("url", ""), live_context
+        ),
+        "referenced_url_relations": sorted(relations),
+        "referenced_url_count": len(referenced_urls),
+        "message_features": console_message_features(text),
+        "raw_text_or_url_logged": False,
+    }
+
+
+def safe_live_request_diagnostic(item: dict[str, Any], live_context: dict[str, Any]) -> dict[str, Any]:
+    failure = item.get("failure", "")
+    if failure in {"net::ERR_ABORTED", "Load request cancelled"}:
+        failure_kind = "exact-cancellation"
+    elif "cancel" in failure.casefold() or "abort" in failure.casefold():
+        failure_kind = "other-cancellation"
+    else:
+        failure_kind = "other-failure"
+    observed_at = float(item.get("observed_at", 0))
+    today_entry_started = float(live_context.get("today_entry_started_at", 0))
+    today_entry_completed = float(live_context.get("today_entry_completed_at", 0))
+    during_today_entry = bool(
+        today_entry_started
+        and today_entry_started
+        <= observed_at
+        <= max(today_entry_completed, today_entry_started) + 0.5
+    )
+    shadow_started = float(live_context.get("shadow_navigation_started_at", 0))
+    shadow_completed = float(live_context.get("shadow_navigation_completed_at", 0))
+    during_shadow_navigation = bool(
+        shadow_started
+        and shadow_started <= observed_at <= max(shadow_completed, shadow_started) + 0.5
+    )
+    exit_started = float(live_context.get("exit_started_at", 0))
+    exit_completed = float(live_context.get("exit_completed_at", 0))
+    during_exit = bool(exit_started and exit_started <= observed_at <= max(exit_completed, exit_started) + 0.5)
+    return {
+        "page_lifetime": item.get("page_lifetime", "unknown"),
+        "url_relation": live_url_relation(item.get("_url", ""), live_context),
+        "resource_type": item.get("resource_type", "unknown"),
+        "is_navigation_request": bool(item.get("is_navigation_request")),
+        "failure_kind": failure_kind,
+        "during_today_entry": during_today_entry,
+        "during_shadow_navigation": during_shadow_navigation,
+        "during_exit_navigation": during_exit,
+        "raw_url_or_failure_logged": False,
+    }
+
+
+def expected_rum_guard_block(
+    url: str,
+    method: str,
+    page_lifetime: str,
+    live_context: dict[str, Any],
+) -> dict[str, Any] | None:
+    base_origin = live_context.get("base_origin") or (
+        f"https://{live_context.get('base_netloc', '')}"
+    )
+    if (
+        method != "POST"
+        or page_lifetime not in LIVE_PAGE_LIFETIMES
+        or not is_exact_same_origin_rum(url, base_origin)
+    ):
+        return None
+    return next(
+        (
+            block
+            for block in live_context.get("expected_telemetry_guard_blocks", [])
+            if block.get("_url") == url
+            and block.get("method") == method
+            and block.get("page_lifetime") == page_lifetime
+            and block.get("kind") == "cloudflare-rum"
+            and block.get("guard_action") == "blockedbyclient"
+        ),
+        None,
     )
 
 
-def console_expected_reason(item: dict[str, Any], scenario: str) -> str | None:
+def exact_rum_console_guard_url(
+    item: dict[str, Any], live_context: dict[str, Any]
+) -> str | None:
+    """Return the guarded RUM URL only for exact browser block diagnostics."""
+    text = item.get("text", "")
+    location_url = item.get("location", {}).get("url", "")
+    page_lifetime = item.get("page_lifetime", "unknown")
+    referenced_urls = [
+        match.rstrip(".,);]}>")
+        for match in re.findall(r"https?://[^\s\"'<>]+", text)
+    ]
+
+    if text in {
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+        "Load failed",
+    } and expected_rum_guard_block(
+        location_url, "POST", page_lifetime, live_context
+    ):
+        return location_url
+
+    if len(referenced_urls) != 1:
+        return None
+    rum_url = referenced_urls[0]
+    exact_fetch_messages = {
+        f"Fetch API cannot load {rum_url} due to access control checks.",
+        f"Fetch API cannot load {rum_url} due to access control checks",
+        f"Fetch API cannot load {rum_url}. Load failed",
+        f"Fetch API cannot load {rum_url}. Load failed.",
+    }
+    location_is_expected = bool(
+        not location_url
+        or location_url == rum_url
+        or is_cloudflare_beacon(urlparse(location_url))
+    )
+    if (
+        text in exact_fetch_messages
+        and location_is_expected
+        and expected_rum_guard_block(
+            rum_url, "POST", page_lifetime, live_context
+        )
+    ):
+        return rum_url
+    return None
+
+
+def console_expected_reason(
+    item: dict[str, Any],
+    scenario: str,
+    live_context: dict[str, Any] | None = None,
+) -> str | None:
+    live_context = live_context or {}
     text = item["text"]
-    location_path = urlparse(item.get("location", {}).get("url", "")).path
+    location_url = item.get("location", {}).get("url", "")
+    location_path = urlparse(location_url).path
     if text == "Service Worker registration blocked by Playwright":
         return "exact Playwright service-worker block"
     if scenario == "error_retry" and location_path == ERROR_MEDIA:
         if text.startswith("Failed to load resource:") and "404" in text:
             return "exact synthetic media 404"
-    if location_path == "/cdn-cgi/rum" and (
-        "ERR_BLOCKED_BY_CLIENT" in text or "Load failed" in text or "blocked" in text.casefold()
-    ):
+    if scenario != "live_read_only" and location_path == "/cdn-cgi/rum" and text in {
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT",
+        "Load failed",
+    }:
         return "exact blocked Cloudflare RUM"
+    if scenario == "live_read_only" and item.get("type") == "error":
+        if exact_rum_console_guard_url(item, live_context):
+            return "exact blocked Cloudflare RUM URL reported by browser console"
     return None
 
 
-def request_failure_expected_reason(item: dict[str, Any], scenario: str) -> str | None:
-    if item["path"] == "/cdn-cgi/rum":
-        return "exact blocked Cloudflare RUM"
+def request_failure_expected_reason(
+    item: dict[str, Any],
+    scenario: str,
+    live_context: dict[str, Any] | None = None,
+) -> str | None:
+    live_context = live_context or {}
+    if (
+        scenario == "live_read_only"
+        and item.get("failure") in GUARD_BLOCK_FAILURES
+        and expected_rum_guard_block(
+            item.get("_url", ""),
+            item.get("method", ""),
+            item.get("page_lifetime", "unknown"),
+            live_context,
+        )
+    ):
+        return "exact same-origin Cloudflare RUM POST blocked by live guard"
     if scenario == "pending_source_switch" and item["path"] == PENDING_MEDIA:
         return "source switch cancelled exact pending media request"
     if item.get("method") == "GET" and item.get("failure") in {"net::ERR_ABORTED", "Load request cancelled"}:
@@ -773,6 +1135,54 @@ def request_failure_expected_reason(item: dict[str, Any], scenario: str) -> str 
             return "filter/source switching cancels exact selected synthetic main clip"
         if scenario == "error_retry" and item["path"] == ERROR_MEDIA:
             return "discarding exact failed synthetic media after intercepted 404"
+        if scenario == "live_read_only":
+            diagnostic = safe_live_request_diagnostic(item, live_context)
+            if (
+                diagnostic["url_relation"] == "shadow-document"
+                and diagnostic["resource_type"] == "other"
+                and diagnostic["failure_kind"] == "exact-cancellation"
+                and diagnostic["during_today_entry"]
+                and not diagnostic["is_navigation_request"]
+                and diagnostic["page_lifetime"]
+                == live_context.get("today_entry_page_lifetime")
+                and bool(live_context.get("today_document_proven_success"))
+                and bool(live_context.get("today_entry_click_proven_success"))
+            ):
+                return "exact Shadow document GET cancelled during proven Today entry click"
+            if (
+                diagnostic["url_relation"]
+                in {"today-dashboard-stats-api", "today-source-count-api"}
+                and diagnostic["resource_type"] == "fetch"
+                and diagnostic["failure_kind"] == "exact-cancellation"
+                and diagnostic["during_shadow_navigation"]
+                and not diagnostic["is_navigation_request"]
+                and diagnostic["page_lifetime"]
+                == live_context.get("shadow_navigation_page_lifetime")
+                and bool(live_context.get("today_document_proven_success"))
+                and bool(live_context.get("shadow_document_proven_success"))
+            ):
+                return "exact Today dashboard GET cancelled by proven fresh shadow navigation"
+            if (
+                diagnostic["url_relation"] == "today-document"
+                and diagnostic["resource_type"] == "other"
+                and diagnostic["failure_kind"] == "exact-cancellation"
+                and diagnostic["during_exit_navigation"]
+                and not diagnostic["is_navigation_request"]
+                and diagnostic["page_lifetime"]
+                == live_context.get("exit_page_lifetime")
+                and bool(live_context.get("exit_target_proven_success"))
+            ):
+                return "exact Today document GET cancelled after proven exit target restoration"
+            if (
+                diagnostic["url_relation"] == "exact-selected-media"
+                and diagnostic["failure_kind"] == "exact-cancellation"
+                and diagnostic["during_exit_navigation"]
+                and not diagnostic["is_navigation_request"]
+                and diagnostic["page_lifetime"]
+                == live_context.get("exit_page_lifetime")
+                and bool(live_context.get("selected_media_proven_success"))
+            ):
+                return "exact proven selected-media GET cancelled by explicit exit navigation"
     return None
 
 
@@ -782,13 +1192,20 @@ def http_error_expected_reason(item: dict[str, Any], scenario: str) -> str | Non
     return None
 
 
-def public_runtime(raw: dict[str, list[Any]], scenario: str, live: bool) -> tuple[dict[str, Any], dict[str, int]]:
+def public_runtime(
+    raw: dict[str, list[Any]],
+    scenario: str,
+    live: bool,
+    live_context: dict[str, Any] | None = None,
+) -> tuple[dict[str, Any], dict[str, int]]:
+    live_context = live_context or {}
     console = []
     unexpected_console = 0
     for item in raw["console"]:
-        reason = console_expected_reason(item, scenario)
+        reason = console_expected_reason(item, scenario, live_context)
         location_path = urlparse(item.get("location", {}).get("url", "")).path
         public = {
+            "page_lifetime": item.get("page_lifetime", "unknown"),
             "type": item["type"],
             "location_path": location_path if not live or location_path == "/cdn-cgi/rum" else "[redacted]",
             "expected": reason is not None,
@@ -796,21 +1213,38 @@ def public_runtime(raw: dict[str, list[Any]], scenario: str, live: bool) -> tupl
         }
         if not live:
             public["text"] = item["text"]
+        else:
+            public["diagnostic"] = safe_live_console_diagnostic(item, live_context)
         console.append(public)
         unexpected_console += reason is None
 
     failures = []
     unexpected_failures = 0
     for item in raw["request_failures"]:
-        reason = request_failure_expected_reason(item, scenario)
-        public = {
-            **item,
-            "expected": reason is not None,
-            "classification": reason,
-        }
+        reason = request_failure_expected_reason(item, scenario, live_context)
         if live:
-            public["path"] = item["path"] if item["path"] == "/cdn-cgi/rum" else "[redacted]"
-            public["failure"] = "[redacted]"
+            public = {
+                "page_lifetime": item.get("page_lifetime", "unknown"),
+                "method": item["method"],
+                "path": item["path"] if item["path"] == "/cdn-cgi/rum" else "[redacted]",
+                "host_relation": live_url_relation(item.get("_url", ""), live_context),
+                "failure": "[redacted]",
+                "expected": reason is not None,
+                "classification": reason,
+                "diagnostic": safe_live_request_diagnostic(item, live_context),
+            }
+        else:
+            public = {
+                key: value
+                for key, value in item.items()
+                if key not in {"_url", "observed_at"}
+            }
+            public.update(
+                {
+                    "expected": reason is not None,
+                    "classification": reason,
+                }
+            )
         failures.append(public)
         unexpected_failures += reason is None
 
@@ -818,15 +1252,44 @@ def public_runtime(raw: dict[str, list[Any]], scenario: str, live: bool) -> tupl
     unexpected_http = 0
     for item in raw["http_errors"]:
         reason = http_error_expected_reason(item, scenario)
-        public = {**item, "expected": reason is not None, "classification": reason}
         if live:
-            public["path"] = item["path"] if item["path"] == "/cdn-cgi/rum" else "[redacted]"
+            public = {
+                "page_lifetime": item.get("page_lifetime", "unknown"),
+                "method": item["method"],
+                "path": item["path"] if item["path"] == "/cdn-cgi/rum" else "[redacted]",
+                "host_relation": live_url_relation(item.get("_url", ""), live_context),
+                "status": item["status"],
+                "expected": reason is not None,
+                "classification": reason,
+                "raw_url_or_content_type_logged": False,
+            }
+        else:
+            public = {
+                key: value
+                for key, value in item.items()
+                if key not in {"_url", "observed_at"}
+            }
+            public.update({"expected": reason is not None, "classification": reason})
         http_errors.append(public)
         unexpected_http += reason is None
 
     runtime = {
         "console": console,
-        "page_errors": ([{"redacted": True}] * len(raw["page_errors"])) if live else raw["page_errors"],
+        "page_errors": (
+            [
+                {
+                    "redacted": True,
+                    "page_lifetime": (
+                        item.get("page_lifetime", "unknown")
+                        if isinstance(item, dict)
+                        else "unknown"
+                    ),
+                }
+                for item in raw["page_errors"]
+            ]
+            if live
+            else raw["page_errors"]
+        ),
         "request_failures": failures,
         "http_errors": http_errors,
     }
@@ -872,7 +1335,13 @@ def create_fixture_page(
     context.add_init_script(script=MEDIA_TRACKER_JS)
     page = context.new_page()
     page.set_default_timeout(timeout)
-    raw = {"console": [], "page_errors": [], "request_failures": [], "http_errors": []}
+    raw = {
+        "console": [],
+        "page_errors": [],
+        "request_failures": [],
+        "http_errors": [],
+        "responses": [],
+    }
     attach_observers(page, raw)
     router = FixtureRouter(base, scenario)
     router.install(page)
@@ -883,9 +1352,10 @@ def create_live_page(
     browser: Browser,
     base: str,
     timeout: int,
+    device: str,
 ) -> tuple[Any, Page, LiveRouter, dict[str, list[Any]]]:
     context = browser.new_context(
-        **DEVICES["desktop"],
+        **DEVICES[device],
         service_workers="block",
         color_scheme="light",
     )
@@ -901,13 +1371,34 @@ def create_live_page(
 """
     )
     context.add_init_script(script=MEDIA_TRACKER_JS)
+    raw = {
+        "console": [],
+        "page_errors": [],
+        "request_failures": [],
+        "http_errors": [],
+        "responses": [],
+    }
+    router = LiveRouter(base)
+    page = create_observed_live_page(
+        context, router, raw, timeout, page_lifetime="today-entry"
+    )
+    return context, page, router, raw
+
+
+def create_observed_live_page(
+    context: Any,
+    router: LiveRouter,
+    raw: dict[str, list[Any]],
+    timeout: int,
+    *,
+    page_lifetime: str,
+) -> Page:
+    """Create one guarded live Page and retain its sanitized lifetime label."""
     page = context.new_page()
     page.set_default_timeout(timeout)
-    raw = {"console": [], "page_errors": [], "request_failures": [], "http_errors": []}
-    attach_observers(page, raw)
-    router = LiveRouter(base)
-    router.install(page)
-    return context, page, router, raw
+    attach_observers(page, raw, page_lifetime=page_lifetime)
+    router.install(page, page_lifetime=page_lifetime)
+    return page
 
 
 def navigate_shadow(page: Page, base: str, run: dict[str, Any], timeout: int) -> None:
@@ -2020,26 +2511,77 @@ def finish_live_run(
     run: dict[str, Any],
     router: LiveRouter,
     raw: dict[str, list[Any]],
+    live_context: dict[str, Any],
 ) -> None:
     run["network"] = router.evidence()
-    runtime, counts = public_runtime(raw, run["scenario"], live=True)
+    runtime_context = {
+        **live_context,
+        "expected_telemetry_guard_blocks": router.expected_telemetry_attempts,
+    }
+    runtime, counts = public_runtime(
+        raw, run["scenario"], live=True, live_context=runtime_context
+    )
+    lifetime_observations = {
+        lifetime: {
+            "response_count": sum(
+                item.get("page_lifetime") == lifetime for item in raw["responses"]
+            ),
+            "console_count": sum(
+                item.get("page_lifetime") == lifetime for item in raw["console"]
+            ),
+            "page_error_count": sum(
+                isinstance(item, dict) and item.get("page_lifetime") == lifetime
+                for item in raw["page_errors"]
+            ),
+            "request_failure_count": sum(
+                item.get("page_lifetime") == lifetime
+                for item in raw["request_failures"]
+            ),
+            "http_error_count": sum(
+                item.get("page_lifetime") == lifetime for item in raw["http_errors"]
+            ),
+        }
+        for lifetime in ("today-entry", "shadow-playback-exit")
+    }
+    both_page_lifetimes_observed = all(
+        evidence["response_count"] > 0
+        for evidence in lifetime_observations.values()
+    )
+    runtime["page_lifetime_observations"] = lifetime_observations
     run["runtime"] = runtime
     add_check(
         run,
         "live.safety-no-writes",
         not router.mutation_attempts,
-        expected="zero attempted non-GET/HEAD/OPTIONS requests; every attempt would be blocked",
+        expected=(
+            "zero unexpected non-GET/HEAD/OPTIONS requests; the only expected exception is "
+            "an exact same-origin Cloudflare RUM POST blocked before dispatch"
+        ),
         actual={
             "count": len(router.mutation_attempts),
             "methods": sorted({item["method"] for item in router.mutation_attempts}),
+            "expected_blocked_rum_posts": len(router.expected_telemetry_attempts),
         },
     )
+    selected = run.get("selected_media_evidence", {})
     add_check(
         run,
-        "live.actual-get-api-and-media",
-        router.api_get_count > 0 and router.media_get_count > 0,
-        expected="at least one actual GET API read and one actual GET media read with no fixture fulfillment",
-        actual={"api_get_count": router.api_get_count, "media_get_count": router.media_get_count},
+        "live.actual-get-api-and-selected-media",
+        router.api_get_count > 0
+        and selected.get("exact_selected_get_count", 0) > 0
+        and selected.get("successful_response_count", 0) > 0
+        and selected.get("media_content_type_count", 0) > 0
+        and selected.get("performance_entry_count", 0) > 0
+        and selected.get("performance_completed_count", 0) > 0,
+        expected=(
+            "actual API GET plus exact selected-media GET with successful media Content-Type "
+            "response and completed Resource Timing evidence"
+        ),
+        actual={
+            "api_get_count": router.api_get_count,
+            "route_media_resource_type_count": router.media_get_count,
+            **selected,
+        },
     )
     add_check(
         run,
@@ -2047,9 +2589,16 @@ def finish_live_run(
         counts["unexpected_console"] == 0
         and counts["page_errors"] == 0
         and counts["unexpected_request_failures"] == 0
-        and counts["unexpected_http_errors"] == 0,
-        expected="no unexpected runtime/HTTP failures (exact telemetry remains classified)",
-        actual=counts,
+        and counts["unexpected_http_errors"] == 0
+        and both_page_lifetimes_observed,
+        expected=(
+            "both isolated Page lifetimes observed with no unexpected runtime/HTTP "
+            "failures (exact telemetry remains classified)"
+        ),
+        actual={
+            **counts,
+            "both_page_lifetimes_observed": both_page_lifetimes_observed,
+        },
     )
 
 
@@ -2059,13 +2608,174 @@ def live_run(
     base: str,
     output: Path,
     timeout: int,
+    device: str,
 ) -> dict[str, Any]:
-    run = new_run(browser_name, "live_read_only", "desktop", "light")
-    run["private_artifact"] = True
-    context, page, router, raw = create_live_page(browser, base, timeout)
+    del output  # Live public artifacts are report-only; screenshots are prohibited.
+    run = new_run(browser_name, "live_read_only", device, "light")
+    run["artifact_privacy"] = "No live screenshots or learner text are written."
+    context, today_page, router, raw = create_live_page(browser, base, timeout, device)
+    live_context: dict[str, Any] = {
+        "base_origin": base.rstrip("/"),
+        "base_netloc": urlparse(base).netloc,
+        "selected_media_url": "",
+        "selected_media_proven_success": False,
+        "today_document_proven_success": False,
+        "today_entry_click_proven_success": False,
+        "today_entry_page_lifetime": "today-entry",
+        "today_entry_started_at": 0.0,
+        "today_entry_completed_at": 0.0,
+        "shadow_document_proven_success": False,
+        "shadow_navigation_page_lifetime": "shadow-playback-exit",
+        "shadow_navigation_started_at": 0.0,
+        "shadow_navigation_completed_at": 0.0,
+        "exit_page_lifetime": "shadow-playback-exit",
+        "exit_started_at": 0.0,
+        "exit_completed_at": 0.0,
+        "exit_target_proven_success": False,
+    }
     try:
-        navigate_shadow(page, base, run, timeout)
+        # Settle Today completely before exercising the real user entry. This
+        # Page remains observed for the whole run, but playback/exit uses a
+        # second Page so a harness navigation cannot cancel Today assets.
+        today_response = today_page.goto(
+            base + "/", wait_until="load", timeout=timeout
+        )
+        today_entry = today_page.get_by_role(
+            "link", name=re.compile(r"^(Start|Resume) shadowing$"), exact=True
+        )
+        today_entry.wait_for(state="visible", timeout=timeout)
+        today_page.wait_for_function(
+            "document.readyState === 'complete'", timeout=timeout
+        )
+        # Network-idle is not a valid readiness condition on the live page:
+        # Cloudflare RUM can retry while the fully loaded, hydrated control is
+        # already stable. Require the actual accessible entry to remain visible
+        # across a bounded quiet window before the user click instead.
+        today_page.wait_for_timeout(750)
+        today_entry.wait_for(state="visible", timeout=timeout)
+        today_href = today_entry.get_attribute("href") or ""
+        today_label_valid = today_entry.inner_text().strip() in {
+            "Start shadowing",
+            "Resume shadowing",
+        }
+        today_href_valid = urlparse(today_href).path.rstrip("/") == "/shadow"
+        live_context["today_document_proven_success"] = bool(
+            today_response and today_response.ok and today_label_valid and today_href_valid
+        )
+
+        live_context["today_entry_started_at"] = time.monotonic()
+        today_entry.click()
+        today_page.wait_for_url(
+            re.compile(r"/shadow/?$"), wait_until="domcontentloaded", timeout=timeout
+        )
+        today_heading = today_page.get_by_role(
+            "heading", name="Find your rhythm.", exact=True
+        )
+        today_shadow_region = today_page.get_by_role(
+            "region", name="Shadowing player", exact=True
+        )
+        today_heading.wait_for(state="visible", timeout=timeout)
+        today_shadow_region.wait_for(state="visible", timeout=timeout)
+        wait_ready(today_page, timeout)
+        today_page.wait_for_timeout(500)
+        today_entry_path_valid = urlparse(today_page.url).path.rstrip("/") == "/shadow"
+        live_context["today_entry_click_proven_success"] = bool(
+            live_context["today_document_proven_success"]
+            and today_entry_path_valid
+            and today_heading.is_visible()
+            and today_shadow_region.is_visible()
+        )
+        live_context["today_entry_completed_at"] = time.monotonic()
+
+        # Playback starts in an independently observed Page. A direct document
+        # load here cannot terminate the settled Today-entry Page lifetime.
+        page = create_observed_live_page(
+            context,
+            router,
+            raw,
+            timeout,
+            page_lifetime="shadow-playback-exit",
+        )
+        live_context["shadow_navigation_started_at"] = time.monotonic()
+        shadow_response = page.goto(
+            base.rstrip("/") + "/shadow/", wait_until="domcontentloaded", timeout=timeout
+        )
+        page.get_by_role("heading", name="Find your rhythm.", exact=True).wait_for(
+            state="visible", timeout=timeout
+        )
+        page.get_by_role("region", name="Shadowing player", exact=True).wait_for(
+            state="visible", timeout=timeout
+        )
         wait_ready(page, timeout)
+        live_context["shadow_navigation_completed_at"] = time.monotonic()
+        live_context["shadow_document_proven_success"] = bool(
+            shadow_response
+            and shadow_response.ok
+            and urlparse(page.url).path.rstrip("/") == "/shadow"
+        )
+        run["navigation"] = {
+            "today_status": today_response.status if today_response else None,
+            "entry_shadow_path_valid": today_entry_path_valid,
+            "playback_shadow_status": shadow_response.status if shadow_response else None,
+            "playback_shadow_path_valid": urlparse(page.url).path.rstrip("/") == "/shadow",
+            "observed_page_lifetimes": ["today-entry", "shadow-playback-exit"],
+        }
+        add_check(
+            run,
+            "live.today-start-resume-click",
+            live_context["today_entry_click_proven_success"]
+            and live_context["shadow_document_proven_success"]
+            and page is not today_page,
+            expected=(
+                "a settled Today Start/Resume user click reaches the real hydrated Shadowing "
+                "region, independently from the playback document"
+            ),
+            actual={
+                "today_status": today_response.status if today_response else None,
+                "label_valid": today_label_valid,
+                "href_valid": today_href_valid,
+                "clicked_shadow_path_valid": today_entry_path_valid,
+                "clicked_shadow_heading_visible": today_heading.is_visible(),
+                "clicked_shadow_region_visible": today_shadow_region.is_visible(),
+                "playback_shadow_status": shadow_response.status if shadow_response else None,
+                "playback_shadow_ready": live_context["shadow_document_proven_success"],
+                "separate_page_lifetimes_observed": page is not today_page,
+            },
+        )
+
+        if device == "desktop":
+            nav_links = page.get_by_role("link", name="Shadowing", exact=True)
+            nav_valid = any(
+                nav_links.nth(index).is_visible()
+                and urlparse(nav_links.nth(index).get_attribute("href") or "").path.rstrip("/")
+                == "/shadow"
+                for index in range(nav_links.count())
+            )
+            nav_actual = {"desktop_visible_shadowing_link": nav_valid}
+        else:
+            menu = page.locator("[data-nav-more]")
+            summary = menu.locator("summary")
+            if summary.count():
+                summary.click()
+            mobile_link = menu.get_by_role("link", name="Shadowing", exact=True)
+            nav_valid = bool(
+                menu.count() == 1
+                and mobile_link.count() == 1
+                and mobile_link.is_visible()
+                and urlparse(mobile_link.get_attribute("href") or "").path.rstrip("/")
+                == "/shadow"
+            )
+            nav_actual = {"mobile_more_visible_shadowing_link": nav_valid}
+            if menu.get_attribute("open") is not None:
+                page.keyboard.press("Escape")
+        add_check(
+            run,
+            "live.responsive-navigation-entry",
+            nav_valid,
+            expected="responsive navigation exposes an exact Shadowing link to /shadow/",
+            actual=nav_actual,
+        )
+
         # No selected option text, source URL, localStorage value, console text,
         # or body copy is copied into this run/report.
         start = button_start_or_resume(page)
@@ -2075,6 +2785,27 @@ def live_run(
         page.wait_for_timeout(650)
         second = latest_media(media_summary(page))
         advance = (second or {}).get("currentTime", 0) - (first or {}).get("currentTime", 0)
+        live_context["selected_media_url"] = page.evaluate(
+            "window.__shadowQa.selectedUrl()"
+        )
+        performance_entries = page.evaluate(
+            """(url) => performance.getEntriesByName(url).map((entry) => ({
+              initiator_type: entry.initiatorType || '',
+              duration_positive: entry.duration > 0,
+              response_end_positive: entry.responseEnd > 0,
+            }))""",
+            live_context["selected_media_url"],
+        )
+        run["selected_media_evidence"] = router.selected_media_evidence(
+            live_context["selected_media_url"], raw["responses"], performance_entries
+        )
+        selected_evidence = run["selected_media_evidence"]
+        live_context["selected_media_proven_success"] = bool(
+            selected_evidence["exact_selected_get_count"] > 0
+            and selected_evidence["successful_response_count"] > 0
+            and selected_evidence["media_content_type_count"] > 0
+            and selected_evidence["performance_completed_count"] > 0
+        )
         add_check(
             run,
             "live.user-start-clock",
@@ -2095,23 +2826,38 @@ def live_run(
             expected="Pause freezes live media clock",
             actual={"paused": bool(paused_second and paused_second["paused"]), "stable": paused_delta <= 0.08},
         )
-        filename = f"{browser_name}--live-read-only--desktop--private.png"
-        page.screenshot(path=str(output / filename), full_page=False, animations="disabled")
-        run["screenshots"] = [filename]
-        run["screenshot_privacy"] = "Contains live learner content; keep as private evidence artifact."
 
         button_start_or_resume(page).click()
         wait_phase(page, {"playing"}, timeout)
         pauses_before = media_summary(page)["sessionPauseCalls"]
+        live_context["exit_started_at"] = time.monotonic()
         page.get_by_role("link", name="Exit shadowing", exact=True).click()
         page.wait_for_function(r"location.pathname.replace(/\/$/, '') !== '/shadow'", timeout=timeout)
+        live_context["exit_completed_at"] = time.monotonic()
         pauses_after = page.evaluate("Number(sessionStorage.getItem('__shadowQaPauseCalls') || '0')")
+        returned_entry = page.get_by_role(
+            "link", name=re.compile(r"^(Start|Resume) shadowing$"), exact=True
+        )
+        returned_entry.wait_for(state="visible", timeout=timeout)
+        returned_href_valid = (
+            urlparse(returned_entry.get_attribute("href") or "").path.rstrip("/") == "/shadow"
+        )
+        returned_today_path = urlparse(page.url).path.rstrip("/") == ""
+        live_context["exit_target_proven_success"] = bool(
+            live_context["today_document_proven_success"]
+            and returned_href_valid
+            and returned_today_path
+        )
         add_check(
             run,
-            "live.navigation-stops-playback",
-            pauses_after > pauses_before,
-            expected="Exit navigation stops live playback",
-            actual={"pause_observed": pauses_after > pauses_before},
+            "live.navigation-stops-playback-and-restores-today-entry",
+            pauses_after > pauses_before and returned_href_valid and returned_today_path,
+            expected="Exit stops live playback and restores the Today Start/Resume route",
+            actual={
+                "pause_observed": pauses_after > pauses_before,
+                "today_entry_restored": returned_href_valid,
+                "today_path_restored": returned_today_path,
+            },
         )
     except Exception as exc:
         run["execution_error"] = safe_error(exc, live=True)
@@ -2119,18 +2865,11 @@ def live_run(
             run,
             "runner.scenario-completed",
             False,
-            expected="live ready/start/clock/pause/navigation smoke completed",
+            expected="live Today/navigation/start/clock/pause/exit smoke completed",
             actual=run["execution_error"],
         )
-        try:
-            filename = f"{browser_name}--live-read-only--desktop--private-failure.png"
-            page.screenshot(path=str(output / filename), full_page=False, animations="disabled")
-            run["screenshots"] = [filename]
-            run["screenshot_privacy"] = "Contains live learner content; keep as private evidence artifact."
-        except Exception:
-            run["screenshot_error"] = "live screenshot failure detail withheld from JSON"
     finally:
-        finish_live_run(run, router, raw)
+        finish_live_run(run, router, raw, live_context)
         context.close()
     return run
 
@@ -2180,9 +2919,10 @@ def markdown_report(report: dict[str, Any]) -> str:
         lines.extend(
             [
                 "- Actual API/media reads were GET/HEAD/OPTIONS only.",
-                "- Every non-safe method was blocked before dispatch and would fail the run.",
+                "- The exact same-origin Cloudflare RUM POST was separately counted and blocked before dispatch.",
+                "- Every other non-safe method was blocked before dispatch and would fail the run.",
                 "- JSON excludes selected source text, option labels, query strings, response bodies, localStorage values, and console text.",
-                "- Live screenshots are explicitly private learner artifacts.",
+                "- Live mode writes no screenshots; public artifacts contain sanitized reports only.",
             ]
         )
     else:
@@ -2290,7 +3030,17 @@ def main() -> int:
                 assert browser is not None
                 report["browser_versions"][browser_name] = browser.version
                 if args.live:
-                    report["runs"].append(live_run(browser, browser_name, base, args.output, args.timeout))
+                    for device in ("desktop", "mobile-390"):
+                        report["runs"].append(
+                            live_run(
+                                browser,
+                                browser_name,
+                                base,
+                                args.output,
+                                args.timeout,
+                                device,
+                            )
+                        )
                     continue
 
                 for device in DEVICES:
