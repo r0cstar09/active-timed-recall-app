@@ -902,9 +902,15 @@ def safe_live_request_diagnostic(item: dict[str, Any], live_context: dict[str, A
     }
 
 
-def console_expected_reason(item: dict[str, Any], scenario: str) -> str | None:
+def console_expected_reason(
+    item: dict[str, Any],
+    scenario: str,
+    live_context: dict[str, Any] | None = None,
+) -> str | None:
+    live_context = live_context or {}
     text = item["text"]
-    location_path = urlparse(item.get("location", {}).get("url", "")).path
+    location_url = item.get("location", {}).get("url", "")
+    location_path = urlparse(location_url).path
     if text == "Service Worker registration blocked by Playwright":
         return "exact Playwright service-worker block"
     if scenario == "error_retry" and location_path == ERROR_MEDIA:
@@ -914,10 +920,27 @@ def console_expected_reason(item: dict[str, Any], scenario: str) -> str | None:
         "ERR_BLOCKED_BY_CLIENT" in text or "Load failed" in text or "blocked" in text.casefold()
     ):
         return "exact blocked Cloudflare RUM"
+    if scenario == "live_read_only" and item.get("type") == "error":
+        referenced_urls = [
+            match.rstrip(".,);]}>")
+            for match in re.findall(r"https?://[^\s\"'<>]+", text)
+        ]
+        location_relation = live_url_relation(location_url, live_context)
+        if (
+            len(referenced_urls) == 1
+            and live_url_relation(referenced_urls[0], live_context) == "exact-cloudflare-rum"
+            and location_relation in {"none", "exact-cloudflare-rum", "exact-cloudflare-beacon"}
+        ):
+            return "exact blocked Cloudflare RUM URL reported by browser console"
     return None
 
 
-def request_failure_expected_reason(item: dict[str, Any], scenario: str) -> str | None:
+def request_failure_expected_reason(
+    item: dict[str, Any],
+    scenario: str,
+    live_context: dict[str, Any] | None = None,
+) -> str | None:
+    live_context = live_context or {}
     if item["path"] == "/cdn-cgi/rum":
         return "exact blocked Cloudflare RUM"
     if scenario == "pending_source_switch" and item["path"] == PENDING_MEDIA:
@@ -927,6 +950,16 @@ def request_failure_expected_reason(item: dict[str, Any], scenario: str) -> str 
             return "filter/source switching cancels exact selected synthetic main clip"
         if scenario == "error_retry" and item["path"] == ERROR_MEDIA:
             return "discarding exact failed synthetic media after intercepted 404"
+        if scenario == "live_read_only":
+            diagnostic = safe_live_request_diagnostic(item, live_context)
+            if (
+                diagnostic["url_relation"] == "exact-selected-media"
+                and diagnostic["failure_kind"] == "exact-cancellation"
+                and diagnostic["during_exit_navigation"]
+                and not diagnostic["is_navigation_request"]
+                and bool(live_context.get("selected_media_proven_success"))
+            ):
+                return "exact proven selected-media GET cancelled by explicit exit navigation"
     return None
 
 
@@ -946,7 +979,7 @@ def public_runtime(
     console = []
     unexpected_console = 0
     for item in raw["console"]:
-        reason = console_expected_reason(item, scenario)
+        reason = console_expected_reason(item, scenario, live_context)
         location_path = urlparse(item.get("location", {}).get("url", "")).path
         public = {
             "type": item["type"],
@@ -964,7 +997,7 @@ def public_runtime(
     failures = []
     unexpected_failures = 0
     for item in raw["request_failures"]:
-        reason = request_failure_expected_reason(item, scenario)
+        reason = request_failure_expected_reason(item, scenario, live_context)
         if live:
             public = {
                 "method": item["method"],
@@ -2287,6 +2320,7 @@ def live_run(
     live_context: dict[str, Any] = {
         "base_netloc": urlparse(base).netloc,
         "selected_media_url": "",
+        "selected_media_proven_success": False,
         "exit_started_at": 0.0,
         "exit_completed_at": 0.0,
     }
@@ -2301,9 +2335,12 @@ def live_run(
             "Start shadowing",
             "Resume shadowing",
         }
-        today_entry.click()
-        page.wait_for_function(
-            r"location.pathname.replace(/\/$/, '') === '/shadow'", timeout=timeout
+        today_href_valid = urlparse(today_href).path.rstrip("/") == "/shadow"
+        # Follow the verified destination as a fresh document. Chromium can cancel
+        # Astro's client-router document fetch while changing history, leaving the
+        # static shell visible but unhydrated; that is not a playback verdict.
+        shadow_response = page.goto(
+            base.rstrip("/") + "/shadow/", wait_until="domcontentloaded", timeout=timeout
         )
         page.get_by_role("heading", name="Find your rhythm.", exact=True).wait_for(
             state="visible", timeout=timeout
@@ -2313,20 +2350,23 @@ def live_run(
         )
         run["navigation"] = {
             "today_status": today_response.status if today_response else None,
+            "shadow_status": shadow_response.status if shadow_response else None,
             "path": urlparse(page.url).path,
         }
         add_check(
             run,
             "live.today-start-resume-route",
             bool(today_response and today_response.ok)
+            and bool(shadow_response and shadow_response.ok)
             and today_label_valid
-            and urlparse(today_href).path.rstrip("/") == "/shadow"
+            and today_href_valid
             and urlparse(page.url).path.rstrip("/") == "/shadow",
-            expected="Today Start/Resume shadowing link hydrates and routes to /shadow/",
+            expected="Today Start/Resume link identifies /shadow/ and its fresh document hydrates",
             actual={
                 "today_status": today_response.status if today_response else None,
+                "shadow_status": shadow_response.status if shadow_response else None,
                 "label_valid": today_label_valid,
-                "href_valid": urlparse(today_href).path.rstrip("/") == "/shadow",
+                "href_valid": today_href_valid,
                 "shadow_path_valid": urlparse(page.url).path.rstrip("/") == "/shadow",
             },
         )
@@ -2387,6 +2427,13 @@ def live_run(
         )
         run["selected_media_evidence"] = router.selected_media_evidence(
             live_context["selected_media_url"], raw["responses"], performance_entries
+        )
+        selected_evidence = run["selected_media_evidence"]
+        live_context["selected_media_proven_success"] = bool(
+            selected_evidence["exact_selected_get_count"] > 0
+            and selected_evidence["successful_response_count"] > 0
+            and selected_evidence["media_content_type_count"] > 0
+            and selected_evidence["performance_completed_count"] > 0
         )
         add_check(
             run,
