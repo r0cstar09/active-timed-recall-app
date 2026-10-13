@@ -1141,6 +1141,8 @@ def add_semantic_checks(page: Page, run: dict[str, Any], device: str, theme: str
 
     layout = inspect_layout(page)
     run["layout"] = layout
+    targets = region.locator("button, select, .shadow-text-toggle").evaluate_all("els => els.filter(e => e.getClientRects().length).map(e => ({name: e.getAttribute('aria-label') || e.textContent.trim().slice(0,40), width: e.getBoundingClientRect().width, height: e.getBoundingClientRect().height}))")
+    add_check(run, "accessibility.touch-targets", all(t["width"] >= 44 and t["height"] >= 44 for t in targets), expected="all key player touch controls at least 44 by 44 CSS pixels", actual=[t for t in targets if t["width"] < 44 or t["height"] < 44])
     add_check(
         run,
         "layout.no-horizontal-overflow",
@@ -1797,7 +1799,8 @@ def reconciliation_run(browser: Browser, browser_name: str, base: str, output: P
                 add_check(run, "restore.current-fetched-audio", current.get("path") == ALT_MEDIA, expected="current API URL replaces historical audio", actual=current.get("path"))
             if scenario == "storage_denied":
                 add_check(run, "storage.actionable-local-only-failure", page.get_by_text("Device storage is unavailable.", exact=False).is_visible(), expected="practice remains usable with truthful persistence warning", actual=page.get_by_text("Device storage is unavailable.", exact=False).count())
-            button_start_or_resume(page).click()
+            button_start_or_resume(page).focus()
+            page.keyboard.press("Enter")
             wait_phase(page, {"playing"}, timeout)
             page.wait_for_timeout(200)
             current = latest_media(media_summary(page)) or {}
