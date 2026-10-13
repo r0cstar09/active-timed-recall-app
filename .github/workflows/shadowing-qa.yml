@@ -1,0 +1,63 @@
+name: Shadowing QA
+on:
+  push:
+    branches: [feat/shadowing-first-draft]
+  pull_request:
+    paths: ['src/**', 'tests/shadow*.test.mjs', 'scripts/test_shadowing_browser.py', '.github/workflows/shadowing-qa.yml']
+  workflow_dispatch:
+    inputs:
+      live:
+        description: 'GET-only public playback verification after deployment'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  shadowing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Existing and shadowing unit tests with production build
+        env:
+          PUBLIC_API_BASE_URL: https://api-spanish.tonymuzo.dev
+        run: npm test && npm run test:shadow && npm run test:timer && npm run test:prompt && npm run test:deploy-workflow
+      - name: Install browser on ephemeral runner
+        run: |
+          python3 -m venv /tmp/shadow-qa
+          /tmp/shadow-qa/bin/pip install --quiet playwright==1.63.0
+          /tmp/shadow-qa/bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Fixture media playback and responsive browser gates
+        if: ${{ !inputs.live }}
+        run: |
+          python3 -m http.server 18765 --bind 127.0.0.1 --directory dist >/tmp/shadow-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for attempt in 1 2 3 4 5; do curl --silent --fail http://127.0.0.1:18765/ >/dev/null && break; sleep 1; done
+          /tmp/shadow-qa/bin/python scripts/test_shadowing_browser.py --base http://127.0.0.1:18765 --browser ${{ matrix.browser }} --output /tmp/shadow-results
+      - name: Public hydrated playback (GET-only)
+        if: ${{ inputs.live }}
+        run: /tmp/shadow-qa/bin/python scripts/test_shadowing_browser.py --base https://spanish-app.tonymuzo.dev --live --browser ${{ matrix.browser }} --output /tmp/shadow-results
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: shadowing-${{ matrix.browser }}
+          path: /tmp/shadow-results
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Retain exercised production build (not a deployment)
+        uses: actions/upload-artifact@v6
+        if: ${{ matrix.browser == 'chromium' && !inputs.live }}
+        with:
+          name: shadowing-production-build
+          path: dist
+          retention-days: 7

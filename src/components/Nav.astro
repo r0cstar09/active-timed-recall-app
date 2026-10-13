@@ -1,12 +1,13 @@
 ---
 import Glyph from "./Glyph.astro";
 interface Props {
-  current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings" | "session" | "write";
+  current?: "home" | "verbs" | "lessons" | "misses" | "ingest" | "library" | "review" | "settings" | "session" | "write" | "shadow";
 }
 const { current } = Astro.props;
 const study = [
   { id: "home", href: "/", label: "Today", icon: "home" },
   { id: "session", href: "/session", label: "Speaking", icon: "session" },
+  { id: "shadow", href: "/shadow/", label: "Shadowing", icon: "session" },
   { id: "write", href: "/write", label: "Writing", icon: "write" },
   { id: "lessons", href: "/lessons", label: "Lessons", icon: "lessons" },
   { id: "verbs", href: "/verbs", label: "Verbs", icon: "verbs" },
@@ -22,7 +23,7 @@ const mobile = [
   { id: "session", href: "/session", label: "Speak", icon: "session" },
   { id: "write", href: "/write", label: "Write", icon: "write" },
 ] as const;
-const more = [...collection, study[4], { id: "settings", href: "/settings", label: "Settings", icon: "settings" }] as const;
+const more = [...study.filter(t => t.id === "shadow" || t.id === "verbs"), ...collection, { id: "settings", href: "/settings", label: "Settings", icon: "settings" }] as const;
 const active = (id: string) => current === id || (id === "misses" && current === "review");
 ---
 <aside class="studio-sidebar" aria-label="App sidebar">
