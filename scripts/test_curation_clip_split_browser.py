@@ -319,6 +319,11 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         # Re-applying the text boundary must preserve the learner's playhead cut.
         boundary_text = panel.get_by_label("Draft 701 combined Spanish split boundary", exact=True)
         boundary_text.evaluate("(node, position) => { node.focus(); node.setSelectionRange(position, position); node.dispatchEvent(new Event('select', {bubbles: true})); }", len(QUESTION))
+        # React's onSelect plugin observes keyboard/selectionchange events,
+        # not a synthetic DOM `select` event. Exercise actual cursor movement.
+        boundary_text.press("ArrowRight")
+        boundary_text.press("ArrowLeft")
+        expect(panel.get_by_role("button", name="Split Spanish at text cursor", exact=True)).to_be_enabled()
         panel.get_by_role("button", name="Split Spanish at text cursor", exact=True).click()
         expect(panel.get_by_label("Draft 701 split time in absolute source seconds", exact=True)).to_have_value("13.20")
         panel.get_by_text("I listened around this cut", exact=False).click()
