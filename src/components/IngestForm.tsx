@@ -4,16 +4,18 @@ import type { IngestJob } from "../lib/types";
 import { isIngestComplete, isIngestFailed } from "../lib/types";
 import {
   INITIAL_INGEST_DELETE_UI,
+  INITIAL_INGEST_HISTORY_REMOVAL_UI,
   canChangeIngestSelection,
   createIngestDeleteGate,
   executeIngestCardDeletion,
+  executeIngestHistoryRemoval,
   ingestActivePhraseCount,
   ingestDeleteUnavailableMessage,
   ingestDeleteUiReducer,
+  ingestHistoryRemovalUiReducer,
   ingestPhraseCount,
   isTerminalIngest,
   mergeRecentIngests,
-
 } from "../lib/ingestJobs";
 import PipelineProgress from "./PipelineProgress";
 import ManualCuration from "./ManualCuration";
@@ -43,14 +45,23 @@ export default function IngestForm() {
   const [restoring, setRestoring] = useState(true);
   const [openingJobId, setOpeningJobId] = useState<number | null>(null);
   const [deleteUi, dispatchDeleteUi] = useReducer(ingestDeleteUiReducer, INITIAL_INGEST_DELETE_UI);
+  const [historyRemovalUi, dispatchHistoryRemovalUi] = useReducer(ingestHistoryRemovalUiReducer, INITIAL_INGEST_HISTORY_REMOVAL_UI);
   const deleteGateRef = useRef(createIngestDeleteGate());
+  const removedJobIdsRef = useRef(new Set<number>());
   const openingJobRef = useRef<number | null>(null);
   const creatingRef = useRef(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollJobRef = useRef<number | null>(null);
 
-  function forgetJob() {
-    try { localStorage.removeItem(INGEST_STORAGE_KEY); } catch { /* optional browser cache */ }
+  function forgetJob(jobId?: number) {
+    try {
+      if (jobId === undefined) localStorage.removeItem(INGEST_STORAGE_KEY);
+      else {
+        const raw = localStorage.getItem(INGEST_STORAGE_KEY);
+        const saved = raw ? JSON.parse(raw) as { jobId?: unknown } : null;
+        if (saved?.jobId === jobId) localStorage.removeItem(INGEST_STORAGE_KEY);
+      }
+    } catch { /* optional browser cache */ }
   }
 
   function rememberJob(jobId: number) {
@@ -58,12 +69,24 @@ export default function IngestForm() {
     catch { /* Server history and polling work without optional browser storage. */ }
   }
 
+  function mergeVisibleRecent(current: IngestJob[], updates: IngestJob[]): IngestJob[] {
+    return mergeRecentIngests(current, updates).filter((candidate) => !removedJobIdsRef.current.has(candidate.job_id));
+  }
+
+  function markJobMissing(jobId: number) {
+    removedJobIdsRef.current.add(jobId);
+    setRecentJobs((current) => current.filter((candidate) => candidate.job_id !== jobId));
+    forgetJob(jobId);
+    if (pollJobRef.current === jobId) stopPolling();
+    setJob((current) => current?.job_id === jobId ? null : current);
+  }
+
   useEffect(() => {
     let alive = true;
     void (async () => {
       let recent: IngestJob[] = [];
       try {
-        recent = await api.getRecentIngests(10);
+        recent = (await api.getRecentIngests(10)).filter((candidate) => !removedJobIdsRef.current.has(candidate.job_id));
         if (alive) setRecentJobs(recent);
       } catch (err) {
         // Recent history is helpful recovery state, but must not prevent a
@@ -89,16 +112,17 @@ export default function IngestForm() {
       if (saved) {
         try {
           const restored = await api.getIngest(saved.jobId);
-          if (!alive) return;
+          if (!alive || removedJobIdsRef.current.has(restored.job_id)) return;
           setJob(restored);
-          setRecentJobs((current) => mergeRecentIngests(current, [restored]));
+          setRecentJobs((current) => mergeVisibleRecent(current, [restored]));
           setBusy(!isTerminalIngest(restored));
           if (!isTerminalIngest(restored)) startPolling(restored.job_id);
           return;
         } catch (err) {
           if (!alive) return;
           if (err instanceof ApiError && err.status === 404) {
-            forgetJob();
+            markJobMissing(saved.jobId);
+            recent = recent.filter((candidate) => candidate.job_id !== saved!.jobId);
           } else {
             setError(`Could not restore the saved job. Use Refresh to retry: ${err instanceof Error ? err.message : String(err)}`);
             return;
@@ -147,15 +171,21 @@ export default function IngestForm() {
       inFlight = true;
       try {
         const next = await api.getIngest(jobId);
-        if (pollJobRef.current !== jobId) return;
+        if (pollJobRef.current !== jobId || removedJobIdsRef.current.has(jobId)) return;
         setPollError(null);
         setJob(next);
-        setRecentJobs((current) => mergeRecentIngests(current, [next]));
+        setRecentJobs((current) => mergeVisibleRecent(current, [next]));
         finishIfTerminal(next);
       } catch (err) {
         // Polling is only observation. The durable server job keeps running;
         // retain its id so navigation/refresh can reconnect later.
         if (pollJobRef.current !== jobId) return;
+        if (err instanceof ApiError && err.status === 404) {
+          markJobMissing(jobId);
+          setBusy(false);
+          setError(`Ingestion job #${jobId} is no longer in history.`);
+          return;
+        }
         setPollError(err instanceof ApiError ? err.message : String(err));
       } finally {
         inFlight = false;
@@ -200,7 +230,7 @@ export default function IngestForm() {
     );
     if (outcome.status === "success") {
       setJob((current) => current?.job_id === target.job_id ? outcome.job : current);
-      setRecentJobs((current) => mergeRecentIngests(current, [outcome.job]));
+      setRecentJobs((current) => mergeVisibleRecent(current, [outcome.job]));
       dispatchDeleteUi({
         type: "succeeded",
         jobId: target.job_id,
@@ -210,13 +240,46 @@ export default function IngestForm() {
     } else if (outcome.status === "refused") {
       if ("job" in outcome) {
         setJob((current) => current?.job_id === target.job_id ? outcome.job : current);
-        setRecentJobs((current) => mergeRecentIngests(current, [outcome.job]));
+        setRecentJobs((current) => mergeVisibleRecent(current, [outcome.job]));
       }
       dispatchDeleteUi({ type: "refused", jobId: target.job_id, error: outcome.message });
     } else if (outcome.status === "error") {
       dispatchDeleteUi({
         type: "failed",
         jobId: target.job_id,
+        error: outcome.error instanceof ApiError ? outcome.error.message : String(outcome.error),
+      });
+    }
+  }
+
+  async function removeJobFromHistory(jobId: number) {
+    if (busy || creatingRef.current || openingJobRef.current !== null || historyRemovalUi.confirmJobId !== jobId) return;
+    const target = [job, ...recentJobs].find((candidate): candidate is IngestJob => Boolean(candidate && candidate.job_id === jobId));
+    if (!target) return;
+    setError(null);
+    const outcome = await executeIngestHistoryRemoval(
+      target,
+      (targetJobId) => api.removeIngestJob(targetJobId),
+      deleteGateRef.current,
+      () => dispatchHistoryRemovalUi({ type: "started", jobId }),
+    );
+    if (outcome.status === "success") {
+      removedJobIdsRef.current.add(jobId);
+      setRecentJobs((current) => current.filter((candidate) => candidate.job_id !== jobId));
+      forgetJob(jobId);
+      if (job?.job_id === jobId) {
+        stopPolling();
+        setJob(null);
+        setBusy(false);
+        dispatchDeleteUi({ type: "reset" });
+      }
+      dispatchHistoryRemovalUi({ type: "succeeded", jobId });
+    } else if (outcome.status === "refused") {
+      dispatchHistoryRemovalUi({ type: "failed", jobId, error: outcome.message });
+    } else if (outcome.status === "error") {
+      dispatchHistoryRemovalUi({
+        type: "failed",
+        jobId,
         error: outcome.error instanceof ApiError ? outcome.error.message : String(outcome.error),
       });
     }
@@ -230,28 +293,34 @@ export default function IngestForm() {
 
     setError(null);
     dispatchDeleteUi({ type: "reset" });
+    dispatchHistoryRemovalUi({ type: "reset" });
     setBusy(false);
   }
 
   async function openRecentJob(jobId: number) {
     if (restoring || busy || creatingRef.current || openingJobRef.current !== null) return;
     const selected = canChangeIngestSelection(deleteGateRef.current)
-      ? recentJobs.find((candidate) => candidate.job_id === jobId) : undefined;
+      ? recentJobs.find((candidate) => candidate.job_id === jobId && !removedJobIdsRef.current.has(jobId)) : undefined;
     if (!selected) return;
     stopPolling();
     openingJobRef.current = jobId;
     setOpeningJobId(jobId);
     setError(null);
     dispatchDeleteUi({ type: "selectionChanged" });
+    dispatchHistoryRemovalUi({ type: "selectionChanged" });
     try {
       const detailed = await api.getIngest(jobId);
+      if (removedJobIdsRef.current.has(jobId)) return;
       setJob(detailed);
-      setRecentJobs((current) => mergeRecentIngests(current, [detailed]));
+      setRecentJobs((current) => mergeVisibleRecent(current, [detailed]));
       setBusy(!isTerminalIngest(detailed));
       rememberJob(jobId);
       if (!isTerminalIngest(detailed)) startPolling(jobId);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : String(err));
+      if (err instanceof ApiError && err.status === 404) {
+        markJobMissing(jobId);
+        setError(`Ingestion job #${jobId} is no longer in history.`);
+      } else setError(err instanceof ApiError ? err.message : String(err));
     } finally {
       openingJobRef.current = null;
       setOpeningJobId(null);
@@ -265,8 +334,12 @@ export default function IngestForm() {
   const terminal = isTerminalIngest(job);
   const deleteBusy = Boolean(job && deleteUi.deletingJobId === job.job_id);
   const deleteConfirm = Boolean(job && deleteUi.confirmJobId === job.job_id);
-  const recentVisibleJobs = mergeRecentIngests(recentJobs, []);
-  const selectionLocked = restoring || busy || openingJobId !== null || deleteUi.deletingJobId !== null;
+  const recentVisibleJobs = mergeVisibleRecent(recentJobs, []);
+  const historyRemovalTarget = historyRemovalUi.confirmJobId === null
+    ? null
+    : [job, ...recentVisibleJobs].find((candidate): candidate is IngestJob => Boolean(candidate && candidate.job_id === historyRemovalUi.confirmJobId)) ?? null;
+  const historyRemovalBusy = historyRemovalUi.removingJobId !== null;
+  const selectionLocked = restoring || busy || openingJobId !== null || deleteUi.deletingJobId !== null || historyRemovalBusy;
   const deleteUnavailable = ingestDeleteUnavailableMessage(job);
 
   return (
@@ -309,17 +382,40 @@ export default function IngestForm() {
           <h2 style={{ margin: 0 }}>Recent ingestion jobs</h2>
           <button className="btn btn-ghost" type="button" disabled={selectionLocked} onClick={() => window.location.reload()}>Refresh history</button>
         </div>
-        <p className="small faint" style={{ margin: 0 }}>Reopen a completed ingestion to inspect or remove only its cards.</p>
+        <p className="small faint" style={{ margin: 0 }}>Reopen a completed ingestion to inspect it, remove its cards, or remove only the job from this history.</p>
+        {historyRemovalUi.message && <div className="alert alert-ok" role="status">{historyRemovalUi.message}</div>}
+        {historyRemovalUi.error && <div className="alert alert-error" role="alert">{historyRemovalUi.error}</div>}
         {restoring && <p role="status">Loading ingestion history…</p>}
         {!restoring && recentVisibleJobs.length === 0 && <p className="small faint">No ingestion jobs found.</p>}
         {recentVisibleJobs.map((recent) => (
-          <button className="btn btn-block" type="button" key={recent.job_id}
-            disabled={selectionLocked} aria-pressed={job?.job_id === recent.job_id}
-            onClick={() => void openRecentJob(recent.job_id)}>
-            Job #{recent.job_id} · {statusLabel(recent)} · {recent.ownership_unknown ? "ownership unknown" : `${ingestActivePhraseCount(recent)} active cards`}
-          </button>
+          <div className="row wrap" style={{ gap: 8 }} key={recent.job_id}>
+            <button className="btn" style={{ flex: "1 1 16rem" }} type="button"
+              disabled={selectionLocked} aria-pressed={job?.job_id === recent.job_id}
+              onClick={() => void openRecentJob(recent.job_id)}>
+              Job #{recent.job_id} · {statusLabel(recent)} · {recent.ownership_unknown ? "ownership unknown" : `${ingestActivePhraseCount(recent)} active cards`}
+            </button>
+            <button className="btn btn-danger" type="button" aria-label={`Remove job #${recent.job_id} from history`}
+              disabled={selectionLocked || !isTerminalIngest(recent)} onClick={() => {
+                dispatchDeleteUi({ type: "cancel" });
+                dispatchHistoryRemovalUi({ type: "confirm", job: recent });
+              }}>
+              {isTerminalIngest(recent) ? "Remove job" : "Remove when finished"}
+            </button>
+          </div>
         ))}
         {openingJobId !== null && <p role="status">Opening job #{openingJobId}…</p>}
+        {historyRemovalTarget && <div className="remove-confirm stack" role="group" aria-label={`Confirm remove job ${historyRemovalTarget.job_id} from history`}>
+          <strong>Remove job #{historyRemovalTarget.job_id} from ingestion history?</strong>
+          <p>This removes only the job from ingestion history. Cards already added to your library and their review history stay unchanged.</p>
+          <div className="btn-row">
+            <button className="btn btn-danger" type="button" disabled={historyRemovalBusy}
+              onClick={() => void removeJobFromHistory(historyRemovalTarget.job_id)}>
+              {historyRemovalUi.removingJobId === historyRemovalTarget.job_id ? "Removing…" : "Yes, remove job from history"}
+            </button>
+            <button className="btn" type="button" disabled={historyRemovalBusy}
+              onClick={() => dispatchHistoryRemovalUi({ type: "cancel" })}>Cancel</button>
+          </div>
+        </div>}
       </section>
 
       {job && (
@@ -403,14 +499,25 @@ export default function IngestForm() {
                 </div>
               </div>
             ) : (
-              <button className="btn btn-danger btn-block" type="button" onClick={() => dispatchDeleteUi({ type: "confirm", job })} disabled={selectionLocked}>
+              <button className="btn btn-danger btn-block" type="button" onClick={() => {
+                dispatchHistoryRemovalUi({ type: "cancel" });
+                dispatchDeleteUi({ type: "confirm", job });
+              }} disabled={selectionLocked}>
                 Delete all cards from this ingestion
               </button>
             )
           )}
 
+          <button className="btn btn-danger btn-block" type="button"
+            disabled={selectionLocked || !terminal} onClick={() => {
+              dispatchDeleteUi({ type: "cancel" });
+              dispatchHistoryRemovalUi({ type: "confirm", job });
+            }}>
+            {terminal ? "Remove job from history" : "Remove job from history when finished"}
+          </button>
+
           <button className="btn btn-ghost btn-block" type="button" onClick={reset}
-            disabled={restoring || creatingRef.current || openingJobId !== null || deleteUi.deletingJobId !== null}>
+            disabled={restoring || creatingRef.current || openingJobId !== null || deleteUi.deletingJobId !== null || historyRemovalBusy}>
             {busy ? "Stop watching this job" : "Ingest another"}
           </button>
         </div>

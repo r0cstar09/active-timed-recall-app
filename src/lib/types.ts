@@ -299,8 +299,14 @@ export interface RemoveIngestCardsResponse {
   ownership_mode: string | null;
 }
 
+export interface RemoveIngestJobResponse {
+  job_id: number;
+  removed: boolean;
+  history_preserved: boolean;
+}
+
 export function isIngestComplete(job: IngestJob): boolean {
-  return job.status === "complete" || job.status === "partial";
+  return job.status === "complete" || job.status === "done" || job.status === "partial";
 }
 
 export function isIngestFailed(job: IngestJob): boolean {

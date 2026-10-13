@@ -1,0 +1,51 @@
+name: Bilingual Selection QA
+on:
+  push:
+    branches: [feat/bilingual-manual-selection]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Optional public frontend; all API traffic stays intercepted fixtures'
+        required: false
+        default: ''
+permissions:
+  contents: read
+jobs:
+  bilingual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund && npm test && npm run build
+      - name: Install browser
+        run: |
+          python3 -m venv /tmp/bilingual-qa
+          /tmp/bilingual-qa/bin/pip install --quiet playwright==1.63.0
+          /tmp/bilingual-qa/bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Bilingual selection and safe history removal on desktop and iPhone viewport
+        env:
+          QA_BASE: ${{ inputs.base }}
+        run: |
+          if [ -z "$QA_BASE" ]; then
+            python3 -m http.server 18764 --bind 127.0.0.1 --directory dist >/tmp/bilingual-server.log 2>&1 &
+            server=$!
+            trap 'kill "$server" 2>/dev/null || true' EXIT
+            for attempt in 1 2 3 4 5; do curl --silent --fail http://127.0.0.1:18764/ >/dev/null && break; sleep 1; done
+            QA_BASE=http://127.0.0.1:18764
+          fi
+          /tmp/bilingual-qa/bin/python scripts/test_curation_translation_browser.py --base "$QA_BASE" --browser ${{ matrix.browser }} --output /tmp/bilingual-results
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: bilingual-${{ matrix.browser }}
+          path: /tmp/bilingual-results
+          if-no-files-found: warn
+          retention-days: 7

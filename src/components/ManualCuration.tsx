@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { curationApi } from "../lib/curationApi";
+import { curationApi, CurationApiError } from "../lib/curationApi";
 import { createActionGate, newerDraft, importNeedsPolling } from "../lib/curationState";
+import { selectionEnglishAfterSourceChange, shouldApplySelectionTranslation, selectionTranslationCanSave } from "../lib/selectionTranslation";
 import type { CurationDraft, CurationImport, DraftPatch, TranscriptSegment } from "../lib/curationTypes";
 
 const LAST_IMPORT = "spanish.curation.lastImport";
@@ -20,21 +21,35 @@ export default function ManualCuration() {
   const [current, setCurrent] = useState<CurationImport | null>(null);
   const [selected, setSelected] = useState<number[]>([]);
   const [spanish, setSpanish] = useState("");
+  const [selectionEnglish, setSelectionEnglish] = useState("");
+  const [selectionTranslationStatus, setSelectionTranslationStatus] = useState<"idle" | "loading" | "ready" | "failed">("idle");
+  const [selectionTranslationError, setSelectionTranslationError] = useState<string | null>(null);
+  const [selectionTranslationNotice, setSelectionTranslationNotice] = useState<string | null>(null);
+  const [selectionTranslationRetry, setSelectionTranslationRetry] = useState(0);
+  const [translationSource, setTranslationSource] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pollError, setPollError] = useState<string | null>(null);
+  const [discardConfirmId, setDiscardConfirmId] = useState<number | null>(null);
   const activeId = useRef<number | null>(null);
   const epoch = useRef(0);
   const gate = useRef(createActionGate());
+  const discardedImportIds = useRef(new Set<number>());
   const [, setDirtyVersion] = useState(0);
   const sourceAudio = useRef<HTMLAudioElement>(null);
   const sourceEnd = useRef<number | null>(null);
   const errorAlert = useRef<HTMLDivElement>(null);
+  const selectionTranslationRequest = useRef(0);
+  const spanishRef = useRef("");
+  const selectionEnglishRef = useRef("");
+  const lastAutomaticEnglish = useRef("");
+  const learnerOwnsEnglish = useRef(false);
   const dirtyEditors = useRef(new Set<number>());
   const needsPolling = importNeedsPolling(current);
 
   function remember(value: CurationImport) {
+    if (discardedImportIds.current.has(value.id)) return;
     activeId.current = value.id;
     setCurrent(value);
     try { localStorage.setItem(LAST_IMPORT, String(value.id)); } catch { /* private browser */ }
@@ -47,18 +62,31 @@ export default function ManualCuration() {
     const version = epoch.current;
     const page = await curationApi.listImports(50, offset);
     if (version !== epoch.current) return;
-    setImports((old) => offset === 0 ? page.imports : [...old, ...page.imports.filter((x) => !old.some((y) => x.id === y.id))]);
+    const visible = page.imports.filter((item) => !discardedImportIds.current.has(item.id));
+    setImports((old) => offset === 0 ? visible : [...old, ...visible.filter((x) => !old.some((y) => x.id === y.id))]);
     setTotal(page.total);
   }
 
   async function refresh(id = activeId.current) {
     if (!id) return;
     const version = epoch.current;
-    const value = await curationApi.getImport(id);
-    if (activeId.current === id && version === epoch.current) {
-      setCurrent(value);
-      setImports((old) => old.map((item) => item.id === id ? value : item));
-      setPollError(null);
+    try {
+      const value = await curationApi.getImport(id);
+      if (activeId.current === id && version === epoch.current && !discardedImportIds.current.has(id)) {
+        setCurrent(value);
+        setImports((old) => old.map((item) => item.id === id ? value : item));
+        setPollError(null);
+      }
+    } catch (err) {
+      if (err instanceof CurationApiError && err.status === 404 && version === epoch.current) {
+        epoch.current++;
+        removeImportLocally(id);
+        setDiscardConfirmId(null);
+        setError(null);
+        setNotice("That saved transcript is no longer in import history.");
+        return;
+      }
+      throw err;
     }
   }
 
@@ -82,7 +110,15 @@ export default function ManualCuration() {
     if (id) {
       activeId.current = id;
       curationApi.getImport(id).then((value) => { if (!cancelled && version === epoch.current && activeId.current === id) remember(value); })
-        .catch((err) => { if (!cancelled && version === epoch.current) setError(message(err)); });
+        .catch((err) => {
+          if (cancelled || version !== epoch.current) return;
+          if (err instanceof CurationApiError && err.status === 404) {
+            epoch.current++;
+            removeImportLocally(id);
+            setNotice("That saved transcript is no longer in import history.");
+            history().catch((historyError) => setError(message(historyError)));
+          } else setError(message(err));
+        });
     }
     return () => { cancelled = true; };
   }, []);
@@ -116,11 +152,145 @@ export default function ManualCuration() {
     return () => window.removeEventListener("beforeunload", leaving);
   }, [selected.length]);
 
+  function invalidateSelectionTranslation() {
+    selectionTranslationRequest.current++;
+    setTranslationSource("");
+    setSelectionTranslationStatus("loading");
+    setSelectionTranslationError(null);
+    setSelectionTranslationNotice(null);
+    setSelectionTranslationRetry((value) => value + 1);
+  }
+
+  function resetSelection() {
+    selectionTranslationRequest.current++;
+    learnerOwnsEnglish.current = false;
+    spanishRef.current = ""; selectionEnglishRef.current = ""; lastAutomaticEnglish.current = "";
+    setSelected([]); setSpanish(""); setSelectionEnglish("");
+    setTranslationSource(""); setSelectionTranslationStatus("idle");
+    setSelectionTranslationError(null); setSelectionTranslationNotice(null);
+  }
+
+  function clearImportPointer(importId: number) {
+    try {
+      if (localStorage.getItem(LAST_IMPORT) === String(importId)) localStorage.removeItem(LAST_IMPORT);
+    } catch { /* optional browser cache */ }
+    const next = new URL(window.location.href);
+    if (next.searchParams.get("import") === String(importId)) {
+      next.searchParams.delete("import");
+      next.searchParams.delete("draft");
+      window.history.replaceState(null, "", `${next.pathname}${next.search}${next.hash}`);
+    }
+  }
+
+  function removeImportLocally(importId: number) {
+    const newlyRemoved = !discardedImportIds.current.has(importId);
+    discardedImportIds.current.add(importId);
+    setImports((old) => old.filter((item) => item.id !== importId));
+    if (newlyRemoved) setTotal((old) => Math.max(0, old - 1));
+    clearImportPointer(importId);
+    if (activeId.current !== importId) return;
+    sourceAudio.current?.pause();
+    sourceEnd.current = null;
+    activeId.current = null;
+    setCurrent(null);
+    dirtyEditors.current.clear();
+    resetSelection();
+    setPollError(null);
+  }
+
+  async function discardImport(importId: number) {
+    if (discardConfirmId !== importId || !gate.current.tryAcquire("mutation")) return;
+    epoch.current++;
+    setBusy(`discard-${importId}`); setError(null); setNotice(null);
+    try {
+      const result = await curationApi.deleteImport(importId);
+      if (result.import_id !== importId || result.removed !== true || result.history_preserved !== true) {
+        throw new Error("The backend did not confirm that the transcript was discarded while cards and review history were preserved. Refresh saved data before trying again.");
+      }
+      removeImportLocally(importId);
+      setDiscardConfirmId(null);
+      setNotice("Transcript discarded. Existing cards and review history were preserved.");
+    } catch (err) {
+      setError(`discard: ${message(err)}`);
+    } finally {
+      epoch.current++;
+      gate.current.release("mutation");
+      setBusy(null);
+    }
+  }
+
+  useEffect(() => {
+    const sourceText = spanish.trim();
+    const active = current;
+    const importId = active?.id;
+    if (!active || !importId || !selected.length || !sourceText) {
+      selectionTranslationRequest.current++;
+      setSelectionTranslationStatus("idle");
+      setSelectionTranslationError(null);
+      return;
+    }
+    const requestId = ++selectionTranslationRequest.current;
+    setSelectionTranslationStatus("loading");
+    setSelectionTranslationError(null);
+    setSelectionTranslationNotice(null);
+    const sorted = [...selected].sort((a, b) => a - b);
+    const firstPosition = active.transcript.findIndex((line) => line.index === sorted[0]);
+    const lastPosition = active.transcript.findIndex((line) => line.index === sorted[sorted.length - 1]);
+    const contextBefore = firstPosition > 0 ? active.transcript[firstPosition - 1].text : "";
+    const contextAfter = lastPosition >= 0 && lastPosition + 1 < active.transcript.length
+      ? active.transcript[lastPosition + 1].text
+      : "";
+    const timer = window.setTimeout(() => {
+      curationApi.translateSelection(importId, {
+        source_text: sourceText,
+        context_before: contextBefore,
+        context_after: contextAfter,
+      }).then((result) => {
+        if (activeId.current !== importId || requestId !== selectionTranslationRequest.current || sourceText !== spanishRef.current.trim()) return;
+        setTranslationSource(sourceText);
+        if (shouldApplySelectionTranslation({
+          requestId,
+          latestRequestId: selectionTranslationRequest.current,
+          requestedSpanish: sourceText,
+          currentSpanish: spanishRef.current,
+          currentEnglish: selectionEnglishRef.current,
+          lastAutomaticEnglish: lastAutomaticEnglish.current,
+          learnerEdited: learnerOwnsEnglish.current,
+        })) {
+          lastAutomaticEnglish.current = result.english;
+          selectionEnglishRef.current = result.english;
+          setSelectionEnglish(result.english);
+          setSelectionTranslationStatus("ready");
+        } else if (requestId === selectionTranslationRequest.current && sourceText === spanishRef.current.trim()) {
+          setSelectionTranslationStatus("ready");
+          setSelectionTranslationNotice("English meaning kept because you edited it.");
+        }
+      }).catch((err) => {
+        if (activeId.current !== importId || requestId !== selectionTranslationRequest.current || sourceText !== spanishRef.current.trim()) return;
+        setTranslationSource(sourceText);
+        setSelectionTranslationStatus("failed");
+        setSelectionTranslationError(message(err));
+      });
+    }, 450);
+    return () => { window.clearTimeout(timer); selectionTranslationRequest.current++; };
+  }, [current?.id, selected.join(","), spanish, selectionTranslationRetry]);
+
   function chooseSource(value: CurationImport) {
     if ((dirtyEditors.current.size || selected.length) && !window.confirm("Discard unsaved edits and selection? Saved drafts remain available.")) return;
     action("open", async () => {
-      const detailed = await curationApi.getImport(value.id);
-      dirtyEditors.current.clear(); setSelected([]); setSpanish(""); remember(detailed);
+      try {
+        const detailed = await curationApi.getImport(value.id);
+        dirtyEditors.current.clear(); resetSelection(); setDiscardConfirmId(null);
+        remember(detailed);
+      } catch (err) {
+        if (err instanceof CurationApiError && err.status === 404) {
+          removeImportLocally(value.id);
+          setDiscardConfirmId(null);
+          setNotice("That saved transcript is no longer in import history.");
+          return;
+        }
+        throw err;
+      }
     });
   }
 
@@ -128,24 +298,67 @@ export default function ManualCuration() {
     if (!current) return;
     const next = checked ? [...new Set([...selected, index])].sort((a, b) => a - b) : selected.filter((i) => i !== index);
     setSelected(next);
-    setSpanish(current.transcript.filter((line) => next.includes(line.index)).map((line) => line.text).join(" "));
+    const lines = current.transcript.filter((line) => next.includes(line.index));
+    const nextSpanish = lines.map((line) => line.text).join(" ");
+    const cachedEnglish = lines.length > 0 && lines.every((line) => line.english)
+      ? lines.map((line) => line.english).join(" ")
+      : "";
+    const nextEnglish = selectionEnglishAfterSourceChange(
+      selectionEnglishRef.current,
+      lastAutomaticEnglish.current,
+      cachedEnglish,
+      learnerOwnsEnglish.current,
+    );
+    invalidateSelectionTranslation();
+    spanishRef.current = nextSpanish;
+    selectionEnglishRef.current = nextEnglish.english;
+    lastAutomaticEnglish.current = nextEnglish.lastAutomaticEnglish;
+    setSpanish(nextSpanish);
+    setSelectionEnglish(nextEnglish.english);
+    setSelectionTranslationNotice(nextEnglish.learnerEdited ? "English meaning kept because you edited it." : null);
   }
 
   function useHighlightedText() {
+    if (busy) return;
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed || !selection.rangeCount) return;
     const range = selection.getRangeAt(0);
     const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-transcript-text]"));
     const hit = nodes.filter((node) => range.intersectsNode(node));
     if (!hit.length) return;
-    setSelected(hit.map((node) => Number(node.dataset.transcriptText)));
-    setSpanish(selection.toString().trim());
+    const indices = hit.map((node) => Number(node.dataset.transcriptText)).sort((a, b) => a - b);
+    const pieces = hit.map((node) => {
+      const piece = document.createRange();
+      piece.selectNodeContents(node);
+      if (node.contains(range.startContainer)) piece.setStart(range.startContainer, range.startOffset);
+      if (node.contains(range.endContainer)) piece.setEnd(range.endContainer, range.endOffset);
+      return piece.toString().trim();
+    }).filter(Boolean);
+    const nextSpanish = pieces.join(" ").replace(/\s+/g, " ").trim();
+    const nextEnglish = selectionEnglishAfterSourceChange(
+      selectionEnglishRef.current,
+      lastAutomaticEnglish.current,
+      "",
+      learnerOwnsEnglish.current,
+    );
+    invalidateSelectionTranslation();
+    setSelected(indices);
+    spanishRef.current = nextSpanish;
+    selectionEnglishRef.current = nextEnglish.english;
+    lastAutomaticEnglish.current = nextEnglish.lastAutomaticEnglish;
+    setSpanish(nextSpanish);
+    setSelectionEnglish(nextEnglish.english);
+    setSelectionTranslationNotice(nextEnglish.learnerEdited ? "English meaning kept because you edited it." : null);
   }
 
   function updateDraft(draft: CurationDraft) {
     setCurrent((old) => old ? { ...old, drafts: mergeDrafts(old.drafts, [draft]) } : old);
   }
 
+  const canSaveSelection = selectionTranslationCanSave({
+    spanish, english: selectionEnglish, translationSource,
+    status: selectionTranslationStatus, learnerEdited: learnerOwnsEnglish.current,
+  });
   const contiguous = selected.length > 0 && selected.every((n, i) => i === 0 || n === selected[i - 1] + 1);
   const selectedLines = current?.transcript.filter((line) => selected.includes(line.index)) ?? [];
   const approved = current?.drafts.filter((d) => d.approved && d.status !== "added" && !dirtyEditors.current.has(d.id)) ?? [];
@@ -159,7 +372,8 @@ export default function ManualCuration() {
           if (!window.confirm("Switch source and discard unsaved edits? Saved drafts are retained.")) return;
         }
         const value = await curationApi.createImport(url.trim());
-        dirtyEditors.current.clear(); setSelected([]); setSpanish(""); remember(value); await history();
+        dirtyEditors.current.clear(); resetSelection();
+        remember(value); await history();
       }); }}>
         <label className="field"><span>YouTube URL</span><input className="input" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://youtube.com/watch?v=…" required disabled={!!busy} /></label>
         <button className="btn btn-primary" disabled={!!busy || !url.trim()}>{busy === "import" ? "Importing…" : "Import transcript"}</button>
@@ -173,38 +387,83 @@ export default function ManualCuration() {
       <summary>Saved imports ({total})</summary>
       <div className="stack" style={{ marginTop: 12 }}>
         {!imports.length && <p className="muted">No saved imports yet.</p>}
-        {imports.map((value) => <button className="btn" disabled={!!busy} key={value.id} onClick={() => chooseSource(value)} aria-current={value.id === current?.id ? "true" : undefined}>
-          {value.title || value.video_id} · {value.status}
-        </button>)}
+        {imports.map((value) => <div className="curation-history-row" key={value.id}>
+          <button className="btn" disabled={!!busy} onClick={() => chooseSource(value)} aria-current={value.id === current?.id ? "true" : undefined}>
+            {value.title || value.video_id} · {value.status}
+          </button>
+          <button className="btn btn-danger" type="button" disabled={!!busy} onClick={() => { setDiscardConfirmId(value.id); setError(null); setNotice(null); }}>Discard</button>
+        </div>)}
         {imports.length < total && <button className="btn" disabled={!!busy} onClick={() => action("history", () => history(imports.length))}>Load more imports</button>}
       </div>
     </details>
 
+    {discardConfirmId !== null && <div className="card remove-confirm stack" role="group" aria-label={`Confirm discard transcript ${discardConfirmId}`}>
+      <strong>Discard transcript #{discardConfirmId} from import history?</strong>
+      <p>This removes the imported transcript, its saved drafts, and pending import work. Cards already added to your library and their review history stay unchanged.</p>
+      {activeId.current === discardConfirmId && (dirtyEditors.current.size > 0 || selected.length > 0) && <p className="alert alert-warn">Unsaved draft edits or the current selection will also be cleared.</p>}
+      <div className="curation-actions">
+        <button className="btn btn-danger" type="button" disabled={!!busy} onClick={() => void discardImport(discardConfirmId)}>
+          {busy === `discard-${discardConfirmId}` ? "Discarding…" : "Yes, discard transcript"}
+        </button>
+        <button className="btn" type="button" disabled={!!busy} onClick={() => setDiscardConfirmId(null)}>Cancel</button>
+      </div>
+    </div>}
+
     {current && <>
       <div className="card stack">
-        <h2>{current.title || current.video_id}</h2>
+        <div className="curation-actions"><h2 style={{ marginRight: "auto" }}>{current.title || current.video_id}</h2>
+          <button className="btn btn-danger" type="button" disabled={!!busy} onClick={() => { setDiscardConfirmId(current.id); setError(null); setNotice(null); }}>Discard transcript</button>
+        </div>
         <a href={current.source_url} target="_blank" rel="noreferrer">Watch original source ↗</a>
         {current.status !== "ready" && <p role="status">{current.status === "failed" ? current.error_message || "Transcript import failed." : "Loading the complete transcript… You can leave and reopen this import."}</p>}
         {current.status === "failed" && <button className="btn" disabled={!!busy} onClick={() => action("retry", async () => remember(await curationApi.createImport(current.source_url)))}>Retry import</button>}
         {current.status === "ready" && <>
           <h3>Full transcript · {current.transcript.length} lines</h3>
+          {current.translation_status !== "ready" && <div className={current.translation_status === "failed" ? "alert alert-error" : "muted small"} role="status">
+            <span>English translations: {current.translation_completed} of {current.translation_total}. </span>
+            {current.translation_status === "failed"
+              ? <><span>{current.translation_error || "Some English translations could not be loaded."} Spanish selection is still available.</span>
+                <button className="btn" disabled={!!busy} onClick={() => action("translation retry", async () => remember(await curationApi.retryImportTranslation(current.id)))}>Retry English translations</button></>
+              : <span>Translations appear progressively; you can select Spanish now.</span>}
+          </div>}
           <p className="muted small">Tick adjacent lines, or highlight words with your mouse. You can edit the selected phrase before saving it.</p>
           <div className="curation-transcript" onMouseUp={useHighlightedText}>
             {current.transcript.map((line: TranscriptSegment) => <label key={line.index} className={`curation-line ${selected.includes(line.index) ? "selected" : ""}`}>
               <input type="checkbox" aria-label={`Select transcript line ${line.index + 1}`} checked={selected.includes(line.index)} disabled={!!busy} onChange={(e) => selectLine(line.index, e.target.checked)} />
-              <time>{stamp(line.start)}</time><span data-transcript-text={line.index}>{line.text}</span>
+              <time>{stamp(line.start)}</time><span className="curation-line-copy"><span data-transcript-text={line.index}>{line.text}</span>
+                {line.english
+                  ? <span className="curation-line-english" lang="en">{line.english}</span>
+                  : <span className="curation-line-english loading" aria-hidden="true">English translation loading…</span>}
+              </span>
             </label>)}
           </div>
-          <label className="field"><span>Selected phrase</span><textarea aria-label="Selected phrase" className="input" rows={3} value={spanish} disabled={!!busy} onChange={(e) => setSpanish(e.target.value)} /></label>
+          <label className="field"><span>Selected phrase</span><textarea aria-label="Selected phrase" className="input" rows={3} value={spanish} disabled={!!busy} onChange={(e) => { invalidateSelectionTranslation(); spanishRef.current = e.target.value; setSpanish(e.target.value); }} /></label>
+          <label className="field"><span>English meaning</span><textarea aria-label="Selected English meaning" className="input" rows={3} value={selectionEnglish} disabled={!!busy} placeholder={selectionTranslationStatus === "loading" ? "Translating the exact selection…" : "English remains editable"} onChange={(e) => {
+            learnerOwnsEnglish.current = true;
+            selectionEnglishRef.current = e.target.value;
+            setSelectionEnglish(e.target.value);
+            setSelectionTranslationNotice(null);
+          }} /></label>
+          <div className="muted small" role="status" aria-live="polite">
+            {selectionTranslationStatus === "loading" && "Translating the exact Spanish selection with nearby context…"}
+            {selectionTranslationNotice}
+          </div>
+          {selectionTranslationStatus === "failed" && <div className="alert alert-error">English translation failed: {selectionTranslationError}. Your Spanish selection is unchanged. Retry, or enter your own English meaning to save.
+            <button className="btn" onClick={invalidateSelectionTranslation}>Retry this translation</button>
+          </div>}
           {selected.length > 0 && !contiguous && <div className="alert alert-error">Select adjacent lines for one continuous audio clip.</div>}
           {selectedLines.length > 0 && <p className="muted small">Source range: {stamp(selectedLines[0].start)} – {stamp(selectedLines[selectedLines.length - 1].end)}. Automatic alignment runs only for this saved selection.</p>}
           <div className="curation-actions">
-            <button className="btn btn-primary" disabled={!!busy || !contiguous || !spanish.trim()} onClick={() => action("selection", async () => {
-              const drafts = await curationApi.createDrafts(current.id, [{ segment_indices: selected, spanish: spanish.trim() }]);
+            <button className="btn btn-primary" disabled={!!busy || !contiguous || !canSaveSelection} onClick={() => action("selection", async () => {
+              if (!canSaveSelection) return;
+              const drafts = await curationApi.createDrafts(current.id, [{ segment_indices: selected, spanish: spanish.trim(), english: selectionEnglish.trim() }]);
               setCurrent((old) => old ? { ...old, drafts: mergeDrafts(old.drafts, drafts) } : old);
-              setSelected([]); setSpanish(""); setNotice("Selection saved as a draft. Prepare its clip below; nothing has been added to your deck.");
+              resetSelection();
+              setNotice("Selection saved as a draft. Prepare its clip below; nothing has been added to your deck.");
             })}>Save selection as draft</button>
-            <button className="btn" disabled={!!busy || !selected.length} onClick={() => { setSelected([]); setSpanish(""); }}>Clear selection</button>
+            <button className="btn" disabled={!!busy || !selected.length} onClick={() => {
+              resetSelection();
+            }}>Clear selection</button>
             {current.source_audio_url && selectedLines.length > 0 && <button className="btn" onClick={() => {
               const player = sourceAudio.current;
               if (!player) return;
@@ -236,12 +495,18 @@ export default function ManualCuration() {
       .curation-line.selected {background:color-mix(in srgb,var(--accent,#c69025) 18%,transparent);}
       .curation-line input {width:20px;height:20px;}
       .curation-line time {font-size:12px;opacity:.7;padding-top:3px;}
+      .curation-line-copy {display:grid;gap:4px;min-width:0;}
+      .curation-line-english {display:block;color:var(--muted,#626262);font-size:.94rem;line-height:1.35;user-select:none;}
+      .curation-line-english.loading {opacity:.65;font-style:italic;}
       .curation-actions {display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
       .curation-actions .btn {min-height:44px;white-space:normal;}
+      .curation-history-row {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;}
+      .curation-history-row .btn:first-child {min-width:0;overflow-wrap:anywhere;}
       .curation-draft {border:1px solid var(--border,#d8d8d8);border-radius:12px;padding:16px;scroll-margin-top:80px;}
       .curation-times {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
       .curation-times input {width:100%;min-width:0;}
       .curation-draft textarea {width:100%;box-sizing:border-box;}
+      @media (max-width:520px) {.curation-history-row {grid-template-columns:1fr;}.curation-history-row .btn {width:100%;}}
     `}</style>
   </section>;
 }

@@ -1,4 +1,5 @@
 export type CurationImportStatus = "queued" | "loading" | "ready" | "failed";
+export type CurationTranslationStatus = "pending" | "queued" | "translating" | "ready" | "failed";
 export type CurationDraftStatus =
   | "draft"
   | "queued"
@@ -13,6 +14,7 @@ export interface TranscriptSegment {
   text: string;
   start: number;
   end: number;
+  english: string | null;
 }
 
 export interface CurationDraft {
@@ -46,6 +48,10 @@ export interface CurationImport {
   title: string | null;
   status: CurationImportStatus;
   error_message: string | null;
+  translation_status: CurationTranslationStatus;
+  translation_error: string | null;
+  translation_completed: number;
+  translation_total: number;
   transcript: TranscriptSegment[];
   drafts: CurationDraft[];
   source_audio_url: string | null;
@@ -56,6 +62,13 @@ export interface CurationImport {
 export interface DraftSelection {
   segment_indices: number[];
   spanish: string;
+  english?: string;
+}
+
+export interface SelectionTranslationRequest {
+  source_text: string;
+  context_before?: string;
+  context_after?: string;
 }
 
 export interface DraftRevisionRef {

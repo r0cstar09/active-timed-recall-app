@@ -4,12 +4,15 @@ import { test } from "node:test";
 import { build } from "esbuild";
 import {
   INITIAL_INGEST_DELETE_UI,
+  INITIAL_INGEST_HISTORY_REMOVAL_UI,
   applyIngestDeleteResult,
   canChangeIngestSelection,
   canDeleteIngestCards,
   createIngestDeleteGate,
   executeIngestCardDeletion,
+  executeIngestHistoryRemoval,
   ingestDeleteUiReducer,
+  ingestHistoryRemovalUiReducer,
   mergeRecentIngests,
   recentTerminalIngests,
   reopenRecentTerminalJob,
@@ -145,6 +148,61 @@ test("switching jobs and reset are blocked while deletion is in flight", () => {
   assert.deepEqual(ingestDeleteUiReducer(deleting, { type: "reset" }), deleting);
 });
 
+test("history removal reducer supports cancel, retry, and success", () => {
+  const selected = terminalJob(22, { status: "failed", phrase_count: 0, active_phrase_count: 0, phrases: [] });
+  let state = ingestHistoryRemovalUiReducer(INITIAL_INGEST_HISTORY_REMOVAL_UI, { type: "confirm", job: selected });
+  assert.equal(state.confirmJobId, 22);
+  state = ingestHistoryRemovalUiReducer(state, { type: "cancel" });
+  assert.deepEqual(state, INITIAL_INGEST_HISTORY_REMOVAL_UI);
+
+  state = ingestHistoryRemovalUiReducer(state, { type: "confirm", job: selected });
+  state = ingestHistoryRemovalUiReducer(state, { type: "started", jobId: 22 });
+  assert.equal(state.removingJobId, 22);
+  state = ingestHistoryRemovalUiReducer(state, { type: "failed", jobId: 22, error: "try again" });
+  assert.equal(state.confirmJobId, 22);
+  assert.equal(state.error, "try again");
+  state = ingestHistoryRemovalUiReducer(state, { type: "started", jobId: 22 });
+  state = ingestHistoryRemovalUiReducer(state, { type: "succeeded", jobId: 22 });
+  assert.equal(state.confirmJobId, null);
+  assert.match(state.message, /22/);
+});
+
+test("history removal is terminal-only, validates receipt, and locks duplicate requests", async () => {
+  let calls = 0;
+  const running = terminalJob(31, { status: "running" });
+  const runningOutcome = await executeIngestHistoryRemoval(running, async () => {
+    calls += 1;
+    return { job_id: 31, removed: true, history_preserved: true };
+  }, createIngestDeleteGate());
+  assert.equal(runningOutcome.status, "blocked");
+  assert.equal(calls, 0);
+
+  const terminal = terminalJob(32);
+  const refused = await executeIngestHistoryRemoval(terminal, async () => ({
+    job_id: 32,
+    removed: true,
+    history_preserved: false,
+  }), createIngestDeleteGate());
+  assert.equal(refused.status, "refused");
+  assert.match(refused.message, /did not confirm.*review history.*preserved/i);
+
+  let releaseRequest;
+  const gate = createIngestDeleteGate();
+  const request = async () => {
+    calls += 1;
+    return await new Promise((resolve) => { releaseRequest = resolve; });
+  };
+  const first = executeIngestHistoryRemoval(terminal, request, gate);
+  const duplicate = await executeIngestHistoryRemoval(terminal, request, gate);
+  assert.equal(duplicate.status, "blocked");
+  assert.equal(canChangeIngestSelection(gate), false);
+  releaseRequest({ job_id: 32, removed: true, history_preserved: true });
+  const success = await first;
+  assert.equal(success.status, "success");
+  assert.equal(calls, 1);
+  assert.equal(canChangeIngestSelection(gate), true);
+});
+
 test("recent terminal jobs remain listed and an older one can be reopened for deletion", () => {
   const jobs = mergeRecentIngests([], [
     terminalJob(103, { status: "processing", active_phrase_count: 2 }),
@@ -177,7 +235,10 @@ test("isolated mocked API client uses the exact DELETE contract without producti
   const calls = [];
   globalThis.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), options });
-    return new Response(JSON.stringify(deleteResponse()), {
+    const body = /\/api\/ingest\/41$/.test(String(url))
+      ? { job_id: 41, removed: true, history_preserved: true }
+      : deleteResponse();
+    return new Response(JSON.stringify(body), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
@@ -185,10 +246,14 @@ test("isolated mocked API client uses the exact DELETE contract without producti
 
   try {
     const result = await api.removeIngestCards(41);
+    const removed = await api.removeIngestJob(41);
     assert.equal(result.active_phrase_count, 0);
-    assert.equal(calls.length, 1);
+    assert.deepEqual(removed, { job_id: 41, removed: true, history_preserved: true });
+    assert.equal(calls.length, 2);
     assert.match(calls[0].url, /\/api\/ingest\/41\/cards$/);
     assert.equal(calls[0].options.method, "DELETE");
+    assert.match(calls[1].url, /\/api\/ingest\/41$/);
+    assert.equal(calls[1].options.method, "DELETE");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -224,6 +289,10 @@ test("IngestForm wires recent history, scoped confirmation, navigation locks, an
   assert.match(source, /Recent ingestion jobs/);
   assert.match(source, /recentVisibleJobs\.map/);
   assert.match(source, /executeIngestCardDeletion/);
+  assert.match(source, /executeIngestHistoryRemoval/);
+  assert.match(source, /api\.removeIngestJob/);
+  assert.match(source, /Remove job from history/);
+  assert.match(source, /Cards already added to your library and their review history stay unchanged/);
   assert.match(source, /role="alert"/);
   assert.match(source, /Delete available when ingestion finishes/);
 });
