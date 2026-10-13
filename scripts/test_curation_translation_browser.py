@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import Page, expect, sync_playwright
 
 
 DEVICES: dict[str, dict[str, Any]] = {
@@ -93,6 +93,9 @@ def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> None:
             evidence["api_requests"].append({"method": request.method, "path": parsed.path, "body": body})
             if request.method == "GET" and parsed.path == "/api/curation/imports":
                 fulfill_json(route, {"imports": [import_fixture()], "total": 1})
+                return
+            if request.method == "GET" and parsed.path == "/api/ingest/recent":
+                fulfill_json(route, {"jobs": []})
                 return
             if request.method == "GET" and parsed.path == "/api/curation/imports/91":
                 if state["retry"]:
@@ -198,9 +201,13 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     assert all(row["englishTop"] > row["spanishTop"] for row in layout["bilingualRows"]), layout
     assert layout["retryRect"] and layout["retryRect"]["height"] >= 40, layout
 
-    page.get_by_label("Select transcript line 2", exact=True).check()
+    selected_line = page.get_by_label("Select transcript line 2", exact=True)
+    selected_line.click()
+    expect(selected_line).to_be_checked()
     page.get_by_label("English meaning", exact=True).wait_for()
-    page.get_by_text("My mind went blank when he asked me the question.", exact=False).wait_for(timeout=5_000)
+    expect(page.get_by_label("English meaning", exact=True)).to_have_value(
+        "My mind went blank when he asked me the question.", timeout=10_000
+    )
     first_request = next(item for item in evidence["api_requests"] if item["path"].endswith("/translations/selection"))
     assert first_request["body"] == {
         "source_text": "Me quedé en blanco cuando me hizo la pregunta.",
@@ -209,7 +216,9 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     }, first_request
 
     page.get_by_label("English meaning", exact=True).fill("My own editable meaning")
-    page.get_by_label("Select transcript line 3", exact=True).check()
+    adjacent_line = page.get_by_label("Select transcript line 3", exact=True)
+    adjacent_line.click()
+    expect(adjacent_line).to_be_checked()
     page.get_by_text("English meaning kept because you edited it.", exact=True).wait_for(timeout=5_000)
     assert page.get_by_label("English meaning", exact=True).input_value() == "My own editable meaning"
 
