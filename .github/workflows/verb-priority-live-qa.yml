@@ -1,0 +1,37 @@
+name: Verb Priority Live QA
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    env:
+      PUBLIC_API_BASE_URL: https://api-spanish.tonymuzo.dev
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run test:verbs && npm run build
+      - name: Install isolated browser runtime
+        run: |
+          python3 -m venv /tmp/verb-live-qa
+          /tmp/verb-live-qa/bin/pip install --quiet playwright==1.63.0
+          /tmp/verb-live-qa/bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify exact deployed assets and hydrated read-only selector
+        run: /tmp/verb-live-qa/bin/python scripts/verify_next30_live.py --browser ${{ matrix.browser }} --output /tmp/verb-live-results/${{ matrix.browser }}
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: verb-live-${{ matrix.browser }}
+          path: /tmp/verb-live-results
+          if-no-files-found: error
+          retention-days: 7
