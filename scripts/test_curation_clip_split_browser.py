@@ -143,18 +143,51 @@ def fulfill_json(route: Any, payload: Any, status: int = 200) -> None:
     )
 
 
-def fulfill_audio(route: Any, body: bytes) -> None:
-    route.fulfill(
-        status=200,
-        headers={
-            "Content-Type": "audio/wav",
-            "Content-Length": str(len(body)),
-            "Accept-Ranges": "bytes",
-            "Access-Control-Allow-Origin": "*",
-            "Cache-Control": "no-store",
-        },
-        body=body,
-    )
+def audio_range_response(body: bytes, range_header: str | None) -> tuple[int, dict[str, str], bytes]:
+    total = len(body)
+    headers = {
+        "Content-Type": "audio/wav",
+        "Accept-Ranges": "bytes",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Expose-Headers": "Accept-Ranges, Content-Length, Content-Range",
+        "Cache-Control": "no-store",
+    }
+    if not range_header:
+        headers["Content-Length"] = str(total)
+        return 200, headers, body
+
+    match = re.fullmatch(r"bytes=(\d*)-(\d*)", range_header.strip())
+    if not match or not any(match.groups()):
+        headers.update({"Content-Length": "0", "Content-Range": f"bytes */{total}"})
+        return 416, headers, b""
+
+    raw_start, raw_end = match.groups()
+    if raw_start:
+        start = int(raw_start)
+        end = min(int(raw_end), total - 1) if raw_end else total - 1
+    else:
+        suffix_length = int(raw_end)
+        if suffix_length <= 0:
+            headers.update({"Content-Length": "0", "Content-Range": f"bytes */{total}"})
+            return 416, headers, b""
+        start = max(0, total - suffix_length)
+        end = total - 1
+    if start >= total or start > end:
+        headers.update({"Content-Length": "0", "Content-Range": f"bytes */{total}"})
+        return 416, headers, b""
+
+    partial = body[start:end + 1]
+    headers.update({
+        "Content-Length": str(len(partial)),
+        "Content-Range": f"bytes {start}-{end}/{total}",
+    })
+    return 206, headers, partial
+
+
+def fulfill_audio(route: Any, body: bytes, range_header: str | None) -> int:
+    status, headers, response_body = audio_range_response(body, range_header)
+    route.fulfill(status=status, headers=headers, body=response_body)
+    return status
 
 
 def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> dict[str, Any]:
@@ -195,8 +228,14 @@ def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> dict[str
             "/api/audio/right.wav": RIGHT_WAV,
         }
         if parsed.path in audio_payloads:
-            evidence["media_requests"].append({"method": request.method, "path": parsed.path})
-            fulfill_audio(route, audio_payloads[parsed.path])
+            range_header = request.headers.get("range")
+            media_request = {
+                "method": request.method,
+                "path": parsed.path,
+                "range": range_header,
+            }
+            evidence["media_requests"].append(media_request)
+            media_request["response_status"] = fulfill_audio(route, audio_payloads[parsed.path], range_header)
             return
         if parsed.path.startswith("/api/"):
             body = json.loads(request.post_data) if request.post_data else None
@@ -309,6 +348,80 @@ def beforeunload_prevented(page: Page) -> bool:
     }"""))
 
 
+def media_state(media: Any) -> dict[str, Any]:
+    return media.evaluate("""node => ({
+      currentTime: node.currentTime,
+      duration: Number.isFinite(node.duration) ? node.duration : null,
+      paused: node.paused,
+      seeking: node.seeking,
+      networkState: node.networkState,
+      readyState: node.readyState,
+      seekable: Array.from({length: node.seekable.length}, (_, index) => [
+        node.seekable.start(index), node.seekable.end(index),
+      ]),
+      error: node.error ? {code: node.error.code, message: node.error.message || null} : null,
+    })""")
+
+
+def assert_media_ok(media: Any) -> dict[str, Any]:
+    state = media_state(media)
+    assert state["error"] is None, state
+    return state
+
+
+def wait_for_media_ready(page: Page, media: Any) -> dict[str, Any]:
+    handle = media.element_handle()
+    page.wait_for_function("""node => node.error || (
+      node.readyState >= HTMLMediaElement.HAVE_METADATA
+      && Number.isFinite(node.duration) && node.duration > 0
+      && node.seekable.length > 0
+    )""", arg=handle)
+    state = assert_media_ok(media)
+    assert state["seekable"], state
+    return state
+
+
+def wait_for_media_time(page: Page, media: Any, target: float, tolerance: float = .03) -> dict[str, Any]:
+    handle = media.element_handle()
+    page.wait_for_function(
+        f"node => node.error || (!node.seeking && Math.abs(node.currentTime - {target!r}) <= {tolerance!r})",
+        arg=handle,
+    )
+    state = assert_media_ok(media)
+    assert abs(state["currentTime"] - target) <= tolerance, state
+    return state
+
+
+def wait_for_media_playing(page: Page, media: Any) -> dict[str, Any]:
+    handle = media.element_handle()
+    page.wait_for_function("node => node.error || !node.paused", arg=handle)
+    state = assert_media_ok(media)
+    assert state["paused"] is False, state
+    return state
+
+
+def wait_for_media_paused_at(page: Page, media: Any, target: float, tolerance: float = .03) -> dict[str, Any]:
+    handle = media.element_handle()
+    page.wait_for_function(
+        f"node => node.error || (node.paused && !node.seeking && Math.abs(node.currentTime - {target!r}) <= {tolerance!r})",
+        arg=handle,
+    )
+    state = assert_media_ok(media)
+    assert state["paused"] is True and abs(state["currentTime"] - target) <= tolerance, state
+    return state
+
+
+def wait_for_media_advance(page: Page, media: Any, start: float, minimum: float = .18) -> dict[str, Any]:
+    handle = media.element_handle()
+    page.wait_for_function(
+        f"node => node.error || node.currentTime - {start!r} >= {minimum!r}",
+        arg=handle,
+    )
+    state = assert_media_ok(media)
+    assert state["currentTime"] - start >= minimum, state
+    return state
+
+
 def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, Any]:
     evidence: dict[str, Any] = {
         "device": name,
@@ -317,11 +430,14 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         "blocked_external": [],
         "console": [],
         "page_errors": [],
+        "media_errors": [],
     }
     context = browser.new_context(**DEVICES[name], color_scheme="light", service_workers="block")
     page = context.new_page()
-    page.add_init_script("""() => {
+    page.expose_function("__recordMediaError", lambda detail: evidence["media_errors"].append(detail))
+    page.add_init_script("""(() => {
       window.__mediaSeekWrites = [];
+      window.__mediaErrors = [];
       const descriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'currentTime');
       if (!descriptor?.get || !descriptor?.set) throw new Error('currentTime descriptor unavailable');
       Object.defineProperty(HTMLMediaElement.prototype, 'currentTime', {
@@ -333,7 +449,22 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
           return descriptor.set.call(this, value);
         },
       });
-    }""")
+      window.addEventListener('error', (event) => {
+        const node = event.target;
+        if (!(node instanceof HTMLMediaElement)) return;
+        const detail = {
+          label: node.getAttribute('aria-label'),
+          code: node.error?.code ?? null,
+          message: node.error?.message || null,
+          currentTime: node.currentTime,
+          duration: Number.isFinite(node.duration) ? node.duration : null,
+          networkState: node.networkState,
+          readyState: node.readyState,
+        };
+        window.__mediaErrors.push(detail);
+        void window.__recordMediaError(detail);
+      }, true);
+    })()""")
     page.on("console", lambda message: evidence["console"].append({"type": message.type, "text": message.text, "location": message.location}) if message.type == "error" else None)
     page.on("pageerror", lambda error: evidence["page_errors"].append(str(error)))
     state = attach_fixtures(page, base, evidence)
@@ -348,15 +479,19 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         # back into currentTime. play() is native; only the UI button starts it.
         trim_audio = original.get_by_label("Draft 701 trim playhead audio", exact=True)
         trim_seek = original.get_by_label("Draft 701 trim playhead seek", exact=True)
-        page.wait_for_function("node => node.readyState >= 1", arg=trim_audio.element_handle())
+        wait_for_media_ready(page, trim_audio)
         trim_seek.fill("10.3")
-        page.wait_for_timeout(80)
+        expect(trim_seek).to_have_value("10.3")
+        wait_for_media_time(page, trim_audio, 10.3)
+        trim_command_writes = page.evaluate(
+            "window.__mediaSeekWrites.filter(item => item.label === 'Draft 701 trim playhead audio')",
+        )
+        assert any(abs(item["value"] - 10.3) <= .03 for item in trim_command_writes), trim_command_writes
         page.evaluate("window.__mediaSeekWrites = []")
         trim_start = trim_audio.evaluate("node => node.currentTime")
         original.get_by_role("button", name="Play selected range", exact=True).click()
-        page.wait_for_function("node => !node.paused", arg=trim_audio.element_handle())
-        page.wait_for_timeout(420)
-        trim_mid = trim_audio.evaluate("node => node.currentTime")
+        wait_for_media_playing(page, trim_audio)
+        trim_mid = wait_for_media_advance(page, trim_audio, trim_start)["currentTime"]
         trim_audio.evaluate("node => node.pause()")
         trim_clock_writes = page.evaluate("window.__mediaSeekWrites.filter(item => item.label === 'Draft 701 trim playhead audio')")
         assert trim_mid - trim_start >= .18, (trim_start, trim_mid)
@@ -367,14 +502,10 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         original.get_by_label("End time (seconds)", exact=True).fill("10.15")
         audition = original.get_by_role("button", name="Audition candidate trim", exact=True)
         audition.click()
-        page.wait_for_function("node => !node.paused", arg=trim_audio.element_handle())
-        page.wait_for_function(
-            "node => node.paused && Math.abs(node.currentTime - 10.15) <= .03",
-            arg=trim_audio.element_handle(),
-        )
-        audition_stop = trim_audio.evaluate("node => node.currentTime")
+        wait_for_media_playing(page, trim_audio)
+        audition_stop = wait_for_media_paused_at(page, trim_audio, 10.15)["currentTime"]
         page.wait_for_timeout(180)
-        audition_stable = trim_audio.evaluate("node => node.currentTime")
+        audition_stable = assert_media_ok(trim_audio)["currentTime"]
         assert abs(audition_stop - 10.15) <= .03, audition_stop
         assert abs(audition_stable - audition_stop) <= .005, (audition_stop, audition_stable)
         original.get_by_role("button", name="Discard edits / reload saved", exact=True).click()
@@ -432,13 +563,13 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
 
         page.get_by_label("Select transcript line 5", exact=True).check()
         source_audio = page.get_by_label("Original source audio", exact=True)
-        page.wait_for_function("node => node.readyState >= 1", arg=source_audio.element_handle())
+        wait_for_media_ready(page, source_audio)
         page.get_by_role("button", name="Play source context", exact=True).click()
-        page.wait_for_function("node => !node.paused", arg=source_audio.element_handle())
+        wait_for_media_playing(page, source_audio)
         split_audio = panel.get_by_label("Draft 701 split playhead audio", exact=True)
-        page.wait_for_function("node => node.readyState >= 1", arg=split_audio.element_handle())
+        wait_for_media_ready(page, split_audio)
         panel.get_by_role("button", name="Play selected range", exact=True).click()
-        page.wait_for_function("node => !node.paused", arg=split_audio.element_handle())
+        wait_for_media_playing(page, split_audio)
         assert source_audio.evaluate("node => node.paused") is True
         split_audio.evaluate("node => node.pause()")
 
@@ -462,18 +593,15 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         # sparse. It remains rewound/clamped there after the deadline fires.
         split_audio = panel.get_by_label("Draft 701 split playhead audio", exact=True)
         seek = panel.get_by_label("Draft 701 split playhead seek", exact=True)
-        page.wait_for_function("node => node.readyState >= 1", arg=split_audio.element_handle())
+        wait_for_media_ready(page, split_audio)
         seek.fill("17.78")
-        page.wait_for_timeout(80)
+        expect(seek).to_have_value("17.78")
+        wait_for_media_time(page, split_audio, 17.78 - 9.8)
         panel.get_by_role("button", name="Play selected range", exact=True).click()
-        page.wait_for_function("node => !node.paused", arg=split_audio.element_handle())
-        page.wait_for_function(
-            "node => node.paused && Math.abs((node.currentTime + 9.8) - 18.0) <= .03",
-            arg=split_audio.element_handle(),
-        )
-        bounded_stop = split_audio.evaluate("node => node.currentTime + 9.8")
+        wait_for_media_playing(page, split_audio)
+        bounded_stop = wait_for_media_paused_at(page, split_audio, 18.0 - 9.8)["currentTime"] + 9.8
         page.wait_for_timeout(180)
-        bounded_stable = split_audio.evaluate("node => node.currentTime + 9.8")
+        bounded_stable = assert_media_ok(split_audio)["currentTime"] + 9.8
         assert abs(bounded_stop - 18.0) <= .03, bounded_stop
         assert abs(bounded_stable - bounded_stop) <= .005, (bounded_stop, bounded_stable)
 
@@ -483,18 +611,19 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         suggestion = panel.get_by_role("button", name=re.compile(rf"After line {question_line} · suggested 0:12\.56"))
         suggestion.click()
         expect(panel.get_by_label("Draft 701 split time in absolute source seconds", exact=True)).to_have_value("12.559")
-        page.wait_for_timeout(80)
+        wait_for_media_time(page, split_audio, 12.559 - 9.8)
         page.evaluate("window.__mediaSeekWrites = []")
         split_start = split_audio.evaluate("node => node.currentTime")
         panel.get_by_role("button", name="Play selected range", exact=True).click()
-        page.wait_for_function("node => !node.paused", arg=split_audio.element_handle())
-        page.wait_for_timeout(420)
-        split_mid = split_audio.evaluate("node => node.currentTime")
+        wait_for_media_playing(page, split_audio)
+        split_mid = wait_for_media_advance(page, split_audio, split_start)["currentTime"]
         split_audio.evaluate("node => node.pause()")
         split_clock_writes = page.evaluate("window.__mediaSeekWrites.filter(item => item.label === 'Draft 701 split playhead audio')")
         assert split_mid - split_start >= .18, (split_start, split_mid)
         assert split_clock_writes == [], split_clock_writes
         seek.fill("13.2")
+        expect(seek).to_have_value("13.2")
+        wait_for_media_time(page, split_audio, 13.2 - 9.8)
         panel.get_by_role("button", name="Use playhead as split point", exact=True).click()
         expect(panel.get_by_label("Draft 701 split time in absolute source seconds", exact=True)).to_have_value("13.20")
 
@@ -550,8 +679,12 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         assert request_count(evidence, "POST", "/api/curation/drafts/702/split") == 0
 
         # Trim only Part 1 at its absolute source playhead, then reprepare/reapprove.
+        trim_audio = left.get_by_label("Draft 701 trim playhead audio", exact=True)
         trim_seek = left.get_by_label("Draft 701 trim playhead seek", exact=True)
+        wait_for_media_ready(page, trim_audio)
         trim_seek.fill("12.9")
+        expect(trim_seek).to_have_value("12.9")
+        wait_for_media_time(page, trim_audio, 12.9)
         left.get_by_role("button", name="Set end here", exact=True).click()
         expect(left.get_by_label("End time (seconds)", exact=True)).to_have_value("12.90")
         expect(left.get_by_text("saved preview still uses the old timing", exact=False)).to_be_visible()
@@ -601,6 +734,7 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         ]
         assert not forbidden, forbidden
         assert not evidence["page_errors"], evidence
+        assert not evidence["media_errors"], evidence
         expected_failure_path = "/api/curation/drafts/701/split"
         blocked_telemetry = {
             item["url"] for item in evidence["blocked_external"]
@@ -630,6 +764,7 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
             "dialogs": dialogs,
             "media_checks": {
                 "trim_advanced_seconds": trim_mid - trim_start,
+                "trim_command_seek_writes": trim_command_writes,
                 "trim_clock_seek_writes": trim_clock_writes,
                 "audition_stop_absolute": audition_stop,
                 "bounded_stop_absolute": bounded_stop,
