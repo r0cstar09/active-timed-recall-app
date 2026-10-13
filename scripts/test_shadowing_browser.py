@@ -783,11 +783,18 @@ def safe_error(exc: Exception, live: bool) -> str:
     return f"{type(exc).__name__}: {exc}"
 
 
-def attach_observers(page: Page, raw: dict[str, list[Any]]) -> None:
+def attach_observers(
+    page: Page,
+    raw: dict[str, list[Any]],
+    *,
+    page_lifetime: str | None = None,
+) -> None:
+    lifetime = {"page_lifetime": page_lifetime} if page_lifetime else {}
     page.on(
         "console",
         lambda message: raw["console"].append(
             {
+                **lifetime,
                 "type": message.type,
                 "text": message.text,
                 "location": message.location,
@@ -796,11 +803,20 @@ def attach_observers(page: Page, raw: dict[str, list[Any]]) -> None:
         if message.type in {"warning", "error"}
         else None,
     )
-    page.on("pageerror", lambda error: raw["page_errors"].append(str(error)))
+    page.on(
+        "pageerror",
+        lambda error: raw["page_errors"].append(
+            {**lifetime, "error": str(error)} if page_lifetime else str(error)
+        ),
+    )
     page.on(
         "requestfailed",
         lambda request: raw["request_failures"].append(
-            {**private_request_record(request), "failure": request.failure or ""}
+            {
+                **lifetime,
+                **private_request_record(request),
+                "failure": request.failure or "",
+            }
         ),
     )
 
@@ -810,6 +826,7 @@ def attach_observers(page: Page, raw: dict[str, list[Any]]) -> None:
         except Exception:
             content_type = ""
         private = {
+            **lifetime,
             **private_request_record(response.request),
             "status": response.status,
             "content_type": content_type,
@@ -903,6 +920,7 @@ def safe_live_request_diagnostic(item: dict[str, Any], live_context: dict[str, A
     exit_completed = float(live_context.get("exit_completed_at", 0))
     during_exit = bool(exit_started and exit_started <= observed_at <= max(exit_completed, exit_started) + 0.5)
     return {
+        "page_lifetime": item.get("page_lifetime", "unknown"),
         "url_relation": live_url_relation(item.get("_url", ""), live_context),
         "resource_type": item.get("resource_type", "unknown"),
         "is_navigation_request": bool(item.get("is_navigation_request")),
@@ -970,6 +988,8 @@ def request_failure_expected_reason(
                 and diagnostic["failure_kind"] == "exact-cancellation"
                 and diagnostic["during_shadow_navigation"]
                 and not diagnostic["is_navigation_request"]
+                and diagnostic["page_lifetime"]
+                == live_context.get("shadow_navigation_page_lifetime")
                 and bool(live_context.get("today_document_proven_success"))
                 and bool(live_context.get("shadow_document_proven_success"))
             ):
@@ -980,6 +1000,8 @@ def request_failure_expected_reason(
                 and diagnostic["failure_kind"] == "exact-cancellation"
                 and diagnostic["during_exit_navigation"]
                 and not diagnostic["is_navigation_request"]
+                and diagnostic["page_lifetime"]
+                == live_context.get("exit_page_lifetime")
                 and bool(live_context.get("exit_target_proven_success"))
             ):
                 return "exact Today document GET cancelled after proven exit target restoration"
@@ -988,6 +1010,8 @@ def request_failure_expected_reason(
                 and diagnostic["failure_kind"] == "exact-cancellation"
                 and diagnostic["during_exit_navigation"]
                 and not diagnostic["is_navigation_request"]
+                and diagnostic["page_lifetime"]
+                == live_context.get("exit_page_lifetime")
                 and bool(live_context.get("selected_media_proven_success"))
             ):
                 return "exact proven selected-media GET cancelled by explicit exit navigation"
@@ -1013,6 +1037,7 @@ def public_runtime(
         reason = console_expected_reason(item, scenario, live_context)
         location_path = urlparse(item.get("location", {}).get("url", "")).path
         public = {
+            "page_lifetime": item.get("page_lifetime", "unknown"),
             "type": item["type"],
             "location_path": location_path if not live or location_path == "/cdn-cgi/rum" else "[redacted]",
             "expected": reason is not None,
@@ -1031,6 +1056,7 @@ def public_runtime(
         reason = request_failure_expected_reason(item, scenario, live_context)
         if live:
             public = {
+                "page_lifetime": item.get("page_lifetime", "unknown"),
                 "method": item["method"],
                 "path": item["path"] if item["path"] == "/cdn-cgi/rum" else "[redacted]",
                 "host_relation": live_url_relation(item.get("_url", ""), live_context),
@@ -1060,6 +1086,7 @@ def public_runtime(
         reason = http_error_expected_reason(item, scenario)
         if live:
             public = {
+                "page_lifetime": item.get("page_lifetime", "unknown"),
                 "method": item["method"],
                 "path": item["path"] if item["path"] == "/cdn-cgi/rum" else "[redacted]",
                 "host_relation": live_url_relation(item.get("_url", ""), live_context),
@@ -1080,7 +1107,21 @@ def public_runtime(
 
     runtime = {
         "console": console,
-        "page_errors": ([{"redacted": True}] * len(raw["page_errors"])) if live else raw["page_errors"],
+        "page_errors": (
+            [
+                {
+                    "redacted": True,
+                    "page_lifetime": (
+                        item.get("page_lifetime", "unknown")
+                        if isinstance(item, dict)
+                        else "unknown"
+                    ),
+                }
+                for item in raw["page_errors"]
+            ]
+            if live
+            else raw["page_errors"]
+        ),
         "request_failures": failures,
         "http_errors": http_errors,
     }
@@ -1162,8 +1203,6 @@ def create_live_page(
 """
     )
     context.add_init_script(script=MEDIA_TRACKER_JS)
-    page = context.new_page()
-    page.set_default_timeout(timeout)
     raw = {
         "console": [],
         "page_errors": [],
@@ -1171,10 +1210,27 @@ def create_live_page(
         "http_errors": [],
         "responses": [],
     }
-    attach_observers(page, raw)
     router = LiveRouter(base)
-    router.install(page)
+    page = create_observed_live_page(
+        context, router, raw, timeout, page_lifetime="today-entry"
+    )
     return context, page, router, raw
+
+
+def create_observed_live_page(
+    context: Any,
+    router: LiveRouter,
+    raw: dict[str, list[Any]],
+    timeout: int,
+    *,
+    page_lifetime: str,
+) -> Page:
+    """Create one guarded live Page and retain its sanitized lifetime label."""
+    page = context.new_page()
+    page.set_default_timeout(timeout)
+    attach_observers(page, raw, page_lifetime=page_lifetime)
+    router.install(page)
+    return page
 
 
 def navigate_shadow(page: Page, base: str, run: dict[str, Any], timeout: int) -> None:
@@ -2293,6 +2349,33 @@ def finish_live_run(
     runtime, counts = public_runtime(
         raw, run["scenario"], live=True, live_context=live_context
     )
+    lifetime_observations = {
+        lifetime: {
+            "response_count": sum(
+                item.get("page_lifetime") == lifetime for item in raw["responses"]
+            ),
+            "console_count": sum(
+                item.get("page_lifetime") == lifetime for item in raw["console"]
+            ),
+            "page_error_count": sum(
+                isinstance(item, dict) and item.get("page_lifetime") == lifetime
+                for item in raw["page_errors"]
+            ),
+            "request_failure_count": sum(
+                item.get("page_lifetime") == lifetime
+                for item in raw["request_failures"]
+            ),
+            "http_error_count": sum(
+                item.get("page_lifetime") == lifetime for item in raw["http_errors"]
+            ),
+        }
+        for lifetime in ("today-entry", "shadow-playback-exit")
+    }
+    both_page_lifetimes_observed = all(
+        evidence["response_count"] > 0
+        for evidence in lifetime_observations.values()
+    )
+    runtime["page_lifetime_observations"] = lifetime_observations
     run["runtime"] = runtime
     add_check(
         run,
@@ -2330,9 +2413,16 @@ def finish_live_run(
         counts["unexpected_console"] == 0
         and counts["page_errors"] == 0
         and counts["unexpected_request_failures"] == 0
-        and counts["unexpected_http_errors"] == 0,
-        expected="no unexpected runtime/HTTP failures (exact telemetry remains classified)",
-        actual=counts,
+        and counts["unexpected_http_errors"] == 0
+        and both_page_lifetimes_observed,
+        expected=(
+            "both isolated Page lifetimes observed with no unexpected runtime/HTTP "
+            "failures (exact telemetry remains classified)"
+        ),
+        actual={
+            **counts,
+            "both_page_lifetimes_observed": both_page_lifetimes_observed,
+        },
     )
 
 
@@ -2347,25 +2437,34 @@ def live_run(
     del output  # Live public artifacts are report-only; screenshots are prohibited.
     run = new_run(browser_name, "live_read_only", device, "light")
     run["artifact_privacy"] = "No live screenshots or learner text are written."
-    context, page, router, raw = create_live_page(browser, base, timeout, device)
+    context, today_page, router, raw = create_live_page(browser, base, timeout, device)
     live_context: dict[str, Any] = {
         "base_netloc": urlparse(base).netloc,
         "selected_media_url": "",
         "selected_media_proven_success": False,
         "today_document_proven_success": False,
+        "today_entry_click_proven_success": False,
         "shadow_document_proven_success": False,
+        "shadow_navigation_page_lifetime": "shadow-playback-exit",
         "shadow_navigation_started_at": 0.0,
         "shadow_navigation_completed_at": 0.0,
+        "exit_page_lifetime": "shadow-playback-exit",
         "exit_started_at": 0.0,
         "exit_completed_at": 0.0,
         "exit_target_proven_success": False,
     }
     try:
-        today_response = page.goto(base + "/", wait_until="domcontentloaded", timeout=timeout)
-        today_entry = page.get_by_role(
+        # Settle Today completely before exercising the real user entry. This
+        # Page remains observed for the whole run, but playback/exit uses a
+        # second Page so a harness navigation cannot cancel Today assets.
+        today_response = today_page.goto(
+            base + "/", wait_until="load", timeout=timeout
+        )
+        today_entry = today_page.get_by_role(
             "link", name=re.compile(r"^(Start|Resume) shadowing$"), exact=True
         )
         today_entry.wait_for(state="visible", timeout=timeout)
+        today_page.wait_for_load_state("networkidle", timeout=timeout)
         today_href = today_entry.get_attribute("href") or ""
         today_label_valid = today_entry.inner_text().strip() in {
             "Start shadowing",
@@ -2375,9 +2474,38 @@ def live_run(
         live_context["today_document_proven_success"] = bool(
             today_response and today_response.ok and today_label_valid and today_href_valid
         )
-        # Follow the verified destination as a fresh document. Chromium can cancel
-        # Astro's client-router document fetch while changing history, leaving the
-        # static shell visible but unhydrated; that is not a playback verdict.
+
+        today_entry.click()
+        today_page.wait_for_url(
+            re.compile(r"/shadow/?$"), wait_until="domcontentloaded", timeout=timeout
+        )
+        today_heading = today_page.get_by_role(
+            "heading", name="Find your rhythm.", exact=True
+        )
+        today_shadow_region = today_page.get_by_role(
+            "region", name="Shadowing player", exact=True
+        )
+        today_heading.wait_for(state="visible", timeout=timeout)
+        today_shadow_region.wait_for(state="visible", timeout=timeout)
+        wait_ready(today_page, timeout)
+        today_page.wait_for_load_state("networkidle", timeout=timeout)
+        today_entry_path_valid = urlparse(today_page.url).path.rstrip("/") == "/shadow"
+        live_context["today_entry_click_proven_success"] = bool(
+            live_context["today_document_proven_success"]
+            and today_entry_path_valid
+            and today_heading.is_visible()
+            and today_shadow_region.is_visible()
+        )
+
+        # Playback starts in an independently observed Page. A direct document
+        # load here cannot terminate the settled Today-entry Page lifetime.
+        page = create_observed_live_page(
+            context,
+            router,
+            raw,
+            timeout,
+            page_lifetime="shadow-playback-exit",
+        )
         live_context["shadow_navigation_started_at"] = time.monotonic()
         shadow_response = page.goto(
             base.rstrip("/") + "/shadow/", wait_until="domcontentloaded", timeout=timeout
@@ -2388,34 +2516,41 @@ def live_run(
         page.get_by_role("region", name="Shadowing player", exact=True).wait_for(
             state="visible", timeout=timeout
         )
-        run["navigation"] = {
-            "today_status": today_response.status if today_response else None,
-            "shadow_status": shadow_response.status if shadow_response else None,
-            "path": urlparse(page.url).path,
-        }
-        add_check(
-            run,
-            "live.today-start-resume-route",
-            bool(today_response and today_response.ok)
-            and bool(shadow_response and shadow_response.ok)
-            and today_label_valid
-            and today_href_valid
-            and urlparse(page.url).path.rstrip("/") == "/shadow",
-            expected="Today Start/Resume link identifies /shadow/ and its fresh document hydrates",
-            actual={
-                "today_status": today_response.status if today_response else None,
-                "shadow_status": shadow_response.status if shadow_response else None,
-                "label_valid": today_label_valid,
-                "href_valid": today_href_valid,
-                "shadow_path_valid": urlparse(page.url).path.rstrip("/") == "/shadow",
-            },
-        )
         wait_ready(page, timeout)
         live_context["shadow_navigation_completed_at"] = time.monotonic()
         live_context["shadow_document_proven_success"] = bool(
             shadow_response
             and shadow_response.ok
             and urlparse(page.url).path.rstrip("/") == "/shadow"
+        )
+        run["navigation"] = {
+            "today_status": today_response.status if today_response else None,
+            "entry_shadow_path_valid": today_entry_path_valid,
+            "playback_shadow_status": shadow_response.status if shadow_response else None,
+            "playback_shadow_path_valid": urlparse(page.url).path.rstrip("/") == "/shadow",
+            "observed_page_lifetimes": ["today-entry", "shadow-playback-exit"],
+        }
+        add_check(
+            run,
+            "live.today-start-resume-click",
+            live_context["today_entry_click_proven_success"]
+            and live_context["shadow_document_proven_success"]
+            and page is not today_page,
+            expected=(
+                "a settled Today Start/Resume user click reaches the real hydrated Shadowing "
+                "region, independently from the playback document"
+            ),
+            actual={
+                "today_status": today_response.status if today_response else None,
+                "label_valid": today_label_valid,
+                "href_valid": today_href_valid,
+                "clicked_shadow_path_valid": today_entry_path_valid,
+                "clicked_shadow_heading_visible": today_heading.is_visible(),
+                "clicked_shadow_region_visible": today_shadow_region.is_visible(),
+                "playback_shadow_status": shadow_response.status if shadow_response else None,
+                "playback_shadow_ready": live_context["shadow_document_proven_success"],
+                "separate_page_lifetimes_observed": page is not today_page,
+            },
         )
 
         if device == "desktop":

@@ -76,6 +76,7 @@ class LiveEvidenceTests(unittest.TestCase):
             "page_errors": [],
             "request_failures": [
                 {
+                    "page_lifetime": "shadow-playback-exit",
                     "method": "GET",
                     "path": "/api/media/private-token.wav",
                     "host": "api-spanish.tonymuzo.dev",
@@ -88,6 +89,7 @@ class LiveEvidenceTests(unittest.TestCase):
             ],
             "http_errors": [
                 {
+                    "page_lifetime": "shadow-playback-exit",
                     "method": "GET",
                     "path": "/api/media/private-token.wav",
                     "host": "api-spanish.tonymuzo.dev",
@@ -109,6 +111,7 @@ class LiveEvidenceTests(unittest.TestCase):
                 "base_netloc": "spanish-app.tonymuzo.dev",
                 "selected_media_url": selected,
                 "selected_media_proven_success": True,
+                "exit_page_lifetime": "shadow-playback-exit",
                 "exit_started_at": 10.0,
                 "exit_completed_at": 11.2,
             },
@@ -136,11 +139,13 @@ class LiveEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(request_diagnostic["url_relation"], "exact-selected-media")
         self.assertEqual(request_diagnostic["failure_kind"], "exact-cancellation")
+        self.assertEqual(request_diagnostic["page_lifetime"], "shadow-playback-exit")
         self.assertTrue(request_diagnostic["during_exit_navigation"])
 
     def test_live_cancellation_allowance_is_relational_and_fail_closed(self) -> None:
         selected = "https://api-spanish.tonymuzo.dev/api/media/private-token.wav?private=1"
         base_item = {
+            "page_lifetime": "shadow-playback-exit",
             "method": "GET",
             "path": "/api/media/private-token.wav",
             "host": "api-spanish.tonymuzo.dev",
@@ -154,6 +159,7 @@ class LiveEvidenceTests(unittest.TestCase):
             "base_netloc": "spanish-app.tonymuzo.dev",
             "selected_media_url": selected,
             "selected_media_proven_success": True,
+            "exit_page_lifetime": "shadow-playback-exit",
             "exit_started_at": 10.0,
             "exit_completed_at": 11.2,
         }
@@ -172,6 +178,7 @@ class LiveEvidenceTests(unittest.TestCase):
             ),
             (base_item, {**context, "selected_media_proven_success": False}),
             (base_item, {**context, "selected_media_url": selected + "-different"}),
+            ({**base_item, "page_lifetime": "today-entry"}, context),
         ]
         for item, changed_context in cases:
             with self.subTest(item=item, context=changed_context):
@@ -186,13 +193,16 @@ class LiveEvidenceTests(unittest.TestCase):
             "base_netloc": "spanish-app.tonymuzo.dev",
             "today_document_proven_success": True,
             "shadow_document_proven_success": True,
+            "shadow_navigation_page_lifetime": "combined-today-shadow",
             "shadow_navigation_started_at": 4.0,
             "shadow_navigation_completed_at": 6.0,
+            "exit_page_lifetime": "combined-today-shadow",
             "exit_started_at": 10.0,
             "exit_completed_at": 11.2,
             "exit_target_proven_success": True,
         }
         stats_item = {
+            "page_lifetime": "combined-today-shadow",
             "method": "GET",
             "path": "/api/stats",
             "host": "api-spanish.tonymuzo.dev",
@@ -203,6 +213,7 @@ class LiveEvidenceTests(unittest.TestCase):
             "failure": "Load request cancelled",
         }
         today_item = {
+            "page_lifetime": "combined-today-shadow",
             "method": "GET",
             "path": "/",
             "host": "spanish-app.tonymuzo.dev",
@@ -222,9 +233,11 @@ class LiveEvidenceTests(unittest.TestCase):
             ({**stats_item, "_url": "https://api-spanish.tonymuzo.dev/api/cards"}, context),
             ({**stats_item, "resource_type": "xhr"}, context),
             ({**stats_item, "observed_at": 7.0}, context),
+            ({**stats_item, "page_lifetime": "other-page"}, context),
             (stats_item, {**context, "shadow_document_proven_success": False}),
             ({**today_item, "observed_at": 9.0}, context),
             ({**today_item, "resource_type": "document"}, context),
+            ({**today_item, "page_lifetime": "other-page"}, context),
             (today_item, {**context, "exit_target_proven_success": False}),
         ]
         for item, changed_context in rejected:
@@ -234,6 +247,74 @@ class LiveEvidenceTests(unittest.TestCase):
                         item, "live_read_only", changed_context
                     )
                 )
+
+    def test_runtime_clean_requires_observations_from_both_page_lifetimes(self) -> None:
+        class StubRouter:
+            mutation_attempts: list[dict[str, str]] = []
+            api_get_count = 1
+            media_get_count = 1
+
+            @staticmethod
+            def evidence() -> dict[str, int]:
+                return {"mutation_attempt_count": 0}
+
+        selected = {
+            "exact_selected_get_count": 1,
+            "successful_response_count": 1,
+            "media_content_type_count": 1,
+            "performance_entry_count": 1,
+            "performance_completed_count": 1,
+        }
+        for labels, expected_pass in (
+            (("today-entry", "shadow-playback-exit"), True),
+            (("today-entry",), False),
+        ):
+            with self.subTest(labels=labels):
+                run = {
+                    "scenario": "live_read_only",
+                    "selected_media_evidence": dict(selected),
+                    "checks": [],
+                }
+                raw = {
+                    "console": [],
+                    "page_errors": [],
+                    "request_failures": [],
+                    "http_errors": [],
+                    "responses": [{"page_lifetime": label} for label in labels],
+                }
+                HARNESS.finish_live_run(
+                    run,
+                    StubRouter(),
+                    raw,
+                    {"base_netloc": "spanish-app.tonymuzo.dev"},
+                )
+                runtime_check = next(
+                    check for check in run["checks"] if check["id"] == "live.runtime-clean"
+                )
+                self.assertEqual(runtime_check["passed"], expected_pass)
+                self.assertEqual(
+                    runtime_check["actual"]["both_page_lifetimes_observed"],
+                    expected_pass,
+                )
+
+    def test_live_entry_click_and_playback_use_separate_observed_pages(self) -> None:
+        source = HARNESS_PATH.read_text(encoding="utf-8")
+        live_run_source = source[
+            source.index("def live_run(") : source.index("\ndef deadline_run(")
+        ]
+
+        self.assertIn('page_lifetime="today-entry"', source)
+        self.assertIn('page_lifetime="shadow-playback-exit"', live_run_source)
+        self.assertIn('today_page.wait_for_load_state("networkidle"', live_run_source)
+        self.assertIn("today_entry.click()", live_run_source)
+        self.assertIn(
+            'today_page.get_by_role(\n            "region", name="Shadowing player", exact=True',
+            live_run_source,
+        )
+        self.assertIn("wait_ready(today_page, timeout)", live_run_source)
+        self.assertIn("shadow_response = page.goto(", live_run_source)
+        self.assertNotIn("shadow_response = today_page.goto(", live_run_source)
+        self.assertIn("both_page_lifetimes_observed", source)
 
     def test_workflow_live_artifact_allowlist_is_report_only(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "shadowing-qa.yml").read_text(
