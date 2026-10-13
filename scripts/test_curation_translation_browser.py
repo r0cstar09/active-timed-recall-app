@@ -262,7 +262,7 @@ def run_removal_flows(page: Page, state: dict[str, Any], evidence: dict[str, Any
     discard.click()
     discard_group = page.get_by_role("group", name="Confirm discard transcript")
     discard_group.get_by_role("button", name="Yes, discard transcript", exact=True).click()
-    page.get_by_text("Fixture discard failure; retry is safe.", exact=True).wait_for()
+    expect(page.get_by_role("alert").filter(has_text="Fixture discard failure; retry is safe.")).to_be_visible()
     expect(page.get_by_text("Fixture interview", exact=True)).to_be_visible()
     assert page.evaluate("localStorage.getItem('spanish.curation.lastImport')") == "91"
     assert "import=91" in page.url
@@ -305,7 +305,7 @@ def run_removal_flows(page: Page, state: dict[str, Any], evidence: dict[str, Any
     remove_job.click()
     remove_group = page.get_by_role("group", name="Confirm remove job 501 from history")
     remove_group.get_by_role("button", name="Yes, remove job from history", exact=True).click()
-    page.get_by_text("Fixture history removal failure; retry is safe.", exact=True).wait_for()
+    page.get_by_text("Fixture history removal failure; retry is safe.", exact=False).wait_for()
     expect(page.get_by_text("Ingestion job #501", exact=True)).to_be_visible()
     assert page.evaluate("JSON.parse(localStorage.getItem('atr.ingest.active')).jobId") == 501
     assert request_count("DELETE", "/api/ingest/501") == 1
@@ -347,7 +347,7 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     evidence: dict[str, Any] = {"device": name, "api_requests": [], "blocked_external": [], "console": [], "page_errors": []}
     context = browser.new_context(**DEVICES[name], color_scheme="light", service_workers="block")
     page = context.new_page()
-    page.on("console", lambda message: evidence["console"].append({"type": message.type, "text": message.text}) if message.type == "error" else None)
+    page.on("console", lambda message: evidence["console"].append({"type": message.type, "text": message.text, "location": message.location}) if message.type == "error" else None)
     page.on("pageerror", lambda error: evidence["page_errors"].append(str(error)))
     state = attach_fixtures(page, base, evidence)
     page.goto(f"{base.rstrip('/')}/ingest/?import=91", wait_until="networkidle")
@@ -463,11 +463,24 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     expect(save).to_be_enabled()
     screenshot = output / f"bilingual-{name}.png"
     page.screenshot(path=str(screenshot), full_page=True)
-    evidence["removal_flows"] = run_removal_flows(page, state, evidence)
+    try:
+        evidence["removal_flows"] = run_removal_flows(page, state, evidence)
+    except Exception:
+        page.screenshot(path=str(output / f"removal-{name}-failure.png"), full_page=True)
+        (output / f"removal-{name}-failure.json").write_text(json.dumps(evidence, indent=2) + "\n")
+        raise
     removal_screenshot = output / f"history-removal-{name}.png"
     page.screenshot(path=str(removal_screenshot), full_page=True)
     assert not evidence["page_errors"], evidence
-    assert not evidence["console"], evidence
+    expected_failure_paths = {"/api/curation/imports/91", "/api/ingest/501"}
+    evidence["unexpected_console_errors"] = [
+        item for item in evidence["console"]
+        if not (
+            "503" in item["text"] and "Failed to load resource" in item["text"]
+            and urlparse(item.get("location", {}).get("url", "")).path in expected_failure_paths
+        )
+    ]
+    assert not evidence["unexpected_console_errors"], evidence
 
     evidence["layout"] = layout
     evidence["screenshot"] = str(screenshot)

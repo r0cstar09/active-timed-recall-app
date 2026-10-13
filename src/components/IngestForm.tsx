@@ -406,7 +406,7 @@ export default function IngestForm() {
         {openingJobId !== null && <p role="status">Opening job #{openingJobId}…</p>}
         {historyRemovalTarget && <div className="remove-confirm stack" role="group" aria-label={`Confirm remove job ${historyRemovalTarget.job_id} from history`}>
           <strong>Remove job #{historyRemovalTarget.job_id} from ingestion history?</strong>
-          <p>This removes only the saved job entry and its processing artifacts. Cards already added to your library and their review history stay unchanged.</p>
+          <p>This removes only the job from ingestion history. Cards already added to your library and their review history stay unchanged.</p>
           <div className="btn-row">
             <button className="btn btn-danger" type="button" disabled={historyRemovalBusy}
               onClick={() => void removeJobFromHistory(historyRemovalTarget.job_id)}>
