@@ -292,152 +292,160 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     page.on("console", lambda message: evidence["console"].append({"type": message.type, "text": message.text, "location": message.location}) if message.type == "error" else None)
     page.on("pageerror", lambda error: evidence["page_errors"].append(str(error)))
     state = attach_fixtures(page, base, evidence)
-    page.goto(f"{base.rstrip('/')}/ingest/?import=91", wait_until="networkidle")
+    try:
+        page.goto(f"{base.rstrip('/')}/ingest/?import=91", wait_until="networkidle")
 
-    original = page.get_by_role("article", name="Draft 701", exact=True)
-    expect(original).to_be_visible()
-    original.get_by_role("button", name="Split clip", exact=True).click()
-    panel = page.get_by_role("region", name="Split draft 701", exact=True)
-    expect(panel).to_be_visible()
-    expect(panel.get_by_text("the app does not detect speakers", exact=False)).to_be_visible()
-    expect(panel.get_by_text(COMBINED_ENGLISH, exact=True)).to_be_visible()
-    expect(panel.get_by_label("Draft 701 Part 1 English", exact=True)).to_have_value("")
-    expect(panel.get_by_label("Draft 701 Part 2 English", exact=True)).to_have_value("")
+        original = page.get_by_role("article", name="Draft 701", exact=True)
+        expect(original).to_be_visible()
+        original.get_by_role("button", name="Split clip", exact=True).click()
+        panel = page.get_by_role("region", name="Split draft 701", exact=True)
+        expect(panel).to_be_visible()
+        expect(panel.get_by_text("the app does not detect speakers", exact=False)).to_be_visible()
+        expect(panel.get_by_text(COMBINED_ENGLISH, exact=True)).to_be_visible()
+        expect(panel.get_by_label("Draft 701 Part 1 English", exact=True)).to_have_value("")
+        expect(panel.get_by_label("Draft 701 Part 2 English", exact=True)).to_have_value("")
 
-    # Overlapping captions deliberately prove the suggestion uses the next line's
-    # start (12.559), never the prior line's end (14.759).
-    suggestion = panel.get_by_role("button", name=re.compile(r"After line 4 · suggested 0:12\.56"))
-    suggestion.click()
-    expect(panel.get_by_label("Draft 701 split time in absolute source seconds", exact=True)).to_have_value("12.559")
-    seek = panel.get_by_label("Draft 701 split playhead seek", exact=True)
-    seek.fill("13.2")
-    panel.get_by_role("button", name="Use playhead as split point", exact=True).click()
-    expect(panel.get_by_label("Draft 701 split time in absolute source seconds", exact=True)).to_have_value("13.20")
+        # Overlapping captions deliberately prove the suggestion uses the next line's
+        # start (12.559), never the prior line's end (14.759).
+        question_line = import_fixture([])["transcript"][0]["index"] + 1
+        suggestion = panel.get_by_role("button", name=re.compile(rf"After line {question_line} · suggested 0:12\.56"))
+        suggestion.click()
+        expect(panel.get_by_label("Draft 701 split time in absolute source seconds", exact=True)).to_have_value("12.559")
+        seek = panel.get_by_label("Draft 701 split playhead seek", exact=True)
+        seek.fill("13.2")
+        panel.get_by_role("button", name="Use playhead as split point", exact=True).click()
+        expect(panel.get_by_label("Draft 701 split time in absolute source seconds", exact=True)).to_have_value("13.20")
 
-    # Re-applying the text boundary must preserve the learner's playhead cut.
-    boundary_text = panel.get_by_label("Draft 701 combined Spanish split boundary", exact=True)
-    boundary_text.evaluate("(node, position) => { node.focus(); node.setSelectionRange(position, position); node.dispatchEvent(new Event('select', {bubbles: true})); }", len(QUESTION))
-    panel.get_by_role("button", name="Split Spanish at text cursor", exact=True).click()
-    expect(panel.get_by_label("Draft 701 split time in absolute source seconds", exact=True)).to_have_value("13.20")
-    panel.get_by_text("I listened around this cut", exact=False).click()
+        # Re-applying the text boundary must preserve the learner's playhead cut.
+        boundary_text = panel.get_by_label("Draft 701 combined Spanish split boundary", exact=True)
+        boundary_text.evaluate("(node, position) => { node.focus(); node.setSelectionRange(position, position); node.dispatchEvent(new Event('select', {bubbles: true})); }", len(QUESTION))
+        panel.get_by_role("button", name="Split Spanish at text cursor", exact=True).click()
+        expect(panel.get_by_label("Draft 701 split time in absolute source seconds", exact=True)).to_have_value("13.20")
+        panel.get_by_text("I listened around this cut", exact=False).click()
 
-    submit = panel.get_by_role("button", name="Split into 2 saved clips", exact=True)
-    submit.click()
-    expect(page.get_by_role("alert").filter(has_text="Fixture split failure; retry is safe.")).to_be_visible()
-    expect(panel).to_be_visible()
-    expect(panel.get_by_label("Draft 701 Part 1 Spanish", exact=True)).to_have_value(QUESTION)
-    assert request_count(evidence, "POST", "/api/curation/drafts/701/split") == 1
+        submit = panel.get_by_role("button", name="Split into 2 saved clips", exact=True)
+        submit.click()
+        expect(page.get_by_role("alert").filter(has_text="Fixture split failure; retry is safe.")).to_be_visible()
+        expect(panel).to_be_visible()
+        expect(panel.get_by_label("Draft 701 Part 1 Spanish", exact=True)).to_have_value(QUESTION)
+        assert request_count(evidence, "POST", "/api/curation/drafts/701/split") == 1
 
-    # Same-tick clicks reach the synchronous mutation gate before React rerenders.
-    page.evaluate("""() => {
-      const panel = document.querySelector('[aria-label="Split draft 701"]');
-      const button = [...panel.querySelectorAll('button')].find((node) => node.textContent?.trim() === 'Split into 2 saved clips');
-      if (!button) throw new Error('split submit missing');
-      button.click(); button.click();
-    }""")
-    page.get_by_text("Split saved as two independent drafts.", exact=False).wait_for()
-    assert request_count(evidence, "POST", "/api/curation/drafts/701/split") == 2
-    expect(page.get_by_role("article", name="Draft 701", exact=True)).to_be_visible()
-    expect(page.get_by_role("article", name="Draft 702", exact=True)).to_be_visible()
+        # Same-tick clicks reach the synchronous mutation gate before React rerenders.
+        page.evaluate("""() => {
+          const panel = document.querySelector('[aria-label="Split draft 701"]');
+          const button = [...panel.querySelectorAll('button')].find((node) => node.textContent?.trim() === 'Split into 2 saved clips');
+          if (!button) throw new Error('split submit missing');
+          button.click(); button.click();
+        }""")
+        page.get_by_text("Split saved as two independent drafts.", exact=False).wait_for()
+        assert request_count(evidence, "POST", "/api/curation/drafts/701/split") == 2
+        expect(page.get_by_role("article", name="Draft 701", exact=True)).to_be_visible()
+        expect(page.get_by_role("article", name="Draft 702", exact=True)).to_be_visible()
 
-    # Reload proves both server-owned drafts survive and prepare independently.
-    page.reload(wait_until="networkidle")
-    left = page.get_by_role("article", name="Draft 701", exact=True)
-    right = page.get_by_role("article", name="Draft 702", exact=True)
-    expect(left).to_be_visible()
-    expect(right).to_be_visible()
-    expect(left.get_by_label("Spanish", exact=True)).to_have_value(QUESTION)
-    expect(right.get_by_label("Spanish", exact=True)).to_have_value(ANSWER)
-    expect(left.get_by_label("English meaning", exact=True)).to_have_value("What changed at halftime?")
-    expect(right.get_by_label("English meaning", exact=True)).to_have_value("We came out with more intensity and scored early.")
+        # Reload proves both server-owned drafts survive and prepare independently.
+        page.reload(wait_until="networkidle")
+        left = page.get_by_role("article", name="Draft 701", exact=True)
+        right = page.get_by_role("article", name="Draft 702", exact=True)
+        expect(left).to_be_visible()
+        expect(right).to_be_visible()
+        expect(left.get_by_label("Spanish", exact=True)).to_have_value(QUESTION)
+        expect(right.get_by_label("Spanish", exact=True)).to_have_value(ANSWER)
+        expect(left.get_by_label("English meaning", exact=True)).to_have_value("What changed at halftime?")
+        expect(right.get_by_label("English meaning", exact=True)).to_have_value("We came out with more intensity and scored early.")
 
-    # Cancel is local-only and leaves the split endpoint untouched.
-    right.get_by_role("button", name="Split clip", exact=True).click()
-    right.get_by_role("button", name="Cancel split", exact=True).click()
-    assert request_count(evidence, "POST", "/api/curation/drafts/702/split") == 0
+        # Cancel is local-only and leaves the split endpoint untouched.
+        right.get_by_role("button", name="Split clip", exact=True).click()
+        right.get_by_role("button", name="Cancel split", exact=True).click()
+        assert request_count(evidence, "POST", "/api/curation/drafts/702/split") == 0
 
-    # Trim only Part 1 at its absolute source playhead, then reprepare/reapprove.
-    trim_seek = left.get_by_label("Draft 701 trim playhead seek", exact=True)
-    trim_seek.fill("12.9")
-    left.get_by_role("button", name="Set end here", exact=True).click()
-    expect(left.get_by_label("End time (seconds)", exact=True)).to_have_value("12.90")
-    expect(left.get_by_text("saved preview still uses the old timing", exact=False)).to_be_visible()
-    audition = left.get_by_role("button", name="Audition candidate trim", exact=True)
-    expect(audition).to_be_enabled()
-    audition.click()
-    left.get_by_role("button", name="Save edits", exact=True).click()
-    left = page.get_by_role("article", name="Draft 701", exact=True)
-    expect(left.get_by_role("button", name="Prepare clip", exact=True)).to_be_enabled()
-    left.get_by_role("button", name="Prepare clip", exact=True).click()
-    left = page.get_by_role("article", name="Draft 701", exact=True)
-    approval = left.get_by_label("I listened and approve this clip and meaning", exact=True)
-    approval.click()
-    expect(approval).to_be_checked()
-    expect(left.get_by_role("button", name="Split clip", exact=True)).to_be_enabled()
+        # Trim only Part 1 at its absolute source playhead, then reprepare/reapprove.
+        trim_seek = left.get_by_label("Draft 701 trim playhead seek", exact=True)
+        trim_seek.fill("12.9")
+        left.get_by_role("button", name="Set end here", exact=True).click()
+        expect(left.get_by_label("End time (seconds)", exact=True)).to_have_value("12.90")
+        expect(left.get_by_text("saved preview still uses the old timing", exact=False)).to_be_visible()
+        audition = left.get_by_role("button", name="Audition candidate trim", exact=True)
+        expect(audition).to_be_enabled()
+        audition.click()
+        left.get_by_role("button", name="Save edits", exact=True).click()
+        left = page.get_by_role("article", name="Draft 701", exact=True)
+        expect(left.get_by_role("button", name="Prepare clip", exact=True)).to_be_enabled()
+        left.get_by_role("button", name="Prepare clip", exact=True).click()
+        left = page.get_by_role("article", name="Draft 701", exact=True)
+        approval = left.get_by_label("I listened and approve this clip and meaning", exact=True)
+        approval.click()
+        expect(approval).to_be_checked()
+        expect(left.get_by_role("button", name="Split clip", exact=True)).to_be_enabled()
 
-    # Part 2 retained its independent revision/timing/approval state.
-    right = page.get_by_role("article", name="Draft 702", exact=True)
-    expect(right.get_by_label("Start time (seconds)", exact=True)).to_have_value("13.2")
-    expect(right.get_by_label("I listened and approve this clip and meaning", exact=True)).not_to_be_checked()
-    patch_calls = [item for item in evidence["api_requests"] if item["method"] == "PATCH"]
-    assert [item["path"] for item in patch_calls] == [
-        "/api/curation/drafts/701",
-        "/api/curation/drafts/701",
-    ], patch_calls
-    assert patch_calls[0]["body"] == {"revision": 4, "end_time": 12.9}, patch_calls[0]
-    assert patch_calls[1]["body"] == {"revision": 6, "approved": True}, patch_calls[1]
+        # Part 2 retained its independent revision/timing/approval state.
+        right = page.get_by_role("article", name="Draft 702", exact=True)
+        expect(right.get_by_label("Start time (seconds)", exact=True)).to_have_value("13.2")
+        expect(right.get_by_label("I listened and approve this clip and meaning", exact=True)).not_to_be_checked()
+        patch_calls = [item for item in evidence["api_requests"] if item["method"] == "PATCH"]
+        assert [item["path"] for item in patch_calls] == [
+            "/api/curation/drafts/701",
+            "/api/curation/drafts/701",
+        ], patch_calls
+        assert patch_calls[0]["body"] == {"revision": 4, "end_time": 12.9}, patch_calls[0]
+        assert patch_calls[1]["body"] == {"revision": 6, "approved": True}, patch_calls[1]
 
-    layout = page.evaluate("""() => ({
-      viewportWidth: document.documentElement.clientWidth,
-      scrollWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
-      splitButtonHeights: [...document.querySelectorAll('button')]
-        .filter((node) => node.textContent?.includes('Split clip'))
-        .map((node) => Math.round(node.getBoundingClientRect().height)),
-    })""")
-    assert layout["scrollWidth"] <= layout["viewportWidth"], layout
-    assert layout["splitButtonHeights"] and min(layout["splitButtonHeights"]) >= 44, layout
+        layout = page.evaluate("""() => ({
+          viewportWidth: document.documentElement.clientWidth,
+          scrollWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+          splitButtonHeights: [...document.querySelectorAll('button')]
+            .filter((node) => node.textContent?.includes('Split clip'))
+            .map((node) => Math.round(node.getBoundingClientRect().height)),
+        })""")
+        assert layout["scrollWidth"] <= layout["viewportWidth"], layout
+        assert layout["splitButtonHeights"] and min(layout["splitButtonHeights"]) >= 44, layout
 
-    forbidden = [
-        item for item in evidence["api_requests"]
-        if item["method"] in {"POST", "PATCH", "DELETE"}
-        and (
-            item["path"].startswith("/api/cards")
-            or item["path"].startswith("/api/reviews")
-            or item["path"].startswith("/api/curation/promote")
-        )
-    ]
-    assert not forbidden, forbidden
-    assert not evidence["page_errors"], evidence
-    expected_failure_path = "/api/curation/drafts/701/split"
-    blocked_telemetry = {
-        item["url"] for item in evidence["blocked_external"]
-        if urlparse(item["url"]).netloc == "static.cloudflareinsights.com"
-        and urlparse(item["url"]).path.startswith("/beacon.min.js/")
-    }
-    evidence["blocked_telemetry"] = sorted(blocked_telemetry)
-    evidence["unexpected_console_errors"] = [
-        item for item in evidence["console"]
-        if not (
-            "503" in item["text"] and "Failed to load resource" in item["text"]
-            and urlparse(item.get("location", {}).get("url", "")).path == expected_failure_path
-        ) and not (
-            "Failed to load resource" in item["text"]
-            and item.get("location", {}).get("url", "") in blocked_telemetry
-        )
-    ]
-    assert not evidence["unexpected_console_errors"], evidence
+        forbidden = [
+            item for item in evidence["api_requests"]
+            if item["method"] in {"POST", "PATCH", "DELETE"}
+            and (
+                item["path"].startswith("/api/cards")
+                or item["path"].startswith("/api/reviews")
+                or item["path"].startswith("/api/curation/promote")
+            )
+        ]
+        assert not forbidden, forbidden
+        assert not evidence["page_errors"], evidence
+        expected_failure_path = "/api/curation/drafts/701/split"
+        blocked_telemetry = {
+            item["url"] for item in evidence["blocked_external"]
+            if urlparse(item["url"]).netloc == "static.cloudflareinsights.com"
+            and urlparse(item["url"]).path.startswith("/beacon.min.js/")
+        }
+        evidence["blocked_telemetry"] = sorted(blocked_telemetry)
+        evidence["unexpected_console_errors"] = [
+            item for item in evidence["console"]
+            if not (
+                "503" in item["text"] and "Failed to load resource" in item["text"]
+                and urlparse(item.get("location", {}).get("url", "")).path == expected_failure_path
+            ) and not (
+                "Failed to load resource" in item["text"]
+                and item.get("location", {}).get("url", "") in blocked_telemetry
+            )
+        ]
+        assert not evidence["unexpected_console_errors"], evidence
 
-    screenshot = output / f"clip-split-{name}.png"
-    page.screenshot(path=str(screenshot), full_page=True)
-    evidence.update({
-        "layout": layout,
-        "split_attempts": state["split_attempts"],
-        "draft_count_after_reload": len(state["drafts"]),
-        "forbidden_learner_writes": len(forbidden),
-        "screenshot": str(screenshot),
-    })
-    context.close()
-    return evidence
+        screenshot = output / f"clip-split-{name}.png"
+        page.screenshot(path=str(screenshot), full_page=True)
+        evidence.update({
+            "layout": layout,
+            "split_attempts": state["split_attempts"],
+            "draft_count_after_reload": len(state["drafts"]),
+            "forbidden_learner_writes": len(forbidden),
+            "screenshot": str(screenshot),
+        })
+        return evidence
+    except Exception as error:
+        evidence["failure"] = repr(error)
+        page.screenshot(path=str(output / f"failure-{name}.png"), full_page=True)
+        (output / f"failure-{name}.json").write_text(json.dumps(evidence, indent=2)+"\n")
+        raise
+    finally:
+        context.close()
 
 
 def main() -> int:
