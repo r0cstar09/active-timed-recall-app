@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import AudioPlayhead from "./AudioPlayhead";
+import SplitClipEditor from "./SplitClipEditor";
 import { curationApi, CurationApiError } from "../lib/curationApi";
+import { splitDraftEligibility } from "../lib/clipEditing";
 import { createActionGate, newerDraft, importNeedsPolling } from "../lib/curationState";
 import { selectionEnglishAfterSourceChange, shouldApplySelectionTranslation, selectionTranslationCanSave } from "../lib/selectionTranslation";
 import type { CurationDraft, CurationImport, DraftPatch, TranscriptSegment } from "../lib/curationTypes";
@@ -355,6 +358,18 @@ export default function ManualCuration() {
     setCurrent((old) => old ? { ...old, drafts: mergeDrafts(old.drafts, [draft]) } : old);
   }
 
+  function applySplit(importId: number, originalDraftId: number, drafts: CurationDraft[]) {
+    if (activeId.current !== importId || discardedImportIds.current.has(importId)) return;
+    setCurrent((old) => {
+      if (!old || old.id !== importId || !old.drafts.some((draft) => draft.id === originalDraftId)) return old;
+      return { ...old, drafts: mergeDrafts(old.drafts, drafts) };
+    });
+    setImports((old) => old.map((item) => item.id === importId
+      ? { ...item, drafts: mergeDrafts(item.drafts, drafts) }
+      : item));
+    setNotice("Split saved as two independent drafts. Each part is unapproved and preparing its own audio and English meaning.");
+  }
+
   const canSaveSelection = selectionTranslationCanSave({
     spanish, english: selectionEnglish, translationSource,
     status: selectionTranslationStatus, learnerEdited: learnerOwnsEnglish.current,
@@ -485,6 +500,7 @@ export default function ManualCuration() {
         </div>
         {!current.drafts.length && <p className="muted">Select a phrase above and save it as a draft.</p>}
         {current.drafts.map((draft) => <DraftEditor key={draft.id} draft={draft} busy={!!busy} action={action} update={updateDraft} refresh={refresh}
+          transcript={current.transcript} sourceAudioUrl={current.source_audio_url} applySplit={applySplit} reportError={(value) => setError(`audio: ${value}`)}
           dirty={(value) => { if (value) dirtyEditors.current.add(draft.id); else dirtyEditors.current.delete(draft.id); setDirtyVersion((n) => n + 1); }}
           remove={() => setCurrent((old) => old ? { ...old, drafts: old.drafts.filter((d) => d.id !== draft.id) } : old)} />)}
       </div>
@@ -506,24 +522,53 @@ export default function ManualCuration() {
       .curation-times {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
       .curation-times input {width:100%;min-width:0;}
       .curation-draft textarea {width:100%;box-sizing:border-box;}
-      @media (max-width:520px) {.curation-history-row {grid-template-columns:1fr;}.curation-history-row .btn {width:100%;}}
+      .saved-clip-preview,.clip-playhead,.clip-split-panel,.clip-split-part,.combined-english-reference {min-width:0;}
+      .saved-clip-preview,.clip-playhead {padding:14px;border:1px solid var(--border,#d8d8d8);border-radius:12px;background:color-mix(in srgb,var(--surface,#fff) 92%,var(--accent,#c69025));}
+      .saved-clip-preview p,.clip-time-readout,.clip-split-panel p,.combined-english-reference p {margin:4px 0 0;overflow-wrap:anywhere;}
+      .clip-playhead audio,.saved-clip-preview audio {display:block;width:100%;max-width:100%;}
+      .clip-seek-field input[type="range"] {width:100%;min-height:44px;margin:0;accent-color:var(--accent,#c69025);}
+      .clip-time-readout {font-variant-numeric:tabular-nums;}
+      .clip-split-panel {padding:18px;border:2px solid color-mix(in srgb,var(--accent,#c69025) 55%,var(--border,#d8d8d8));border-radius:14px;background:color-mix(in srgb,var(--surface,#fff) 96%,var(--accent,#c69025));}
+      .clip-split-panel h4,.clip-split-part h4 {margin:4px 0 0;}
+      .clip-split-parts {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+      .clip-split-part {padding:14px;border:1px solid var(--border,#d8d8d8);border-radius:12px;background:var(--surface,#fff);}
+      .split-boundary-text {cursor:text;}
+      .combined-english-reference {padding:14px;border-left:4px solid var(--accent,#c69025);background:color-mix(in srgb,var(--accent,#c69025) 9%,transparent);}
+      .split-confirm {display:flex;gap:10px;align-items:flex-start;min-height:44px;padding:10px 0;cursor:pointer;}
+      .split-confirm input {width:22px;height:22px;flex:0 0 auto;}
+      .split-time-field input {max-width:18rem;}
+      @media (max-width:620px) {
+        .curation-history-row {grid-template-columns:1fr;}
+        .curation-history-row .btn {width:100%;}
+        .clip-split-parts,.curation-times {grid-template-columns:1fr;}
+        .clip-split-panel {padding:14px;}
+      }
     `}</style>
   </section>;
 }
 
 type Editor = { spanish: string; english: string; start: string; end: string };
 const editValues = (d: CurationDraft): Editor => ({ spanish: d.spanish, english: d.english, start: String(d.start_time), end: String(d.end_time) });
-function DraftEditor({ draft, busy, action, update, remove, refresh, dirty }: {
+function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, transcript, sourceAudioUrl, applySplit, reportError }: {
   draft: CurationDraft; busy: boolean; action: (key: string, work: () => Promise<void>) => Promise<void>;
   update: (draft: CurationDraft) => void; remove: () => void; refresh: () => Promise<void>; dirty: (value: boolean) => void;
+  transcript: TranscriptSegment[]; sourceAudioUrl: string | null;
+  applySplit: (importId: number, originalDraftId: number, drafts: CurationDraft[]) => void;
+  reportError: (message: string) => void;
 }) {
   const [values, setValues] = useState<Editor>(() => editValues(draft));
   const [baseRevision, setBaseRevision] = useState(draft.revision);
   const [changed, setChanged] = useState(false);
+  const [splitOpen, setSplitOpen] = useState(false);
+  const [trimPlayhead, setTrimPlayhead] = useState(draft.start_time);
   const dirtyRef = useRef(false);
   const root = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (!dirtyRef.current) { setValues(editValues(draft)); setBaseRevision(draft.revision); }
+    if (!dirtyRef.current) {
+      setValues(editValues(draft));
+      setBaseRevision(draft.revision);
+      setTrimPlayhead(draft.start_time);
+    }
   }, [draft.revision]);
   useEffect(() => {
     if (new URLSearchParams(location.search).get("draft") === String(draft.id)) root.current?.scrollIntoView({ block: "center" });
@@ -533,11 +578,22 @@ function DraftEditor({ draft, busy, action, update, remove, refresh, dirty }: {
     setValues((old) => ({ ...old, [key]: value })); setChanged(true); dirtyRef.current = true; dirty(true);
   }
   function sync(value: CurationDraft) {
-    dirtyRef.current = false; dirty(false); setChanged(false); setValues(editValues(value)); setBaseRevision(value.revision); update(value);
+    dirtyRef.current = false;
+    dirty(false);
+    setChanged(false);
+    setValues(editValues(value));
+    setBaseRevision(value.revision);
+    setTrimPlayhead(value.start_time);
+    update(value);
   }
-  const locked = busy || isDraftWorking(draft) || draft.status === "added";
+  const locked = busy || isDraftWorking(draft) || draft.status === "added" || splitOpen;
   const stale = changed && baseRevision !== draft.revision;
   const previewReady = ["ready", "needs_review"].includes(draft.status) && !!draft.audio_url && !!draft.english.trim();
+  const candidateStart = Number(values.start);
+  const candidateEnd = Number(values.end);
+  const validCandidateTiming = Number.isFinite(candidateStart) && Number.isFinite(candidateEnd) && candidateEnd > candidateStart;
+  const timingChanged = validCandidateTiming && (candidateStart !== draft.start_time || candidateEnd !== draft.end_time);
+  const splitEligibility = splitDraftEligibility(draft, { busy, changed, stale });
   return <article ref={root} id={`draft-${draft.id}`} className="curation-draft stack" aria-label={`Draft ${draft.id}`}>
     <div className="curation-actions"><h3 style={{ margin: 0 }}>Draft #{draft.id}{draft.repair_phrase_id ? ` · repair card #${draft.repair_phrase_id}` : ""}</h3><span className="pill">{draft.status.replaceAll("_", " ")}</span></div>
     {draft.repair_phrase_id && <p className="muted small">Repair changes only audio and timing. Spanish, English, review history and FSRS stay unchanged. Archived cards require a separate Restore.</p>}
@@ -562,11 +618,53 @@ function DraftEditor({ draft, busy, action, update, remove, refresh, dirty }: {
       if (Number(values.end) !== draft.end_time) patch.end_time = Number(values.end);
       sync(await curationApi.patchDraft(draft.id, patch));
     })}>Save edits</button><button className="btn" disabled={busy} onClick={() => sync(draft)}>Discard edits / reload saved</button><span className="muted small">Text or timing changes require a new preview and approval.</span></div>}
-    {draft.audio_url && <audio aria-label={`Draft ${draft.id} audio preview`} controls preload="metadata" src={draft.audio_url} style={{ width: "100%" }} />}
+    {draft.audio_url && <>
+      <div className="saved-clip-preview stack">
+        <div><strong>Saved prepared preview</strong><p className="muted small">Audio for saved source bounds {stamp(draft.start_time)}–{stamp(draft.end_time)}. This preview changes only after saving and preparing again.</p></div>
+        <audio key={`${draft.audio_url}:${draft.revision}`} aria-label={`Draft ${draft.id} audio preview`} controls preload="metadata" src={draft.audio_url} style={{ width: "100%" }} />
+        {timingChanged && <div className="alert alert-warn" role="note">The saved preview still uses the old timing. Audition the candidate trim below; then save and reprepare before approval.</div>}
+      </div>
+      <AudioPlayhead
+        identity={`trim:${draft.id}:${draft.revision}:${sourceAudioUrl ?? draft.audio_url}`}
+        label={`Draft ${draft.id} trim playhead`}
+        audioUrl={sourceAudioUrl ?? draft.audio_url}
+        audioSourceOffset={sourceAudioUrl ? 0 : draft.start_time}
+        savedClipStart={draft.start_time}
+        rangeStart={validCandidateTiming ? Math.min(draft.start_time, candidateStart) : draft.start_time}
+        rangeEnd={validCandidateTiming ? Math.max(draft.end_time, candidateEnd) : draft.end_time}
+        playhead={trimPlayhead}
+        onPlayheadChange={setTrimPlayhead}
+        onSetStart={(absolute) => change("start", absolute.toFixed(2))}
+        onSetEnd={(absolute) => change("end", absolute.toFixed(2))}
+        audition={validCandidateTiming ? { start: candidateStart, end: candidateEnd } : undefined}
+        disabled={locked || stale}
+        onError={reportError}
+      />
+    </>}
     {isDraftWorking(draft) && <p role="status">Preparing only your selected phrase… It will remain saved if you leave this page.</p>}
     {draft.status !== "added" && <>
-      <div className="curation-actions"><button className="btn" disabled={locked || changed} onClick={() => action(`prepare-${draft.id}`, async () => { const values = await curationApi.prepareDrafts([{ id: draft.id, revision: draft.revision }]); values.forEach(update); })}>{draft.audio_url ? "Reprepare clip" : draft.status === "failed" ? "Retry prepare" : "Prepare clip"}</button>
-        <button className="btn" disabled={locked} onClick={() => { if (window.confirm("Delete this draft only? Existing cards and review history are not deleted.")) action(`delete-${draft.id}`, async () => { await curationApi.deleteDraft(draft.id, draft.revision); dirty(false); remove(); }); }}>Delete draft</button></div>
+      <div className="curation-actions">
+        <button className="btn" disabled={locked || changed} onClick={() => action(`prepare-${draft.id}`, async () => { const prepared = await curationApi.prepareDrafts([{ id: draft.id, revision: draft.revision }]); prepared.forEach(update); })}>{draft.audio_url ? "Reprepare clip" : draft.status === "failed" ? "Retry prepare" : "Prepare clip"}</button>
+        {!draft.repair_phrase_id && <button
+          className="btn btn-primary"
+          type="button"
+          aria-expanded={splitOpen}
+          disabled={splitOpen || !splitEligibility.allowed}
+          title={splitEligibility.reason ?? "Split one prepared clip into two independent drafts"}
+          onClick={() => setSplitOpen(true)}
+        >Split clip</button>}
+        <button className="btn" disabled={locked} onClick={() => { if (window.confirm("Delete this draft only? Existing cards and review history are not deleted.")) action(`delete-${draft.id}`, async () => { await curationApi.deleteDraft(draft.id, draft.revision); dirty(false); remove(); }); }}>Delete draft</button>
+      </div>
+      {!draft.repair_phrase_id && !splitOpen && splitEligibility.reason && ["ready", "needs_review"].includes(draft.status) && <p className="muted small">Split clip unavailable: {splitEligibility.reason}</p>}
+      {splitOpen && <SplitClipEditor
+        draft={draft}
+        transcript={transcript}
+        busy={busy}
+        action={action}
+        onSplit={applySplit}
+        onClose={() => setSplitOpen(false)}
+        onError={reportError}
+      />}
       <label className="curation-actions"><input type="checkbox" checked={draft.approved && !changed} disabled={locked || changed || !previewReady} onChange={(e) => { const approved = e.target.checked; action(`approve-${draft.id}`, async () => sync(await curationApi.patchDraft(draft.id, { revision: draft.revision, approved }))); }} />I listened and approve this clip and meaning</label>
     </>}
     {draft.status === "added" && <p role="status">{draft.repair_phrase_id ? "Repair saved" : "In library"}. <a href={`/library/?phrase=${draft.phrase_id}`}>Open card #{draft.phrase_id}</a></p>}

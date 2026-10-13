@@ -85,6 +85,19 @@ export interface DraftPatch {
   approved?: boolean;
 }
 
+export interface DraftSplitPart {
+  spanish: string;
+  english: string;
+}
+
+export interface DraftSplitRequest {
+  revision: number;
+  /** Absolute seconds in the original source, never clip-relative seconds. */
+  split_time: number;
+  left: DraftSplitPart;
+  right: DraftSplitPart;
+}
+
 export interface PromoteResult {
   draft_id: number;
   phrase_id: number;

@@ -1,0 +1,52 @@
+name: Clip Split QA
+on:
+  push:
+    branches: [feat/curation-clip-split]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Optional public frontend; all API and media traffic stays intercepted fixtures'
+        required: false
+        default: ''
+permissions:
+  contents: read
+jobs:
+  clip-split:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Unit tests and production build
+        run: npm ci --no-audit --no-fund && npm test && npm run build
+      - name: Install isolated browser
+        run: |
+          python3 -m venv /tmp/clip-split-qa
+          /tmp/clip-split-qa/bin/pip install --quiet playwright==1.63.0
+          /tmp/clip-split-qa/bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Split, reload, independent trim, retry, and mobile fixture regression
+        env:
+          QA_BASE: ${{ inputs.base }}
+        run: |
+          if [ -z "$QA_BASE" ]; then
+            python3 -m http.server 18764 --bind 127.0.0.1 --directory dist >/tmp/clip-split-server.log 2>&1 &
+            server=$!
+            trap 'kill "$server" 2>/dev/null || true' EXIT
+            for attempt in 1 2 3 4 5; do curl --silent --fail http://127.0.0.1:18764/ >/dev/null && break; sleep 1; done
+            QA_BASE=http://127.0.0.1:18764
+          fi
+          /tmp/clip-split-qa/bin/python scripts/test_curation_clip_split_browser.py --base "$QA_BASE" --browser ${{ matrix.browser }} --output /tmp/clip-split-results
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: clip-split-${{ matrix.browser }}
+          path: /tmp/clip-split-results
+          if-no-files-found: warn
+          retention-days: 7

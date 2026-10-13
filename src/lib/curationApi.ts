@@ -6,6 +6,7 @@ import type {
   DraftPatch,
   DraftRevisionRef,
   DraftSelection,
+  DraftSplitRequest,
   PromoteResponse,
   SelectionTranslationRequest,
 } from "./curationTypes";
@@ -170,6 +171,15 @@ export const curationApi = {
       "PATCH",
       patch,
     ));
+  },
+
+  async splitDraft(draftId: number | string, split: DraftSplitRequest): Promise<CurationDraft[]> {
+    const result = await requestJson<{ drafts: CurationDraft[] }>(
+      `/api/curation/drafts/${encodeURIComponent(String(draftId))}/split`,
+      "POST",
+      split,
+    );
+    return (result.drafts ?? []).map(hydrateDraft);
   },
 
   deleteDraft(draftId: number | string, revision: number): Promise<{ ok: true }> {
