@@ -111,7 +111,14 @@ def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> None:
                 return
             if request.method == "POST" and parsed.path == "/api/curation/imports/91/translations/selection":
                 state["selection_calls"] += 1
-                value = "My mind went blank when he asked me the question." if state["selection_calls"] == 1 else "SHOULD NOT OVERWRITE MANUAL ENGLISH"
+                assert isinstance(body, dict), body
+                text = body["source_text"]
+                value = {
+                    "Me quedé en blanco": "My mind went blank.",
+                    "Me quedé en blanco cuando me hizo la pregunta.": "My mind went blank when he asked me the question.",
+                    "Me quedé en blanco cuando me hizo la pregunta. Después respiré y pude responder.": "I blanked, then took a breath and answered.",
+                    "muy nervioso. Me quedé en blanco": "very nervous. My mind went blank",
+                }[text]
                 fulfill_json(route, {"english": value})
                 return
             if request.method == "POST" and parsed.path == "/api/curation/imports/91/drafts":
@@ -182,7 +189,7 @@ def assert_layout(page: Page) -> dict[str, Any]:
 
 def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, Any]:
     evidence: dict[str, Any] = {"device": name, "api_requests": [], "blocked_external": [], "console": [], "page_errors": []}
-    context = browser.new_context(**DEVICES[name], color_scheme="light")
+    context = browser.new_context(**DEVICES[name], color_scheme="light", service_workers="block")
     page = context.new_page()
     page.on("console", lambda message: evidence["console"].append({"type": message.type, "text": message.text}) if message.type == "error" else None)
     page.on("pageerror", lambda error: evidence["page_errors"].append(str(error)))
@@ -257,6 +264,28 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         "spanish": "Me quedé en blanco cuando me hizo la pregunta. Después respiré y pude responder.",
         "english": "My own editable meaning",
     }], draft_request
+    # Select substrings from the Spanish DOM nodes, including a range crossing
+    # intervening English. This exercises the actual mouseup extraction handler.
+    for selection in [
+        {"start": 1, "end": 1, "prefix": "", "last": "Me quedé en blanco", "spanish": "Me quedé en blanco", "english": "My mind went blank."},
+        {"start": 0, "end": 1, "prefix": "Durante la entrevista estaba ", "last": "Me quedé en blanco", "spanish": "muy nervioso. Me quedé en blanco", "english": "very nervous. My mind went blank"},
+    ]:
+        page.get_by_role("button", name="Clear selection", exact=True).click() if page.get_by_role("button", name="Clear selection", exact=True).is_enabled() else None
+        page.evaluate("""(s) => {
+            const first = document.querySelector(`[data-transcript-text="${s.start}"]`).firstChild;
+            const last = document.querySelector(`[data-transcript-text="${s.end}"]`).firstChild;
+            const range = document.createRange();
+            range.setStart(first, s.prefix.length);
+            range.setEnd(last, s.last.length);
+            const selected = window.getSelection();
+            selected.removeAllRanges(); selected.addRange(range);
+            document.querySelector('.curation-transcript').dispatchEvent(new MouseEvent('mouseup', {bubbles:true}));
+        }""", selection)
+        expect(page.get_by_label("Selected phrase", exact=True)).to_have_value(selection["spanish"])
+        expect(english).to_have_value(selection["english"], timeout=10_000)
+        last_translation = [item for item in evidence["api_requests"] if item["path"].endswith("/translations/selection")][-1]
+        assert last_translation["body"]["source_text"] == selection["spanish"]
+        assert "English" not in last_translation["body"]["source_text"]
     assert not evidence["page_errors"], evidence
     assert not evidence["console"], evidence
 
