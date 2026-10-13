@@ -6,13 +6,20 @@
 .verb-core-progress::-webkit-progress-bar { border-radius: 99px; background: var(--bg-elev-2); }
 .verb-core-progress::-webkit-progress-value { border-radius: 99px; background: var(--accent); }
 .verb-core-progress::-moz-progress-bar { border-radius: 99px; background: var(--accent); }
-.verb-group-key { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; list-style: none; padding: 0; margin: 0; }
+.verb-group-key { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; list-style: none; padding: 0; margin: 0; }
 .verb-group-key li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 9px; min-width: 0; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: .78rem; line-height: 1.4; background: var(--paper); }
 .verb-group-key li[data-verb-group="core"] { border-color: var(--accent); background: var(--bg-elev-2); }
 .verb-group-key li[data-verb-group="other"] { border-style: dashed; color: var(--text-dim); }
 .verb-group-key strong { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
 .verb-group-number { font-size: .65rem; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.verb-next-priority { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--bg-elev-2); min-width: 0; }
+.verb-next-priority h3 { margin: 0; font-size: 1.1rem; }
+.verb-next-priority summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.verb-next-priority summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.verb-next-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 28px; padding-left: 24px; font-size: .88rem; overflow-wrap: anywhere; }
+.verb-next-badge, .verb-group-key li[data-verb-group="next"] { border-color: var(--accent); background: var(--bg-elev-2); }
 @media (max-width: 760px) {
+  .verb-next-list { grid-template-columns: 1fr; }
   .verb-group-key { grid-template-columns: 1fr; gap: 6px; }
   .verb-group-key li { padding: 10px 12px; font-size: .8rem; }
   .verb-curriculum { gap: 12px; }

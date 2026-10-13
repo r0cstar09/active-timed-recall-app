@@ -55,10 +55,16 @@ CORE_SPANISH_VERBS = tuple(
     "pedir recibir recordar terminar permitir aparecer conseguir comenzar servir sacar "
     "necesitar mantener resultar".split()
 )
-COMPLETED_VERBS = frozenset({"ser", "volar"})
+NEXT_30_SPANISH_VERBS = tuple(
+    "gustar ayudar usar cambiar comprar pagar comer beber dormir escuchar preguntar responder "
+    "explicar aprender estudiar leer abrir cerrar traer subir bajar jugar ganar viajar preferir "
+    "olvidar levantar lavar amar mentir".split()
+)
+COMPLETED_VERBS = frozenset({"ser", "volar", "traer"})
 
 PROGRESS_FIXTURE: dict[str, Any] = {
     "items": [
+        {"verb": "traer", "completed": 1, "full_pass_count": 7, "required_full_passes": 7, "total_assignments": 50},
         {
             "verb": "ser",
             "completed": 1,
@@ -181,7 +187,7 @@ def load_catalog() -> dict[str, Any]:
     missing_core = [verb for verb in CORE_SPANISH_VERBS if verb not in names]
     if len(CORE_SPANISH_VERBS) != 60 or missing_core:
         problems.append(f"Core 60 fixture mismatch; missing={missing_core!r}")
-    missing_special = [verb for verb in ("volar", "pagar") if verb not in names]
+    missing_special = [verb for verb in ("volar", *NEXT_30_SPANISH_VERBS) if verb not in names]
     if missing_special:
         problems.append(f"required non-core fixture verbs missing: {missing_special!r}")
     if problems:
@@ -474,13 +480,15 @@ def assert_group_contract(
     run["groups"] = groups
     catalog_names = [entry["verb"] for entry in catalog["verbs"]]
     expected_core = [verb for verb in CORE_SPANISH_VERBS if verb not in COMPLETED_VERBS]
+    expected_next = [verb for verb in NEXT_30_SPANISH_VERBS if verb not in COMPLETED_VERBS]
     expected_other = [
-        verb for verb in catalog_names if verb not in COMPLETED_VERBS and verb not in CORE_SPANISH_VERBS
+        verb for verb in catalog_names if verb not in COMPLETED_VERBS and verb not in CORE_SPANISH_VERBS and verb not in NEXT_30_SPANISH_VERBS
     ]
     expected_labels = [
         f"Completed / mastered ({len(COMPLETED_VERBS)})",
         f"Core 60 — still to master ({len(expected_core)})",
-        f"Other verbs — later ({len(expected_other)})",
+        f"Next 30 — everyday usefulness ({len(expected_next)})",
+        f"Other verbs — available anytime ({len(expected_other)})",
     ]
     actual_labels = [group["label"] for group in groups]
     add_check(
@@ -493,12 +501,13 @@ def assert_group_contract(
 
     completed_values = groups[0]["values"] if len(groups) > 0 else []
     core_values = groups[1]["values"] if len(groups) > 1 else []
-    other_values = groups[2]["values"] if len(groups) > 2 else []
+    next_values = groups[2]["values"] if len(groups) > 2 else []
+    other_values = groups[3]["values"] if len(groups) > 3 else []
     add_check(
         run,
         "groups.completed-exclusive",
-        len(completed_values) == 2 and set(completed_values) == COMPLETED_VERBS,
-        expected="ser and volar exclusively",
+        len(completed_values) == len(COMPLETED_VERBS) and set(completed_values) == COMPLETED_VERBS,
+        expected="ser, volar and traer exclusively",
         actual=completed_values,
     )
     add_check(
@@ -511,12 +520,20 @@ def assert_group_contract(
     add_check(
         run,
         "groups.other-membership",
-        other_values == expected_other and "pagar" in other_values,
-        expected={"catalog_order": expected_other, "must_include": "pagar"},
+        other_values == expected_other and "pagar" not in other_values,
+        expected={"catalog_order": expected_other, "must_exclude": "pagar"},
         actual=other_values,
     )
 
-    all_values = completed_values + core_values + other_values
+    add_check(run, "groups.next30-priority", next_values == expected_next,
+              expected=expected_next, actual=next_values)
+    panel = page.locator(".verb-next-priority")
+    text = " ".join(panel.inner_text().split())
+    add_check(run, "summary.next30-progress", "1 / 30 completed" in text,
+              expected="1 / 30 completed", actual=text)
+    add_check(run, "summary.honest-ranking", "not frequency ranks 61–90" in text,
+              expected="personalized practical ranking disclaimer", actual=text)
+    all_values = completed_values + core_values + next_values + other_values
     duplicates = sorted({value for value in all_values if all_values.count(value) > 1})
     add_check(
         run,
@@ -676,6 +693,20 @@ def exercise_selection_without_grading(
         },
     )
 
+    selector.select_option("pagar")
+    badge = page.get_by_text("Next 30 · priority 6", exact=True)
+    badge.wait_for(state="visible", timeout=timeout)
+    add_check(run, "selection.next30-badge", badge.is_visible(), expected="pagar priority badge", actual=badge.inner_text())
+    selector.select_option("traer")
+    badge = page.get_by_text("Next 30 · priority 19", exact=True)
+    badge.wait_for(state="visible", timeout=timeout)
+    add_check(run, "selection.completed-next30-badge", badge.is_visible(), expected="completed traer retains priority badge", actual=badge.inner_text())
+    panel = page.locator(".verb-next-priority")
+    panel.locator("summary").click()
+    rows = panel.locator(".verb-next-list li strong").all_text_contents()
+    add_check(run, "details.all30-in-order", rows == list(NEXT_30_SPANISH_VERBS), expected=list(NEXT_30_SPANISH_VERBS), actual=rows)
+    panel.locator("summary").click()
+
 
 def expected_console_messages(scenario: str, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     expected_503 = scenario in {"catalog_fallback", "progress_retry"}
@@ -798,8 +829,8 @@ def catalog_fallback_run(
         add_check(
             run,
             "fallback.bundled-catalog-used",
-            router.catalog_attempts >= 1 and len(extract_group_state(selector)) == 3,
-            expected="fixture catalog GET returns 503, then bundled 224-verb catalog renders three groups",
+            router.catalog_attempts >= 1 and len(extract_group_state(selector)) == 4,
+            expected="fixture catalog GET returns 503, then bundled 224-verb catalog renders four groups",
             actual={"catalog_attempts": router.catalog_attempts, "option_count": selector.locator("option").count()},
         )
         add_check(

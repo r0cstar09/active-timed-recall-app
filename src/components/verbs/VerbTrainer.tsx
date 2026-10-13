@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, type StudyGradeResponse, type VerbCatalog, type VerbCatalogAssignment, type VerbProgress, type VerbPromptProgress, type LessonPromptProgress, type VerbUsagePrompt } from "../../lib/api";
 import LessonSentencePacks from "../lessons/LessonSentencePacks";
-import { CORE_SPANISH_VERBS, coreVerbRank, groupVerbCatalog } from "../../lib/verbSelection";
+import { CORE_SPANISH_VERBS, NEXT_30_SPANISH_VERBS, coreVerbRank, nextVerbPriority, groupVerbCatalog } from "../../lib/verbSelection";
 import "../../styles/verb-curriculum.css";
 
 type Assignment = VerbCatalogAssignment;
@@ -129,10 +129,12 @@ export default function VerbTrainer() {
   const verbGroups = useMemo(() => groupVerbCatalog(data.verbs, verbProgress), [data.verbs, verbProgress]);
   const progressReady = progressStatus === "ready";
   const selectedCoreRank = verb ? coreVerbRank(verb.verb) : undefined;
+  const selectedNextPriority = verb ? nextVerbPriority(verb.verb) : undefined;
   const selectorGroups = [
     { id: "completed", label: "Completed / mastered", entries: verbGroups.completed },
     { id: "core", label: "Core 60 — still to master", entries: verbGroups.core },
-    { id: "other", label: "Other verbs — later", entries: verbGroups.other },
+    { id: "next", label: "Next 30 — everyday usefulness", entries: verbGroups.next },
+    { id: "other", label: "Other verbs — available anytime", entries: verbGroups.other },
   ];
 
   useEffect(() => {
@@ -509,8 +511,31 @@ export default function VerbTrainer() {
               {progressReady ? `${verbGroups.coreCompleted} / ${CORE_SPANISH_VERBS.length} completed` : progressStatus === "loading" ? "Loading completion…" : "Completion unavailable"}
             </span>
           </div>
-          <p className="muted small">Go deep on these 60 before expanding. Your completed verbs come first; the remaining core follows your paper’s ranking.</p>
+          <p className="muted small">The original 60 follow your paper’s ranking, not a complete everyday vocabulary. Keep building depth, and use the Next 30 whenever you need them.</p>
           {progressReady && <progress className="verb-core-progress" max={CORE_SPANISH_VERBS.length} value={verbGroups.coreCompleted} aria-label="Core 60 conjugation completion" />}
+          <div className="verb-next-priority" aria-labelledby="next30-heading">
+            <div className="row between wrap">
+              <h3 id="next30-heading">Next 30 — everyday usefulness</h3>
+              <span className="pill pill-good" aria-live="polite">
+                {progressReady ? `${verbGroups.nextCompleted} / ${NEXT_30_SPANISH_VERBS.length} completed` : progressStatus === "loading" ? "Loading completion…" : "Completion unavailable"}
+              </span>
+            </div>
+            <p className="small muted">A practical supplement for everyday needs, conversations and relationships—not frequency ranks 61–90. You can practise any of these now.</p>
+            {progressReady && <progress className="verb-core-progress" max={NEXT_30_SPANISH_VERBS.length} value={verbGroups.nextCompleted} aria-label="Next 30 conjugation completion" />}
+            <details>
+              <summary>See all 30 recommended verbs</summary>
+              <p className="small muted">Suggested study order. Use “Choose verb” below to practise; completed verbs remain in the completed group.</p>
+              <ol className="verb-next-list">
+                {NEXT_30_SPANISH_VERBS.map((name) => {
+                  const entry = data.verbs.find((item) => item.verb === name);
+                  const completed = progressReady && verbGroups.completed.some((item) => item.verb === name);
+                  return <li key={name}><strong>{name}</strong>{entry ? ` — ${entry.englishBase || entry.category}` : " — unavailable in this catalog"}{completed && <span className="small"> · completed ✓</span>}</li>;
+                })}
+              </ol>
+              <p className="small muted">Learn useful constructions too: me gusta / me gustan; levantarse (get up); lavarse (wash yourself). Amar adds explicit “love”; querer also expresses affection. These are priority highlights, not new drills or changes to your progress.</p>
+            </details>
+            {verbGroups.missingNext.length > 0 && <p className="alert" role="status">Next 30 missing from this catalog: {verbGroups.missingNext.join(", ")}. They are not counted as completed.</p>}
+          </div>
           <ol className="verb-group-key" aria-label="Verb list sections">
             {selectorGroups.map((group, index) => (
               <li key={group.id} data-verb-group={group.id}>
@@ -520,7 +545,7 @@ export default function VerbTrainer() {
               </li>
             ))}
           </ol>
-          <p className="small faint">Completed means your saved conjugation threshold is met. Usage practice remains separate; other verbs stay available for later.</p>
+          <p className="small faint">Completed means your saved conjugation threshold is met. Usage practice remains separate; every verb stays available without finishing a priority group first.</p>
           {progressStatus === "loading" && <p role="status" className="small muted">Loading saved completion…</p>}
           {progressStatus === "error" && (
             <div className="alert alert-danger" role="alert">
@@ -540,6 +565,7 @@ export default function VerbTrainer() {
           </div>
           <div className="row wrap">
             {selectedCoreRank && <span className="pill">Core 60 · #{selectedCoreRank}</span>}
+            {selectedNextPriority && <span className="pill verb-next-badge">Next 30 · priority {selectedNextPriority}</span>}
             <span className={progressReady && verbComplete ? "pill pill-good" : "pill"}>
               {!progressReady ? "Completion unavailable" : verbComplete ? "mastered" : `${fullPassCount}/${requiredPasses} perfect`}
             </span>
@@ -552,7 +578,7 @@ export default function VerbTrainer() {
               <optgroup key={group.id} label={`${group.label} (${group.entries.length})`}>
                 {group.entries.map((v) => (
                   <option key={v.verb} value={v.verb}>
-                    {group.id === "completed" ? "✓ " : ""}{coreVerbRank(v.verb) ? `#${coreVerbRank(v.verb)} · ` : ""}{v.verb} — {v.englishBase || v.category}
+                    {group.id === "completed" ? "✓ " : ""}{coreVerbRank(v.verb) ? `#${coreVerbRank(v.verb)} · ` : nextVerbPriority(v.verb) ? `Next 30 · ${nextVerbPriority(v.verb)} · ` : ""}{v.verb} — {v.englishBase || v.category}
                   </option>
                 ))}
               </optgroup>
@@ -617,7 +643,7 @@ export default function VerbTrainer() {
 
         <div className="row between small faint">
           <span>{filled}/{visibleRows.length} open prompts answered</span>
-          <span>{hiddenPassedCount ? `${hiddenPassedCount} completed hidden` : `${data.count} verbs · Core 60 focus · ${verb?.category}`}</span>
+          <span>{hiddenPassedCount ? `${hiddenPassedCount} completed hidden` : `${data.count} verbs · Core 60 + Next 30 · ${verb?.category}`}</span>
         </div>
       </div>
 
