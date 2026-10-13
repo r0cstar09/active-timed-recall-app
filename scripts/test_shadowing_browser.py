@@ -497,7 +497,7 @@ class FixtureRouter:
                 self.error_media_attempts += 1
                 if self.scenario == "error_retry" and self.error_media_attempts == 1:
                     route.fulfill(
-                        status=503,
+                        status=404,
                         content_type="text/plain",
                         headers={"Cache-Control": "no-store"},
                         body="Synthetic browser QA media failure",
@@ -754,8 +754,8 @@ def console_expected_reason(item: dict[str, Any], scenario: str) -> str | None:
     if text == "Service Worker registration blocked by Playwright":
         return "exact Playwright service-worker block"
     if scenario == "error_retry" and location_path == ERROR_MEDIA:
-        if text.startswith("Failed to load resource:") and "503" in text:
-            return "exact synthetic media 503"
+        if text.startswith("Failed to load resource:") and "404" in text:
+            return "exact synthetic media 404"
     if location_path == "/cdn-cgi/rum" and (
         "ERR_BLOCKED_BY_CLIENT" in text or "Load failed" in text or "blocked" in text.casefold()
     ):
@@ -768,12 +768,17 @@ def request_failure_expected_reason(item: dict[str, Any], scenario: str) -> str 
         return "exact blocked Cloudflare RUM"
     if scenario == "pending_source_switch" and item["path"] == PENDING_MEDIA:
         return "source switch cancelled exact pending media request"
+    if item.get("method") == "GET" and item.get("failure") in {"net::ERR_ABORTED", "Load request cancelled"}:
+        if scenario == "ready" and item["path"] == MAIN_MEDIA:
+            return "filter/source switching cancels exact selected synthetic main clip"
+        if scenario == "error_retry" and item["path"] == ERROR_MEDIA:
+            return "discarding exact failed synthetic media after intercepted 404"
     return None
 
 
 def http_error_expected_reason(item: dict[str, Any], scenario: str) -> str | None:
-    if scenario == "error_retry" and item["path"] == ERROR_MEDIA and item["status"] == 503:
-        return "exact synthetic media 503"
+    if scenario == "error_retry" and item["path"] == ERROR_MEDIA and item["status"] == 404:
+        return "exact synthetic media 404"
     return None
 
 
@@ -1333,7 +1338,7 @@ def add_filter_and_text_checks(page: Page, run: dict[str, Any], router: FixtureR
 
 def save_screenshot(page: Page, output: Path, run: dict[str, Any], suffix: str = "") -> None:
     filename = f"{run['browser']}--{run['scenario']}--{run['device']}--{run['theme']}{suffix}.png"
-    page.screenshot(path=str(output / filename), full_page=False, animations="disabled")
+    page.screenshot(path=str(output / filename), full_page=True, animations="disabled")
     run.setdefault("screenshots", []).append(filename)
 
 
@@ -1404,6 +1409,9 @@ def visual_run(
         if deep_checks:
             add_filter_and_text_checks(page, run, router, timeout)
         save_screenshot(page, output, run)
+        if device != "desktop":
+            page.get_by_role("button", name="Start shadowing", exact=True).scroll_into_view_if_needed()
+            save_screenshot(page, output, run, "--controls")
     except Exception as exc:
         run["execution_error"] = safe_error(exc, live=False)
         add_check(
@@ -1753,6 +1761,64 @@ def playback_and_persistence_run(
     return run
 
 
+def reconciliation_run(browser: Browser, browser_name: str, base: str, output: Path, timeout: int, scenario: str) -> dict[str, Any]:
+    run = new_run(browser_name, scenario, "desktop", "light")
+    context, page, router, raw = create_fixture_page(browser, base, scenario, "desktop", "light", timeout)
+    prefs = {"rate": 0.5, "gapSeconds": 5, "mode": "repeat", "showSpanish": True}
+    if scenario == "empty_library":
+        router.cards = []
+    elif scenario == "malformed_storage":
+        context.add_init_script("localStorage.setItem('atr.shadow.v1', '{not valid json')")
+    elif scenario == "storage_denied":
+        context.add_init_script("""(() => {
+          const get = Storage.prototype.getItem, set = Storage.prototype.setItem;
+          Storage.prototype.getItem = function(k) { if (k === 'atr.shadow.v1') throw new DOMException('Denied', 'SecurityError'); return get.call(this, k); };
+          Storage.prototype.setItem = function(k,v) { if (k === 'atr.shadow.v1') throw new DOMException('Denied', 'QuotaExceededError'); return set.call(this, k,v); };
+        })()""")
+    elif scenario in {"removed_clip", "changed_audio"}:
+        context.add_init_script("localStorage.setItem('atr.shadow.v1', " + json.dumps(json.dumps({"version": 1, "clipId": 1, "preferences": prefs})) + ")")
+        if scenario == "removed_clip":
+            router.cards = [c for c in router.cards if c["phrase_id"] != 1]
+        else:
+            next(c for c in router.cards if c["phrase_id"] == 1)["audio_url"] = base + ALT_MEDIA
+    try:
+        navigate_shadow(page, base, run, timeout)
+        if scenario == "empty_library":
+            page.get_by_role("heading", name="Your voice, your clips.").wait_for()
+            add_check(run, "empty.actionable-without-player", page.get_by_role("link", name="Open Library", exact=True).is_visible() and page.get_by_role("button", name="Refresh clips", exact=True).is_visible() and not chooser(page).count(), expected="Library/source actions without an unusable player", actual={"clip_choices": chooser(page).count()})
+        else:
+            wait_ready(page, timeout)
+            summary = media_summary(page)
+            add_check(run, "restore.no-autoplay", event_count(summary, "play-call") == 0, expected="restored state never plays automatically", actual=event_count(summary, "play-call"))
+            if scenario == "removed_clip":
+                add_check(run, "restore.removed-id-reconciled", chooser(page).input_value() != "1" and page.get_by_text("Your previous clip is no longer active.", exact=False).is_visible(), expected="current library replaces removed saved ID with visible notice", actual=chooser(page).input_value())
+            if scenario == "changed_audio":
+                current = latest_media(summary) or {}
+                add_check(run, "restore.current-fetched-audio", current.get("path") == ALT_MEDIA, expected="current API URL replaces historical audio", actual=current.get("path"))
+            if scenario == "storage_denied":
+                add_check(run, "storage.actionable-local-only-failure", page.get_by_text("Device storage is unavailable.", exact=False).is_visible(), expected="practice remains usable with truthful persistence warning", actual=page.get_by_text("Device storage is unavailable.", exact=False).count())
+            button_start_or_resume(page).click()
+            wait_phase(page, {"playing"}, timeout)
+            page.wait_for_timeout(200)
+            current = latest_media(media_summary(page)) or {}
+            add_check(run, "recovery.real-playback", current.get("currentTime", 0) > 0.02, expected="real audio clock advances after explicit start", actual=current.get("currentTime"))
+            # Exercise pagehide interruption without leaving the disposable page.
+            page.evaluate("window.dispatchEvent(new Event('pagehide'))")
+            wait_phase(page, {"idle", "paused"}, timeout)
+            a = media_summary(page)
+            page.wait_for_timeout(250)
+            b = media_summary(page)
+            add_check(run, "lifecycle.pagehide-stops", all(m["paused"] for m in b["media"]) and event_count(a, "play-call") == event_count(b, "play-call"), expected="all owners paused and no delayed restart on pagehide", actual={"all_paused": all(m["paused"] for m in b["media"])})
+        save_screenshot(page, output, run)
+    except Exception as exc:
+        add_check(run, "runner.scenario-completed", False, expected="reconciliation scenario completes", actual=safe_error(exc, live=False))
+        save_screenshot(page, output, run, "--failure")
+    finally:
+        finish_fixture_run(run, router, raw)
+        context.close()
+    return run
+
+
 def pending_source_switch_run(
     browser: Browser,
     browser_name: str,
@@ -1867,7 +1933,7 @@ def recovery_run(
         retry = page.get_by_role("button", name="Retry audio", exact=True)
         if scenario == "error_retry":
             try:
-                # preload="auto" normally surfaces the intercepted 503 as soon
+                # preload="auto" normally surfaces the intercepted 404 as soon
                 # as the source is selected. If an engine defers the read, use
                 # the visible Start control as the required user gesture.
                 retry.wait_for(state="visible", timeout=min(3_000, timeout))
@@ -1889,10 +1955,11 @@ def recovery_run(
         if scenario == "error_retry":
             add_check(
                 run,
-                "error-retry.exact-media-503",
+                "error-retry.exact-media-404",
                 router.error_media_attempts == 1
-                and any(item["path"] == ERROR_MEDIA and item["status"] == 503 for item in raw["http_errors"]),
-                expected="one exact locally intercepted media 503 before retry",
+                and (any(item["path"] == ERROR_MEDIA and item["status"] == 404 for item in raw["http_errors"])
+                     or any(item["path"] == ERROR_MEDIA and item["failure"] == "Load request cancelled" for item in raw["request_failures"])),
+                expected="one exact locally intercepted media 404; WebKit can cancel failed media before its response callback",
                 actual={"attempts": router.error_media_attempts, "http_errors": raw["http_errors"]},
             )
         else:
@@ -1923,7 +1990,7 @@ def recovery_run(
                 run,
                 "error-retry.second-read-succeeds",
                 router.error_media_attempts == 2,
-                expected="exactly two media reads: fixture 503 then decodable WAV",
+                expected="exactly two media reads: fixture 404 then decodable WAV",
                 actual=router.error_media_attempts,
             )
         page.get_by_role("button", name="Pause", exact=True).click()
@@ -2241,6 +2308,7 @@ def main() -> int:
                             )
                         )
                 for behavior in (
+                    *(lambda scenario=scenario: reconciliation_run(browser, browser_name, base, args.output, args.timeout, scenario) for scenario in ("empty_library", "malformed_storage", "storage_denied", "removed_clip", "changed_audio")),
                     lambda: playback_and_persistence_run(browser, browser_name, base, args.output, args.timeout),
                     lambda: pending_source_switch_run(browser, browser_name, base, args.output, args.timeout),
                     lambda: recovery_run(

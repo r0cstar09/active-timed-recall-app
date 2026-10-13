@@ -54,3 +54,10 @@ jobs:
           path: /tmp/shadow-results
           retention-days: 7
           if-no-files-found: warn
+      - name: Retain exercised production build (not a deployment)
+        uses: actions/upload-artifact@v6
+        if: ${{ matrix.browser == 'chromium' && !inputs.live }}
+        with:
+          name: shadowing-production-build
+          path: dist
+          retention-days: 7
