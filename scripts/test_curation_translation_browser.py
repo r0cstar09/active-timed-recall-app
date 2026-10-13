@@ -78,8 +78,8 @@ def fulfill_json(route: Any, payload: Any, status: int = 200) -> None:
     )
 
 
-def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> None:
-    state = {"retry": False, "polls_after_retry": 0, "selection_calls": 0}
+def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> dict[str, Any]:
+    state = {"retry": False, "polls_after_retry": 0, "selection_calls": 0, "hold_selection": False, "pending": []}
     base_origin = f"{urlparse(base).scheme}://{urlparse(base).netloc}"
 
     def handle(route: Any) -> None:
@@ -119,7 +119,10 @@ def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> None:
                     "Me quedé en blanco cuando me hizo la pregunta. Después respiré y pude responder.": "I blanked, then took a breath and answered.",
                     "muy nervioso. Me quedé en blanco": "very nervous. My mind went blank",
                 }[text]
-                fulfill_json(route, {"english": value})
+                if state["hold_selection"]:
+                    state["pending"].append((route, value))
+                else:
+                    fulfill_json(route, {"english": value})
                 return
             if request.method == "POST" and parsed.path == "/api/curation/imports/91/drafts":
                 assert isinstance(body, dict), body
@@ -157,6 +160,7 @@ def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> None:
         route.abort()
 
     page.route("**/*", handle)
+    return state
 
 
 def assert_layout(page: Page) -> dict[str, Any]:
@@ -193,7 +197,7 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     page = context.new_page()
     page.on("console", lambda message: evidence["console"].append({"type": message.type, "text": message.text}) if message.type == "error" else None)
     page.on("pageerror", lambda error: evidence["page_errors"].append(str(error)))
-    attach_fixtures(page, base, evidence)
+    state = attach_fixtures(page, base, evidence)
     page.goto(f"{base.rstrip('/')}/ingest/?import=91", wait_until="networkidle")
 
     page.get_by_text("During the interview, I was very nervous.", exact=True).wait_for()
@@ -208,6 +212,9 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     assert all(row["englishTop"] > row["spanishTop"] for row in layout["bilingualRows"]), layout
     assert layout["retryRect"] and layout["retryRect"]["height"] >= 40, layout
 
+    save = page.get_by_role("button", name="Save selection as draft", exact=True)
+    expect(save).to_be_disabled()
+    state["hold_selection"] = True
     selected_line = page.get_by_label("Select transcript line 2", exact=True)
     with page.expect_request(
         lambda request: request.method == "POST" and request.url.endswith("/translations/selection"),
@@ -216,8 +223,19 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         selected_line.focus()
         selected_line.press("Space")
     expect(selected_line).to_be_checked()
-    english = page.get_by_label("English meaning", exact=True)
+    english = page.get_by_label("Selected English meaning", exact=True)
     english.wait_for()
+    expect(save).to_be_disabled()
+    expect(english).to_have_attribute("placeholder", "Translating the exact selection…")
+    assert state["pending"], "translation request must be intercepted, never reach the server"
+    # Edit while an automatic response is genuinely in flight.
+    english.fill("My in-flight meaning")
+    expect(save).to_be_disabled()
+    pending_route, value = state["pending"].pop()
+    fulfill_json(pending_route, {"english": value})
+    state["hold_selection"] = False
+    expect(english).to_have_value("My in-flight meaning")
+    expect(save).to_be_enabled()
     expect(english).to_have_attribute("placeholder", "English remains editable", timeout=10_000)
     assert english.input_value().strip(), "single-line English translation was empty"
     first_request = first_request_info.value
@@ -286,6 +304,11 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         last_translation = [item for item in evidence["api_requests"] if item["path"].endswith("/translations/selection")][-1]
         assert last_translation["body"]["source_text"] == selection["spanish"]
         assert "English" not in last_translation["body"]["source_text"]
+    expect(save).to_be_enabled()
+    english.fill(" ")
+    expect(save).to_be_disabled()
+    english.fill("very nervous. My mind went blank")
+    expect(save).to_be_enabled()
     assert not evidence["page_errors"], evidence
     assert not evidence["console"], evidence
 

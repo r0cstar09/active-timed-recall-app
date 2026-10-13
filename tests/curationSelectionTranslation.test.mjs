@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   selectionEnglishAfterSourceChange,
   shouldApplySelectionTranslation,
+  selectionTranslationCanSave,
 } from "../src/lib/selectionTranslation.ts";
 
 test("automatic selection translation accepts only the latest matching Spanish request", () => {
@@ -37,6 +38,23 @@ test("automatic translation never overwrites an English meaning edited by the le
     shouldApplySelectionTranslation({ ...base, currentEnglish: "Tell it to me." }),
     true,
   );
+});
+
+test("saving requires current exact translation or explicit English after failure", () => {
+  const base = { spanish: "Dímelo.", english: "Tell me.", translationSource: "Dímelo.", status: "ready", learnerEdited: false };
+  assert.equal(selectionTranslationCanSave(base), true);
+  for (const status of ["idle", "loading", "failed"]) {
+    assert.equal(selectionTranslationCanSave({ ...base, status }), false);
+  }
+  assert.equal(selectionTranslationCanSave({ ...base, spanish: "Ya te lo dije." }), false);
+  assert.equal(selectionTranslationCanSave({ ...base, english: " " }), false);
+  assert.equal(selectionTranslationCanSave({ ...base, status: "loading", learnerEdited: true }), false);
+  assert.equal(selectionTranslationCanSave({ ...base, status: "failed", learnerEdited: true }), true);
+});
+
+test("explicit learner ownership survives equality with the previous automatic value", () => {
+  assert.equal(shouldApplySelectionTranslation({ requestId: 1, latestRequestId: 1, requestedSpanish: "Hola", currentSpanish: "Hola", currentEnglish: "Hello", lastAutomaticEnglish: "Hello", learnerEdited: true }), false);
+  assert.equal(selectionEnglishAfterSourceChange("Hello", "Hello", "Hello there", true).english, "Hello");
 });
 
 test("expanding or replacing the Spanish span preserves learner-authored English", () => {

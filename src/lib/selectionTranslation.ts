@@ -5,14 +5,13 @@ export interface SelectionTranslationGuard {
   currentSpanish: string;
   currentEnglish: string;
   lastAutomaticEnglish: string;
+  learnerEdited?: boolean;
 }
 
-/**
- * A delayed automatic translation may update only the same Spanish selection,
- * and only while the learner has not replaced the last automatic English.
- */
+/** A response owns only its current source and never learner-authored English. */
 export function shouldApplySelectionTranslation(guard: SelectionTranslationGuard): boolean {
-  return guard.requestId === guard.latestRequestId
+  return !guard.learnerEdited
+    && guard.requestId === guard.latestRequestId
     && guard.requestedSpanish === guard.currentSpanish.trim()
     && guard.currentEnglish === guard.lastAutomaticEnglish;
 }
@@ -28,9 +27,23 @@ export function selectionEnglishAfterSourceChange(
   currentEnglish: string,
   lastAutomaticEnglish: string,
   cachedEnglish: string,
+  learnerOwned = false,
 ): SelectionEnglishSourceChange {
-  const learnerEdited = currentEnglish !== lastAutomaticEnglish;
+  const learnerEdited = learnerOwned || currentEnglish !== lastAutomaticEnglish;
   return learnerEdited
     ? { english: currentEnglish, lastAutomaticEnglish, learnerEdited }
     : { english: cachedEnglish, lastAutomaticEnglish: cachedEnglish, learnerEdited };
+}
+
+/** Cached line meanings cannot satisfy a new/partial selection's save gate. */
+export function selectionTranslationCanSave(value: {
+  spanish: string;
+  english: string;
+  translationSource: string;
+  status: "idle" | "loading" | "ready" | "failed";
+  learnerEdited: boolean;
+}): boolean {
+  return !!value.spanish.trim() && !!value.english.trim()
+    && value.translationSource === value.spanish.trim()
+    && (value.status === "ready" || (value.status === "failed" && value.learnerEdited));
 }
