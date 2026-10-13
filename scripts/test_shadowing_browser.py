@@ -1340,7 +1340,7 @@ def add_filter_and_text_checks(page: Page, run: dict[str, Any], router: FixtureR
 
 def save_screenshot(page: Page, output: Path, run: dict[str, Any], suffix: str = "") -> None:
     filename = f"{run['browser']}--{run['scenario']}--{run['device']}--{run['theme']}{suffix}.png"
-    page.screenshot(path=str(output / filename), full_page=True, animations="disabled")
+    page.screenshot(path=str(output / filename), full_page=not suffix.endswith("--controls"), animations="disabled")
     run.setdefault("screenshots", []).append(filename)
 
 
