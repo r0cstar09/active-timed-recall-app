@@ -1,6 +1,6 @@
-import type { IngestJob, RemoveIngestCardsResponse } from "./types";
+import type { IngestJob, RemoveIngestCardsResponse, RemoveIngestJobResponse } from "./types";
 
-export const INGEST_TERMINAL_STATUSES = new Set(["complete", "partial", "failed"]);
+export const INGEST_TERMINAL_STATUSES = new Set(["complete", "done", "partial", "failed"]);
 
 export function isTerminalIngest(job: IngestJob | null | undefined): boolean {
   return Boolean(job && INGEST_TERMINAL_STATUSES.has(job.status));
@@ -97,6 +97,93 @@ export function createIngestDeleteGate(): IngestDeleteGate {
 
 export function canChangeIngestSelection(gate: IngestDeleteGate): boolean {
   return !gate.isLocked();
+}
+
+export type IngestHistoryRemovalExecution =
+  | { status: "success"; result: RemoveIngestJobResponse }
+  | { status: "refused"; message: string; result: RemoveIngestJobResponse }
+  | { status: "error"; error: unknown }
+  | { status: "blocked"; reason: "busy" | "unavailable" };
+
+export async function executeIngestHistoryRemoval(
+  job: IngestJob,
+  removeJob: (jobId: number) => Promise<RemoveIngestJobResponse>,
+  gate: IngestDeleteGate,
+  onStart?: () => void,
+): Promise<IngestHistoryRemovalExecution> {
+  if (!isTerminalIngest(job)) return { status: "blocked", reason: "unavailable" };
+  if (!gate.tryAcquire(job.job_id)) return { status: "blocked", reason: "busy" };
+  onStart?.();
+  try {
+    const result = await removeJob(job.job_id);
+    if (result.job_id !== job.job_id || result.removed !== true || result.history_preserved !== true) {
+      return {
+        status: "refused",
+        message: "The backend did not confirm that the job was removed while cards and review history were preserved. Refresh history before trying again.",
+        result,
+      };
+    }
+    return { status: "success", result };
+  } catch (error) {
+    return { status: "error", error };
+  } finally {
+    gate.release(job.job_id);
+  }
+}
+
+export interface IngestHistoryRemovalUiState {
+  confirmJobId: number | null;
+  removingJobId: number | null;
+  message: string | null;
+  error: string | null;
+}
+
+export const INITIAL_INGEST_HISTORY_REMOVAL_UI: IngestHistoryRemovalUiState = {
+  confirmJobId: null,
+  removingJobId: null,
+  message: null,
+  error: null,
+};
+
+export type IngestHistoryRemovalUiAction =
+  | { type: "confirm"; job: IngestJob }
+  | { type: "cancel" }
+  | { type: "started"; jobId: number }
+  | { type: "succeeded"; jobId: number }
+  | { type: "failed"; jobId: number; error: string }
+  | { type: "selectionChanged" }
+  | { type: "reset" };
+
+export function ingestHistoryRemovalUiReducer(
+  state: IngestHistoryRemovalUiState,
+  action: IngestHistoryRemovalUiAction,
+): IngestHistoryRemovalUiState {
+  switch (action.type) {
+    case "confirm":
+      if (state.removingJobId !== null || !isTerminalIngest(action.job)) return state;
+      return { confirmJobId: action.job.job_id, removingJobId: null, message: null, error: null };
+    case "cancel":
+      if (state.removingJobId !== null) return state;
+      return { ...INITIAL_INGEST_HISTORY_REMOVAL_UI };
+    case "started":
+      if (state.removingJobId !== null || state.confirmJobId !== action.jobId) return state;
+      return { ...state, removingJobId: action.jobId, message: null, error: null };
+    case "succeeded":
+      if (state.removingJobId !== action.jobId) return state;
+      return {
+        confirmJobId: null,
+        removingJobId: null,
+        message: `Removed job #${action.jobId} from ingestion history. Existing cards and review history were preserved.`,
+        error: null,
+      };
+    case "failed":
+      if (state.removingJobId !== action.jobId) return state;
+      return { ...state, removingJobId: null, message: null, error: action.error };
+    case "selectionChanged":
+    case "reset":
+      if (state.removingJobId !== null) return state;
+      return { ...INITIAL_INGEST_HISTORY_REMOVAL_UI };
+  }
 }
 
 export function reopenRecentTerminalJob(

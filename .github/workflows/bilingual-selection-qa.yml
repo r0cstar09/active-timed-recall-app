@@ -30,7 +30,7 @@ jobs:
           python3 -m venv /tmp/bilingual-qa
           /tmp/bilingual-qa/bin/pip install --quiet playwright==1.63.0
           /tmp/bilingual-qa/bin/playwright install --with-deps ${{ matrix.browser }}
-      - name: English during selection on desktop and iPhone viewport
+      - name: Bilingual selection and safe history removal on desktop and iPhone viewport
         env:
           QA_BASE: ${{ inputs.base }}
         run: |

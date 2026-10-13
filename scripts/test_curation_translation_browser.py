@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
@@ -71,7 +72,7 @@ def fulfill_json(route: Any, payload: Any, status: int = 200) -> None:
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "content-type,accept",
-            "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+            "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
             "Cache-Control": "no-store",
         },
         body=json.dumps(payload),
@@ -79,7 +80,19 @@ def fulfill_json(route: Any, payload: Any, status: int = 200) -> None:
 
 
 def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> dict[str, Any]:
-    state = {"retry": False, "polls_after_retry": 0, "selection_calls": 0, "hold_selection": False, "pending": []}
+    state = {
+        "retry": False,
+        "polls_after_retry": 0,
+        "selection_calls": 0,
+        "hold_selection": False,
+        "pending": [],
+        "import_deleted": False,
+        "import_delete_attempts": 0,
+        "pending_import_delete": None,
+        "job_removed": False,
+        "job_remove_attempts": 0,
+        "pending_job_remove": None,
+    }
     base_origin = f"{urlparse(base).scheme}://{urlparse(base).netloc}"
 
     def handle(route: Any) -> None:
@@ -92,18 +105,61 @@ def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> dict[str
             body = json.loads(request.post_data) if request.post_data else None
             evidence["api_requests"].append({"method": request.method, "path": parsed.path, "body": body})
             if request.method == "GET" and parsed.path == "/api/curation/imports":
-                fulfill_json(route, {"imports": [import_fixture()], "total": 1})
+                imports = [] if state["import_deleted"] else [import_fixture()]
+                fulfill_json(route, {"imports": imports, "total": len(imports)})
                 return
             if request.method == "GET" and parsed.path == "/api/ingest/recent":
-                fulfill_json(route, {"jobs": []})
+                jobs = [
+                    {
+                        "job_id": 502, "status": "complete", "phrase_count": 2,
+                        "active_phrase_count": 2, "ownership_unknown": False,
+                        "ownership_message": None, "ownership_mode": "exact", "phrases": [],
+                    },
+                ]
+                if not state["job_removed"]:
+                    jobs.append({
+                        "job_id": 501, "status": "failed", "phrase_count": 0,
+                        "active_phrase_count": 0, "ownership_unknown": False,
+                        "ownership_message": None, "ownership_mode": "exact", "phrases": [],
+                        "error_message": "Fixture ingest failed.",
+                    })
+                fulfill_json(route, {"jobs": jobs})
                 return
             if request.method == "GET" and parsed.path == "/api/curation/imports/91":
+                if state["import_deleted"]:
+                    fulfill_json(route, {"detail": "Import not found"}, 404)
+                    return
                 if state["retry"]:
                     state["polls_after_retry"] += 1
                     ready = state["polls_after_retry"] >= 1
                     fulfill_json(route, import_fixture(status="ready" if ready else "translating", completed=3 if ready else 2))
                 else:
                     fulfill_json(route, import_fixture())
+                return
+            if request.method == "DELETE" and parsed.path == "/api/curation/imports/91":
+                state["import_delete_attempts"] += 1
+                if state["import_delete_attempts"] == 1:
+                    fulfill_json(route, {"detail": "Fixture discard failure; retry is safe."}, 503)
+                else:
+                    state["pending_import_delete"] = route
+                return
+            if request.method == "GET" and parsed.path == "/api/ingest/501":
+                if state["job_removed"]:
+                    fulfill_json(route, {"detail": "Job not found"}, 404)
+                else:
+                    fulfill_json(route, {
+                        "job_id": 501, "status": "failed", "phrase_count": 0,
+                        "active_phrase_count": 0, "ownership_unknown": False,
+                        "ownership_message": None, "ownership_mode": "exact", "phrases": [],
+                        "error_message": "Fixture ingest failed.",
+                    })
+                return
+            if request.method == "DELETE" and parsed.path == "/api/ingest/501":
+                state["job_remove_attempts"] += 1
+                if state["job_remove_attempts"] == 1:
+                    fulfill_json(route, {"detail": "Fixture history removal failure; retry is safe."}, 503)
+                else:
+                    state["pending_job_remove"] = route
                 return
             if request.method == "POST" and parsed.path == "/api/curation/imports/91/translations/retry":
                 state["retry"] = True
@@ -189,6 +245,102 @@ def assert_layout(page: Page) -> dict[str, Any]:
           })(),
         })"""
     )
+
+
+def run_removal_flows(page: Page, state: dict[str, Any], evidence: dict[str, Any]) -> dict[str, Any]:
+    def request_count(method: str, path: str) -> int:
+        return sum(1 for item in evidence["api_requests"] if item["method"] == method and item["path"] == path)
+
+    discard = page.get_by_role("button", name="Discard transcript", exact=True)
+    discard.click()
+    discard_group = page.get_by_role("group", name="Confirm discard transcript")
+    expect(discard_group).to_be_visible()
+    discard_group.get_by_role("button", name="Cancel", exact=True).click()
+    expect(discard_group).to_have_count(0)
+    assert request_count("DELETE", "/api/curation/imports/91") == 0
+
+    discard.click()
+    discard_group = page.get_by_role("group", name="Confirm discard transcript")
+    discard_group.get_by_role("button", name="Yes, discard transcript", exact=True).click()
+    page.get_by_text("Fixture discard failure; retry is safe.", exact=True).wait_for()
+    expect(page.get_by_text("Fixture interview", exact=True)).to_be_visible()
+    assert page.evaluate("localStorage.getItem('spanish.curation.lastImport')") == "91"
+    assert "import=91" in page.url
+    assert request_count("DELETE", "/api/curation/imports/91") == 1
+
+    # Two same-tick DOM clicks exercise the synchronous lock before React can
+    # disable the button. Exactly one retry request may reach the fixture.
+    page.evaluate("""() => {
+      const button = [...document.querySelectorAll('button')]
+        .find((node) => node.textContent?.trim() === 'Yes, discard transcript');
+      if (!button) throw new Error('discard confirmation button missing');
+      button.click(); button.click();
+    }""")
+    expect(discard_group.get_by_role("button", name="Discarding…", exact=True)).to_be_disabled()
+    assert request_count("DELETE", "/api/curation/imports/91") == 2
+    assert state["pending_import_delete"] is not None
+    state["import_deleted"] = True
+    fulfill_json(state["pending_import_delete"], {"import_id": 91, "removed": True, "history_preserved": True})
+    state["pending_import_delete"] = None
+    page.get_by_text("Transcript discarded. Existing cards and review history were preserved.", exact=True).wait_for()
+    expect(page.get_by_text("Fixture interview", exact=True)).to_have_count(0)
+    assert page.evaluate("localStorage.getItem('spanish.curation.lastImport')") is None
+    assert "import=" not in page.url
+
+    page.reload(wait_until="networkidle")
+    expect(page.get_by_text("Fixture interview", exact=True)).to_have_count(0)
+    assert page.evaluate("localStorage.getItem('spanish.curation.lastImport')") is None
+
+    open_failed = page.get_by_role("button", name=re.compile(r"^Job #501 · failed"))
+    open_failed.click()
+    page.get_by_text("Ingestion job #501", exact=True).wait_for()
+    remove_job = page.get_by_role("button", name="Remove job from history", exact=True)
+    remove_job.click()
+    remove_group = page.get_by_role("group", name="Confirm remove job 501 from history")
+    expect(remove_group).to_be_visible()
+    remove_group.get_by_role("button", name="Cancel", exact=True).click()
+    expect(remove_group).to_have_count(0)
+    assert request_count("DELETE", "/api/ingest/501") == 0
+
+    remove_job.click()
+    remove_group = page.get_by_role("group", name="Confirm remove job 501 from history")
+    remove_group.get_by_role("button", name="Yes, remove job from history", exact=True).click()
+    page.get_by_text("Fixture history removal failure; retry is safe.", exact=True).wait_for()
+    expect(page.get_by_text("Ingestion job #501", exact=True)).to_be_visible()
+    assert page.evaluate("JSON.parse(localStorage.getItem('atr.ingest.active')).jobId") == 501
+    assert request_count("DELETE", "/api/ingest/501") == 1
+
+    page.evaluate("""() => {
+      const button = [...document.querySelectorAll('button')]
+        .find((node) => node.textContent?.trim() === 'Yes, remove job from history');
+      if (!button) throw new Error('job removal confirmation button missing');
+      button.click(); button.click();
+    }""")
+    expect(remove_group.get_by_role("button", name="Removing…", exact=True)).to_be_disabled()
+    assert request_count("DELETE", "/api/ingest/501") == 2
+    assert state["pending_job_remove"] is not None
+    state["job_removed"] = True
+    fulfill_json(state["pending_job_remove"], {"job_id": 501, "removed": True, "history_preserved": True})
+    state["pending_job_remove"] = None
+    page.get_by_text("Removed job #501 from ingestion history. Existing cards and review history were preserved.", exact=True).wait_for()
+    expect(page.get_by_text("Ingestion job #501", exact=True)).to_have_count(0)
+    expect(page.get_by_role("button", name=re.compile(r"^Job #501"))).to_have_count(0)
+    assert page.evaluate("localStorage.getItem('atr.ingest.active')") is None
+
+    page.reload(wait_until="networkidle")
+    expect(page.get_by_role("button", name=re.compile(r"^Job #501"))).to_have_count(0)
+    assert page.evaluate("localStorage.getItem('atr.ingest.active')") is None
+    card_deletes = [
+        item for item in evidence["api_requests"]
+        if item["method"] == "DELETE" and item["path"].endswith("/cards")
+    ]
+    assert not card_deletes, card_deletes
+    return {
+        "import_delete_requests": request_count("DELETE", "/api/curation/imports/91"),
+        "job_delete_requests": request_count("DELETE", "/api/ingest/501"),
+        "card_delete_requests": len(card_deletes),
+        "refresh_persistence": True,
+    }
 
 
 def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, Any]:
@@ -309,13 +461,17 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     expect(save).to_be_disabled()
     english.fill("very nervous. My mind went blank")
     expect(save).to_be_enabled()
+    screenshot = output / f"bilingual-{name}.png"
+    page.screenshot(path=str(screenshot), full_page=True)
+    evidence["removal_flows"] = run_removal_flows(page, state, evidence)
+    removal_screenshot = output / f"history-removal-{name}.png"
+    page.screenshot(path=str(removal_screenshot), full_page=True)
     assert not evidence["page_errors"], evidence
     assert not evidence["console"], evidence
 
-    screenshot = output / f"bilingual-{name}.png"
-    page.screenshot(path=str(screenshot), full_page=True)
     evidence["layout"] = layout
     evidence["screenshot"] = str(screenshot)
+    evidence["removal_screenshot"] = str(removal_screenshot)
     context.close()
     return evidence
 

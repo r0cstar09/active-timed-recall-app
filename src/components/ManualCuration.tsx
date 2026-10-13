@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { curationApi } from "../lib/curationApi";
+import { curationApi, CurationApiError } from "../lib/curationApi";
 import { createActionGate, newerDraft, importNeedsPolling } from "../lib/curationState";
 import { selectionEnglishAfterSourceChange, shouldApplySelectionTranslation, selectionTranslationCanSave } from "../lib/selectionTranslation";
 import type { CurationDraft, CurationImport, DraftPatch, TranscriptSegment } from "../lib/curationTypes";
@@ -31,9 +31,11 @@ export default function ManualCuration() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pollError, setPollError] = useState<string | null>(null);
+  const [discardConfirmId, setDiscardConfirmId] = useState<number | null>(null);
   const activeId = useRef<number | null>(null);
   const epoch = useRef(0);
   const gate = useRef(createActionGate());
+  const discardedImportIds = useRef(new Set<number>());
   const [, setDirtyVersion] = useState(0);
   const sourceAudio = useRef<HTMLAudioElement>(null);
   const sourceEnd = useRef<number | null>(null);
@@ -47,6 +49,7 @@ export default function ManualCuration() {
   const needsPolling = importNeedsPolling(current);
 
   function remember(value: CurationImport) {
+    if (discardedImportIds.current.has(value.id)) return;
     activeId.current = value.id;
     setCurrent(value);
     try { localStorage.setItem(LAST_IMPORT, String(value.id)); } catch { /* private browser */ }
@@ -59,18 +62,31 @@ export default function ManualCuration() {
     const version = epoch.current;
     const page = await curationApi.listImports(50, offset);
     if (version !== epoch.current) return;
-    setImports((old) => offset === 0 ? page.imports : [...old, ...page.imports.filter((x) => !old.some((y) => x.id === y.id))]);
+    const visible = page.imports.filter((item) => !discardedImportIds.current.has(item.id));
+    setImports((old) => offset === 0 ? visible : [...old, ...visible.filter((x) => !old.some((y) => x.id === y.id))]);
     setTotal(page.total);
   }
 
   async function refresh(id = activeId.current) {
     if (!id) return;
     const version = epoch.current;
-    const value = await curationApi.getImport(id);
-    if (activeId.current === id && version === epoch.current) {
-      setCurrent(value);
-      setImports((old) => old.map((item) => item.id === id ? value : item));
-      setPollError(null);
+    try {
+      const value = await curationApi.getImport(id);
+      if (activeId.current === id && version === epoch.current && !discardedImportIds.current.has(id)) {
+        setCurrent(value);
+        setImports((old) => old.map((item) => item.id === id ? value : item));
+        setPollError(null);
+      }
+    } catch (err) {
+      if (err instanceof CurationApiError && err.status === 404 && version === epoch.current) {
+        epoch.current++;
+        removeImportLocally(id);
+        setDiscardConfirmId(null);
+        setError(null);
+        setNotice("That saved transcript is no longer in import history.");
+        return;
+      }
+      throw err;
     }
   }
 
@@ -94,7 +110,15 @@ export default function ManualCuration() {
     if (id) {
       activeId.current = id;
       curationApi.getImport(id).then((value) => { if (!cancelled && version === epoch.current && activeId.current === id) remember(value); })
-        .catch((err) => { if (!cancelled && version === epoch.current) setError(message(err)); });
+        .catch((err) => {
+          if (cancelled || version !== epoch.current) return;
+          if (err instanceof CurationApiError && err.status === 404) {
+            epoch.current++;
+            removeImportLocally(id);
+            setNotice("That saved transcript is no longer in import history.");
+            history().catch((historyError) => setError(message(historyError)));
+          } else setError(message(err));
+        });
     }
     return () => { cancelled = true; };
   }, []);
@@ -144,6 +168,55 @@ export default function ManualCuration() {
     setSelected([]); setSpanish(""); setSelectionEnglish("");
     setTranslationSource(""); setSelectionTranslationStatus("idle");
     setSelectionTranslationError(null); setSelectionTranslationNotice(null);
+  }
+
+  function clearImportPointer(importId: number) {
+    try {
+      if (localStorage.getItem(LAST_IMPORT) === String(importId)) localStorage.removeItem(LAST_IMPORT);
+    } catch { /* optional browser cache */ }
+    const next = new URL(window.location.href);
+    if (next.searchParams.get("import") === String(importId)) {
+      next.searchParams.delete("import");
+      next.searchParams.delete("draft");
+      window.history.replaceState(null, "", `${next.pathname}${next.search}${next.hash}`);
+    }
+  }
+
+  function removeImportLocally(importId: number) {
+    const newlyRemoved = !discardedImportIds.current.has(importId);
+    discardedImportIds.current.add(importId);
+    setImports((old) => old.filter((item) => item.id !== importId));
+    if (newlyRemoved) setTotal((old) => Math.max(0, old - 1));
+    clearImportPointer(importId);
+    if (activeId.current !== importId) return;
+    sourceAudio.current?.pause();
+    sourceEnd.current = null;
+    activeId.current = null;
+    setCurrent(null);
+    dirtyEditors.current.clear();
+    resetSelection();
+    setPollError(null);
+  }
+
+  async function discardImport(importId: number) {
+    if (discardConfirmId !== importId || !gate.current.tryAcquire("mutation")) return;
+    epoch.current++;
+    setBusy(`discard-${importId}`); setError(null); setNotice(null);
+    try {
+      const result = await curationApi.deleteImport(importId);
+      if (result.import_id !== importId || result.removed !== true || result.history_preserved !== true) {
+        throw new Error("The backend did not confirm that the transcript was discarded while cards and review history were preserved. Refresh saved data before trying again.");
+      }
+      removeImportLocally(importId);
+      setDiscardConfirmId(null);
+      setNotice("Transcript discarded. Existing cards and review history were preserved.");
+    } catch (err) {
+      setError(`discard: ${message(err)}`);
+    } finally {
+      epoch.current++;
+      gate.current.release("mutation");
+      setBusy(null);
+    }
   }
 
   useEffect(() => {
@@ -205,9 +278,19 @@ export default function ManualCuration() {
   function chooseSource(value: CurationImport) {
     if ((dirtyEditors.current.size || selected.length) && !window.confirm("Discard unsaved edits and selection? Saved drafts remain available.")) return;
     action("open", async () => {
-      const detailed = await curationApi.getImport(value.id);
-      dirtyEditors.current.clear(); resetSelection();
-      remember(detailed);
+      try {
+        const detailed = await curationApi.getImport(value.id);
+        dirtyEditors.current.clear(); resetSelection(); setDiscardConfirmId(null);
+        remember(detailed);
+      } catch (err) {
+        if (err instanceof CurationApiError && err.status === 404) {
+          removeImportLocally(value.id);
+          setDiscardConfirmId(null);
+          setNotice("That saved transcript is no longer in import history.");
+          return;
+        }
+        throw err;
+      }
     });
   }
 
@@ -304,16 +387,33 @@ export default function ManualCuration() {
       <summary>Saved imports ({total})</summary>
       <div className="stack" style={{ marginTop: 12 }}>
         {!imports.length && <p className="muted">No saved imports yet.</p>}
-        {imports.map((value) => <button className="btn" disabled={!!busy} key={value.id} onClick={() => chooseSource(value)} aria-current={value.id === current?.id ? "true" : undefined}>
-          {value.title || value.video_id} · {value.status}
-        </button>)}
+        {imports.map((value) => <div className="curation-history-row" key={value.id}>
+          <button className="btn" disabled={!!busy} onClick={() => chooseSource(value)} aria-current={value.id === current?.id ? "true" : undefined}>
+            {value.title || value.video_id} · {value.status}
+          </button>
+          <button className="btn btn-danger" type="button" disabled={!!busy} onClick={() => { setDiscardConfirmId(value.id); setError(null); setNotice(null); }}>Discard</button>
+        </div>)}
         {imports.length < total && <button className="btn" disabled={!!busy} onClick={() => action("history", () => history(imports.length))}>Load more imports</button>}
       </div>
     </details>
 
+    {discardConfirmId !== null && <div className="card remove-confirm stack" role="group" aria-label={`Confirm discard transcript ${discardConfirmId}`}>
+      <strong>Discard transcript #{discardConfirmId} from import history?</strong>
+      <p>This removes the imported transcript, its saved drafts, and pending import work. Cards already added to your library and their review history stay unchanged.</p>
+      {activeId.current === discardConfirmId && (dirtyEditors.current.size > 0 || selected.length > 0) && <p className="alert alert-warn">Unsaved draft edits or the current selection will also be cleared.</p>}
+      <div className="curation-actions">
+        <button className="btn btn-danger" type="button" disabled={!!busy} onClick={() => void discardImport(discardConfirmId)}>
+          {busy === `discard-${discardConfirmId}` ? "Discarding…" : "Yes, discard transcript"}
+        </button>
+        <button className="btn" type="button" disabled={!!busy} onClick={() => setDiscardConfirmId(null)}>Cancel</button>
+      </div>
+    </div>}
+
     {current && <>
       <div className="card stack">
-        <h2>{current.title || current.video_id}</h2>
+        <div className="curation-actions"><h2 style={{ marginRight: "auto" }}>{current.title || current.video_id}</h2>
+          <button className="btn btn-danger" type="button" disabled={!!busy} onClick={() => { setDiscardConfirmId(current.id); setError(null); setNotice(null); }}>Discard transcript</button>
+        </div>
         <a href={current.source_url} target="_blank" rel="noreferrer">Watch original source ↗</a>
         {current.status !== "ready" && <p role="status">{current.status === "failed" ? current.error_message || "Transcript import failed." : "Loading the complete transcript… You can leave and reopen this import."}</p>}
         {current.status === "failed" && <button className="btn" disabled={!!busy} onClick={() => action("retry", async () => remember(await curationApi.createImport(current.source_url)))}>Retry import</button>}
@@ -400,10 +500,13 @@ export default function ManualCuration() {
       .curation-line-english.loading {opacity:.65;font-style:italic;}
       .curation-actions {display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
       .curation-actions .btn {min-height:44px;white-space:normal;}
+      .curation-history-row {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;}
+      .curation-history-row .btn:first-child {min-width:0;overflow-wrap:anywhere;}
       .curation-draft {border:1px solid var(--border,#d8d8d8);border-radius:12px;padding:16px;scroll-margin-top:80px;}
       .curation-times {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
       .curation-times input {width:100%;min-width:0;}
       .curation-draft textarea {width:100%;box-sizing:border-box;}
+      @media (max-width:520px) {.curation-history-row {grid-template-columns:1fr;}.curation-history-row .btn {width:100%;}}
     `}</style>
   </section>;
 }

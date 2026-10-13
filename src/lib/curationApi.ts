@@ -130,6 +130,13 @@ export const curationApi = {
     ));
   },
 
+  deleteImport(importId: number | string): Promise<{ import_id: number; removed: boolean; history_preserved: boolean }> {
+    return request<{ import_id: number; removed: boolean; history_preserved: boolean }>(
+      `/api/curation/imports/${encodeURIComponent(String(importId))}`,
+      { method: "DELETE" },
+    );
+  },
+
   async retryImportTranslation(importId: number | string): Promise<CurationImport> {
     return hydrateImport(await request<CurationImport>(
       `/api/curation/imports/${encodeURIComponent(String(importId))}/translations/retry`,

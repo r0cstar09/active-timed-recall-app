@@ -52,6 +52,7 @@ import type {
   SessionMode,
   IngestJob,
   RemoveIngestCardsResponse,
+  RemoveIngestJobResponse,
   Source,
   Phrase,
   PracticeTopicCardsResponse,
@@ -972,6 +973,12 @@ export const api = {
   removeIngestCards(jobId: number | string): Promise<RemoveIngestCardsResponse> {
     return request<RemoveIngestCardsResponse>(
       `/api/ingest/${encodeURIComponent(String(jobId))}/cards`,
+      { method: "DELETE" },
+    );
+  },
+  removeIngestJob(jobId: number | string): Promise<RemoveIngestJobResponse> {
+    return request<RemoveIngestJobResponse>(
+      `/api/ingest/${encodeURIComponent(String(jobId))}`,
       { method: "DELETE" },
     );
   },

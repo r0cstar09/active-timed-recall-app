@@ -125,6 +125,7 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
     let body = { ok: true };
     if (path.endsWith("/api/curation/imports")) body = curationImport();
     else if (path.includes("/api/curation/imports?") ) body = { imports: [curationImport()], total: 1 };
+    else if (options.method === "DELETE" && /\/api\/curation\/imports\/2$/.test(path)) body = { import_id: 2, removed: true, history_preserved: true };
     else if (/\/api\/curation\/imports\/2$/.test(path)) body = curationImport();
     else if (path.endsWith("/translations/retry")) body = curationImport({ translation_status: "queued" });
     else if (path.endsWith("/translations/selection")) body = { english: "Good morning" };
@@ -141,6 +142,7 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
     await curationApi.createImport("https://youtu.be/abcdefghijk");
     await curationApi.listImports(50, 0);
     const loaded = await curationApi.getImport(2);
+    const discarded = await curationApi.deleteImport(2);
     await curationApi.retryImportTranslation(2);
     const translated = await curationApi.translateSelection(2, {
       source_text: "Buenos días",
@@ -157,12 +159,14 @@ test("curation API uses the exact shared HTTP contract and hydrates relative aud
     await curationApi.reactivateCard(44);
 
     assert.equal(loaded.source_audio_url, "/api/audio/source/original.m4a");
+    assert.deepEqual(discarded, { import_id: 2, removed: true, history_preserved: true });
     assert.equal(translated.english, "Good morning");
     const summary = calls.map(({ url, options }) => `${options.method ?? "GET"} ${new URL(url, "https://local.test").pathname}${new URL(url, "https://local.test").search}`);
     assert.deepEqual(summary, [
       "POST /api/curation/imports",
       "GET /api/curation/imports?limit=50&offset=0",
       "GET /api/curation/imports/2",
+      "DELETE /api/curation/imports/2",
       "POST /api/curation/imports/2/translations/retry",
       "POST /api/curation/imports/2/translations/selection",
       "POST /api/curation/imports/2/drafts",
@@ -193,6 +197,10 @@ test("ingest UI makes manual curation primary while retaining legacy history and
   assert.match(source, /Add approved/);
   assert.match(source, /api\.getRecentIngests/);
   assert.match(source, /executeIngestCardDeletion/);
+  assert.match(source, /curationApi\.deleteImport/);
+  assert.match(source, /Discard transcript/);
+  assert.match(source, /api\.removeIngestJob/);
+  assert.match(source, /Remove job from history/);
   assert.match(source, /api\.addVerb/);
   assert.match(source, /Legacy auto-ingest history/);
   assert.match(source, /\?import=/);
