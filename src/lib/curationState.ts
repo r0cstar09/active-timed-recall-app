@@ -163,6 +163,25 @@ export function importNeedsPolling(item: CurationImport | null | undefined): boo
   ));
 }
 
+export function hasUnsavedCurationWork(
+  dirtyDraftIds: ReadonlySet<number>,
+  openSplitDraftIds: ReadonlySet<number>,
+  selectedLineCount: number,
+): boolean {
+  return dirtyDraftIds.size > 0 || openSplitDraftIds.size > 0 || selectedLineCount > 0;
+}
+
+export function promotableApprovedDrafts(
+  drafts: CurationDraft[],
+  dirtyDraftIds: ReadonlySet<number>,
+  openSplitDraftIds: ReadonlySet<number>,
+): CurationDraft[] {
+  return drafts.filter((draft) => draft.approved
+    && draft.status !== "added"
+    && !dirtyDraftIds.has(draft.id)
+    && !openSplitDraftIds.has(draft.id));
+}
+
 export function curationDeepLink(importId: number, draftId?: number | null): string {
   const params = new URLSearchParams({ import: String(importId) });
   if (draftId != null) params.set("draft", String(draftId));

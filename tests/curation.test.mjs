@@ -6,7 +6,9 @@ import {
   canonicalYouTubeVideoId,
   createActionGate,
   createDraftEditorState,
+  hasUnsavedCurationWork,
   mergeImportSnapshot,
+  promotableApprovedDrafts,
   reconcileDraftEditor,
   selectedSegmentText,
   toggleContiguousSegment,
@@ -105,6 +107,27 @@ test("synchronous action gate blocks same-tick duplicate requests", () => {
   assert.equal(gate.tryAcquire("prepare:8"), true);
   gate.release("prepare:7");
   assert.equal(gate.tryAcquire("prepare:7"), true);
+});
+
+test("an open split is unsaved work and synchronously removes only its original from promotion", () => {
+  const ordinaryDirty = new Set([8]);
+  const openSplits = new Set([7]);
+  const drafts = [
+    draft({ id: 7, approved: true, status: "ready" }),
+    draft({ id: 8, approved: true, status: "ready" }),
+    draft({ id: 9, approved: true, status: "ready" }),
+    draft({ id: 10, approved: true, status: "added" }),
+  ];
+
+  assert.equal(hasUnsavedCurationWork(ordinaryDirty, openSplits, 0), true);
+  assert.deepEqual(promotableApprovedDrafts(drafts, ordinaryDirty, openSplits).map((item) => item.id), [9]);
+
+  openSplits.delete(7);
+  assert.equal(hasUnsavedCurationWork(ordinaryDirty, openSplits, 0), true, "cancelling split must not clear ordinary edits");
+  assert.deepEqual(promotableApprovedDrafts(drafts, ordinaryDirty, openSplits).map((item) => item.id), [7, 9]);
+
+  ordinaryDirty.clear();
+  assert.equal(hasUnsavedCurationWork(ordinaryDirty, openSplits, 0), false);
 });
 
 test("curation API uses the exact shared HTTP contract and hydrates relative audio", async () => {

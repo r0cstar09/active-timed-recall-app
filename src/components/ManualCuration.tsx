@@ -3,7 +3,13 @@ import AudioPlayhead from "./AudioPlayhead";
 import SplitClipEditor from "./SplitClipEditor";
 import { curationApi, CurationApiError } from "../lib/curationApi";
 import { splitDraftEligibility } from "../lib/clipEditing";
-import { createActionGate, newerDraft, importNeedsPolling } from "../lib/curationState";
+import {
+  createActionGate,
+  hasUnsavedCurationWork,
+  importNeedsPolling,
+  newerDraft,
+  promotableApprovedDrafts,
+} from "../lib/curationState";
 import { selectionEnglishAfterSourceChange, shouldApplySelectionTranslation, selectionTranslationCanSave } from "../lib/selectionTranslation";
 import type { CurationDraft, CurationImport, DraftPatch, TranscriptSegment } from "../lib/curationTypes";
 
@@ -42,6 +48,9 @@ export default function ManualCuration() {
   const [, setDirtyVersion] = useState(0);
   const sourceAudio = useRef<HTMLAudioElement>(null);
   const sourceEnd = useRef<number | null>(null);
+  const sourceDeadline = useRef<number | null>(null);
+  const sourceFrame = useRef<number | null>(null);
+  const sourceCommandedSeek = useRef<number | null>(null);
   const errorAlert = useRef<HTMLDivElement>(null);
   const selectionTranslationRequest = useRef(0);
   const spanishRef = useRef("");
@@ -49,7 +58,65 @@ export default function ManualCuration() {
   const lastAutomaticEnglish = useRef("");
   const learnerOwnsEnglish = useRef(false);
   const dirtyEditors = useRef(new Set<number>());
+  const openSplitEditors = useRef(new Set<number>());
   const needsPolling = importNeedsPolling(current);
+
+  function hasUnsavedWork() {
+    return hasUnsavedCurationWork(dirtyEditors.current, openSplitEditors.current, selected.length);
+  }
+
+  function setDraftWork(set: { current: Set<number> }, draftId: number, value: boolean) {
+    if (set.current.has(draftId) === value) return;
+    if (value) set.current.add(draftId);
+    else set.current.delete(draftId);
+    setDirtyVersion((version) => version + 1);
+  }
+
+  function clearSourceBoundary(clearTarget = true) {
+    if (sourceDeadline.current !== null) window.clearTimeout(sourceDeadline.current);
+    if (sourceFrame.current !== null) window.cancelAnimationFrame(sourceFrame.current);
+    sourceDeadline.current = null;
+    sourceFrame.current = null;
+    if (clearTarget) sourceEnd.current = null;
+  }
+
+  function finishSourceBoundary(player: HTMLAudioElement, target: number) {
+    if (sourceEnd.current !== target) return;
+    clearSourceBoundary();
+    player.pause();
+    sourceCommandedSeek.current = target;
+    player.currentTime = target;
+  }
+
+  function monitorSourceBoundary(target: number) {
+    const player = sourceAudio.current;
+    if (!player) return;
+    clearSourceBoundary(false);
+    sourceEnd.current = target;
+    const sample = () => {
+      if (sourceEnd.current !== target || player.paused || player.ended) {
+        clearSourceBoundary(false);
+        return;
+      }
+      if (player.currentTime >= target - .004) {
+        finishSourceBoundary(player, target);
+        return;
+      }
+      sourceFrame.current = window.requestAnimationFrame(sample);
+    };
+    const armDeadline = () => {
+      if (sourceEnd.current !== target || player.paused || player.ended) return;
+      const remaining = target - player.currentTime;
+      if (remaining <= .004) {
+        finishSourceBoundary(player, target);
+        return;
+      }
+      const rate = Number.isFinite(player.playbackRate) && player.playbackRate > 0 ? player.playbackRate : 1;
+      sourceDeadline.current = window.setTimeout(armDeadline, Math.max(4, (remaining / rate) * 1000 - 2));
+    };
+    sourceFrame.current = window.requestAnimationFrame(sample);
+    armDeadline();
+  }
 
   function remember(value: CurationImport) {
     if (discardedImportIds.current.has(value.id)) return;
@@ -149,11 +216,24 @@ export default function ManualCuration() {
 
   useEffect(() => {
     function leaving(event: BeforeUnloadEvent) {
-      if (dirtyEditors.current.size || selected.length) { event.preventDefault(); event.returnValue = ""; }
+      if (hasUnsavedCurationWork(dirtyEditors.current, openSplitEditors.current, selected.length)) {
+        event.preventDefault();
+        Reflect.set(event, "returnValue", "");
+      }
     }
     window.addEventListener("beforeunload", leaving);
     return () => window.removeEventListener("beforeunload", leaving);
   }, [selected.length]);
+
+  useEffect(() => {
+    const player = sourceAudio.current;
+    clearSourceBoundary();
+    player?.pause();
+    return () => {
+      clearSourceBoundary();
+      player?.pause();
+    };
+  }, [current?.source_audio_url]);
 
   function invalidateSelectionTranslation() {
     selectionTranslationRequest.current++;
@@ -197,6 +277,7 @@ export default function ManualCuration() {
     activeId.current = null;
     setCurrent(null);
     dirtyEditors.current.clear();
+    openSplitEditors.current.clear();
     resetSelection();
     setPollError(null);
   }
@@ -279,11 +360,11 @@ export default function ManualCuration() {
   }, [current?.id, selected.join(","), spanish, selectionTranslationRetry]);
 
   function chooseSource(value: CurationImport) {
-    if ((dirtyEditors.current.size || selected.length) && !window.confirm("Discard unsaved edits and selection? Saved drafts remain available.")) return;
+    if (hasUnsavedWork() && !window.confirm("Discard unsaved edits, split choices, and selection? Saved drafts remain available.")) return;
     action("open", async () => {
       try {
         const detailed = await curationApi.getImport(value.id);
-        dirtyEditors.current.clear(); resetSelection(); setDiscardConfirmId(null);
+        dirtyEditors.current.clear(); openSplitEditors.current.clear(); resetSelection(); setDiscardConfirmId(null);
         remember(detailed);
       } catch (err) {
         if (err instanceof CurationApiError && err.status === 404) {
@@ -376,18 +457,26 @@ export default function ManualCuration() {
   });
   const contiguous = selected.length > 0 && selected.every((n, i) => i === 0 || n === selected[i - 1] + 1);
   const selectedLines = current?.transcript.filter((line) => selected.includes(line.index)) ?? [];
-  const approved = current?.drafts.filter((d) => d.approved && d.status !== "added" && !dirtyEditors.current.has(d.id)) ?? [];
+  const approved = current
+    ? promotableApprovedDrafts(current.drafts, dirtyEditors.current, openSplitEditors.current)
+    : [];
 
-  return <section className="stack" aria-label="Manual phrase curation">
+  return <section className="stack" aria-label="Manual phrase curation" onPlayCapture={(event) => {
+    const playing = event.target;
+    if (!(playing instanceof HTMLAudioElement)) return;
+    event.currentTarget.querySelectorAll("audio").forEach((candidate) => {
+      if (candidate !== playing && !candidate.paused) candidate.pause();
+    });
+  }}>
     <div className="card stack">
       <div><div className="spanish-kicker">you choose what enters your deck</div><h2>Choose → preview → approve</h2>
         <p className="muted">Import the full transcript, select the phrases you want, and listen before adding. Importing and preparing clips never add learning cards.</p></div>
       <form className="stack" onSubmit={(event) => { event.preventDefault(); action("import", async () => {
-        if (dirtyEditors.current.size || selected.length) {
-          if (!window.confirm("Switch source and discard unsaved edits? Saved drafts are retained.")) return;
+        if (hasUnsavedWork()) {
+          if (!window.confirm("Switch source and discard unsaved edits, split choices, and selection? Saved drafts are retained.")) return;
         }
         const value = await curationApi.createImport(url.trim());
-        dirtyEditors.current.clear(); resetSelection();
+        dirtyEditors.current.clear(); openSplitEditors.current.clear(); resetSelection();
         remember(value); await history();
       }); }}>
         <label className="field"><span>YouTube URL</span><input className="input" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://youtube.com/watch?v=…" required disabled={!!busy} /></label>
@@ -415,7 +504,7 @@ export default function ManualCuration() {
     {discardConfirmId !== null && <div className="card remove-confirm stack" role="group" aria-label={`Confirm discard transcript ${discardConfirmId}`}>
       <strong>Discard transcript #{discardConfirmId} from import history?</strong>
       <p>This removes the imported transcript, its saved drafts, and pending import work. Cards already added to your library and their review history stay unchanged.</p>
-      {activeId.current === discardConfirmId && (dirtyEditors.current.size > 0 || selected.length > 0) && <p className="alert alert-warn">Unsaved draft edits or the current selection will also be cleared.</p>}
+      {activeId.current === discardConfirmId && hasUnsavedWork() && <p className="alert alert-warn">Unsaved draft edits, split choices, or the current selection will also be cleared.</p>}
       <div className="curation-actions">
         <button className="btn btn-danger" type="button" disabled={!!busy} onClick={() => void discardImport(discardConfirmId)}>
           {busy === `discard-${discardConfirmId}` ? "Discarding…" : "Yes, discard transcript"}
@@ -482,18 +571,52 @@ export default function ManualCuration() {
             {current.source_audio_url && selectedLines.length > 0 && <button className="btn" onClick={() => {
               const player = sourceAudio.current;
               if (!player) return;
-              player.currentTime = Math.max(0, selectedLines[0].start - .5);
-              sourceEnd.current = selectedLines[selectedLines.length - 1].end + .5;
-              player.play().catch((err) => setError(message(err)));
+              clearSourceBoundary();
+              const requestedStart = Math.max(0, selectedLines[0].start - .5);
+              sourceCommandedSeek.current = requestedStart;
+              player.currentTime = requestedStart;
+              const requestedEnd = selectedLines[selectedLines.length - 1].end + .5;
+              sourceEnd.current = Number.isFinite(player.duration) ? Math.min(player.duration, requestedEnd) : requestedEnd;
+              player.play().catch((err) => { clearSourceBoundary(); setError(message(err)); });
             }}>Play source context</button>}
           </div>
         </>}
-        {current.source_audio_url && <div><p className="muted small">Original audio — use it to check context or adjust a cut.</p><audio ref={sourceAudio} controls preload="metadata" src={current.source_audio_url} style={{ width: "100%" }} onTimeUpdate={(e) => { if (sourceEnd.current !== null && e.currentTarget.currentTime >= sourceEnd.current) { e.currentTarget.pause(); sourceEnd.current = null; } }} /></div>}
+        {current.source_audio_url && <div><p className="muted small">Original audio — use it to check context or adjust a cut.</p><audio
+          ref={sourceAudio}
+          aria-label="Original source audio"
+          controls
+          preload="metadata"
+          src={current.source_audio_url}
+          style={{ width: "100%" }}
+          onPlay={() => { if (sourceEnd.current !== null) monitorSourceBoundary(sourceEnd.current); }}
+          onPause={() => clearSourceBoundary()}
+          onSeeking={(event) => {
+            clearSourceBoundary(false);
+            if (sourceCommandedSeek.current === null
+              || Math.abs(event.currentTarget.currentTime - sourceCommandedSeek.current) > .03) sourceEnd.current = null;
+          }}
+          onSeeked={(event) => {
+            sourceCommandedSeek.current = null;
+            if (!event.currentTarget.paused && sourceEnd.current !== null) monitorSourceBoundary(sourceEnd.current);
+          }}
+          onRateChange={(event) => {
+            if (!event.currentTarget.paused && sourceEnd.current !== null) monitorSourceBoundary(sourceEnd.current);
+          }}
+          onTimeUpdate={(event) => {
+            const target = sourceEnd.current;
+            if (target !== null && event.currentTarget.currentTime >= target - .004) finishSourceBoundary(event.currentTarget, target);
+          }}
+          onEnded={() => clearSourceBoundary()}
+        /></div>}
       </div>
       <div className="card stack">
         <div className="curation-actions"><h2 style={{ marginRight: "auto" }}>Draft clips ({current.drafts.length})</h2>
           <button className="btn btn-primary" disabled={!!busy || !approved.length} onClick={() => action("promote", async () => {
-            const result = await curationApi.promoteDrafts(approved.map((d) => ({ id: d.id, revision: d.revision })));
+            const stillApproved = current
+              ? promotableApprovedDrafts(current.drafts, dirtyEditors.current, openSplitEditors.current)
+              : [];
+            if (!stillApproved.length) return;
+            const result = await curationApi.promoteDrafts(stillApproved.map((d) => ({ id: d.id, revision: d.revision })));
             setCurrent((old) => old ? { ...old, drafts: mergeDrafts(old.drafts, result.drafts) } : old);
             setNotice(result.results.map((r) => r.action === "repaired" ? `Card #${r.phrase_id}: audio repaired; learning history unchanged.` : r.action === "added" ? `Card #${r.phrase_id} added.` : `Card #${r.phrase_id} already exists; no duplicate added.`).join(" "));
           })}>Add approved ({approved.length})</button>
@@ -501,7 +624,8 @@ export default function ManualCuration() {
         {!current.drafts.length && <p className="muted">Select a phrase above and save it as a draft.</p>}
         {current.drafts.map((draft) => <DraftEditor key={draft.id} draft={draft} busy={!!busy} action={action} update={updateDraft} refresh={refresh}
           transcript={current.transcript} sourceAudioUrl={current.source_audio_url} applySplit={applySplit} reportError={(value) => setError(`audio: ${value}`)}
-          dirty={(value) => { if (value) dirtyEditors.current.add(draft.id); else dirtyEditors.current.delete(draft.id); setDirtyVersion((n) => n + 1); }}
+          dirty={(value) => setDraftWork(dirtyEditors, draft.id, value)}
+          splitDirty={(value) => setDraftWork(openSplitEditors, draft.id, value)}
           remove={() => setCurrent((old) => old ? { ...old, drafts: old.drafts.filter((d) => d.id !== draft.id) } : old)} />)}
       </div>
     </>}
@@ -549,9 +673,10 @@ export default function ManualCuration() {
 
 type Editor = { spanish: string; english: string; start: string; end: string };
 const editValues = (d: CurationDraft): Editor => ({ spanish: d.spanish, english: d.english, start: String(d.start_time), end: String(d.end_time) });
-function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, transcript, sourceAudioUrl, applySplit, reportError }: {
+function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, splitDirty, transcript, sourceAudioUrl, applySplit, reportError }: {
   draft: CurationDraft; busy: boolean; action: (key: string, work: () => Promise<void>) => Promise<void>;
-  update: (draft: CurationDraft) => void; remove: () => void; refresh: () => Promise<void>; dirty: (value: boolean) => void;
+  update: (draft: CurationDraft) => void; remove: () => void; refresh: () => Promise<void>;
+  dirty: (value: boolean) => void; splitDirty: (value: boolean) => void;
   transcript: TranscriptSegment[]; sourceAudioUrl: string | null;
   applySplit: (importId: number, originalDraftId: number, drafts: CurationDraft[]) => void;
   reportError: (message: string) => void;
@@ -561,6 +686,7 @@ function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, tran
   const [changed, setChanged] = useState(false);
   const [splitOpen, setSplitOpen] = useState(false);
   const [trimPlayhead, setTrimPlayhead] = useState(draft.start_time);
+  const [trimSeekCommand, setTrimSeekCommand] = useState<{ sequence: number; absoluteSourceSeconds: number } | null>(null);
   const dirtyRef = useRef(false);
   const root = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -572,10 +698,17 @@ function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, tran
   }, [draft.revision]);
   useEffect(() => {
     if (new URLSearchParams(location.search).get("draft") === String(draft.id)) root.current?.scrollIntoView({ block: "center" });
-    return () => dirty(false);
+    return () => { dirty(false); splitDirty(false); };
   }, []);
   function change(key: keyof Editor, value: string) {
     setValues((old) => ({ ...old, [key]: value })); setChanged(true); dirtyRef.current = true; dirty(true);
+  }
+  function commandTrimPlayhead(absoluteSourceSeconds: number) {
+    setTrimPlayhead(absoluteSourceSeconds);
+    setTrimSeekCommand((current) => ({
+      sequence: (current?.sequence ?? 0) + 1,
+      absoluteSourceSeconds,
+    }));
   }
   function sync(value: CurationDraft) {
     dirtyRef.current = false;
@@ -585,6 +718,10 @@ function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, tran
     setBaseRevision(value.revision);
     setTrimPlayhead(value.start_time);
     update(value);
+  }
+  function closeSplit() {
+    splitDirty(false);
+    setSplitOpen(false);
   }
   const locked = busy || isDraftWorking(draft) || draft.status === "added" || splitOpen;
   const stale = changed && baseRevision !== draft.revision;
@@ -606,8 +743,8 @@ function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, tran
     <label className="field"><span>Spanish</span><textarea aria-label="Spanish" className="input" rows={2} value={values.spanish} readOnly={!!draft.repair_phrase_id} disabled={locked} onChange={(e) => change("spanish", e.target.value)} /></label>
     <label className="field"><span>English meaning</span><textarea aria-label="English meaning" className="input" rows={2} value={values.english} readOnly={!!draft.repair_phrase_id} disabled={locked} onChange={(e) => change("english", e.target.value)} placeholder="Generated when you prepare, or enter your own meaning" /></label>
     <div className="curation-times">{(["start", "end"] as const).map((key) => <div key={key}>
-      <label className="field"><span>{key === "start" ? "Start" : "End"} time (seconds)</span><input className="input" type="number" min="0" step="0.01" value={values[key]} disabled={locked} onChange={(e) => change(key, e.target.value)} /></label>
-      <div className="curation-actions">{[-.1, .1].map((delta) => <button key={delta} className="btn" aria-label={`${key} ${delta > 0 ? "plus" : "minus"} 0.1 seconds`} disabled={locked} onClick={() => change(key, String(Math.max(0, Number(values[key]) + delta).toFixed(2)))}>{delta > 0 ? "+" : "−"}0.1s</button>)}</div>
+      <label className="field"><span>{key === "start" ? "Start" : "End"} time (seconds)</span><input className="input" type="number" min="0" step="0.01" value={values[key]} disabled={locked} onChange={(e) => { change(key, e.target.value); const value = Number(e.target.value); if (Number.isFinite(value)) commandTrimPlayhead(value); }} /></label>
+      <div className="curation-actions">{[-.1, .1].map((delta) => <button key={delta} className="btn" aria-label={`${key} ${delta > 0 ? "plus" : "minus"} 0.1 seconds`} disabled={locked} onClick={() => { const value = Math.max(0, Number(values[key]) + delta); change(key, value.toFixed(2)); commandTrimPlayhead(value); }}>{delta > 0 ? "+" : "−"}0.1s</button>)}</div>
     </div>)}</div>
     {stale && <div className="alert alert-error">This draft changed on the server. Your unsaved edits are still here; reload the saved version before continuing.</div>}
     {changed && <div className="curation-actions"><button className="btn btn-primary" disabled={locked || stale || !values.spanish.trim() || !values.start.trim() || !values.end.trim() || !Number.isFinite(Number(values.start)) || Number(values.end) <= Number(values.start)} onClick={() => action(`save-${draft.id}`, async () => {
@@ -621,7 +758,17 @@ function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, tran
     {draft.audio_url && <>
       <div className="saved-clip-preview stack">
         <div><strong>Saved prepared preview</strong><p className="muted small">Audio for saved source bounds {stamp(draft.start_time)}–{stamp(draft.end_time)}. This preview changes only after saving and preparing again.</p></div>
-        <audio key={`${draft.audio_url}:${draft.revision}`} aria-label={`Draft ${draft.id} audio preview`} controls preload="metadata" src={draft.audio_url} style={{ width: "100%" }} />
+        <audio
+          key={`${draft.audio_url}:${draft.revision}`}
+          aria-label={`Draft ${draft.id} audio preview`}
+          aria-disabled={splitOpen}
+          controls={!splitOpen}
+          tabIndex={splitOpen ? -1 : undefined}
+          preload="metadata"
+          src={draft.audio_url}
+          style={{ width: "100%" }}
+          onPlay={(event) => { if (splitOpen) event.currentTarget.pause(); }}
+        />
         {timingChanged && <div className="alert alert-warn" role="note">The saved preview still uses the old timing. Audition the candidate trim below; then save and reprepare before approval.</div>}
       </div>
       <AudioPlayhead
@@ -634,6 +781,7 @@ function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, tran
         rangeEnd={validCandidateTiming ? Math.max(draft.end_time, candidateEnd) : draft.end_time}
         playhead={trimPlayhead}
         onPlayheadChange={setTrimPlayhead}
+        seekCommand={trimSeekCommand}
         onSetStart={(absolute) => change("start", absolute.toFixed(2))}
         onSetEnd={(absolute) => change("end", absolute.toFixed(2))}
         audition={validCandidateTiming ? { start: candidateStart, end: candidateEnd } : undefined}
@@ -651,7 +799,12 @@ function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, tran
           aria-expanded={splitOpen}
           disabled={splitOpen || !splitEligibility.allowed}
           title={splitEligibility.reason ?? "Split one prepared clip into two independent drafts"}
-          onClick={() => setSplitOpen(true)}
+          onClick={() => {
+            // Register synchronously before React rerenders so same-tick promotion,
+            // source switches, and beforeunload all see the pending split work.
+            splitDirty(true);
+            setSplitOpen(true);
+          }}
         >Split clip</button>}
         <button className="btn" disabled={locked} onClick={() => { if (window.confirm("Delete this draft only? Existing cards and review history are not deleted.")) action(`delete-${draft.id}`, async () => { await curationApi.deleteDraft(draft.id, draft.revision); dirty(false); remove(); }); }}>Delete draft</button>
       </div>
@@ -662,7 +815,7 @@ function DraftEditor({ draft, busy, action, update, remove, refresh, dirty, tran
         busy={busy}
         action={action}
         onSplit={applySplit}
-        onClose={() => setSplitOpen(false)}
+        onClose={closeSplit}
         onError={reportError}
       />}
       <label className="curation-actions"><input type="checkbox" checked={draft.approved && !changed} disabled={locked || changed || !previewReady} onChange={(e) => { const approved = e.target.checked; action(`approve-${draft.id}`, async () => sync(await curationApi.patchDraft(draft.id, { revision: draft.revision, approved }))); }} />I listened and approve this clip and meaning</label>

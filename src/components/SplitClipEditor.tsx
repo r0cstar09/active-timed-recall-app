@@ -37,6 +37,7 @@ export default function SplitClipEditor({
   const [right, setRight] = useState<PartValues>({ spanish: "", english: "" });
   const [splitTime, setSplitTime] = useState("");
   const [playhead, setPlayhead] = useState((draft.start_time + draft.end_time) / 2);
+  const [seekCommand, setSeekCommand] = useState<{ sequence: number; absoluteSourceSeconds: number } | null>(null);
   const [cursor, setCursor] = useState(0);
   const [boundaryError, setBoundaryError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
@@ -64,10 +65,18 @@ export default function SplitClipEditor({
     // a cut the learner already chose by listening.
   }
 
+  function commandPlayhead(absoluteSourceSeconds: number) {
+    setPlayhead(absoluteSourceSeconds);
+    setSeekCommand((current) => ({
+      sequence: (current?.sequence ?? 0) + 1,
+      absoluteSourceSeconds,
+    }));
+  }
+
   function useCaptionSuggestion(suggestion: ReturnType<typeof createLineSplitSuggestions>[number]) {
     setTextPartition(suggestion.leftSpanish, suggestion.rightSpanish);
     setSplitTime(String(suggestion.suggestedSourceTime));
-    setPlayhead(suggestion.suggestedSourceTime);
+    commandPlayhead(suggestion.suggestedSourceTime);
     setTimingSource("caption");
   }
 
@@ -132,6 +141,7 @@ export default function SplitClipEditor({
       rangeEnd={draft.end_time}
       playhead={playhead}
       onPlayheadChange={setPlayhead}
+      seekCommand={seekCommand}
       onUsePlayhead={(absolute) => {
         setSplitTime(absolute.toFixed(2));
         setTimingSource("playhead");
@@ -155,7 +165,7 @@ export default function SplitClipEditor({
         onChange={(event) => {
           setSplitTime(event.target.value);
           const value = Number(event.target.value);
-          if (Number.isFinite(value)) setPlayhead(value);
+          if (Number.isFinite(value)) commandPlayhead(value);
           setTimingSource("typed");
           setConfirmed(false);
         }}
