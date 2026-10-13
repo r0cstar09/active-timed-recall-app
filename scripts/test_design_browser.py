@@ -50,6 +50,187 @@ DEVICES = {
 }
 THEMES = {"light": "paper", "dark": "dark"}
 
+# The live design sweep may render learner-backed API data. Keep its persisted
+# report on a strict metadata-only schema: adding a new field fails closed until
+# the offline safety test and this allowlist are deliberately updated.
+REPORT_ALLOWED_KEYS = frozenset(
+    {
+        "after",
+        "allowed_methods",
+        "before",
+        "behavior_checks",
+        "behavior_error_type",
+        "blocked_methods",
+        "blocked_mutation_count",
+        "blocked_mutations",
+        "browser_requested",
+        "browser_version",
+        "capture_count",
+        "capture_error_type",
+        "captures",
+        "category",
+        "color_scheme",
+        "console",
+        "console_error_or_warning_count",
+        "count",
+        "current_page_count",
+        "data_theme",
+        "device",
+        "document",
+        "emulation_note",
+        "expected_capture_count",
+        "expected_guard_block",
+        "final_route_match",
+        "generated_at",
+        "height",
+        "horizontal_overflow",
+        "horizontal_overflow_cases",
+        "http_error_count",
+        "http_errors",
+        "initial_navigation",
+        "inspection",
+        "lang",
+        "left",
+        "live_mode",
+        "mask_count",
+        "mask_scope",
+        "method",
+        "more_menu_passed",
+        "navigation",
+        "navigation_behavior_passed",
+        "navigation_error_type",
+        "navigation_failures",
+        "navigation_links",
+        "network_idle_timeout",
+        "ok",
+        "overflowers",
+        "page_error_count",
+        "page_errors",
+        "passed",
+        "persisted_after_reload",
+        "png",
+        "privacy",
+        "production_test_writes",
+        "reason_code",
+        "request_failures",
+        "right",
+        "route",
+        "safety",
+        "schema_version",
+        "scroll_height",
+        "scroll_width",
+        "screenshots_written",
+        "service_workers",
+        "screenshot",
+        "screenshot_mask_scope",
+        "status",
+        "stored",
+        "summary",
+        "tag",
+        "target",
+        "target_route",
+        "theme_after_navigation_passed",
+        "theme_behavior_passed",
+        "theme_requested",
+        "theme_toggle",
+        "theme_toggle_count",
+        "type",
+        "unexpected_console_count",
+        "unexpected_request_failure_count",
+        "viewport",
+        "viewport_requested",
+        "visible_count",
+        "width",
+    }
+)
+URL_MARKERS = ("http://", "https://", "blob:", "data:")
+
+
+def diagnostic_category(value: object) -> str:
+    message = str(value or "")
+    if message == "Service Worker registration blocked by Playwright":
+        return "expected_service_worker_block"
+    if "ERR_BLOCKED_BY_CLIENT" in message:
+        return "expected_guard_block"
+    return "unexpected"
+
+
+def failure_category(value: object) -> str:
+    failure = str(value or "").upper()
+    if "ABORT" in failure or "CANCEL" in failure:
+        return "aborted_or_cancelled"
+    if "BLOCKED" in failure:
+        return "blocked"
+    if "TIMEOUT" in failure or "TIMED_OUT" in failure:
+        return "timeout"
+    return "other" if failure else "none"
+
+
+def privacy_safe_inspection(value: dict) -> dict:
+    """Copy only geometry and fixed UI metadata from a DOM inspection."""
+    navigation = value.get("navigationLinks") or {}
+    viewport = value.get("viewport") or {}
+    document = value.get("document") or {}
+    overflowers = [
+        {
+            "tag": str(item.get("tag") or "unknown")[:24],
+            "left": item.get("left"),
+            "right": item.get("right"),
+            "width": item.get("width"),
+        }
+        for item in (value.get("overflowers") or [])[:12]
+        if isinstance(item, dict)
+    ]
+    return {
+        "lang": value.get("lang"),
+        "data_theme": value.get("dataTheme"),
+        "color_scheme": value.get("colorScheme"),
+        "viewport": {"width": viewport.get("width"), "height": viewport.get("height")},
+        "document": {
+            "scroll_width": document.get("scrollWidth"),
+            "scroll_height": document.get("scrollHeight"),
+        },
+        "horizontal_overflow": bool(value.get("horizontalOverflow")),
+        "overflowers": overflowers,
+        "navigation_links": {
+            "count": int(navigation.get("count") or 0),
+            "visible_count": int(navigation.get("visibleCount") or 0),
+            "current_page_count": int(navigation.get("currentPageCount") or 0),
+        },
+        "theme_toggle_count": int(value.get("themeToggleCount") or 0),
+    }
+
+
+def assert_privacy_safe_report(value: object, path: str = "report") -> None:
+    """Reject report fields or URL-bearing strings outside the safe schema."""
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if key not in REPORT_ALLOWED_KEYS:
+                raise ValueError(f"privacy-unsafe report key at {path}: {key}")
+            assert_privacy_safe_report(item, f"{path}.{key}")
+        return
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            assert_privacy_safe_report(item, f"{path}[{index}]")
+        return
+    if isinstance(value, str) and any(marker in value.lower() for marker in URL_MARKERS):
+        raise ValueError(f"privacy-unsafe URL value at {path}")
+
+
+def capture_privacy_safe_screenshot(page: Page, destination: Path) -> dict:
+    """Mask all learner-rendered main content, or refuse to capture."""
+    main = page.locator("main#main-content")
+    if main.count() != 1 or not main.is_visible():
+        raise RuntimeError("required privacy mask target is not uniquely visible")
+    page.screenshot(
+        path=str(destination),
+        full_page=False,
+        animations="disabled",
+        mask=[main],
+        mask_color="#111827",
+    )
+    return {"mask_scope": "main-content", "mask_count": 1}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Read-only Spanish app visual QA")
@@ -72,7 +253,7 @@ def png_dimensions(path: Path) -> dict[str, int]:
 
 
 def inspect_page(page: Page) -> dict:
-    return page.evaluate(
+    raw = page.evaluate(
         """() => {
           const root = document.documentElement;
           const body = document.body;
@@ -81,12 +262,8 @@ def inspect_page(page: Page) -> dict:
             .map((element) => {
               const rect = element.getBoundingClientRect();
               if (rect.right <= viewportWidth + 1 && rect.left >= -1) return null;
-              const id = element.id ? `#${element.id}` : '';
-              const classes = typeof element.className === 'string'
-                ? element.className.trim().split(/\\s+/).filter(Boolean).slice(0, 3).map(c => `.${c}`).join('')
-                : '';
               return {
-                selector: `${element.tagName.toLowerCase()}${id}${classes}`,
+                tag: element.tagName.toLowerCase(),
                 left: Math.round(rect.left * 10) / 10,
                 right: Math.round(rect.right * 10) / 10,
                 width: Math.round(rect.width * 10) / 10,
@@ -96,15 +273,8 @@ def inspect_page(page: Page) -> dict:
             .slice(0, 12);
           const navLinks = [...document.querySelectorAll(
             'nav a[href], header a[href], .tabbar a[href], .recall-command-strip a[href]'
-          )].map((anchor) => ({
-            text: (anchor.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 100),
-            href: anchor.getAttribute('href'),
-            visible: !!(anchor.offsetWidth || anchor.offsetHeight || anchor.getClientRects().length),
-            ariaCurrent: anchor.getAttribute('aria-current'),
-            className: typeof anchor.className === 'string' ? anchor.className : '',
-          }));
+          )];
           return {
-            title: document.title,
             lang: root.lang,
             dataTheme: root.dataset.theme || null,
             colorScheme: getComputedStyle(root).colorScheme,
@@ -115,12 +285,18 @@ def inspect_page(page: Page) -> dict:
             },
             horizontalOverflow: Math.max(root.scrollWidth, body?.scrollWidth || 0) > viewportWidth + 1,
             overflowers,
-            navLinks,
+            navigationLinks: {
+              count: navLinks.length,
+              visibleCount: navLinks.filter(anchor => !!(
+                anchor.offsetWidth || anchor.offsetHeight || anchor.getClientRects().length
+              )).length,
+              currentPageCount: navLinks.filter(anchor => anchor.getAttribute('aria-current') === 'page').length,
+            },
             themeToggleCount: document.querySelectorAll('[data-theme-toggle]').length,
-            bodyTextPreview: (body?.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 500),
           };
         }"""
     )
+    return privacy_safe_inspection(raw)
 
 
 def attach_read_only_guard(page: Page, log: dict) -> None:
@@ -137,7 +313,7 @@ def attach_read_only_guard(page: Page, log: dict) -> None:
         request = route.request
         method = request.method.upper()
         if method not in SAFE_METHODS:
-            log["blocked_mutations"].append({"method": method, "url": request.url})
+            log["blocked_mutations"].append({"method": method})
             route.abort("blockedbyclient")
             return
         parsed = urlparse(request.url)
@@ -178,23 +354,24 @@ def attach_read_only_guard(page: Page, log: dict) -> None:
 def attach_observers(page: Page, log: dict) -> None:
     def on_console(message) -> None:
         if message.type in {"warning", "error"}:
-            log["console"].append({"type": message.type, "text": message.text})
+            log["console"].append(
+                {"type": message.type, "category": diagnostic_category(message.text)}
+            )
 
     def on_response(response) -> None:
         if response.status >= 400:
             log["http_errors"].append(
-                {"status": response.status, "method": response.request.method, "url": response.url}
+                {"status": response.status, "method": response.request.method}
             )
 
     page.on("console", on_console)
-    page.on("pageerror", lambda error: log["page_errors"].append(str(error)))
+    page.on("pageerror", lambda _error: log["page_errors"].append({"category": "page_error"}))
     page.on(
         "requestfailed",
         lambda request: log["request_failures"].append(
             {
                 "method": request.method,
-                "url": request.url,
-                "failure": request.failure,
+                "category": failure_category(request.failure),
                 "expected_guard_block": request.method.upper() not in SAFE_METHODS,
             }
         ),
@@ -202,8 +379,13 @@ def attach_observers(page: Page, log: dict) -> None:
     page.on("response", on_response)
 
 
-def navigate(page: Page, url: str, timeout: int) -> dict:
-    result = {"url": url, "ok": False, "navigation_error": None, "final_url": None}
+def navigate(page: Page, url: str, expected_route: str, timeout: int) -> dict:
+    result = {
+        "ok": False,
+        "status": None,
+        "navigation_error_type": None,
+        "final_route_match": False,
+    }
     try:
         response = page.goto(url, wait_until="domcontentloaded", timeout=timeout)
         result["status"] = response.status if response else None
@@ -213,9 +395,11 @@ def navigate(page: Page, url: str, timeout: int) -> dict:
         except PlaywrightTimeoutError:
             result["network_idle_timeout"] = True
         result["ok"] = True
-    except Exception as exc:  # preserve visual/error evidence rather than stopping the matrix
-        result["navigation_error"] = f"{type(exc).__name__}: {exc}"
-    result["final_url"] = page.url
+    except Exception as exc:  # preserve error category rather than stopping the matrix
+        result["navigation_error_type"] = type(exc).__name__
+    expected_path = expected_route.rstrip("/") or "/"
+    actual_path = urlparse(page.url).path.rstrip("/") or "/"
+    result["final_route_match"] = actual_path == expected_path
     return result
 
 
@@ -233,7 +417,7 @@ def run_behavior_checks(browser: Browser, base: str, device_name: str, timeout: 
         **log,
     }
     try:
-        result["initial_navigation"] = navigate(page, urljoin(base + "/", "./"), timeout)
+        result["initial_navigation"] = navigate(page, urljoin(base + "/", "./"), "/", timeout)
         # Establish a known preference once. An init script would overwrite it
         # on reload and invalidate the persistence check.
         page.evaluate("localStorage.setItem('atr-theme', 'paper')")
@@ -254,10 +438,10 @@ def run_behavior_checks(browser: Browser, base: str, device_name: str, timeout: 
                 "before": before,
                 "after": after,
                 "stored": stored,
-                "persistedAfterReload": persisted,
+                "persisted_after_reload": persisted,
             }
         else:
-            result["theme_toggle"]["reason"] = "No visible [data-theme-toggle] control"
+            result["theme_toggle"]["reason_code"] = "theme_toggle_not_visible"
 
         page.goto(urljoin(base + "/", "./"), wait_until="domcontentloaded", timeout=timeout)
         candidates = page.locator(
@@ -271,15 +455,13 @@ def run_behavior_checks(browser: Browser, base: str, device_name: str, timeout: 
                 clicked = candidate
                 break
         if clicked is not None:
-            href = clicked.get_attribute("href")
             clicked.click()
             page.wait_for_function("location.pathname.replace(/\\/$/, '') === '/lessons'", timeout=timeout)
             page.locator('h1').wait_for(state="visible", timeout=timeout)
             path = urlparse(page.url).path.rstrip("/") or "/"
             result["navigation"] = {
                 "passed": path == "/lessons",
-                "clickedHref": href,
-                "finalUrl": page.url,
+                "target_route": "/lessons",
             }
             # Astro swaps page DOM without reloading the document.
             before_swap_toggle = page.locator("html").get_attribute("data-theme")
@@ -295,9 +477,9 @@ def run_behavior_checks(browser: Browser, base: str, device_name: str, timeout: 
                 assert menu.get_attribute("open") is None
                 result["more_menu_passed"] = True
         else:
-            result["navigation"]["reason"] = "No visible navigation link to /lessons"
+            result["navigation"]["reason_code"] = "lessons_navigation_not_visible"
     except Exception as exc:
-        result["behavior_error"] = f"{type(exc).__name__}: {exc}"
+        result["behavior_error_type"] = type(exc).__name__
     finally:
         context.close()
     return result
@@ -320,16 +502,21 @@ def main() -> int:
     report = {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "base": base,
-        "output": str(args.output.resolve()),
+        "target": (
+            "live-read-only-origin"
+            if parsed.hostname not in {"localhost", "127.0.0.1"}
+            else "localhost-preview-with-read-only-api"
+            if API_ORIGIN
+            else "localhost-static-preview"
+        ),
         "browser_requested": args.browser,
-        "browser_execution_host": None,
         "safety": {
             "live_mode": parsed.scheme == "https" and parsed.hostname not in {"localhost", "127.0.0.1"},
             "allowed_methods": sorted(SAFE_METHODS),
             "blocked_methods": ["POST", "PUT", "PATCH", "DELETE", "and every other non-safe method"],
             "service_workers": "blocked",
             "production_test_writes": 0,
+            "screenshot_mask_scope": "main-content",
         },
         "emulation_note": "iPhone results use browser mobile emulation at 390x844 CSS px; no physical iPhone was tested.",
         "captures": [],
@@ -337,9 +524,6 @@ def main() -> int:
         "summary": {},
     }
 
-    import socket
-
-    report["browser_execution_host"] = socket.gethostname()
     with sync_playwright() as playwright:
         browser_type = getattr(playwright, args.browser)
         browser = browser_type.launch(headless=True)
@@ -370,7 +554,7 @@ def main() -> int:
                         filename = f"{args.browser}-{device_name}-{theme_name}-{slug}.png"
                         destination = args.output / filename
                         before_counts = {key: len(value) for key, value in log.items()}
-                        nav = navigate(page, base + route, args.timeout)
+                        nav = navigate(page, base + route, route, args.timeout)
                         capture = {
                             "route": route,
                             "device": device_name,
@@ -381,10 +565,10 @@ def main() -> int:
                         }
                         try:
                             capture["inspection"] = inspect_page(page)
-                            page.screenshot(path=str(destination), full_page=False)
+                            capture["privacy"] = capture_privacy_safe_screenshot(page, destination)
                             capture["png"] = png_dimensions(destination)
                         except Exception as exc:
-                            capture["capture_error"] = f"{type(exc).__name__}: {exc}"
+                            capture["capture_error_type"] = type(exc).__name__
                         for key, values in log.items():
                             capture[key] = values[before_counts[key] :]
                         report["captures"].append(capture)
@@ -398,23 +582,31 @@ def main() -> int:
             browser.close()
 
     captures = report["captures"]
+    observed_runs = [*captures, *report["behavior_checks"]]
     report["summary"] = {
         "expected_capture_count": len(ROUTES) * len(DEVICES) * len(THEMES),
         "capture_count": len(captures),
         "screenshots_written": sum((args.output / item["screenshot"]).is_file() for item in captures),
-        "navigation_failures": sum(not item["navigation"]["ok"] for item in captures),
-        "horizontal_overflow_cases": sum(
-            bool(item.get("inspection", {}).get("horizontalOverflow")) for item in captures
-        ),
-        "console_error_or_warning_count": sum(len(item["console"]) for item in captures),
-        "unexpected_console_count": sum(
-            message["text"] != "Service Worker registration blocked by Playwright"
-            and "ERR_BLOCKED_BY_CLIENT" not in message["text"]
+        "navigation_failures": sum(
+            not item["navigation"]["ok"] or not item["navigation"]["final_route_match"]
             for item in captures
+        ),
+        "horizontal_overflow_cases": sum(
+            bool(item.get("inspection", {}).get("horizontal_overflow")) for item in captures
+        ),
+        "console_error_or_warning_count": sum(len(item["console"]) for item in observed_runs),
+        "unexpected_console_count": sum(
+            message["category"] == "unexpected"
+            for item in observed_runs
             for message in item["console"]
         ),
-        "page_error_count": sum(len(item["page_errors"]) for item in captures),
-        "http_error_count": sum(len(item["http_errors"]) for item in captures),
+        "page_error_count": sum(len(item["page_errors"]) for item in observed_runs),
+        "http_error_count": sum(len(item["http_errors"]) for item in observed_runs),
+        "unexpected_request_failure_count": sum(
+            not item["expected_guard_block"] and item["category"] not in {"blocked", "aborted_or_cancelled"}
+            for run in observed_runs
+            for item in run["request_failures"]
+        ),
         "blocked_mutation_count": sum(len(item["blocked_mutations"]) for item in captures)
         + sum(len(item["blocked_mutations"]) for item in report["behavior_checks"]),
         "theme_behavior_passed": all(
@@ -434,6 +626,7 @@ def main() -> int:
         and report["summary"]["page_error_count"] == 0
         and report["summary"]["http_error_count"] == 0
         and report["summary"]["unexpected_console_count"] == 0
+        and report["summary"]["unexpected_request_failure_count"] == 0
         and report["summary"]["theme_behavior_passed"]
         and report["summary"]["navigation_behavior_passed"]
         and report["summary"]["theme_after_navigation_passed"]
@@ -441,6 +634,7 @@ def main() -> int:
         else "failed"
     )
     report_path = args.output / "report.json"
+    assert_privacy_safe_report(report)
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({"report": str(report_path), "status": report["status"], **report["summary"]}, indent=2))
     return 0 if report["status"] == "passed" else 1
