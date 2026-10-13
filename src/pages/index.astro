@@ -1,8 +1,22 @@
 ---
 import Base from "../layouts/Base.astro";
 import DueSummary from "../components/DueSummary.tsx";
+import "../styles/shadowing.css";
 ---
 
 <Base title="Today · Spanish Recall" heading="Spanish" current="home" hideCommandStrip>
+  <section class="shadow-today" aria-label="Shadowing quick start">
+    <div><h2>A little Spanish, out loud.</h2><p>One saved clip, at your pace. Repeat without seeking or switching tabs.</p></div>
+    <a class="btn btn-primary" id="today-shadow" href="/shadow/">Start shadowing</a>
+  </section>
   <DueSummary client:load />
 </Base>
+<script>
+  import { readShadow } from "../lib/shadowing";
+  try {
+    if (readShadow(localStorage).clipId !== null) {
+      const link = document.getElementById("today-shadow");
+      if (link) link.textContent = "Resume shadowing";
+    }
+  } catch { /* Device storage is optional; the start link remains usable. */ }
+</script>
