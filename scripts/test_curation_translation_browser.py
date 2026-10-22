@@ -84,6 +84,7 @@ def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> dict[str
         "retry": False,
         "polls_after_retry": 0,
         "selection_calls": 0,
+        "translation_jobs": {},
         "hold_selection": False,
         "pending": [],
         "import_deleted": False,
@@ -165,9 +166,15 @@ def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> dict[str
                 state["retry"] = True
                 fulfill_json(route, import_fixture(status="queued"))
                 return
-            if request.method == "POST" and parsed.path == "/api/curation/imports/91/translations/selection":
+            if request.method == "POST" and parsed.path == "/api/curation/imports/91/translation-jobs":
                 state["selection_calls"] += 1
                 assert isinstance(body, dict), body
+                assert re.fullmatch(r"[A-Za-z0-9._:-]{8,160}", body["request_key"]), body
+                existing = next((job for job in state["translation_jobs"].values()
+                                 if job["request_key"] == body["request_key"]), None)
+                if existing is not None:
+                    fulfill_json(route, existing)
+                    return
                 text = body["source_text"]
                 value = {
                     "Me quedé en blanco": "My mind went blank.",
@@ -175,10 +182,22 @@ def attach_fixtures(page: Page, base: str, evidence: dict[str, Any]) -> dict[str
                     "Me quedé en blanco cuando me hizo la pregunta. Después respiré y pude responder.": "I blanked, then took a breath and answered.",
                     "muy nervioso. Me quedé en blanco": "very nervous. My mind went blank",
                 }[text]
+                job = {
+                    "id": 800 + state["selection_calls"], "request_key": body["request_key"],
+                    "operation_type": "selection_translation", "scope_key": f"fixture:{text}",
+                    "status": "running" if state["hold_selection"] else "completed",
+                    "result": None if state["hold_selection"] else {"english": value},
+                    "error": None, "attempt_count": 1,
+                }
+                state["translation_jobs"][job["id"]] = job
                 if state["hold_selection"]:
-                    state["pending"].append((route, value))
-                else:
-                    fulfill_json(route, {"english": value})
+                    state["pending"].append((job, value))
+                fulfill_json(route, {**job, "status": "queued", "result": None})
+                return
+            if request.method == "GET" and re.fullmatch(r"/api/curation/translation-jobs/\d+", parsed.path):
+                job_id = int(parsed.path.rsplit("/", 1)[1])
+                assert job_id in state["translation_jobs"], job_id
+                fulfill_json(route, state["translation_jobs"][job_id])
                 return
             if request.method == "POST" and parsed.path == "/api/curation/imports/91/drafts":
                 assert isinstance(body, dict), body
@@ -369,7 +388,7 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     state["hold_selection"] = True
     selected_line = page.get_by_label("Select transcript line 2", exact=True)
     with page.expect_request(
-        lambda request: request.method == "POST" and request.url.endswith("/translations/selection"),
+        lambda request: request.method == "POST" and request.url.endswith("/translation-jobs"),
         timeout=10_000,
     ) as first_request_info:
         selected_line.focus()
@@ -383,15 +402,17 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     # Edit while an automatic response is genuinely in flight.
     english.fill("My in-flight meaning")
     expect(save).to_be_disabled()
-    pending_route, value = state["pending"].pop()
-    fulfill_json(pending_route, {"english": value})
+    pending_job, value = state["pending"].pop()
+    pending_job.update(status="completed", result={"english": value})
     state["hold_selection"] = False
     expect(english).to_have_value("My in-flight meaning")
     expect(save).to_be_enabled()
     expect(english).to_have_attribute("placeholder", "English remains editable", timeout=10_000)
     assert english.input_value().strip(), "single-line English translation was empty"
     first_request = first_request_info.value
-    assert first_request.post_data_json == {
+    first_payload = dict(first_request.post_data_json)
+    assert re.fullmatch(r"[A-Za-z0-9._:-]{8,160}", first_payload.pop("request_key")), first_payload
+    assert first_payload == {
         "source_text": "Me quedé en blanco cuando me hizo la pregunta.",
         "context_before": "Durante la entrevista estaba muy nervioso.",
         "context_after": "Después respiré y pude responder.",
@@ -400,7 +421,7 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
     english.fill("My own editable meaning")
     adjacent_line = page.get_by_label("Select transcript line 3", exact=True)
     with page.expect_request(
-        lambda request: request.method == "POST" and request.url.endswith("/translations/selection"),
+        lambda request: request.method == "POST" and request.url.endswith("/translation-jobs"),
         timeout=10_000,
     ) as adjacent_request_info:
         adjacent_line.focus()
@@ -453,7 +474,7 @@ def run_device(browser: Any, base: str, output: Path, name: str) -> dict[str, An
         }""", selection)
         expect(page.get_by_label("Selected phrase", exact=True)).to_have_value(selection["spanish"])
         expect(english).to_have_value(selection["english"], timeout=10_000)
-        last_translation = [item for item in evidence["api_requests"] if item["path"].endswith("/translations/selection")][-1]
+        last_translation = [item for item in evidence["api_requests"] if item["path"].endswith("/translation-jobs")][-1]
         assert last_translation["body"]["source_text"] == selection["spanish"]
         assert "English" not in last_translation["body"]["source_text"]
     expect(save).to_be_enabled()
