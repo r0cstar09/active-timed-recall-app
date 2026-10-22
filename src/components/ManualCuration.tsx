@@ -10,10 +10,30 @@ import {
   newerDraft,
   promotableApprovedDrafts,
 } from "../lib/curationState";
-import { selectionEnglishAfterSourceChange, shouldApplySelectionTranslation, selectionTranslationCanSave } from "../lib/selectionTranslation";
+import {
+  parseSelectionTranslationIntent,
+  restorableSelectionTranslationIntent,
+  selectionEnglishAfterSourceChange,
+  selectionTranslationIntentMatches,
+  shouldApplySelectionTranslation,
+  selectionTranslationCanSave,
+  type SelectionTranslationIntent,
+} from "../lib/selectionTranslation";
 import type { CurationDraft, CurationImport, DraftPatch, TranscriptSegment } from "../lib/curationTypes";
 
 const LAST_IMPORT = "spanish.curation.lastImport";
+const translationIntentKey = (importId: number) => `spanish.curation.selectionTranslation:${importId}`;
+function readTranslationIntent(importId: number): SelectionTranslationIntent | null {
+  try { return parseSelectionTranslationIntent(localStorage.getItem(translationIntentKey(importId))); }
+  catch { return null; }
+}
+function writeTranslationIntent(intent: SelectionTranslationIntent) {
+  try { localStorage.setItem(translationIntentKey(intent.importId), JSON.stringify(intent)); } catch { /* optional cache */ }
+}
+
+function newTranslationRequestKey() {
+  return `selection:${typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `${Date.now()}:${Math.random().toString(36).slice(2)}`}`;
+}
 const isDraftWorking = (draft: CurationDraft) => draft.status === "queued" || draft.status === "preparing";
 function mergeDrafts(current: CurationDraft[], incoming: CurationDraft[]) {
   const map = new Map(current.map((draft) => [draft.id, draft]));
@@ -179,7 +199,21 @@ export default function ManualCuration() {
     const id = raw && /^\d+$/.test(raw) ? Number(raw) : null;
     if (id) {
       activeId.current = id;
-      curationApi.getImport(id).then((value) => { if (!cancelled && version === epoch.current && activeId.current === id) remember(value); })
+      curationApi.getImport(id).then((value) => {
+        if (cancelled || version !== epoch.current || activeId.current !== id) return;
+        remember(value);
+        const saved = restorableSelectionTranslationIntent(readTranslationIntent(id), id, value.transcript);
+        if (saved && !spanishRef.current) {
+          spanishRef.current = saved.sourceText;
+          selectionEnglishRef.current = saved.english ?? "";
+          lastAutomaticEnglish.current = saved.lastAutomaticEnglish ?? "";
+          learnerOwnsEnglish.current = saved.learnerEdited ?? false;
+          setSelected(saved.selectedIndices!);
+          setSpanish(saved.sourceText);
+          setSelectionEnglish(saved.english ?? "");
+          setSelectionTranslationNotice("Restored your selected phrase; reconnecting to its translation.");
+        }
+      })
         .catch((err) => {
           if (cancelled || version !== epoch.current) return;
           if (err instanceof CurationApiError && err.status === 404) {
@@ -245,6 +279,9 @@ export default function ManualCuration() {
   }
 
   function resetSelection() {
+    if (activeId.current) {
+      try { localStorage.removeItem(translationIntentKey(activeId.current)); } catch { /* optional cache */ }
+    }
     selectionTranslationRequest.current++;
     learnerOwnsEnglish.current = false;
     spanishRef.current = ""; selectionEnglishRef.current = ""; lastAutomaticEnglish.current = "";
@@ -255,6 +292,7 @@ export default function ManualCuration() {
 
   function clearImportPointer(importId: number) {
     try {
+      localStorage.removeItem(translationIntentKey(importId));
       if (localStorage.getItem(LAST_IMPORT) === String(importId)) localStorage.removeItem(LAST_IMPORT);
     } catch { /* optional browser cache */ }
     const next = new URL(window.location.href);
@@ -304,6 +342,16 @@ export default function ManualCuration() {
   }
 
   useEffect(() => {
+    const id = activeId.current;
+    if (!id) return;
+    const saved = readTranslationIntent(id);
+    if (saved && saved.sourceText === spanishRef.current.trim()) {
+      writeTranslationIntent({ ...saved, english: selectionEnglishRef.current,
+        lastAutomaticEnglish: lastAutomaticEnglish.current, learnerEdited: learnerOwnsEnglish.current });
+    }
+  }, [selectionEnglish]);
+
+  useEffect(() => {
     const sourceText = spanish.trim();
     const active = current;
     const importId = active?.id;
@@ -324,13 +372,45 @@ export default function ManualCuration() {
     const contextAfter = lastPosition >= 0 && lastPosition + 1 < active.transcript.length
       ? active.transcript[lastPosition + 1].text
       : "";
-    const timer = window.setTimeout(() => {
-      curationApi.translateSelection(importId, {
-        source_text: sourceText,
-        context_before: contextBefore,
-        context_after: contextAfter,
-      }).then((result) => {
-        if (activeId.current !== importId || requestId !== selectionTranslationRequest.current || sourceText !== spanishRef.current.trim()) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const stillCurrent = () => !cancelled
+      && activeId.current === importId
+      && requestId === selectionTranslationRequest.current
+      && sourceText === spanishRef.current.trim();
+    const identity = { importId, sourceText, contextBefore, contextAfter };
+    const saved = readTranslationIntent(importId);
+    let intent: SelectionTranslationIntent = {
+      ...(selectionTranslationIntentMatches(saved, identity) ? saved! : { ...identity, requestKey: newTranslationRequestKey() }),
+      selectedIndices: sorted,
+      transcriptText: active.transcript.filter((line) => sorted.includes(line.index)).map((line) => line.text).join(" "),
+      english: selectionEnglishRef.current,
+      lastAutomaticEnglish: lastAutomaticEnglish.current,
+      learnerEdited: learnerOwnsEnglish.current,
+    };
+    // Persist selection and identity before debounce/POST, including response loss.
+    writeTranslationIntent(intent);
+    timer = window.setTimeout(() => {
+      void (async () => {
+        let job = await curationApi.enqueueSelectionTranslation(importId, intent.requestKey, {
+          source_text: sourceText,
+          context_before: contextBefore,
+          context_after: contextAfter,
+        });
+        if (!stillCurrent()) return;
+        intent = { ...intent, requestKey: job.request_key, jobId: job.id,
+          english: selectionEnglishRef.current, lastAutomaticEnglish: lastAutomaticEnglish.current,
+          learnerEdited: learnerOwnsEnglish.current };
+        writeTranslationIntent(intent);
+        while (stillCurrent() && (job.status === "queued" || job.status === "running")) {
+          await new Promise((resolve) => window.setTimeout(resolve, 1400));
+          if (!stillCurrent()) return;
+          job = await curationApi.getSelectionTranslationJob(job.id);
+        }
+        if (!stillCurrent()) return;
+        if (job.status === "failed") throw new Error(job.error || "English translation failed.");
+        const english = job.result?.english?.trim();
+        if (job.status !== "completed" || !english) throw new Error("Translation job completed without an English meaning.");
         setTranslationSource(sourceText);
         if (shouldApplySelectionTranslation({
           requestId,
@@ -341,22 +421,22 @@ export default function ManualCuration() {
           lastAutomaticEnglish: lastAutomaticEnglish.current,
           learnerEdited: learnerOwnsEnglish.current,
         })) {
-          lastAutomaticEnglish.current = result.english;
-          selectionEnglishRef.current = result.english;
-          setSelectionEnglish(result.english);
+          lastAutomaticEnglish.current = english;
+          selectionEnglishRef.current = english;
+          setSelectionEnglish(english);
           setSelectionTranslationStatus("ready");
-        } else if (requestId === selectionTranslationRequest.current && sourceText === spanishRef.current.trim()) {
+        } else {
           setSelectionTranslationStatus("ready");
           setSelectionTranslationNotice("English meaning kept because you edited it.");
         }
-      }).catch((err) => {
-        if (activeId.current !== importId || requestId !== selectionTranslationRequest.current || sourceText !== spanishRef.current.trim()) return;
+      })().catch((err) => {
+        if (!stillCurrent()) return;
         setTranslationSource(sourceText);
         setSelectionTranslationStatus("failed");
         setSelectionTranslationError(message(err));
       });
     }, 450);
-    return () => { window.clearTimeout(timer); selectionTranslationRequest.current++; };
+    return () => { cancelled = true; window.clearTimeout(timer); selectionTranslationRequest.current++; };
   }, [current?.id, selected.join(","), spanish, selectionTranslationRetry]);
 
   function chooseSource(value: CurationImport) {
@@ -381,6 +461,7 @@ export default function ManualCuration() {
   function selectLine(index: number, checked: boolean) {
     if (!current) return;
     const next = checked ? [...new Set([...selected, index])].sort((a, b) => a - b) : selected.filter((i) => i !== index);
+    if (!next.length) { resetSelection(); return; }
     setSelected(next);
     const lines = current.transcript.filter((line) => next.includes(line.index));
     const nextSpanish = lines.map((line) => line.text).join(" ");

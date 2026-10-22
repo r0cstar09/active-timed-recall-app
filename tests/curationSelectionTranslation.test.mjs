@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  parseSelectionTranslationIntent,
+  restorableSelectionTranslationIntent,
   selectionEnglishAfterSourceChange,
+  selectionTranslationIntentMatches,
   shouldApplySelectionTranslation,
   selectionTranslationCanSave,
 } from "../src/lib/selectionTranslation.ts";
@@ -55,6 +58,49 @@ test("saving requires current exact translation or explicit English after failur
 test("explicit learner ownership survives equality with the previous automatic value", () => {
   assert.equal(shouldApplySelectionTranslation({ requestId: 1, latestRequestId: 1, requestedSpanish: "Hola", currentSpanish: "Hola", currentEnglish: "Hello", lastAutomaticEnglish: "Hello", learnerEdited: true }), false);
   assert.equal(selectionEnglishAfterSourceChange("Hello", "Hello", "Hello there", true).english, "Hello");
+});
+
+test("translation reconnect intent is accepted only for the exact selected scope", () => {
+  const intent = parseSelectionTranslationIntent(JSON.stringify({
+    requestKey: "selection:stable-key",
+    jobId: 42,
+    importId: 7,
+    sourceText: "Dímelo.",
+    contextBefore: "Antes.",
+    contextAfter: "Después.",
+  }));
+  assert.ok(intent);
+  assert.equal(selectionTranslationIntentMatches(intent, {
+    importId: 7, sourceText: "Dímelo.", contextBefore: "Antes.", contextAfter: "Después.",
+  }), true);
+  assert.equal(selectionTranslationIntentMatches(intent, {
+    importId: 7, sourceText: "No me lo digas.", contextBefore: "Antes.", contextAfter: "Después.",
+  }), false);
+  assert.equal(parseSelectionTranslationIntent('{"requestKey":"short"}'), null);
+});
+
+test("reload restores partial Spanish and learner-owned English before job reconnect", () => {
+  const transcript = [{ index: 4, text: "Antes." }, { index: 7, text: "Dímelo ahora." }, { index: 9, text: "Después." }];
+  const intent = parseSelectionTranslationIntent(JSON.stringify({
+    requestKey: "selection:lost-response", importId: 12,
+    sourceText: "Dímelo", contextBefore: "Antes.", contextAfter: "Después.",
+    selectedIndices: [7], transcriptText: "Dímelo ahora.",
+    english: "My own English", lastAutomaticEnglish: "", learnerEdited: true,
+  }));
+  assert.ok(intent);
+  const restored = restorableSelectionTranslationIntent(intent, 12, transcript);
+  assert.equal(restored.requestKey, "selection:lost-response");
+  assert.deepEqual(restored.selectedIndices, [7]);
+  assert.equal(restored.sourceText, "Dímelo");
+  assert.equal(restored.english, "My own English");
+  assert.equal(restored.learnerEdited, true);
+  assert.equal(restorableSelectionTranslationIntent(intent, 13, transcript), null);
+  assert.equal(restorableSelectionTranslationIntent(intent, 12, transcript.filter(x => x.index !== 7)), null);
+  assert.equal(restorableSelectionTranslationIntent(intent, 12, transcript.map(x => x.index === 7 ? {...x, text: "Changed."} : x)), null);
+  assert.equal(restorableSelectionTranslationIntent({...intent, contextBefore: "wrong"}, 12, transcript), null);
+  for (const selectedIndices of [[-1], [7, 7], ["7"], []]) {
+    assert.equal(parseSelectionTranslationIntent(JSON.stringify({...intent, selectedIndices})), null);
+  }
 });
 
 test("expanding or replacing the Spanish span preserves learner-authored English", () => {

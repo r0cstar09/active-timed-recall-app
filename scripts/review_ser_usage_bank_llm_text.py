@@ -1,52 +1,110 @@
 #!/usr/bin/env python3
+"""Review a saved SER bank through Hermes and emit a textual QA report."""
 from __future__ import annotations
-import json, os, time
+
+import argparse
+import json
 from pathlib import Path
-import requests
-ROOT=Path(__file__).resolve().parents[1]
-BANK=ROOT/'src/data/generated/c1_verb_usage_banks.json'
-OUT=ROOT/'reports/ser_usage_llm_generation/llm_quality_review_text.md'
-URL=os.getenv('SPANISH_LLM_PROXY','http://34.24.121.154:8787/v1/chat/completions')
-MODEL=os.getenv('SPANISH_LLM_MODEL','gemini-2.5-flash')
+from typing import Any
 
-def call(msg):
-    payload={'model':MODEL,'messages':[{'role':'system','content':'You are a concise Spanish C1 curriculum QA reviewer. Flag only clear fix-before-study problems.'},{'role':'user','content':msg}], 'temperature':0.1, 'max_tokens':2500}
-    last=None
-    for i in range(4):
-        try:
-            r=requests.post(URL,json=payload,timeout=140)
-            if r.status_code==200: return r.json()['choices'][0]['message']['content']
-            last=r.text[:300]
-        except Exception as e: last=repr(e)
-        time.sleep(2+i)
-    raise RuntimeError(last)
+try:  # package import during tests; direct import when run as a script
+    from .hermes_authoring import HermesAuthoring
+except ImportError:  # pragma: no cover - exercised by direct CLI execution
+    from hermes_authoring import HermesAuthoring
 
-prompts=json.load(open(BANK,encoding='utf-8'))['verbs']['ser']['prompts']
-parts=[f'# SER usage bank LLM QA review\n\nmodel: {MODEL}\n']
-fix_lines=[]
-for b in range(1,11):
-    compact=[]
-    for p in prompts:
-        if p['batch']==b:
-            compact.append(f"{p['id']} | {p['tense']} | {p['construction']} | EN: {p['prompt_en']} | ES: {p['expected_es']} | vocab: {', '.join(p['target_vocabulary'])}")
-    msg='''Review these 50 SER prompts. Flag only clear fix-before-study issues: wrong/unnatural Spanish, English mismatch, wrong SER use, obvious estar/tener/haber issue, bizarre semantics, target vocabulary misuse, or prompt leaks Spanish.
+ROOT = Path(__file__).resolve().parents[1]
+BANK = ROOT / "src/data/generated/c1_verb_usage_banks.json"
+OUT = ROOT / "reports/ser_usage_llm_generation/llm_quality_review_text.md"
 
-Respond in this exact plain-text style:
+
+def compact_batch(prompts: list[dict[str, Any]], batch: int) -> str:
+    lines: list[str] = []
+    for prompt in prompts:
+        if prompt.get("batch") == batch:
+            vocabulary = prompt.get("target_vocabulary", [])
+            lines.append(
+                f"{prompt.get('id')} | {prompt.get('tense')} | {prompt.get('construction')} | "
+                f"EN: {prompt.get('prompt_en')} | ES: {prompt.get('expected_es')} | "
+                f"vocab: {', '.join(map(str, vocabulary))}"
+            )
+    if not lines:
+        raise ValueError(f"SER bank has no prompts for batch {batch}")
+    return "\n".join(lines)
+
+
+def review_prompt(batch: int, compact: str) -> str:
+    return f"""You are Hermes acting as a concise Spanish curriculum QA reviewer.
+Review SER usage-bank batch {batch}. Flag only clear fix-before-study issues: wrong or unnatural Spanish, English mismatch, wrong SER use, an obvious ESTAR/TENER/HABER error, bizarre semantics, target-vocabulary misuse, or Spanish leaked into the English prompt.
+Return strict JSON only with exactly one key: {{"report":"..."}}.
+The report value must be plain text in this exact format:
 FIXES: NONE
 OVERALL: one sentence
-
-If there are fixes, use:
+Or, when fixes exist:
 FIXES:
-- ser-usage-123: issue; suggested Spanish: ...
+- ser-usage-NNN: issue; suggested Spanish: ...
 OVERALL: one sentence
+Do not include markdown fences or any other JSON keys.
 
-Prompts:\n'''+"\n".join(compact)
-    print('review batch',b,flush=True)
-    text=call(msg).strip()
-    parts.append(f'\n## Batch {b}\n\n{text}\n')
-    for line in text.splitlines():
-        if line.strip().startswith('- ser-usage-'):
-            fix_lines.append(line.strip())
-OUT.write_text('\n'.join(parts),encoding='utf-8')
-print('fix_lines',len(fix_lines))
-for x in fix_lines[:30]: print(x)
+Prompts:
+{compact}"""
+
+
+def validate_review(value: Any, batch: int) -> str:
+    if not isinstance(value, dict) or set(value) != {"report"}:
+        raise ValueError(f"batch {batch}: review must be exactly {{report: string}}")
+    report = value["report"]
+    if not isinstance(report, str) or not report.strip():
+        raise ValueError(f"batch {batch}: report must be a non-empty string")
+    text = report.strip()
+    if not text.startswith("FIXES:") or "\nOVERALL:" not in text:
+        raise ValueError(f"batch {batch}: report does not use the required textual format")
+    return text
+
+
+def review_bank(
+    *,
+    authorer: HermesAuthoring | Any | None = None,
+    bank_path: Path = BANK,
+    out_path: Path = OUT,
+) -> dict[str, Any]:
+    bank = json.loads(bank_path.read_text(encoding="utf-8"))
+    prompts = bank.get("verbs", {}).get("ser", {}).get("prompts")
+    if not isinstance(prompts, list) or not prompts:
+        raise ValueError("SER prompts are missing")
+    batches = sorted({prompt.get("batch") for prompt in prompts if isinstance(prompt.get("batch"), int)})
+    if not batches:
+        raise ValueError("SER prompts have no integer batches")
+
+    active_authorer = authorer if authorer is not None else HermesAuthoring()
+    provenance = active_authorer.provenance()
+    reports: list[tuple[int, str]] = []
+    for batch in batches:
+        request = review_prompt(batch, compact_batch(prompts, batch))
+        value = active_authorer.generate_json(request, temperature=0.1, max_output_tokens=4000)
+        reports.append((batch, validate_review(value, batch)))
+
+    parts = [
+        "# SER usage bank Hermes QA review",
+        "",
+        f"backend: {provenance['backend']}",
+        f"provider: {provenance['provider']}",
+        f"model: {provenance['model']}",
+    ]
+    fix_lines: list[str] = []
+    for batch, report in reports:
+        parts.extend(("", f"## Batch {batch}", "", report))
+        fix_lines.extend(line.strip() for line in report.splitlines() if line.strip().startswith("- ser-usage-"))
+    # Do not leave a partial review if any batch response is invalid.
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text("\n".join(parts) + "\n", encoding="utf-8")
+    return {"output": str(out_path), "batches": len(reports), "fix_lines": len(fix_lines), "provenance": provenance}
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.parse_args()
+    print(json.dumps(review_bank(), ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()

@@ -384,6 +384,19 @@ export type PatternPack = {
   drills: PatternDrill[];
 };
 
+export type PatternPackJob = {
+  id: number;
+  request_key: string;
+  pattern_id: string;
+  source_lesson_id?: string | null;
+  requested_count: number;
+  status: "queued" | "running" | "completed" | "failed";
+  progress_message?: string | null;
+  error?: string | null;
+  pack_id?: number | null;
+  pack?: PatternPack | null;
+};
+
 export type PatternMiss = {
   id: number;
   pattern_id: string;
@@ -621,6 +634,10 @@ function hydratePatternPack(pack: PatternPack): PatternPack {
       audio_url: drill.audio_url ? resolveUrl(drill.audio_url) : (drill.audio_path ? resolveUrl(`/api/audio/source/${drill.audio_path}`) : null),
     })),
   };
+}
+
+function hydratePatternPackJob(job: PatternPackJob): PatternPackJob {
+  return { ...job, pack: job.pack ? hydratePatternPack(job.pack) : null };
 }
 
 export const api = {
@@ -928,6 +945,19 @@ export const api = {
     const suffix = patternId ? `?pattern_id=${encodeURIComponent(patternId)}` : "";
     const res = await request<unknown>(`/api/study/pattern-packs${suffix}`);
     return toArray<PatternPack>(res, ["packs", "items", "data", "results"]).map(hydratePatternPack);
+  },
+  async enqueuePatternPack(
+    patternId: string,
+    payload: { request_key: string; source_lesson_id?: string | null; count?: number },
+  ): Promise<PatternPackJob> {
+    return hydratePatternPackJob(await requestJson<PatternPackJob>(
+      `/api/study/patterns/${encodeURIComponent(patternId)}/generate-pack-job`,
+      "POST",
+      payload,
+    ));
+  },
+  async getPatternPackJob(jobId: number): Promise<PatternPackJob> {
+    return hydratePatternPackJob(await request<PatternPackJob>(`/api/study/pattern-pack-jobs/${jobId}`));
   },
   async generatePatternPack(patternId: string, payload: { source_lesson_id?: string | null; count?: number } = {}): Promise<{ pack: PatternPack }> {
     const response = await requestJson<{ pack: PatternPack }>(`/api/study/patterns/${encodeURIComponent(patternId)}/generate-pack`, "POST", payload);

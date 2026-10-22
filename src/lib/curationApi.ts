@@ -9,6 +9,7 @@ import type {
   DraftSplitRequest,
   PromoteResponse,
   SelectionTranslationRequest,
+  SelectionTranslationJob,
 } from "./curationTypes";
 
 export class CurationApiError extends Error {
@@ -143,6 +144,24 @@ export const curationApi = {
       `/api/curation/imports/${encodeURIComponent(String(importId))}/translations/retry`,
       { method: "POST" },
     ));
+  },
+
+  enqueueSelectionTranslation(
+    importId: number | string,
+    requestKey: string,
+    selection: SelectionTranslationRequest,
+  ): Promise<SelectionTranslationJob> {
+    return requestJson<SelectionTranslationJob>(
+      `/api/curation/imports/${encodeURIComponent(String(importId))}/translation-jobs`,
+      "POST",
+      { request_key: requestKey, ...selection },
+    );
+  },
+
+  getSelectionTranslationJob(jobId: number | string): Promise<SelectionTranslationJob> {
+    return request<SelectionTranslationJob>(
+      `/api/curation/translation-jobs/${encodeURIComponent(String(jobId))}`,
+    );
   },
 
   translateSelection(

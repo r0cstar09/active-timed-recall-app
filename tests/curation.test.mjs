@@ -230,7 +230,7 @@ test("ingest UI makes manual curation primary while retaining legacy history and
   assert.match(source, /line\.english/);
   assert.match(source, /translation_status/);
   assert.match(source, /Retry English translations/);
-  assert.match(source, /translateSelection/);
+  assert.match(source, /enqueueSelectionTranslation/);
   assert.match(source, /shouldApplySelectionTranslation/);
   assert.match(source, /English meaning kept because you edited it/);
   assert.doesNotMatch(source, /api\.createIngest/);

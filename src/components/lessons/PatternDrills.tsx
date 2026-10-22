@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ApiError, api, type PatternCatalogEntry, type PatternDrill, type PatternPack, type PatternGradeResultItem } from "../../lib/api";
+import { ApiError, api, type PatternCatalogEntry, type PatternDrill, type PatternPack, type PatternPackJob, type PatternGradeResultItem } from "../../lib/api";
 import AudioPlayer from "../AudioPlayer";
 
 type View = "all" | "unlocked" | "packs";
@@ -24,12 +24,46 @@ function drillKey(drill: PatternDrill) {
   return `pattern-drill:${drill.id}`;
 }
 
+type SavedPatternJob = {
+  requestKey: string;
+  jobId?: number;
+  sourceLessonId?: string | null;
+  count: number;
+};
+
+const patternJobStorageKey = (patternId: string) => `spanish.patternPackJob:${patternId}`;
+
+function readSavedPatternJob(patternId: string): SavedPatternJob | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(patternJobStorageKey(patternId)) || "null") as Partial<SavedPatternJob> | null;
+    return value && typeof value.requestKey === "string" && value.requestKey.length >= 8
+      ? { requestKey: value.requestKey, jobId: value.jobId, sourceLessonId: value.sourceLessonId, count: value.count ?? 10 }
+      : null;
+  } catch { return null; }
+}
+
+function writeSavedPatternJob(patternId: string, value: SavedPatternJob) {
+  try { localStorage.setItem(patternJobStorageKey(patternId), JSON.stringify(value)); } catch { /* optional cache */ }
+}
+
+function clearSavedPatternJob(patternId: string, requestKey: string) {
+  try {
+    const saved = readSavedPatternJob(patternId);
+    if (saved?.requestKey === requestKey) localStorage.removeItem(patternJobStorageKey(patternId));
+  } catch { /* optional cache */ }
+}
+
+function newRequestKey() {
+  return `pattern:${typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `${Date.now()}:${Math.random().toString(36).slice(2)}`}`;
+}
+
 export default function PatternDrills() {
   const [patterns, setPatterns] = useState<PatternCatalogEntry[]>([]);
   const [packs, setPacks] = useState<PatternPack[]>([]);
   const [view, setView] = useState<View>("unlocked");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
+  const [generationJobs, setGenerationJobs] = useState<Record<string, PatternPackJob>>({});
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<number, PatternGradeResultItem>>({});
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +86,80 @@ export default function PatternDrills() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!patterns.length) return;
+    let cancelled = false;
+    for (const pattern of patterns) {
+      const saved = readSavedPatternJob(pattern.id);
+      if (!saved) continue;
+      api.enqueuePatternPack(pattern.id, {
+        request_key: saved.requestKey,
+        source_lesson_id: saved.sourceLessonId,
+        count: saved.count,
+      }).then((job) => {
+        if (cancelled) return;
+        writeSavedPatternJob(pattern.id, {
+          requestKey: job.request_key,
+          jobId: job.id,
+          sourceLessonId: job.source_lesson_id,
+          count: job.requested_count,
+        });
+        setGenerationJobs((current) => ({ ...current, [pattern.id]: job }));
+        if (job.status === "completed") {
+          clearSavedPatternJob(pattern.id, job.request_key);
+          setMessage(`Generated ${job.pack?.drills.length ?? 0} drills. The saved pack is ready.`);
+          void refresh(false);
+        } else if (job.status === "failed") {
+          setError(job.error || "Pattern generation failed. Retry to create a replacement job.");
+        }
+      }).catch((err) => { if (!cancelled) setError(err instanceof Error ? err.message : String(err)); });
+    }
+    return () => { cancelled = true; };
+  }, [patterns.map((pattern) => pattern.id).join(",")]);
+
+  const generationPollKey = Object.values(generationJobs)
+    .filter((job) => job.status === "queued" || job.status === "running")
+    .map((job) => `${job.id}:${job.status}`)
+    .sort()
+    .join(",");
+  useEffect(() => {
+    if (!generationPollKey) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    async function poll() {
+      const active = Object.values(generationJobs).filter((job) => job.status === "queued" || job.status === "running");
+      try {
+        const updates = await Promise.all(active.map((job) => api.getPatternPackJob(job.id)));
+        if (cancelled) return;
+        const completed = updates.some((job) => job.status === "completed");
+        // React may defer/replay state updaters: no side effects or flags inside.
+        setGenerationJobs((current) => ({
+          ...current,
+          ...Object.fromEntries(updates.map((job) => [job.pattern_id, job])),
+        }));
+        for (const job of updates) {
+          if (job.status === "completed") {
+            clearSavedPatternJob(job.pattern_id, job.request_key);
+            setMessage(`Generated ${job.pack?.drills.length ?? 0} drills. The saved pack is ready.`);
+          } else if (job.status === "failed") {
+            setError(job.error || "Pattern generation failed. Retry without losing saved packs.");
+          }
+        }
+        if (completed) await refresh(false);
+        if (!cancelled && updates.some((job) => job.status === "queued" || job.status === "running")) {
+          timer = setTimeout(poll, 1800);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(`Connection interrupted while checking generation. The server job is saved. ${err instanceof Error ? err.message : String(err)}`);
+          timer = setTimeout(poll, 2500);
+        }
+      }
+    }
+    timer = setTimeout(poll, 800);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [generationPollKey, refresh]);
 
   const hasPendingAudio = packs.some((pack) => pack.drills.some((drill) => drill.audio_status === "pending"));
   useEffect(() => {
@@ -81,12 +189,38 @@ export default function PatternDrills() {
     setError(null);
     setMessage(null);
     try {
-      const res = await api.generatePatternPack(pattern.id, { source_lesson_id: pattern.source_lesson_id, count: 10 });
-      setMessage(`Generated ${res.pack.drills.length} drills for ${pattern.name}.`);
-      await refresh();
+      const saved = readSavedPatternJob(pattern.id);
+      const intent: SavedPatternJob = saved ?? {
+        requestKey: newRequestKey(),
+        sourceLessonId: pattern.source_lesson_id,
+        count: 10,
+      };
+      // Persist intent before POST so a lost enqueue response can be reissued idempotently.
+      writeSavedPatternJob(pattern.id, intent);
+      const job = await api.enqueuePatternPack(pattern.id, {
+        request_key: intent.requestKey,
+        source_lesson_id: intent.sourceLessonId,
+        count: intent.count,
+      });
+      writeSavedPatternJob(pattern.id, {
+        requestKey: job.request_key,
+        jobId: job.id,
+        sourceLessonId: job.source_lesson_id,
+        count: job.requested_count,
+      });
+      setGenerationJobs((current) => ({ ...current, [pattern.id]: job }));
+      if (job.status === "completed") {
+        clearSavedPatternJob(pattern.id, job.request_key);
+        setMessage(`Generated ${job.pack?.drills.length ?? 0} drills for ${pattern.name}.`);
+        await refresh(false);
+      } else if (job.status === "failed") {
+        setError(job.error || "Pattern generation failed. Retry to create a replacement job.");
+      } else {
+        setMessage(`Hermes is generating a saved pack for ${pattern.name}. You can leave and return.`);
+      }
     } catch (err) {
       const msg = err instanceof ApiError || err instanceof Error ? err.message : String(err);
-      setError(msg);
+      setError(`${msg} The generation request is saved; Retry will reconnect safely.`);
     } finally {
       setBusy((b) => ({ ...b, [key]: false }));
     }
@@ -154,6 +288,8 @@ export default function PatternDrills() {
             const total = patternPacks.flatMap((p) => p.drills).length;
             const canGenerate = pattern.status !== "locked";
             const key = `generate:${pattern.id}`;
+            const generationJob = generationJobs[pattern.id];
+            const generationActive = generationJob?.status === "queued" || generationJob?.status === "running";
             return (
               <article className="card card-tight stack pattern-card" key={pattern.id}>
                 <div className="row between wrap">
@@ -169,8 +305,8 @@ export default function PatternDrills() {
                 </div>
                 {canGenerate ? (
                   <div className="btn-row">
-                    <button className="btn btn-primary" type="button" disabled={busy[key]} onClick={() => void generatePack(pattern)}>
-                      {busy[key] ? "Generating…" : patternPacks.length ? "Generate next pack" : "Generate drill pack"}
+                    <button className="btn btn-primary" type="button" disabled={busy[key] || generationActive} onClick={() => void generatePack(pattern)}>
+                      {busy[key] ? "Reconnecting…" : generationActive ? (generationJob.progress_message || "Hermes is generating…") : generationJob?.status === "failed" ? "Retry generation" : patternPacks.length ? "Generate next pack" : "Generate drill pack"}
                     </button>
                     {patternPacks.length > 0 ? (
                       <button className="btn" type="button" onClick={() => setView("packs")}>Open saved packs</button>

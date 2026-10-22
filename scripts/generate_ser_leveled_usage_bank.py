@@ -1,257 +1,242 @@
 #!/usr/bin/env python3
-"""Create a leveled SER usage bank: easy first, old C1 preserved as ser_advanced."""
+"""Author an easy-first 500-item SER bank through Hermes only.
+
+The command is import-safe and preserves the saved bank unless --replace-ser is
+explicitly supplied.  A prior C1 SER bank is retained as ``ser_advanced``.
+"""
 from __future__ import annotations
 
+import argparse
 import json
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Any, cast
 
+try:  # package import during tests; direct import when run as a script
+    from .hermes_authoring import HermesAuthoring, duplicate_errors, exclusion_context
+except ImportError:  # pragma: no cover - exercised by direct CLI execution
+    from hermes_authoring import HermesAuthoring, duplicate_errors, exclusion_context
+
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "src/data/generated/c1_verb_usage_banks.json"
 REPORT = ROOT / "reports/ser_usage_leveling_report.json"
+CACHE_ROOT = ROOT / "reports/ser_usage_leveled_generation/cache"
+SER_FORMS = re.compile(
+    r"\b(soy|eres|es|somos|sois|son|fui|fuiste|fue|fuimos|fuisteis|fueron|"
+    r"era|eras|éramos|erais|eran|sea|seas|seamos|seáis|sean|fuera|fueras|"
+    r"fuéramos|fuerais|fueran|sería|serías|seríamos|seríais|serían|seré|"
+    r"serás|será|seremos|seréis|serán|sido|ser)\b",
+    re.I,
+)
+REQUIRED = [
+    "id", "verb", "batch", "batch_size", "level", "tense", "mood",
+    "difficulty", "construction", "prompt_en", "expected_es",
+    "acceptable_answer_pattern", "target_vocabulary", "grading_notes",
+    "correction_hint",
+]
+LEVELS = [
+    {"name": "easy", "start": 1, "end": 200, "batches": [1, 2, 3, 4], "description": "short present-tense identity, description, nationality, material, event time/place"},
+    {"name": "medium", "start": 201, "end": 350, "batches": [5, 6, 7], "description": "source, purpose, ownership, simple cause/identity"},
+    {"name": "past", "start": 351, "end": 425, "batches": [8, 9], "description": "fue, era, and ha sido in short sentences"},
+    {"name": "advanced_intro", "start": 426, "end": 500, "batches": [9, 10], "description": "short subjunctive, conditional, future, and natural passive introduction"},
+]
 
-prompts: list[dict[str, Any]] = []
-seen_en: set[str] = set()
-seen_es: set[str] = set()
 
-SER_FORMS = ("soy", "eres", "es", "somos", "son", "fue", "fueron", "era", "eran", "ha sido", "han sido", "sea", "sean", "sería", "serían", "será", "serán", "fuera")
+def level_for_index(index: int) -> str:
+    for level in LEVELS:
+        if level["start"] <= index <= level["end"]:
+            return str(level["name"])
+    raise ValueError(f"index outside SER bank: {index}")
 
-def mood(tense: str) -> str:
-    return "subjunctive" if "Subjunctive" in tense else "indicative/conditional"
 
-def level_for_index(i: int) -> str:
-    if i <= 200:
-        return "easy"
-    if i <= 350:
-        return "medium"
-    if i <= 425:
-        return "past"
-    return "advanced_intro"
+def _chunks() -> list[tuple[int, int]]:
+    chunks: list[tuple[int, int]] = []
+    start = 1
+    boundaries = {51, 101, 151, 201, 251, 301, 351, 401, 426, 451, 501}
+    while start <= 500:
+        count = min(10, 501 - start)
+        crossing = sorted(boundary for boundary in boundaries if start < boundary < start + count)
+        if crossing:
+            count = crossing[0] - start
+        chunks.append((start, count))
+        start += count
+    return chunks
 
-def add(tense: str, difficulty: str, construction: str, prompt_en: str, expected_es: str, vocab: list[str], hint: str) -> bool:
-    prompt_en = "Say: " + prompt_en.strip().rstrip(".") + "."
-    expected_es = expected_es.strip().rstrip(".") + "."
-    if prompt_en in seen_en or expected_es in seen_es:
-        return False
-    if not any(f in expected_es.lower() for f in SER_FORMS):
-        raise ValueError(f"No SER form in: {expected_es}")
-    seen_en.add(prompt_en); seen_es.add(expected_es)
-    i = len(prompts) + 1
-    prompts.append({
-        "id": f"ser-usage-{i:03d}",
-        "verb": "ser",
-        "batch": (i - 1) // 50 + 1,
-        "batch_size": 50,
-        "level": level_for_index(i),
-        "tense": tense,
-        "mood": mood(tense),
-        "difficulty": difficulty,
-        "construction": construction,
-        "prompt_en": prompt_en,
-        "expected_es": expected_es,
-        "acceptable_answer_pattern": None,
-        "target_vocabulary": vocab,
-        "grading_notes": "Grade for the required SER use, correct form, agreement, and target vocabulary. Do not require accents for pass/fail.",
-        "correction_hint": hint,
+
+def authoring_prompt(start: int, count: int) -> str:
+    end = start + count - 1
+    level = level_for_index(start)
+    batch = (start - 1) // 50 + 1
+    description = next(item["description"] for item in LEVELS if item["name"] == level)
+    return f"""You are Hermes, authoring an easy-first Spanish SER curriculum for an adult learner.
+Return strict JSON only: a bare array of exactly {count} distinct exercise objects.
+IDs: ser-usage-{start:03d} through ser-usage-{end:03d}. Level: {level}. Focus: {description}.
+Every item must use this schema:
+{{"id":"ser-usage-NNN","verb":"ser","batch":{batch},"batch_size":50,"level":"{level}",
+"tense":"Present|Preterite|Imperfect|Present Perfect|Present Subjunctive|Imperfect Subjunctive|Conditional|Future|Mixed",
+"mood":"indicative/conditional|subjunctive|mixed","difficulty":"A1|A1/A2|A2|A2/B1|B1|B1/B2",
+"construction":"short label","prompt_en":"Say: ...","expected_es":"one natural Spanish answer",
+"acceptable_answer_pattern":null,"target_vocabulary":["Spanish target"],
+"grading_notes":"Grade for the required SER use, correct form, agreement, and target vocabulary. Do not require accents for pass/fail.",
+"correction_hint":"short learner-friendly SER explanation"}}
+Hermes must author every prompt and answer. Keep them natural, speakable, age-appropriate, and genuinely distinct. Do not reveal Spanish in prompt_en. Every answer must contain SER. Keep easy items short; add complexity only at the stated level. Do not create uniqueness by adding meaningless context prefixes."""
+
+
+def validate_item(value: Any, index: int) -> list[str]:
+    expected_id = f"ser-usage-{index:03d}"
+    if not isinstance(value, dict):
+        return [f"{expected_id}: not an object"]
+    errors = [f"{expected_id}: missing {field}" for field in REQUIRED if field not in value]
+    if errors:
+        return errors
+    expected_batch = (index - 1) // 50 + 1
+    if value["id"] != expected_id:
+        errors.append(f"{expected_id}: wrong id {value['id']!r}")
+    if value["verb"] != "ser" or value["batch"] != expected_batch or value["batch_size"] != 50:
+        errors.append(f"{expected_id}: wrong verb/batch/batch_size")
+    if value["level"] != level_for_index(index):
+        errors.append(f"{expected_id}: wrong level {value['level']!r}")
+    if not isinstance(value["prompt_en"], str) or not value["prompt_en"].startswith("Say:"):
+        errors.append(f"{expected_id}: prompt_en must start with Say:")
+    if not isinstance(value["expected_es"], str) or not SER_FORMS.search(value["expected_es"]):
+        errors.append(f"{expected_id}: expected_es lacks SER")
+    if not isinstance(value["target_vocabulary"], list) or not value["target_vocabulary"]:
+        errors.append(f"{expected_id}: target_vocabulary must be non-empty")
+    return errors
+
+
+def validate_chunk(value: Any, start: int, count: int) -> list[str]:
+    if not isinstance(value, list):
+        return [f"chunk {start}: response is not an array"]
+    if len(value) != count:
+        return [f"chunk {start}: expected {count}, got {len(value)}"]
+    errors: list[str] = []
+    for offset, item in enumerate(value):
+        errors.extend(validate_item(item, start + offset))
+    return errors
+
+
+def validate_prompts(prompts: list[dict[str, Any]]) -> None:
+    if len(prompts) != 500:
+        raise ValueError(f"expected 500 prompts, got {len(prompts)}")
+    errors: list[str] = []
+    for index, item in enumerate(prompts, 1):
+        errors.extend(validate_item(item, index))
+    english = [re.sub(r"\s+", " ", item["prompt_en"]).casefold() for item in prompts]
+    spanish = [re.sub(r"\s+", " ", item["expected_es"]).casefold() for item in prompts]
+    if len(set(english)) != 500:
+        errors.append("duplicate prompt_en values")
+    if len(set(spanish)) != 500:
+        errors.append("duplicate expected_es values")
+    expected_levels = {"easy": 200, "medium": 150, "past": 75, "advanced_intro": 75}
+    if Counter(item["level"] for item in prompts) != Counter(expected_levels):
+        errors.append("level distribution does not match 200/150/75/75")
+    if errors:
+        raise ValueError("invalid leveled SER bank: " + "; ".join(errors[:40]))
+
+
+def _read_bank(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {"verbs": {}}
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict) or not isinstance(value.get("verbs"), dict):
+        raise ValueError(f"invalid bank at {path}")
+    return value
+
+
+def _write_json(path: Path, value: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def generate_leveled_bank(
+    *,
+    authorer: HermesAuthoring | Any | None = None,
+    out_path: Path = OUT,
+    report_path: Path = REPORT,
+    cache_root: Path = CACHE_ROOT,
+    replace_ser: bool = False,
+) -> dict[str, Any]:
+    existing = _read_bank(out_path)
+    verbs: dict[str, Any] = existing["verbs"]
+    if "ser" in verbs and not replace_ser:
+        return {"status": "preserved", "output": str(out_path), "total_prompts": len(verbs["ser"].get("prompts", []))}
+
+    active_authorer = authorer if authorer is not None else HermesAuthoring()
+    provenance = active_authorer.provenance()
+    cache_dir = cache_root / active_authorer.cache_namespace()
+    prompts: list[dict[str, Any]] = []
+    for start, count in _chunks():
+        cache_path = cache_dir / f"ser_{start:03d}_{start + count - 1:03d}.json"
+        value: Any = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else None
+        errors = validate_chunk(value, start, count) if value is not None else ["not cached"]
+        if not errors:
+            errors = duplicate_errors(value, prompts)
+        if errors:
+            request = authoring_prompt(start, count) + exclusion_context(prompts)
+            value = active_authorer.generate_json(request, temperature=0.65, max_output_tokens=10000)
+            errors = validate_chunk(value, start, count)
+            if not errors:
+                errors = duplicate_errors(value, prompts)
+            if errors:
+                value = active_authorer.generate_json(
+                    request + "\nCorrect and return the complete array. Validation errors:\n" + json.dumps(errors, ensure_ascii=False),
+                    temperature=0.15,
+                    max_output_tokens=10000,
+                )
+                errors = validate_chunk(value, start, count)
+                if not errors:
+                    errors = duplicate_errors(value, prompts)
+            if errors:
+                raise ValueError("Hermes returned an invalid leveled chunk: " + "; ".join(errors[:20]))
+            _write_json(cache_path, value)
+        prompts.extend(cast(list[dict[str, Any]], value))
+
+    validate_prompts(prompts)
+    old_ser = verbs.get("ser")
+    if isinstance(old_ser, dict) and "c1" in str(old_ser.get("quality_note", "")).casefold() and "ser_advanced" not in verbs:
+        preserved = dict(old_ser)
+        preserved["verb"] = "ser_advanced"
+        preserved["quality_note"] = "Advanced/C1 SER bank preserved from the prior generation; not served as the first unlocked SER bank."
+        verbs["ser_advanced"] = preserved
+
+    verbs["ser"] = {
+        "verb": "ser", "english_base": "be", "category": "irregular",
+        "total_prompts": 500, "batch_size": 50, "batches": 10,
+        "levels": [{key: value for key, value in level.items() if key not in ("start", "end")} for level in LEVELS],
+        "quality_note": "Hermes-authored leveled SER usage bank: easy batches first; prior C1 bank preserved separately when present.",
+        "prompts": prompts,
+        "generation": dict(provenance),
+    }
+    existing.update({
+        "source": "hermes/ser-leveled-usage-bank",
+        "count": len(verbs), "batch_size": 50, "prompts_per_verb": 500,
+        "status": "ser_leveled_easy_first; prior c1 bank preserved as ser_advanced",
+        "last_generation": {**provenance, "scope": "ser", "cache_namespace": active_authorer.cache_namespace(), "method": "Hermes-authored validated chunks of at most 10 items"},
     })
-    return True
+    existing.setdefault("generation", dict(existing["last_generation"]))
+    word_counts = [len(re.findall(r"\w+", item["expected_es"], re.UNICODE)) for item in prompts]
+    report = {
+        "output": str(out_path), "total_prompts": 500,
+        "duplicate_prompt_en": 0, "duplicate_expected_es": 0,
+        "batch_counts": sorted(Counter(item["batch"] for item in prompts).items()),
+        "level_counts": Counter(item["level"] for item in prompts).most_common(),
+        "spanish_word_count_avg": round(sum(word_counts) / len(word_counts), 2),
+        "spanish_word_count_max": max(word_counts), "provenance": provenance,
+    }
+    # Do not touch the main bank or report until the complete bank validates.
+    _write_json(out_path, existing)
+    _write_json(report_path, report)
+    return report
 
 
-def lower_first_for_context(text: str) -> str:
-    """Lowercase after context commas without turning English 'I' into 'i'."""
-    return text if text.startswith("I ") else text[0].lower() + text[1:]
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--replace-ser", action="store_true", help="deliberately replace the saved SER bank")
+    args = parser.parse_args()
+    print(json.dumps(generate_leveled_bank(replace_ser=args.replace_ser), ensure_ascii=False, indent=2))
 
 
-names = [
-    ("Ana", "Ana", "f"), ("Luis", "Luis", "m"), ("Marta", "Marta", "f"), ("Carlos", "Carlos", "m"), ("Sofía", "Sofía", "f"),
-    ("Diego", "Diego", "m"), ("Elena", "Elena", "f"), ("Pedro", "Pedro", "m"), ("Lucía", "Lucía", "f"), ("Miguel", "Miguel", "m"),
-]
-professions = [
-    ("a doctor", "doctor", "doctora", "profession", "doctor"), ("a teacher", "maestro", "maestra", "profession", "maestro"),
-    ("a nurse", "enfermero", "enfermera", "profession", "enfermera"), ("a mechanic", "mecánico", "mecánica", "profession", "mecánico"),
-    ("a driver", "conductor", "conductora", "profession", "conductor"), ("a cook", "cocinero", "cocinera", "profession", "cocinera"),
-    ("a student", "estudiante", "estudiante", "identity", "estudiante"), ("a singer", "cantante", "cantante", "profession", "cantante"),
-    ("an artist", "artista", "artista", "profession", "artista"), ("a cashier", "cajero", "cajera", "profession", "cajera"),
-]
-descriptions = [
-    ("tall", "alto", "description", "alto"), ("short", "bajo", "description", "bajo"),
-    ("kind", "amable", "description", "amable"), ("smart", "inteligente", "description", "inteligente"),
-    ("serious", "serio", "description", "serio"), ("funny", "gracioso", "description", "gracioso"),
-    ("young", "joven", "description", "joven"), ("strong", "fuerte", "description", "fuerte"),
-]
-fem_descriptions = {"alto":"alta", "bajo":"baja", "serio":"seria", "gracioso":"graciosa"}
-nationalities = [("Mexican", "mexicano", "mexicana", "México"), ("Colombian", "colombiano", "colombiana", "Colombia"), ("Spanish", "español", "española", "España"), ("Chilean", "chileno", "chilena", "Chile"), ("Peruvian", "peruano", "peruana", "Perú")]
-people = [("My brother", "Mi hermano", "m"), ("My sister", "Mi hermana", "f"), ("My cousin", "Mi primo", "m"), ("My aunt", "Mi tía", "f"), ("The boy", "El niño", "m"), ("The girl", "La niña", "f"), ("The doctor", "La doctora", "f"), ("The teacher", "El maestro", "m")]
-materials = [("table", "mesa", "la", "wood", "madera"), ("chair", "silla", "la", "plastic", "plástico"), ("door", "puerta", "la", "metal", "metal"), ("glass", "vaso", "el", "glass", "vidrio"), ("shirt", "camisa", "la", "cotton", "algodón"), ("jacket", "chaqueta", "la", "leather", "cuero"), ("box", "caja", "la", "cardboard", "cartón"), ("ring", "anillo", "el", "gold", "oro"), ("spoon", "cuchara", "la", "silver", "plata"), ("bag", "bolsa", "la", "paper", "papel")]
-events = [("meeting", "reunión", "la"), ("class", "clase", "la"), ("party", "fiesta", "la"), ("appointment", "cita", "la"), ("concert", "concierto", "el"), ("exam", "examen", "el"), ("game", "partido", "el"), ("wedding", "boda", "la"), ("call", "llamada", "la"), ("interview", "entrevista", "la")]
-times = [("at eight", "a las ocho"), ("at nine", "a las nueve"), ("at ten", "a las diez"), ("tomorrow", "mañana"), ("on Saturday", "el sábado"), ("on Sunday", "el domingo"), ("today", "hoy"), ("tonight", "esta noche")]
-locations = [("in the park", "en el parque"), ("at school", "en la escuela"), ("at home", "en casa"), ("in the office", "en la oficina"), ("at the hotel", "en el hotel"), ("in room two", "en la sala dos"), ("at the station", "en la estación"), ("at the clinic", "en la clínica")]
-
-# Easy: 200 unique short present-tense prompts.
-add("Present", "A1", "identity", "I am a student", "Soy estudiante", ["estudiante"], "Use soy for your identity.")
-add("Present", "A1", "identity", "I am Tony", "Soy Tony", ["Tony"], "Use soy for your name or identity.")
-add("Present", "A1", "profession", "You are a teacher", "Eres maestro", ["maestro"], "Use eres for you are.")
-pairs = [(i, j, names[i], professions[j]) for i in range(len(names)) for j in range(len(professions))]
-pairs.sort(key=lambda item: (item[0] * 7 + item[1] * 3) % 101)
-for _i, _j, name_row, prof_row in pairs:
-    if len(prompts) >= 55:
-        break
-    en_name, es_name, gender = name_row
-    en_prof, es_prof_m, es_prof_f, cons, vocab = prof_row
-    es_prof = es_prof_f if gender == "f" else es_prof_m
-    add("Present", "A1/A2", cons, f"{en_name} is {en_prof}", f"{es_name} es {es_prof}", [vocab], "Use ser for identity or profession.")
-for en_person, es_person, gender in people:
-    for en_adj, es_adj, cons, vocab in descriptions:
-        adj = fem_descriptions.get(es_adj, es_adj) if gender == "f" else es_adj
-        add("Present", "A1/A2", cons, f"{en_person} is {en_adj}", f"{es_person} es {adj}", [vocab], "Use ser for a basic description.")
-        if len(prompts) >= 95: break
-    if len(prompts) >= 95: break
-for en_person, es_person, gender in people:
-    for en_nat, nat_m, nat_f, country in nationalities:
-        add("Present", "A1/A2", "nationality", f"{en_person} is {en_nat}", f"{es_person} es {nat_f if gender == 'f' else nat_m}", [country], "Use ser for nationality.")
-        if len(prompts) >= 125: break
-    if len(prompts) >= 125: break
-for en_obj, es_obj, article, en_mat, es_mat in materials:
-    add("Present", "A1/A2", "material", f"The {en_obj} is made of {en_mat}", f"{article.capitalize()} {es_obj} es de {es_mat}", [es_obj, es_mat], "Use ser de for material.")
-    add("Present", "A2", "negative material", f"The {en_obj} is not made of {en_mat}", f"{article.capitalize()} {es_obj} no es de {es_mat}", [es_obj, es_mat], "Use no es de for negative material.")
-for en_event, es_event, article in events:
-    for en_time, es_time in times:
-        add("Present", "A1/A2", "event time", f"The {en_event} is {en_time}", f"{article.capitalize()} {es_event} es {es_time}", [es_event], "Use ser for when an event happens.")
-        if len(prompts) >= 175: break
-    if len(prompts) >= 175: break
-for en_event, es_event, article in events:
-    for en_loc, es_loc in locations:
-        add("Present", "A2", "event location", f"The {en_event} is {en_loc}", f"{article.capitalize()} {es_event} es {es_loc}", [es_event], "Use ser for where an event takes place.")
-        if len(prompts) >= 200: break
-    if len(prompts) >= 200: break
-assert len(prompts) == 200
-
-# Medium: 150 short practical present and simple identification/cause/source/purpose.
-medium = [
-    ("The problem is the price", "El problema es el precio", "identity/cause", ["problema", "precio"]),
-    ("The problem is the battery", "El problema es la batería", "identity/cause", ["problema", "batería"]),
-    ("The answer is simple", "La respuesta es sencilla", "description", ["respuesta"]),
-    ("The best option is the bus", "La mejor opción es el autobús", "choice", ["opción", "autobús"]),
-    ("The main reason is the rain", "La razón principal es la lluvia", "cause", ["razón", "lluvia"]),
-    ("The call is from the clinic", "La llamada es de la clínica", "source", ["llamada", "clínica"]),
-    ("The message is from Ana", "El mensaje es de Ana", "source", ["mensaje"]),
-    ("The gift is for my sister", "El regalo es para mi hermana", "recipient", ["regalo", "hermana"]),
-    ("This key is for the front door", "Esta llave es para la puerta principal", "purpose", ["llave", "puerta"]),
-    ("My job is to help patients", "Mi trabajo es ayudar a los pacientes", "role/purpose", ["trabajo", "pacientes"]),
-    ("The plan is for tomorrow", "El plan es para mañana", "planned time", ["plan"]),
-    ("The important thing is to arrive early", "Lo importante es llegar temprano", "lo importante es", ["llegar"]),
-    ("The easy part is reading", "La parte fácil es leer", "identification", ["leer"]),
-    ("The hard part is speaking", "La parte difícil es hablar", "identification", ["hablar"]),
-    ("This book is mine", "Este libro es mío", "ownership", ["libro"]),
-    ("This backpack is yours", "Esta mochila es tuya", "ownership", ["mochila"]),
-]
-while len(prompts) < 350:
-    en, es, cons, vocab = medium[len(prompts) % len(medium)]
-    if not add("Present", "A2/B1", cons, en, es, vocab, "Use ser to identify, define, show source, purpose, or ownership."):
-        # Add a tiny natural context to keep prompts unique without increasing difficulty.
-        contexts = [
-            ("Today", "Hoy"), ("For me", "Para mí"), ("In class", "En clase"), ("At home", "En casa"),
-            ("At work", "En el trabajo"), ("Right now", "Ahora mismo"), ("In this case", "En este caso"),
-            ("For Ana", "Para Ana"), ("For Luis", "Para Luis"), ("This morning", "Esta mañana"),
-        ]
-        en_ctx, es_ctx = contexts[(len(prompts) // len(medium)) % len(contexts)]
-        add("Present", "A2/B1", cons, f"{en_ctx}, {lower_first_for_context(en)}", f"{es_ctx}, {es[0].lower() + es[1:]}", vocab, "Use ser to identify, define, show source, purpose, or ownership.")
-
-# Past/present-perfect: 75 short prompts.
-past = [
-    ("The meeting was yesterday", "La reunión fue ayer", "Preterite", "event date", ["reunión"]),
-    ("The class was useful", "La clase fue útil", "Preterite", "completed evaluation", ["clase"]),
-    ("The exam was difficult", "El examen fue difícil", "Preterite", "completed evaluation", ["examen"]),
-    ("The party was at my house", "La fiesta fue en mi casa", "Preterite", "event location", ["fiesta", "casa"]),
-    ("That was a good idea", "Eso fue una buena idea", "Preterite", "past identification", ["idea"]),
-    ("My grandfather was a farmer", "Mi abuelo era agricultor", "Imperfect", "past role", ["abuelo", "agricultor"]),
-    ("The house was small", "La casa era pequeña", "Imperfect", "past description", ["casa"]),
-    ("The streets were quiet", "Las calles eran tranquilas", "Imperfect", "past description", ["calles"]),
-    ("The doctor was kind", "La doctora era amable", "Imperfect", "past description", ["doctora"]),
-    ("This week has been busy", "Esta semana ha sido ocupada", "Present Perfect", "present perfect evaluation", ["semana"]),
-    ("The trip has been long", "El viaje ha sido largo", "Present Perfect", "present perfect evaluation", ["viaje"]),
-    ("The service has been good", "El servicio ha sido bueno", "Present Perfect", "present perfect evaluation", ["servicio"]),
-]
-while len(prompts) < 425:
-    en, es, tense, cons, vocab = past[len(prompts) % len(past)]
-    if not add(tense, "B1", cons, en, es, vocab, "Use fue for completed events, era for background descriptions, or ha sido for an evaluation up to now."):
-        contexts = [("For me", "Para mí"), ("Yesterday", "Ayer"), ("Last week", "La semana pasada"), ("Honestly", "Sinceramente"), ("At first", "Al principio"), ("In my opinion", "En mi opinión"), ("For Ana", "Para Ana")]
-        en_ctx, es_ctx = contexts[(len(prompts) // len(past)) % len(contexts)]
-        add(tense, "B1", cons, f"{en_ctx}, {lower_first_for_context(en)}", f"{es_ctx}, {es[0].lower() + es[1:]}", vocab, "Use fue for completed events, era for background descriptions, or ha sido for an evaluation up to now.")
-
-# Advanced intro: 75 short later constructions, not C1/legal/admin.
-adv = [
-    ("It is important that the room be large", "Es importante que la habitación sea amplia", "Present Subjunctive", "requirement + sea", ["habitación"]),
-    ("It is better that the answer be short", "Es mejor que la respuesta sea corta", "Present Subjunctive", "evaluation + sea", ["respuesta"]),
-    ("I want the meeting to be quick", "Quiero que la reunión sea rápida", "Present Subjunctive", "wish + sea", ["reunión"]),
-    ("I need the plan to be clear", "Necesito que el plan sea claro", "Present Subjunctive", "need + sea", ["plan"]),
-    ("It would be better to leave early", "Sería mejor salir temprano", "Conditional", "sería mejor", ["salir"]),
-    ("It would be a good idea", "Sería una buena idea", "Conditional", "conditional identification", ["idea"]),
-    ("Tomorrow will be another day", "Mañana será otro día", "Future", "future identification", ["día"]),
-    ("The party will be at my house", "La fiesta será en mi casa", "Future", "future event location", ["fiesta", "casa"]),
-    ("If I were rich, I would travel", "Si fuera rico, viajaría", "Imperfect Subjunctive", "si fuera", ["viajar"]),
-    ("If it were easy, everyone would do it", "Si fuera fácil, todos lo harían", "Imperfect Subjunctive", "si fuera", ["fácil"]),
-    ("The report was written by Ana", "El informe fue escrito por Ana", "Preterite", "simple passive voice", ["informe"]),
-]
-while len(prompts) < 500:
-    en, es, tense, cons, vocab = adv[len(prompts) % len(adv)]
-    if not add(tense, "B1/B2", cons, en, es, vocab, "This introduces a later SER construction in a short sentence."):
-        contexts = [("In this case", "En este caso"), ("For me", "Para mí"), ("Today", "Hoy"), ("In class", "En clase"), ("At work", "En el trabajo"), ("For Ana", "Para Ana"), ("Tomorrow", "Mañana")]
-        en_ctx, es_ctx = contexts[(len(prompts) // len(adv)) % len(contexts)]
-        add(tense, "B1/B2", cons, f"{en_ctx}, {lower_first_for_context(en)}", f"{es_ctx}, {es[0].lower() + es[1:]}", vocab, "This introduces a later SER construction in a short sentence.")
-
-assert len(prompts) == 500
-for i, p in enumerate(prompts, 1):
-    assert p["id"] == f"ser-usage-{i:03d}"
-    assert p["batch"] == (i - 1) // 50 + 1
-
-existing: dict[str, Any] = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {"verbs": {}}
-verbs = cast(dict[str, Any], existing.setdefault("verbs", {}))
-old_ser = verbs.get("ser")
-if isinstance(old_ser, dict) and old_ser.get("quality_note", "").lower().find("c1") >= 0 and "ser_advanced" not in verbs:
-    adv_bank = dict(old_ser)
-    adv_bank["verb"] = "ser_advanced"
-    adv_bank["quality_note"] = "Advanced/C1 SER bank preserved from the original C1 gap-vocabulary generation; not served as the first unlocked ser usage bank."
-    verbs["ser_advanced"] = adv_bank
-
-verbs["ser"] = {
-    "verb": "ser",
-    "english_base": "be",
-    "category": "irregular",
-    "total_prompts": 500,
-    "batch_size": 50,
-    "batches": 10,
-    "levels": [
-        {"name": "easy", "batches": [1, 2, 3, 4], "description": "short present-tense identity, description, nationality, material, event time/place"},
-        {"name": "medium", "batches": [5, 6, 7], "description": "source, purpose, ownership, simple cause/identity"},
-        {"name": "past", "batches": [8, 9], "description": "fue, era, ha sido in short sentences"},
-        {"name": "advanced_intro", "batches": [9, 10], "description": "short subjunctive/conditional/future/passive intro"},
-    ],
-    "quality_note": "Leveled SER usage bank: easy batches first; old C1 bank preserved separately as ser_advanced.",
-    "prompts": prompts,
-}
-existing.update({
-    "source": "curated/ser-leveled-usage-bank",
-    "count": len(verbs),
-    "batch_size": 50,
-    "prompts_per_verb": 500,
-    "status": "ser_leveled_easy_first; c1 bank preserved as ser_advanced",
-})
-OUT.write_text(json.dumps(existing, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-
-word_counts = [len(p["expected_es"].replace(".", "").replace(",", "").split()) for p in prompts]
-report = {
-    "output": str(OUT),
-    "total_prompts": len(prompts),
-    "duplicate_prompt_en": len(prompts) - len({p["prompt_en"] for p in prompts}),
-    "duplicate_expected_es": len(prompts) - len({p["expected_es"] for p in prompts}),
-    "batch_counts": sorted(Counter(p["batch"] for p in prompts).items()),
-    "level_counts": Counter(p["level"] for p in prompts).most_common(),
-    "tense_counts": Counter(p["tense"] for p in prompts).most_common(),
-    "spanish_word_count_avg": round(sum(word_counts) / len(word_counts), 2),
-    "spanish_word_count_max": max(word_counts),
-    "first_15": [{"id": p["id"], "prompt_en": p["prompt_en"], "expected_es": p["expected_es"], "level": p["level"]} for p in prompts[:15]],
-}
-REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-print(json.dumps(report, ensure_ascii=False, indent=2))
+if __name__ == "__main__":
+    main()

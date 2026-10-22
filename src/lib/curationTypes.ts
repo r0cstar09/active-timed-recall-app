@@ -71,6 +71,21 @@ export interface SelectionTranslationRequest {
   context_after?: string;
 }
 
+export interface SelectionTranslationJob {
+  id: number;
+  operation_type: "selection_translation";
+  request_key: string;
+  scope_key: string;
+  status: "queued" | "running" | "completed" | "failed";
+  result: { english: string } | null;
+  error: string | null;
+  attempt_count: number;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  updated_at: string;
+}
+
 export interface DraftRevisionRef {
   id: number;
   revision: number;
