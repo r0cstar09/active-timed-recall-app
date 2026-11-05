@@ -22,7 +22,8 @@ env:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # Keep the browser runtime on an explicitly supported OS image.
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       id-token: write
