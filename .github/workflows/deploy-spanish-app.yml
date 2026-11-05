@@ -105,6 +105,17 @@ jobs:
           /tmp/spanish-browser-qa/bin/playwright install --with-deps chromium
           /tmp/spanish-browser-qa/bin/python scripts/test_capture_browser.py
 
+      - name: Test mode-preserving continuation without learner writes
+        env:
+          CONTINUATION_QA_OUTPUT: /tmp/spanish-continuation-qa
+        run: |
+          export PLAYWRIGHT_MODULE=$(/tmp/spanish-browser-qa/bin/python -c "import pathlib, playwright; print(pathlib.Path(playwright.__file__).parent / 'driver/package')")
+          python3 -m http.server 18765 --bind 127.0.0.1 --directory dist >/tmp/spanish-continuation-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for attempt in 1 2 3 4 5; do curl -fsS http://127.0.0.1:18765/session/ >/dev/null && break; sleep 1; done
+          node scripts/test_continuation_browser.cjs
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:

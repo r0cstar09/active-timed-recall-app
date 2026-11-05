@@ -24,6 +24,8 @@ export interface PersistedSession {
   sessionId: number;
   /** Mode is optional so sessions saved by older app versions still resume. */
   mode?: SessionMode;
+  /** Activity to continue after grading; correction sessions may use another backend mode. */
+  continuationMode?: SessionMode;
   /** Raw items from POST /api/sessions (ungraded). */
   items: Session["items"];
   index: number;
@@ -66,11 +68,16 @@ export function clearSession(): void {
 }
 
 /** Keep batch results resumable so refresh cannot lose the correction scope. */
-export function saveCompletedSession(session: Session): void {
+export function saveCompletedSession(session: Session, continuationMode?: SessionMode): void {
+  const current = loadSession();
+  const preservedContinuation = continuationMode
+    ?? (current?.sessionId === session.session_id ? current.continuationMode : undefined)
+    ?? session.mode;
   saveLastGraded(session);
   saveSession({
     sessionId: session.session_id,
     mode: session.mode,
+    continuationMode: preservedContinuation,
     items: session.items,
     index: 0,
     phase: "summary",

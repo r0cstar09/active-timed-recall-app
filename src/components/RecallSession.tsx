@@ -102,6 +102,8 @@ export default function RecallSession() {
   const [gradingJob, setGradingJob] = useState<Job | null>(null);
   const [sessionMode, setSessionMode] = useState<SessionMode>("review");
   const sessionModeRef = useRef<SessionMode>("review");
+  const [continuationMode, setContinuationMode] = useState<SessionMode>("review");
+  const continuationModeRef = useRef<SessionMode>("review");
   const [routeReady, setRouteReady] = useState(false);
   const [showModePicker, setShowModePicker] = useState(false);
   const [queueStats, setQueueStats] = useState<ServerDashboardStats | null>(null);
@@ -140,6 +142,7 @@ export default function RecallSession() {
       saveSession({
         sessionId: sessionIdRef.current,
         mode: sessionModeRef.current,
+        continuationMode: continuationModeRef.current,
         items,
         index,
         phase,
@@ -166,6 +169,8 @@ export default function RecallSession() {
     const mode = explicitMode ?? "review";
     sessionModeRef.current = mode;
     setSessionMode(mode);
+    continuationModeRef.current = mode;
+    setContinuationMode(mode);
     setShowModePicker(explicitMode == null);
     const topicId = mode === "practice" ? topicFromUrl() : null;
     selectedTopicIdRef.current = topicId;
@@ -180,6 +185,11 @@ export default function RecallSession() {
       sessionModeRef.current = saved.mode;
       setSessionMode(saved.mode);
     }
+    if (saved && (explicitMode == null || saved.phase === "grading")) {
+      const savedContinuation = saved.continuationMode ?? saved.mode ?? mode;
+      continuationModeRef.current = savedContinuation;
+      setContinuationMode(savedContinuation);
+    }
     if (saved?.phase === "grading") {
       sessionIdRef.current = saved.sessionId;
       uploadedRef.current = saved.uploadedItemIds ?? [];
@@ -189,7 +199,7 @@ export default function RecallSession() {
       setStatus("active");
       void startGrading(saved);
     } else {
-      setResumable(saved?.phase === "summary" && explicitMode && saved.mode !== explicitMode ? null : saved);
+      setResumable(saved?.phase === "summary" && explicitMode && saved.mode && saved.mode !== explicitMode ? null : saved);
     }
   }, [status]);
 
@@ -314,6 +324,7 @@ export default function RecallSession() {
     saveSession({
       sessionId: sessionIdRef.current,
       mode: sessionModeRef.current,
+      continuationMode: continuationModeRef.current,
       items: list,
       index: i,
       phase: "arming",
@@ -356,6 +367,7 @@ export default function RecallSession() {
     saveSession({
       sessionId: sessionIdRef.current,
       mode: sessionModeRef.current,
+      continuationMode: continuationModeRef.current,
       items: list,
       index: i,
       phase: "recall",
@@ -385,16 +397,18 @@ export default function RecallSession() {
   }
 
   async function start() {
+    const mode = explicitModeFromUrl() ?? sessionMode;
+    await launchSession(mode, false);
+  }
+
+  async function launchSession(mode: SessionMode, continuing: boolean) {
     if (launchInFlightRef.current) return;
     launchInFlightRef.current = true;
     const launchVersion = ++topicLaunchVersionRef.current;
     setLaunching(true);
+    setError(null);
     try {
-      const mode = explicitModeFromUrl() ?? sessionMode;
-      sessionModeRef.current = mode;
-      setSessionMode(mode);
-      setError(null);
-      if (mode === "practice" && !topicSelectionReady) {
+      if (!continuing && mode === "practice" && !topicSelectionReady) {
         setError("Wait for the practice topics to load, then choose a valid focus.");
         return;
       }
@@ -416,25 +430,47 @@ export default function RecallSession() {
         ? await api.createSession("practice", phraseIds.length, phraseIds)
         : await api.createSession(mode);
       if (launchVersion !== topicLaunchVersionRef.current) return;
-      if (!session.items?.length) {
-        clearSession();
-        setServerResumable(session.resumable_session ?? null);
-        setGraded({
-          session_id: session.session_id,
-          items: [],
-          mode: session.mode ?? mode,
-          affects_fsrs: session.affects_fsrs,
-        });
-        setPhase("summary");
-        setStatus("active");
-        return;
-      }
+
       const actualMode = session.mode ?? mode;
+      const nextContinuationMode = mode;
+      // Corrections use practice URLs. A successful continuation must update
+      // the route too, otherwise refresh can hide this new mode's summary.
+      const sessionUrl = new URL(window.location.href);
+      sessionUrl.searchParams.set("mode", actualMode);
+      if (actualMode !== "practice") sessionUrl.searchParams.delete("topic");
+      window.history.replaceState(null, "", sessionUrl);
+      continuationModeRef.current = nextContinuationMode;
+      setContinuationMode(nextContinuationMode);
       sessionIdRef.current = session.session_id;
-      uploadedRef.current = [];
-      setItems(session.items);
       sessionModeRef.current = actualMode;
       setSessionMode(actualMode);
+      uploadedRef.current = [];
+      pendingUploadRef.current = null;
+      setServerResumable(session.resumable_session ?? null);
+
+      if (!session.items?.length) {
+        itemStartTokenRef.current += 1;
+        recorderRef.current?.dispose();
+        recorderRef.current = null;
+        const emptySession: Session = {
+          session_id: session.session_id,
+          items: [],
+          mode: actualMode,
+          affects_fsrs: session.affects_fsrs,
+        };
+        setItems([]);
+        setIndex(0);
+        setGraded(emptySession);
+        setResumable(null);
+        setPhase("summary");
+        setStatus("active");
+        clearSession();
+        return;
+      }
+
+      setItems(session.items);
+      setGraded(null);
+      setResumable(null);
       setStatus("active");
       if (actualMode === "learn") {
         setIndex(0);
@@ -442,6 +478,7 @@ export default function RecallSession() {
         saveSession({
           sessionId: session.session_id,
           mode: actualMode,
+          continuationMode: nextContinuationMode,
           items: session.items,
           index: 0,
           phase: "learn",
@@ -454,19 +491,23 @@ export default function RecallSession() {
           savedAt: Date.now(),
         });
       } else {
-        beginItem(0, session.items, null);
+        await beginItem(0, session.items, null);
       }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
-      // Topic lookups fail closed on the launcher. Never reinterpret a failed
-      // filtered request as an unfiltered Mix all session.
+      // A failed continuation leaves the completed batch and its persisted
+      // results intact so the learner can retry without losing feedback.
       recorderRef.current?.dispose();
       recorderRef.current = null;
-      if (sessionModeRef.current !== "practice") setStatus("error");
+      if (!continuing && mode !== "practice") setStatus("error");
     } finally {
       launchInFlightRef.current = false;
       setLaunching(false);
     }
+  }
+
+  async function continueToNextSet() {
+    await launchSession(continuationModeRef.current, true);
   }
 
   async function resume() {
@@ -495,6 +536,9 @@ export default function RecallSession() {
         }
         if (!stillCurrent()) return;
       }
+      const restoredContinuation = saved.continuationMode ?? restoredMode ?? "review";
+      continuationModeRef.current = restoredContinuation;
+      setContinuationMode(restoredContinuation);
       if (restoredMode) {
         sessionModeRef.current = restoredMode;
         setSessionMode(restoredMode);
@@ -518,7 +562,7 @@ export default function RecallSession() {
           // Refresh grades, not batch membership (including locally removed cards).
           const allowed = new Set(saved.items.map(item => item.phrase_id));
           const scoped = { ...fresh, items: fresh.items.filter(item => allowed.has(item.phrase_id)) };
-          saveCompletedSession(scoped);
+          saveCompletedSession(scoped, restoredContinuation);
           setItems(scoped.items);
           setGraded(scoped);
           setPhase("summary");
@@ -573,16 +617,19 @@ export default function RecallSession() {
       );
       sessionIdRef.current = session.session_id;
       sessionModeRef.current = actualMode;
+      continuationModeRef.current = actualMode;
       uploadedRef.current = session.items
         .filter((candidate) => Boolean(candidate.recording_id) || Boolean(candidate.timed_out))
         .map((candidate) => candidate.sprint_item_id);
       setSessionMode(actualMode);
+      setContinuationMode(actualMode);
       setServerResumable(null);
 
       if (!remainingItems.length) {
         const saved: PersistedSession = {
           sessionId: session.session_id,
           mode: actualMode,
+          continuationMode: actualMode,
           items: session.items,
           index: Math.max(0, session.items.length - 1),
           phase: "grading",
@@ -636,6 +683,7 @@ export default function RecallSession() {
         saveSession({
           sessionId: sessionIdRef.current,
           mode: sessionModeRef.current,
+          continuationMode: continuationModeRef.current,
           items,
           index: next,
           phase: "learn",
@@ -697,7 +745,7 @@ export default function RecallSession() {
       const scope = new Set(graded.items.map(item => item.phrase_id));
       const scoped = { ...fresh, items: fresh.items.filter(item => scope.has(item.phrase_id)) };
       setGraded(scoped);
-      saveCompletedSession(scoped);
+      saveCompletedSession(scoped, continuationModeRef.current);
       if (latestSessionItems(scoped.items).some(item => item.result === "pending")) {
         throw new Error("Resume the unfinished re-recording in this batch before starting corrections.");
       }
@@ -834,7 +882,14 @@ export default function RecallSession() {
     setError(null);
     setGradingJob(null);
     if (saved) {
-      saveSession({ ...saved, phase: "grading", jobId: null, graded: null, savedAt: Date.now() });
+      saveSession({
+        ...saved,
+        continuationMode: saved.continuationMode ?? continuationModeRef.current,
+        phase: "grading",
+        jobId: null,
+        graded: null,
+        savedAt: Date.now(),
+      });
     } else {
       persist({ phase: "grading" });
     }
@@ -843,6 +898,7 @@ export default function RecallSession() {
       saveSession({
         sessionId,
         mode: sessionModeRef.current,
+        continuationMode: continuationModeRef.current,
         items: gradingItems,
         index: gradingIndex,
         phase: "grading",
@@ -867,7 +923,7 @@ export default function RecallSession() {
       await pollJob(jobId, { timeoutMs: 15 * 60_000, onUpdate: setGradingJob });
       const gradedSession = await api.getSession(sessionId);
       setGraded(gradedSession);
-      saveCompletedSession(gradedSession);
+      saveCompletedSession(gradedSession, continuationModeRef.current);
       setPhase("summary");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : String(err));
@@ -1063,11 +1119,13 @@ export default function RecallSession() {
     return (
       <Summary
         graded={graded}
+        continuationMode={continuationMode}
         recordings={recordingsRef.current}
         noisyMode={noisyMode}
         serverResumable={serverResumable}
         onContinueServerSession={() => void continueServerSession()}
-        onCorrectBatch={(phraseIds) => void correctBatch(phraseIds)}
+        onCorrectBatch={correctBatch}
+        onNextSet={continueToNextSet}
         onPracticeAgain={() => {
           clearSession();
           setItems([]);
@@ -1085,7 +1143,7 @@ export default function RecallSession() {
           setGraded(current => {
             const allowed = new Set((current?.items ?? g.items).map(item => item.phrase_id));
             const scoped = { ...g, items: g.items.filter(item => allowed.has(item.phrase_id)) };
-            saveCompletedSession(scoped);
+            saveCompletedSession(scoped, continuationModeRef.current);
             return scoped;
           });
         }}
@@ -1406,7 +1464,7 @@ function RetryRecorder({
   noisyMode: boolean;
   onDone: (fresh: Session) => void;
   disabled: boolean;
-  onBusyChange: (itemId: number, busy: boolean) => void;
+  onBusyChange: (itemId: number, busy: boolean) => boolean;
 }) {
   const [phase, setPhase] = useState<RetryPhase>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -1433,7 +1491,7 @@ function RetryRecorder({
   }, []);
   useEffect(() => {
     onBusyChange(item.sprint_item_id, phase !== "idle");
-    return () => onBusyChange(item.sprint_item_id, false);
+    return () => { onBusyChange(item.sprint_item_id, false); };
   }, [phase, item.sprint_item_id, onBusyChange]);
 
   // countdown + auto-stop at the limit (recording stops automatically)
@@ -1582,7 +1640,9 @@ function RetryRecorder({
 
   if (phase === "idle") {
     return (
-      <button className="btn btn-primary btn-block" disabled={disabled} onClick={() => void begin()}>
+      <button className="btn btn-primary btn-block" disabled={disabled} onClick={() => {
+        if (onBusyChange(item.sprint_item_id, true)) void begin();
+      }}>
         Re-record now
       </button>
     );
@@ -1616,11 +1676,15 @@ function RetryRecorder({
     <div className="stack" style={{ gap: 8 }}>
       <div className="alert alert-error" style={{ margin: 0 }}>{error}</div>
       {pendingRef.current || uploadedTargetRef.current !== null ? (
-        <button className="btn btn-primary btn-block" onClick={() => void uploadAndGrade()}>
+        <button className="btn btn-primary btn-block" onClick={() => {
+          if (onBusyChange(item.sprint_item_id, true)) void uploadAndGrade();
+        }}>
           {pendingRef.current ? "Retry upload" : "Retry grading"}
         </button>
       ) : (
-        <button className="btn btn-block" disabled={disabled} onClick={() => void begin()}>
+        <button className="btn btn-block" disabled={disabled} onClick={() => {
+          if (onBusyChange(item.sprint_item_id, true)) void begin();
+        }}>
           Try again
         </button>
       )}
@@ -1714,22 +1778,26 @@ function TranscriptFeedback({ sessionId, item }: { sessionId: number; item: Sess
 // ── Summary view ────────────────────────────────────────────────────────────
 function Summary({
   graded,
+  continuationMode,
   recordings,
   noisyMode,
   serverResumable,
   onContinueServerSession,
   onCorrectBatch,
+  onNextSet,
   onPracticeAgain,
   correcting,
   correctionError,
   onRefresh,
 }: {
   graded: Session | null;
+  continuationMode: SessionMode;
   recordings: Map<number, string>;
   noisyMode: boolean;
   serverResumable?: ResumableSessionSummary | null;
   onContinueServerSession?: () => void;
-  onCorrectBatch: (phraseIds: number[]) => void;
+  onCorrectBatch: (phraseIds: number[]) => Promise<void>;
+  onNextSet: () => Promise<void>;
   onPracticeAgain: () => void;
   correcting: boolean;
   correctionError: string | null;
@@ -1739,12 +1807,30 @@ function Summary({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletingPhraseId, setDeletingPhraseId] = useState<number | null>(null);
   const [busyRetry, setBusyRetry] = useState<number | null>(null);
-  const onRetryBusy = useCallback((itemId: number, busy: boolean) => {
-    setBusyRetry(current => busy ? itemId : current === itemId ? null : current);
+  const actionInFlightRef = useRef<string | null>(null);
+  const [summaryAction, setSummaryAction] = useState<string | null>(null);
+  const beginSummaryAction = useCallback((action: string, allowSame = false) => {
+    if (actionInFlightRef.current) return allowSame && actionInFlightRef.current === action;
+    if (!actionInFlightRef.current) {
+      actionInFlightRef.current = action;
+      setSummaryAction(action);
+    }
+    return true;
   }, []);
+  const endSummaryAction = useCallback((action: string) => {
+    if (actionInFlightRef.current !== action) return;
+    actionInFlightRef.current = null;
+    setSummaryAction(null);
+  }, []);
+  const onRetryBusy = useCallback((itemId: number, busy: boolean) => {
+    const action = `retry:${itemId}`;
+    if (busy && !beginSummaryAction(action, true)) return false;
+    if (!busy) endSummaryAction(action);
+    setBusyRetry(current => busy ? itemId : current === itemId ? null : current);
+    return true;
+  }, [beginSummaryAction, endSummaryAction]);
   const summary = graded?.summary;
   const items = (graded?.items ?? []).filter((item) => !deletedPhraseIds.has(item.phrase_id));
-  const mode = graded?.mode;
   const misses = correctionPhraseIds(items);
   const pendingRetry = latestSessionItems(items).some(item => item.result === "pending");
   const fsrsAppliedCount = items.filter((it) => it.fsrs_applied).length;
@@ -1767,6 +1853,8 @@ function Summary({
 
   async function deleteCard(item: SessionItem) {
     if (!window.confirm(`Delete “${item.spanish || item.english}” from future practice?\n\nIts existing review history will be preserved.`)) return;
+    const action = `delete:${item.phrase_id}`;
+    if (!beginSummaryAction(action)) return;
     setDeletingPhraseId(item.phrase_id);
     setDeleteError(null);
     try {
@@ -1777,45 +1865,52 @@ function Summary({
       setDeleteError(err instanceof ApiError ? err.message : String(err));
     } finally {
       setDeletingPhraseId(null);
+      endSummaryAction(action);
+    }
+  }
+
+  async function runSummaryAction(action: string, callback: () => Promise<void>) {
+    if (!beginSummaryAction(action)) return;
+    try {
+      await callback();
+    } finally {
+      endSummaryAction(action);
     }
   }
 
   if (!items.length) {
-    const title = mode === "learn"
-      ? "No new cards"
-      : mode === "misses"
-        ? "No misses waiting"
-        : mode === "practice"
-          ? "Nothing available for Free Practice"
-          : "Nothing due";
-    const body = mode === "learn"
-      ? "Your Learn queue is empty. Newly generated packs will appear here before entering FSRS review."
-      : mode === "misses"
-        ? "No failed or partial items are waiting for a workout."
-        : mode === "practice"
-          ? "Learn at least one new card, then return for schedule-neutral speaking practice."
-          : "No cards are scheduled for Due Review right now.";
+    const learningComplete = continuationMode === "learn";
     return (
       <div className="card stack center">
-        <h2>{title}</h2>
+        <h2>{learningComplete ? "No new cards" : "Recall complete"}</h2>
         <p className="muted">{serverResumable
           ? `${serverResumable.remaining_items} card${serverResumable.remaining_items === 1 ? " is" : "s are"} waiting in an unfinished ${serverResumable.mode === "review" ? "Due Review" : "session"}.`
-          : body}</p>
+          : learningComplete
+            ? "Your Learn queue is empty. Newly generated packs will appear here before entering FSRS review."
+            : "No more cards are available in this recall queue right now."}</p>
         {serverResumable && onContinueServerSession && (
-          <button className="btn btn-primary btn-lg btn-block" onClick={onContinueServerSession}>
+          <button
+            className="btn btn-primary btn-lg btn-block"
+            disabled={summaryAction !== null}
+            onClick={() => {
+              if (!beginSummaryAction("resume")) return;
+              onContinueServerSession();
+            }}
+          >
             Continue unfinished {serverResumable.mode === "review" ? "review" : "session"} · {serverResumable.remaining_items} remaining
           </button>
         )}
-        {mode !== "learn" && (
-          <a className="btn btn-block" href="/session?mode=learn">Open Learn queue</a>
-        )}
-        {mode !== "review" && (
-          <a className="btn btn-primary btn-block" href="/session?mode=review">Due Review · FSRS ON</a>
-        )}
-        {mode !== "practice" && (
-          <a className="btn btn-block" href="/session?mode=practice">Free Practice · FSRS OFF</a>
-        )}
-        <a className="btn btn-ghost btn-block" href="/">Home</a>
+        <button
+          className="btn btn-block"
+          type="button"
+          disabled={summaryAction !== null}
+          onClick={() => {
+            if (!beginSummaryAction("home")) return;
+            window.location.href = "/";
+          }}
+        >
+          Home
+        </button>
       </div>
     );
   }
@@ -1899,7 +1994,7 @@ function Summary({
         <div className="card stack center">
           <h3 style={{ margin: 0 }}>Corrections · this batch only</h3>
           <p className="muted">Repeat only the {misses.length} card{misses.length === 1 ? "" : "s"} needing correction from this batch. No other queue cards are added; FSRS stays off.</p>
-          <button className="btn btn-primary btn-block" type="button" disabled={correcting || deletingPhraseId !== null || busyRetry !== null || pendingRetry} onClick={() => onCorrectBatch(misses)}>
+          <button className="btn btn-primary btn-block" type="button" disabled={summaryAction !== null || correcting || deletingPhraseId !== null || busyRetry !== null || pendingRetry} onClick={() => void runSummaryAction("correct", () => onCorrectBatch(misses))}>
             {correcting ? "Preparing this batch…" : "Correct this batch"}
           </button>
         </div>
@@ -2006,7 +2101,7 @@ function Summary({
                 item={it}
                 noisyMode={noisyMode}
                 onDone={onRefresh}
-                disabled={correcting || (busyRetry !== null && busyRetry !== it.sprint_item_id)}
+                disabled={correcting || (summaryAction !== null && summaryAction !== `retry:${it.sprint_item_id}`) || (busyRetry !== null && busyRetry !== it.sprint_item_id)}
                 onBusyChange={onRetryBusy}
               />
             )}
@@ -2014,7 +2109,7 @@ function Summary({
             <button
               className="btn btn-small btn-danger"
               type="button"
-              disabled={correcting || deletingPhraseId !== null}
+              disabled={summaryAction !== null || correcting || deletingPhraseId !== null}
               onClick={() => void deleteCard(it)}
             >
               {deletingPhraseId === it.phrase_id ? "Deleting…" : "Delete malformed card"}
@@ -2025,12 +2120,27 @@ function Summary({
 
       <div className="btn-row">
         {graded?.mode === "practice" && (
-          <button className={`btn ${misses.length ? "" : "btn-primary"}`} type="button" onClick={onPracticeAgain}>
+          <button className="btn" type="button" disabled={summaryAction !== null} onClick={() => {
+            if (!beginSummaryAction("practice-picker")) return;
+            onPracticeAgain();
+          }}>
             Choose or repeat a practice topic
           </button>
         )}
-        <a className={`btn ${misses.length || graded?.mode === "practice" ? "" : "btn-primary"}`} href="/session?mode=learn">Learn next batch</a>
-        <a className="btn" href="/">Home</a>
+        <button
+          className="btn btn-primary"
+          type="button"
+          disabled={summaryAction !== null}
+          onClick={() => void runSummaryAction("next", onNextSet)}
+        >
+          {summaryAction === "next" ? "Opening next set…" : continuationMode === "learn" ? "Learn next batch" : "Next recall set"}
+        </button>
+        <button className="btn" type="button" disabled={summaryAction !== null} onClick={() => {
+          if (!beginSummaryAction("home")) return;
+          window.location.href = "/";
+        }}>
+          Home
+        </button>
       </div>
     </div>
   );
