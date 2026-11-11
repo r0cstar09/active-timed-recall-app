@@ -3,6 +3,7 @@ import { strict as assert } from "node:assert";
 
 const apiSource = readFileSync(new URL("../src/lib/api.ts", import.meta.url), "utf8");
 const sessionSource = readFileSync(new URL("../src/components/RecallSession.tsx", import.meta.url), "utf8");
+const dueSummarySource = readFileSync(new URL("../src/components/DueSummary.tsx", import.meta.url), "utf8");
 
 assert.match(
   apiSource,
@@ -38,5 +39,7 @@ assert.doesNotMatch(
   /setPhase\("summary"\)/,
   "Learn completion must not stop at the old summary dead end",
 );
+assert.doesNotMatch(sessionSource, /FSRS OFF|Practice without scheduling|without changing their due dates/i, "Active recall must not offer schedule-neutral practice");
+assert.doesNotMatch(dueSummarySource, /Free Practice does not|Practice FSRS: off|schedule-neutral/i, "Home must not advertise schedule-neutral recall");
 
 console.log("learn handoff regression checks passed");

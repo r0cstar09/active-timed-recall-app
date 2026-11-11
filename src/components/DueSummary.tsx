@@ -185,8 +185,8 @@ export default function DueSummary() {
     if (!stats.habit.target_met) {
       return {
         href: "/session?mode=practice",
-        label: "Start free practice",
-        detail: "FSRS scheduling off",
+        label: "Start focused recall",
+        detail: "Every clear grade updates FSRS",
         headline: "Keep the rhythm going.",
       };
     }
@@ -257,7 +257,7 @@ export default function DueSummary() {
         ? `Start with what is due. Every completed study activity moves the ${habit.daily_target}-rep goal forward.`
         : stats.new_count > 0
           ? "Introduce the new cards first, then use practice to make them feel natural."
-          : "Nothing is due. A short free-practice round will keep today moving.";
+          : "Nothing is due. A short focused-recall round will keep today moving.";
 
   const sourceLabel = sourceStatus === "ready"
     ? `${sourceCount} ${sourceCount === 1 ? "source" : "sources"}`
@@ -318,7 +318,7 @@ export default function DueSummary() {
 
         <div className="daily-scheduling-note">
           <DashboardIcon name="refresh" />
-          <p><strong>Scheduling stays clear.</strong> Due Review and fresh Misses attempts update FSRS. Free Practice does not. Every study activity can add to today’s reps.</p>
+          <p><strong>Every graded recall schedules.</strong> Due Review, Focused Recall, Misses, and clear corrections all update FSRS. Learn remains exposure before recall.</p>
         </div>
       </article>
 
@@ -365,14 +365,14 @@ export default function DueSummary() {
           <a className="daily-mode-card practice" href="/session?mode=practice">
             <div className="daily-mode-topline">
               <span className="daily-mode-icon"><DashboardIcon name="microphone" /></span>
-              <span className="daily-mode-tag">FSRS off</span>
+              <span className="daily-mode-tag">FSRS on</span>
             </div>
             <strong className="daily-mode-value daily-mode-word">Open</strong>
             <div className="daily-mode-copy">
-              <h3>Free Practice</h3>
-              <p>Rotate introduced cards and practise speaking without moving their due dates.</p>
+              <h3>Focused Recall</h3>
+              <p>Choose a topic or rotate introduced cards. Every clear grade sets the next due date.</p>
             </div>
-            <span className="daily-mode-action">Practise freely<DashboardIcon name="arrow" /></span>
+            <span className="daily-mode-action">Choose a focus<DashboardIcon name="arrow" /></span>
           </a>
         </div>
       </section>

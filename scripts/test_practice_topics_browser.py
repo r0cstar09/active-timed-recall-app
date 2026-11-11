@@ -67,14 +67,14 @@ with sync_playwright() as pw:
                 if scenario=='selection-error':reply({'detail':'Fixture selection unavailable'},503); return
                 reply(dict(topic_id=topic_id,phrase_ids=[] if scenario=='empty' else IDS,learned_count=3,available_count=0 if scenario=='empty' else 3)); return
             if path=='/api/sessions/990001' and req.method=='GET' and scenario.startswith('resume-'):
-                reply(dict(session_id=990001,status='complete',mode='practice',response_mode='written',affects_fsrs=False,items=[dict(item,result='pass',answer_visible=True) for item in ITEMS])); return
+                reply(dict(session_id=990001,status='complete',mode='practice',response_mode='written',affects_fsrs=True,items=[dict(item,result='pass',answer_visible=True) for item in ITEMS])); return
             if path=='/api/sessions' and req.method=='POST':
                 body=req.post_data_json
                 assert body['mode']=='practice', body
                 if scenario=='resume-mix': assert 'phrase_ids' not in body and body['size']==10, body
                 else: assert body['phrase_ids']==IDS and body['size']==3, body
                 assert 'target_verb' not in body
-                reply(dict(session_id=990001,status='awaiting_recordings',mode='practice',response_mode=body.get('response_mode','spoken'),affects_fsrs=False,items=ITEMS)); return
+                reply(dict(session_id=990001,status='awaiting_recordings',mode='practice',response_mode=body.get('response_mode','spoken'),affects_fsrs=True,items=ITEMS)); return
             if path=='/api/study/verbs':reply({'verbs':[]}); return
             if path=='/api/sources':reply([]); return
             if path=='/api/stats':reply({}); return

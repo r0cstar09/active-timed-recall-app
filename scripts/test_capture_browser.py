@@ -50,7 +50,7 @@ def context_for(browser, inline=False):
     page.on('pageerror', lambda error: errors.append(str(error)))
     items = [dict(ITEMS[0], result='partial', error_type='transcription_unclear', answer_visible=True,
                   feedback='Fixture capture needs another take.', attempt_number=1)] if inline else ITEMS
-    graded = dict(session_id=990001, items=items, mode='practice', response_mode='spoken', affects_fsrs=False,
+    graded = dict(session_id=990001, items=items, mode='practice', response_mode='spoken', affects_fsrs=True,
                   summary=dict(total=1, passed=0, failed=0, partial=1, unclear=1, score=0, overtime_count=0))
     saved = dict(sessionId=990001, mode='practice', items=items, index=0,
                  phase='summary' if inline else 'recall', deadline=None, durationMs=15000,
@@ -115,6 +115,7 @@ def context_for(browser, inline=False):
     context.route('**/*',guard)
     page.goto(BASE+'/session/?mode=practice', wait_until='networkidle')
     page.get_by_role('button',name='Resume',exact=True).click()
+    expect(page.get_by_text('FSRS OFF', exact=False)).to_have_count(0)
     return context,page,errors,uploads,requests,blocked
 
 with sync_playwright() as pw:

@@ -24,14 +24,14 @@ test("explicit empty or invalid targeting must not silently become the general q
     assert.throws(() => targetedPhraseIds(ids), /batch/i);
   }
 });
-test("targeted response must match the exact ordered set with FSRS off", () => {
-  const session = { session_id: 6, mode: "practice", affects_fsrs: false, items: [item(9, "pending"), item(17, "pending")] };
+test("targeted response must match the exact ordered set with FSRS on", () => {
+  const session = { session_id: 6, mode: "practice", affects_fsrs: true, items: [item(9, "pending"), item(17, "pending")] };
   assert.doesNotThrow(() => assertTargetedSession(session, [9, 17]));
   for (const change of [
     { items: [item(500, "pending"), item(17, "pending")] },
     { items: [item(9, "pending")] },
     { items: [item(17, "pending"), item(9, "pending")] },
-    { items: [] }, { session_id: 0 }, { mode: "review" }, { affects_fsrs: true },
+    { items: [] }, { session_id: 0 }, { mode: "review" }, { affects_fsrs: false },
   ]) assert.throws(() => assertTargetedSession({ ...session, ...change }, [9, 17]), /batch/i);
 });
 test("spoken summary never routes batch corrections through the global misses page", () => {

@@ -84,7 +84,7 @@ export default function PracticeTopicPicker({
 
   const detail = selectedTopic ?? (selectedTopicId === null ? {
     label: "Mix all learned cards",
-    description: "Rotate across your full learned deck. This is the explicit default and keeps FSRS scheduling off.",
+    description: "Rotate across your full learned deck. Every completed graded recall updates FSRS scheduling.",
     learned_count: catalog?.learned_count ?? 0,
     available_count: catalog?.available_count ?? 0,
     examples: [],
@@ -97,7 +97,7 @@ export default function PracticeTopicPicker({
           <p className="practice-topic-kicker">Choose before you start</p>
           <h2 id={`${prefix}-title`}>Practice focus</h2>
         </div>
-        <span className="pill">FSRS OFF</span>
+        <span className="pill">FSRS ON</span>
       </div>
 
       {loading ? (

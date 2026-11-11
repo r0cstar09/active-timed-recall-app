@@ -32,7 +32,7 @@ export function correctionPhraseIds(items: SessionItem[]): number[] {
 
 /** Never display unrelated cards if a stale server ignores the requested scope. */
 export function assertTargetedSession(session: Session, phraseIds: number[]): void {
-  if (!session.session_id || session.mode !== "practice" || session.affects_fsrs !== false ||
+  if (!session.session_id || session.mode !== "practice" || session.affects_fsrs !== true ||
       session.items.length !== phraseIds.length ||
       session.items.some((item, index) => item.phrase_id !== phraseIds[index])) {
     throw new Error("The exact card batch could not be reserved. Retry this batch; no other cards will be shown.");

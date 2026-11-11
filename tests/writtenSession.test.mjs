@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { loadWrittenSession, saveWrittenSession, clearWrittenSession, reconcileWrittenSession } from '../src/lib/writtenSession.ts';
 
 const snapshot = { version: 1, sessionId: 21, phraseIds: [42, 9], mode: 'learn', targetVerb: 'ser', index: 1, phase: 'answer', answers: { 210: { answer: 'Soy feliz.', response_seconds: 3 } }, draft: 'Somos', promptStartedAt: 1000 };
-const session = { session_id: 21, response_mode: 'written', mode: 'practice', affects_fsrs: false, status: 'awaiting_recordings', target_verb: 'ser', items: [{ sprint_item_id: 210, phrase_id: 42, result: 'pending' }, { sprint_item_id: 211, phrase_id: 9, result: 'pending' }] };
+const session = { session_id: 21, response_mode: 'written', mode: 'practice', affects_fsrs: true, status: 'awaiting_recordings', target_verb: 'ser', items: [{ sprint_item_id: 210, phrase_id: 42, result: 'pending' }, { sprint_item_id: 211, phrase_id: 9, result: 'pending' }] };
 
 test('written batch snapshot preserves origin, exact scope, answers and unsaved draft', () => {
   const data = new Map();

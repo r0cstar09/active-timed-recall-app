@@ -5,7 +5,7 @@ import { saveCompletedSession, loadSession, clearSession } from "../src/lib/time
 
 const compiled = await build({ entryPoints: [new URL("../src/lib/api.ts", import.meta.url).pathname], bundle: true, write: false, platform: "node", format: "esm", define: { "import.meta.env": "{}" } });
 const { api } = await import("data:text/javascript;base64," + Buffer.from(compiled.outputFiles[0].text).toString("base64"));
-const fixture = (ids, extra = {}) => ({ session_id: 6, mode: "practice", affects_fsrs: false, items: ids.map((phrase_id) => ({ phrase_id, result: "pending" })), ...extra });
+const fixture = (ids, extra = {}) => ({ session_id: 6, mode: "practice", affects_fsrs: true, items: ids.map((phrase_id) => ({ phrase_id, result: "pending" })), ...extra });
 
 test("both real API client methods keep explicit scopes and reject mixed response IDs", async () => {
   const originalFetch = globalThis.fetch;
@@ -29,7 +29,7 @@ test("both real API client methods keep explicit scopes and reject mixed respons
       if (written) assert.equal(calls.at(-1).body.response_mode, "written");
       response = fixture([999, 17]);
       await assert.rejects(create([9, 17]), /batch/i);
-      response = fixture([9, 17], { affects_fsrs: true });
+      response = fixture([9, 17], { affects_fsrs: false });
       await assert.rejects(create([9, 17]), /batch/i);
     }
   } finally { globalThis.fetch = originalFetch; }

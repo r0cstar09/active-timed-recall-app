@@ -80,7 +80,7 @@ function modeLabel(mode: SessionMode): string {
   return {
     learn: "Learn queue · no FSRS yet",
     review: "Due review · FSRS on",
-    practice: "Free practice · FSRS off",
+    practice: "Focused recall · FSRS on",
     misses: "Misses workout · FSRS on",
     cloze: "Cloze recall · FSRS on",
     english_to_spanish: "English → Spanish · FSRS on",
@@ -1014,17 +1014,17 @@ export default function RecallSession() {
 
               <a className="card session-mode-choice session-mode-free" href="/session?mode=practice">
                 <div className="row between">
-                  <span className="pill">FSRS OFF</span>
+                  <span className="pill">FSRS ON</span>
                   <strong>Rotating cards</strong>
                 </div>
                 <div>
-                  <h2>Free Practice</h2>
-                  <p className="muted">A little extra room to find your voice. Rotate through familiar cards without changing their due dates.</p>
+                  <h2>Focused Recall</h2>
+                  <p className="muted">Choose a topic or rotate familiar cards. Every completed clear grade sets the card&apos;s next due date.</p>
                 </div>
-                <span className="btn btn-block">Practice without scheduling</span>
+                <span className="btn btn-block">Choose a recall focus</span>
               </a>
             </div>
-            <p className="session-mode-note"><strong>Your schedule stays intentional.</strong> Due Review and fresh Misses attempts update FSRS. Learn introduces cards; Free Practice leaves their due dates alone.</p>
+            <p className="session-mode-note"><strong>Every graded recall schedules.</strong> Due Review, Focused Recall, Misses, and clear correction attempts all update FSRS. Learn remains exposure before recall.</p>
           </div>
         ) : (
           <div className="card hero-card stack center session-launch-card">
@@ -1034,7 +1034,7 @@ export default function RecallSession() {
               {sessionMode === "learn"
                 ? "Preview new sentences here. They enter the FSRS due queue after you finish learning them; this step does not grade the schedule."
                 : sessionMode === "practice"
-                  ? "FSRS is OFF. Cards rotate for extra speaking practice, but feedback does not change due dates or the due count."
+                  ? "FSRS is ON. Choose a focus or rotate familiar cards; every completed clear grade updates the next due date."
                   : sessionMode === "misses"
                     ? "FSRS is ON. Recalling a missed card is a real review: every clear grade updates its next due date and schedule."
                     : "FSRS is ON. These are cards due now; every grade updates the next due date and the due queue."}
@@ -1081,7 +1081,7 @@ export default function RecallSession() {
                 : sessionMode === "review"
                   ? "Start due review · FSRS ON"
                   : sessionMode === "practice"
-                    ? "Start free practice · FSRS OFF"
+                    ? "Start focused recall · FSRS ON"
                     : sessionMode === "misses"
                       ? "Start misses workout · FSRS ON"
                       : "Start scheduled recall · FSRS ON"}
@@ -1932,7 +1932,7 @@ function Summary({
         )}
         {fsrsAppliedCount > 0 && (
           <div className="alert alert-ok" style={{ margin: 0, width: "100%" }}>
-            <strong>FSRS updated:</strong> {fsrsAppliedCount} first-attempt grade{fsrsAppliedCount === 1 ? "" : "s"} changed scheduling.
+            <strong>FSRS updated:</strong> {fsrsAppliedCount} clear grade{fsrsAppliedCount === 1 ? "" : "s"} changed scheduling.
           </div>
         )}
         {graded?.affects_fsrs && fsrsAppliedCount === 0 && graded?.mode !== "learn" && (
@@ -1940,11 +1940,7 @@ function Summary({
             <strong>Schedule unchanged:</strong> no attempt shown here produced an FSRS review update.
           </div>
         )}
-        {graded?.mode === "practice" && (
-          <div className="alert" style={{ margin: 0, width: "100%" }}>
-            <strong>FSRS OFF:</strong> Free Practice feedback was saved, but due dates and the due count were not changed.
-          </div>
-        )}
+
         {graded?.mode === "misses" && (
           <p className="muted">Misses workout complete. Passed cards leave the Misses queue; partial and failed cards remain.</p>
         )}
@@ -1985,7 +1981,7 @@ function Summary({
             Start Due Review · FSRS ON
           </a>
           <a className="btn btn-block" href="/session?mode=practice">
-            Free Practice instead · FSRS OFF
+            Start Focused Recall · FSRS ON
           </a>
         </div>
       )}
@@ -1993,7 +1989,7 @@ function Summary({
       {graded?.mode !== "learn" && misses.length > 0 && (
         <div className="card stack center">
           <h3 style={{ margin: 0 }}>Corrections · this batch only</h3>
-          <p className="muted">Repeat only the {misses.length} card{misses.length === 1 ? "" : "s"} needing correction from this batch. No other queue cards are added; FSRS stays off.</p>
+          <p className="muted">Repeat only the {misses.length} card{misses.length === 1 ? "" : "s"} needing correction from this batch. No other queue cards are added; each clear correction updates FSRS.</p>
           <button className="btn btn-primary btn-block" type="button" disabled={summaryAction !== null || correcting || deletingPhraseId !== null || busyRetry !== null || pendingRetry} onClick={() => void runSummaryAction("correct", () => onCorrectBatch(misses))}>
             {correcting ? "Preparing this batch…" : "Correct this batch"}
           </button>
@@ -2031,7 +2027,7 @@ function Summary({
               <span className="small faint">
                 {it.fsrs_applied && it.fsrs_rating && !unclear ? `FSRS ${it.fsrs_rating} · schedule updated` : ""}
                 {!it.fsrs_applied && !unclear && it.fsrs_rating ? "schedule unchanged" : ""}
-                {!it.fsrs_applied && !graded?.affects_fsrs && !unclear && !it.fsrs_rating ? "FSRS off · schedule unchanged" : ""}
+
                 {unclear ? "not counted against you" : ""}
                 {it.timed_out ? " · ⏱ timed out" : it.over_time ? " · ⏱ over time" : ""}
               </span>
@@ -2124,7 +2120,7 @@ function Summary({
             if (!beginSummaryAction("practice-picker")) return;
             onPracticeAgain();
           }}>
-            Choose or repeat a practice topic
+            Choose or repeat a recall focus
           </button>
         )}
         <button

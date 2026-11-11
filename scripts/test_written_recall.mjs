@@ -26,6 +26,7 @@ assert.match(
 assert.match(writtenSource, /api\.gradeWrittenSession\(session\.session_id, attempts\)/, "Hermes must grade the complete typed batch server-side");
 assert.match(writtenSource, /advances shared FSRS scheduling/, "Review scheduling semantics must be explained in the UI");
 assert.match(writtenSource, /never claims pronunciation or spoken-speed mastery/, "Typed success must not be presented as spoken evidence");
+assert.doesNotMatch(writtenSource, /FSRS OFF|without changing due dates|schedule-neutral/i, "Written recall must not advertise an FSRS-off mode");
 assert.doesNotMatch(writtenSource, /MediaRecorder|getUserMedia|uploadRecording/, "Written Recall must not require microphone/audio capture");
 
 assert.match(pageSource, /WrittenRecall client:load/, "The /write route must hydrate the Written Recall module");

@@ -20,7 +20,7 @@ globalThis.localStorage = new MemoryStorage();
 const session = (session_id, mode) => ({
   session_id,
   mode,
-  affects_fsrs: mode !== "practice",
+  affects_fsrs: mode !== "learn",
   items: [{ phrase_id: 9, sprint_item_id: 90, result: "pass" }],
 });
 

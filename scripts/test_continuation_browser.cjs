@@ -24,7 +24,7 @@ const item={sprint_item_id:990001,phrase_id:990001,position:1,result:'pass',prom
    const page=await context.newPage();page.setDefaultTimeout(20000);
    const requests=[],errors=[],blocked=[];let fail=scenario.failFirst;
    page.on('pageerror',error=>errors.push(String(error)));
-   const graded={session_id:990001,items:[item],mode:scenario.mode,response_mode:'spoken',affects_fsrs:scenario.mode==='review',status:'complete',summary:{total:1,passed:1,failed:0,partial:0,score:100,overtime_count:0}};
+   const graded={session_id:990001,items:[item],mode:scenario.mode,response_mode:'spoken',affects_fsrs:scenario.mode!=='learn',status:'complete',summary:{total:1,passed:1,failed:0,partial:0,score:100,overtime_count:0}};
    const saved={sessionId:990001,mode:scenario.legacy?undefined:scenario.mode,continuationMode:scenario.origin,items:[item],index:0,phase:scenario.grading?'grading':'summary',deadline:null,durationMs:15000,promptShownAt:null,uploadedItemIds:[990001],jobId:scenario.grading?990001:null,graded,savedAt:Date.now()};
    await context.addInitScript(({saved})=>{if(!sessionStorage.getItem('continuation-fixture-seeded')){localStorage.setItem('atr.session',JSON.stringify(saved));sessionStorage.setItem('continuation-fixture-seeded','1');}},{saved});
    await context.route('**/*',async route=>{
@@ -45,7 +45,7 @@ const item={sprint_item_id:990001,phrase_id:990001,position:1,result:'pass',prom
      await new Promise(resolve=>setTimeout(resolve,180));
      if(fail){fail=false;return reply({detail:'Synthetic next-set outage'},503);}
      const nextItem={...item,sprint_item_id:990002,phrase_id:990002,recording_id:null,result:'pending',answer_visible:body.mode==='learn',spanish:body.mode==='learn'?'Necesito agua.':null,english:'I need water.',english_meaning:'I need water.',prompt:'I need water.'};
-     return reply({session_id:990002,mode:body.mode,response_mode:'spoken',affects_fsrs:body.mode==='review',items:scenario.empty?[]:[nextItem]});
+     return reply({session_id:990002,mode:body.mode,response_mode:'spoken',affects_fsrs:body.mode!=='learn',items:scenario.empty?[]:[nextItem]});
     }
     if(req.method()==='GET'&&p==='/api/sources')return reply([]);
     blocked.push({method:req.method(),category:'unexpected-api',path:p});return route.abort();
@@ -55,6 +55,7 @@ const item={sprint_item_id:990001,phrase_id:990001,position:1,result:'pass',prom
     if(!scenario.grading)await page.getByRole('button',{name:'Resume',exact:true}).click();
     const label=scenario.next==='learn'?'Learn next batch':'Next recall set';
     const button=page.getByRole('button',{name:label,exact:true});await button.waitFor();
+    assert.equal(await page.getByText(/FSRS OFF/i).count(),0);
     assert.match(await button.getAttribute('class'),/btn-primary/);
     if(scenario.next!=='learn')assert.equal(await page.getByText('Learn next batch',{exact:true}).count(),0);
     await page.screenshot({path:path.join(OUT,scenario.name+'-results.png')});

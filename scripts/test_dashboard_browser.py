@@ -62,7 +62,7 @@ DEVICES: dict[str, dict[str, Any]] = {
         ),
     },
 }
-CORE_SCENARIOS = frozenset({"due", "new", "free_practice", "completed"})
+CORE_SCENARIOS = frozenset({"due", "new", "focused_recall", "completed"})
 
 
 def habit(**overrides: Any) -> dict[str, Any]:
@@ -152,13 +152,13 @@ SCENARIOS: dict[str, dict[str, Any]] = {
         "source_label": "3 sources",
         "mode_value": "19",
     },
-    "free_practice": {
+    "focused_recall": {
         "kind": "ready",
-        "description": "Empty due/new queues with an unfinished goal promote free practice.",
+        "description": "Empty due/new queues with an unfinished goal promote focused recall.",
         "stats": stats(0, 0, habit(today_reps=0, remaining_reps=10, current_streak=0, practiced_today=False)),
         # Named wrapper contract exercises toArray(..., ['sources', ...]).
         "sources": {"sources": [source(1), source(2)]},
-        "primary": {"label": "Start free practice", "href": "/session?mode=practice"},
+        "primary": {"label": "Start focused recall", "href": "/session?mode=practice"},
         "source_label": "2 sources",
         "mode_value": "Open",
     },
@@ -1100,7 +1100,7 @@ def markdown_report(report: dict[str, Any]) -> str:
             "",
             "- Loading skeleton and labelled busy region",
             "- Stats error, alert copy, keyboard retry, and post-retry focus",
-            "- Due (>10 label cap), New (>10 label cap), Free Practice, and completed-goal primary actions",
+            "- Due (>10 label cap), New (>10 label cap), Focused Recall, and completed-goal primary actions",
             "- `habit.available=false` offline semantics",
             "- Sources failure isolation and all supported source-count response shapes",
             "- Desktop 1440×1000, iPhone-sized 390×844, and narrow 320×700 layout",

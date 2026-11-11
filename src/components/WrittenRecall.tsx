@@ -12,7 +12,7 @@ const MODE_COPY: Record<WrittenMode, { title: string; description: string; sched
   learn: {
     title: "Learn queue",
     description: "Study new cards, then type the exact batch from English.",
-    schedule: "Introduces each card; the immediate written test is schedule-neutral.",
+    schedule: "Introduces each card; the immediate written recall then updates FSRS.",
   },
   review: {
     title: "Due review",
@@ -20,9 +20,9 @@ const MODE_COPY: Record<WrittenMode, { title: string; description: string; sched
     schedule: "Counts as an authoritative rep and advances shared FSRS scheduling.",
   },
   practice: {
-    title: "Free practice",
-    description: "Write introduced cards without consuming the due queue.",
-    schedule: "Counts toward daily reps but leaves FSRS dates unchanged.",
+    title: "Focused recall",
+    description: "Choose a focus or rotate introduced cards outside the due queue.",
+    schedule: "Every completed graded answer updates shared FSRS scheduling.",
   },
 };
 
@@ -534,15 +534,14 @@ export default function WrittenRecall() {
             <span><strong>{summary?.failed ?? 0}</strong> retry</span>
           </div>
           <p className="muted">
-            All {session.items.length} submitted cards count toward today&apos;s reps.
-            {session.affects_fsrs ? " This due-review pack also advanced shared scheduling." : " This practice pack left FSRS dates unchanged."}
+            All {session.items.length} submitted cards count toward today&apos;s reps. Every graded answer advanced shared FSRS scheduling.
           </p>
         </div>
         <div className="written-result-list">
           {misses.length > 0 && (
             <div className="card stack">
               <h2>Corrections · this batch only</h2>
-              <p className="muted">Repeat only the {misses.length} card{misses.length === 1 ? "" : "s"} needing correction. No other queue cards are added; FSRS stays off.</p>
+              <p className="muted">Repeat only the {misses.length} card{misses.length === 1 ? "" : "s"} needing correction. No other queue cards are added; each graded correction updates FSRS.</p>
               <button className="btn btn-primary btn-lg btn-block" type="button" disabled={busy} onClick={() => void correctBatch()}>
                 {busy ? "Preparing this batch…" : "Correct this batch"}
               </button>

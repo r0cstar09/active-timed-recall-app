@@ -769,7 +769,7 @@ export const api = {
     return request<Job>(`/api/jobs/${encodeURIComponent(String(jobId))}`);
   },
 
-  // ── Free Practice topics (read-only selection) ───────────────────────────
+  // ── Focused Recall topics (read-only selection) ─────────────────────────
   async getPracticeTopics(): Promise<PracticeTopicsResponse> {
     return normalizePracticeTopicsResponse(await request<unknown>("/api/practice/topics"));
   },
