@@ -9,15 +9,15 @@ const passed={...pending,sprint_item_id:990002,phrase_id:990002,position:2,resul
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH});const checks=[];
  try{
- for(const scenario of ['spoken-failure','spoken-repeat-failure','spoken-already-complete','spoken-lost-response','spoken-complete','spoken-unclear','spoken-running-reload','written-initial-failure','written-failure','written-lost-response']){
+ for(const scenario of ['spoken-failure','spoken-repeat-failure','spoken-already-complete','spoken-lost-response','spoken-complete','spoken-unclear','spoken-running-reload','written-initial-failure','written-legacy-failure','written-failure','written-lost-response']){
   const written=scenario.startsWith('written'),complete=scenario==='spoken-complete',unclear=scenario==='spoken-unclear';
   const ctx=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block',reducedMotion:'reduce'});const page=await ctx.newPage();page.setDefaultTimeout(15000);
   const blocked=[],errors=[],posts=[];let retries=0,finished=complete||unclear,failedAgain=false,lost=false;
   const job={job_id:990010,status:'failed',failure,error_message:null};
   if(scenario==='spoken-running-reload'){job.job_id=990011;job.status='processing';}
-  const session=()=>({session_id:990001,mode:'review',response_mode:written?'written':'spoken',affects_fsrs:true,status:finished?'complete':written?'awaiting_recordings':'failed',
+  const session=()=>({session_id:990001,mode:'review',response_mode:written?'written':'spoken',affects_fsrs:true,status:finished||scenario==='written-legacy-failure'?'complete':written?'awaiting_recordings':'failed',
    grading_job:written?null:finished?{job_id:990011,status:'complete'}:job,
-   items:[{...pending,...(written?{recording_id:null,user_transcript_segment:'Quiero té.'}:{}),...(finished?{result:unclear?'partial':'pass',error_type:unclear?'transcription_unclear':'none',spanish:'Quiero té.',fsrs_applied:!unclear,feedback:unclear?'Audio was unclear.':'Meaning accepted.'}: {})},written?{...passed,result:finished?'pass':'pending',user_transcript_segment:'Necesito agua.'}:passed],
+   items:[{...pending,...(scenario==='written-legacy-failure'?{result:'fail',error_type:'grader_timeout'}:{}),...(written?{recording_id:null,user_transcript_segment:'Quiero té.'}:{}),...(finished?{result:unclear?'partial':'pass',error_type:unclear?'transcription_unclear':'none',spanish:'Quiero té.',fsrs_applied:!unclear,feedback:unclear?'Audio was unclear.':'Meaning accepted.'}: {})},written?{...passed,result:finished||scenario==='written-legacy-failure'?'pass':'pending',user_transcript_segment:'Necesito agua.'}:passed],
    summary:finished?{total:2,passed:unclear?1:2,failed:0,partial:unclear?1:0,score:100,overtime_count:0}:null});
   const saved=written?{version:1,sessionId:990001,phraseIds:[990001,990002],mode:'review',targetVerb:'',phase:scenario==='written-initial-failure'?'answer':'results',index:1,answers:{990001:{answer:'Quiero té.',response_seconds:3},990002:{answer:'Necesito agua.',response_seconds:4}},draft:'Necesito agua.',promptStartedAt:Date.now()}
     :{sessionId:990001,mode:'review',continuationMode:'review',items:session().items,index:1,phase:complete||unclear||scenario==='spoken-running-reload'?'summary':'grading',deadline:null,durationMs:null,promptShownAt:null,uploadedItemIds:[990001,990002],jobId:990010,graded:session(),savedAt:Date.now()};

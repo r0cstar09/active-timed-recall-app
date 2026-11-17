@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type WrittenAttempt } from "../lib/api";
 import type { Session, SessionItem } from "../lib/types";
+import { isTechnicalWrittenFailure } from "../lib/gradingRetry";
 import { correctionPhraseIds } from "../lib/sessionCorrections";
 import { requirePracticeTopicPhraseIds } from "../lib/practiceTopics";
 import { clearWrittenSession, loadWrittenSession, reconcileWrittenSession, saveWrittenSession, type SavedAnswer, type WrittenMode, type WrittenPhase, type WrittenSnapshot } from "../lib/writtenSession";
@@ -364,7 +365,8 @@ export default function WrittenRecall() {
       persistCurrent({ answers: answerMap, phase: "grading" });
       const fresh = retry ? await api.getSession(session.session_id) : session;
       let graded: Session;
-      if (fresh.status === "complete" || fresh.status === "complete_overtime") {
+      if ((fresh.status === "complete" || fresh.status === "complete_overtime") &&
+          !fresh.items.some(isTechnicalWrittenFailure)) {
         graded = fresh;
       } else if (fresh.status === "grading") {
         throw new Error("Your saved batch is still grading. Retry shortly to check its results.");
@@ -539,7 +541,9 @@ export default function WrittenRecall() {
 
   if (phase === "results" && session) {
     const summary = session.summary;
-    const incomplete = session.items.some(item => !item.result || item.result === "pending");
+    const technicalErrors = session.items.filter(isTechnicalWrittenFailure).length;
+    const gradedItems = session.items.filter(item => !isTechnicalWrittenFailure(item));
+    const incomplete = session.items.some(item => !item.result || item.result === "pending" || isTechnicalWrittenFailure(item));
     const misses = correctionPhraseIds(session.items);
     return (
       <section className="written-shell">
@@ -547,13 +551,16 @@ export default function WrittenRecall() {
           <p className="written-kicker">{incomplete ? "Written results · grading incomplete" : "Written pack complete"}</p>
           <h1>{incomplete ? "Your answers are saved" : `${summary?.passed ?? 0}/${summary?.total ?? session.items.length} passed`}</h1>
           <div className="written-result-stats">
-            <span><strong>{summary?.passed ?? 0}</strong> pass</span>
-            <span><strong>{summary?.partial ?? 0}</strong> polish</span>
-            <span><strong>{summary?.failed ?? 0}</strong> retry</span>
+            <span><strong>{gradedItems.filter(item => item.result === "pass").length}</strong> pass</span>
+            <span><strong>{gradedItems.filter(item => item.result === "partial").length}</strong> polish</span>
+            <span><strong>{gradedItems.filter(item => item.result === "fail").length}</strong> retry</span>
+            {technicalErrors > 0 && <span><strong>{technicalErrors}</strong> AI errors</span>}
           </div>
           <p className="muted">
             {incomplete
-              ? "Grading could not finish. This is not a wrong answer. Retry the same saved answers without typing them again. Only completed grades count toward progress."
+              ? (technicalErrors > 0
+                  ? "These AI errors are not wrong answers. Retry your saved answers to replace the earlier error results without adding another review."
+                  : "Grading could not finish. This is not a wrong answer. Retry the same saved answers without typing them again. Only completed grades count toward progress.")
               : <>All {session.items.length} submitted cards count toward today&apos;s reps. Every graded answer advanced shared FSRS scheduling.</>}
           </p>
         </div>
@@ -571,11 +578,11 @@ export default function WrittenRecall() {
           )}
           {error && <p className="alert alert-error" role="alert">{error}</p>}
           {session.items.map((item, itemIndex) => (
-            <article className={`card written-result result-${item.result || "pending"}`} key={item.sprint_item_id}>
+            <article className={`card written-result result-${isTechnicalWrittenFailure(item) ? "pending" : item.result || "pending"}`} key={item.sprint_item_id}>
               <div className="written-result-title">
                 <span>{itemIndex + 1}. {item.english}</span>
-                <span className={`pill ${item.result === "pass" ? "pill-good" : item.result === "partial" || item.result === "pending" ? "pill-warn" : "pill-bad"}`}>
-                  {resultLabel(item.result)}
+                <span className={`pill ${item.result === "pass" ? "pill-good" : item.result === "partial" || item.result === "pending" || isTechnicalWrittenFailure(item) ? "pill-warn" : "pill-bad"}`}>
+                  {isTechnicalWrittenFailure(item) ? "AI grading error" : resultLabel(item.result)}
                 </span>
               </div>
               <dl>

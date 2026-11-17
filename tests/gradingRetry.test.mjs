@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { canRetryGrading } from '../src/lib/gradingRetry.ts';
+import { canRetryGrading, isTechnicalWrittenFailure } from '../src/lib/gradingRetry.ts';
 import { reconcileWrittenSession } from '../src/lib/writtenSession.ts';
+test('legacy completed technical errors remain retryable, genuine grades do not', () => {
+  assert.equal(isTechnicalWrittenFailure({result:'fail',error_type:'grader_timeout'}),true);
+  assert.equal(isTechnicalWrittenFailure({result:'partial',error_type:'grader_json_error'}),true);
+  assert.equal(isTechnicalWrittenFailure({result:'pass',error_type:'none'}),false);
+  assert.equal(isTechnicalWrittenFailure({result:'fail',error_type:'grammar'}),false);
+});
 const failure = { retryable: true, retry_action: 'retry_grading_same_answer', code: 'grader_unavailable', message: 'Unavailable' };
 test('only a retryable failed pipeline offers same-answer grading', () => {
   assert.equal(canRetryGrading({status:'failed',failure}),true);
