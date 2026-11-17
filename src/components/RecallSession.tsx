@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, ApiError, pollJob } from "../lib/api";
+import { api, ApiError, GradingJobError, pollJob } from "../lib/api";
 import { RECALL_SECONDS } from "../lib/config";
 import { itemForDuration, recallSecondsFromServer } from "../lib/recallDuration";
 import type { ActiveRecallV2Evidence, Job, ResumableSessionSummary, ServerDashboardStats, Session, SessionItem, SessionMode, WordAlignmentOperation } from "../lib/types";
@@ -18,6 +18,7 @@ import {
 import AudioPlayer from "./AudioPlayer";
 import { recallPromptPresentation } from "../lib/recallPrompt";
 import { correctionPhraseIds, latestSessionItems } from "../lib/sessionCorrections";
+import { canRetryGrading } from "../lib/gradingRetry";
 import { isIncompleteRecordingError } from "../lib/recordingRecovery";
 import { requirePracticeTopicPhraseIds } from "../lib/practiceTopics";
 import PracticeTopicPicker, { type PracticeTopicPickerStatus } from "./PracticeTopicPicker";
@@ -926,7 +927,18 @@ export default function RecallSession() {
       saveCompletedSession(gradedSession, continuationModeRef.current);
       setPhase("summary");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : String(err));
+      setError(err instanceof Error ? err.message : String(err));
+      if (err instanceof GradingJobError) {
+        try {
+          const fresh = await api.getSession(sessionId);
+          if (sessionIdRef.current !== sessionId) return;
+          const partial = { ...fresh, grading_job: err.job };
+          setGraded(partial);
+          saveCompletedSession(partial, continuationModeRef.current);
+          setError(null);
+          setPhase("summary");
+        } catch { /* Keep reconnect available if the results fetch fails. */ }
+      }
     }
   }
 
@@ -1807,6 +1819,8 @@ function Summary({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletingPhraseId, setDeletingPhraseId] = useState<number | null>(null);
   const [busyRetry, setBusyRetry] = useState<number | null>(null);
+  const [gradingError, setGradingError] = useState<string | null>(null);
+  const [retryJob, setRetryJob] = useState<Job | null>(null);
   const actionInFlightRef = useRef<string | null>(null);
   const [summaryAction, setSummaryAction] = useState<string | null>(null);
   const beginSummaryAction = useCallback((action: string, allowSame = false) => {
@@ -1841,8 +1855,11 @@ function Summary({
     },
     { current: 0, best: 0 },
   ).best;
-  const cleanRecall = graded?.mode !== "learn" && !!summary && summary.failed === 0 && summary.partial === 0;
-  const celebrationTier = graded?.mode === "learn" || !summary ? null : cleanRecall ? "¡Olé!" : summary.failed === 0 ? "¡Eso es!" : summary.partial > 0 ? "¡Casi!" : null;
+  const failedJob = retryJob ?? graded?.grading_job;
+  const retryableGrading = canRetryGrading(failedJob);
+  const incompleteGrading = pendingRetry || failedJob?.status === "failed";
+  const cleanRecall = !incompleteGrading && graded?.mode !== "learn" && !!summary && summary.failed === 0 && summary.partial === 0;
+  const celebrationTier = incompleteGrading || graded?.mode === "learn" || !summary ? null : cleanRecall ? "¡Olé!" : summary.failed === 0 ? "¡Eso es!" : summary.partial > 0 ? "¡Casi!" : null;
 
   useEffect(() => {
     if (!summary || graded?.mode === "learn") return;
@@ -1850,6 +1867,28 @@ function Summary({
     else if (summary.failed > 0) pulseDevice([90, 45, 90]);
     else pulseDevice(35);
   }, [cleanRecall, graded?.mode, summary]);
+
+  async function retrySavedGrading() {
+    if (!graded || !failedJob || !onRefresh || !beginSummaryAction("grading")) return;
+    setGradingError(null);
+    try {
+      const result = failedJob.status === "failed"
+        ? await api.retryGradingJob(failedJob.job_id)
+        : { status: failedJob.status, job_id: failedJob.job_id };
+      if (result.status !== "already_complete") {
+        if (result.job_id == null) throw new Error("The grading service did not return a job. Please retry.");
+        await pollJob(result.job_id, { timeoutMs: 15 * 60_000, onUpdate: setRetryJob });
+      }
+      const fresh = await api.getSession(graded.session_id);
+      onRefresh(fresh);
+      setRetryJob(null);
+    } catch (err) {
+      if (err instanceof GradingJobError) setRetryJob(err.job);
+      setGradingError(err instanceof Error ? err.message : String(err));
+    } finally {
+      endSummaryAction("grading");
+    }
+  }
 
   async function deleteCard(item: SessionItem) {
     if (!window.confirm(`Delete “${item.spanish || item.english}” from future practice?\n\nIts existing review history will be preserved.`)) return;
@@ -1926,7 +1965,7 @@ function Summary({
             </div>
           </>
         )}
-        <h2 style={{ margin: 0 }}>{graded?.mode === "learn" ? "Ready for Due Review" : cleanRecall ? "Clean recall" : "Session graded"}</h2>
+        <h2 style={{ margin: 0 }}>{incompleteGrading ? "Grading incomplete" : graded?.mode === "learn" ? "Ready for Due Review" : cleanRecall ? "Clean recall" : "Session graded"}</h2>
         {graded?.mode === "learn" && (
           <p className="muted">These cards are now introduced and due. Start Due Review when you want your spoken grades to begin scheduling them.</p>
         )}
@@ -1996,8 +2035,26 @@ function Summary({
         </div>
       )}
 
+      {(failedJob?.status === "failed" || (incompleteGrading && failedJob) || retryJob || gradingError) && (
+        <div className="card stack" aria-live="polite">
+          <h3 style={{ margin: 0 }}>Your recordings are saved</h3>
+          <p className="muted" style={{ margin: 0 }}>
+            Grading could not finish. This is not a wrong answer. Retrying uses the same recordings;
+            completed grades stay unchanged and progress is counted only once.
+          </p>
+          {summaryAction === "grading" && <PipelineProgress progress={retryJob?.progress} fallbackStatus="processing" />}
+          {(retryableGrading || (failedJob && failedJob.status !== "failed")) && (
+            <button className="btn btn-primary btn-block" type="button" disabled={summaryAction !== null || correcting}
+              onClick={() => void retrySavedGrading()}>
+              {summaryAction === "grading" ? "Retrying grading…" : failedJob && failedJob.status !== "failed" ? "Reconnect to grading" : "Retry grading"}
+            </button>
+          )}
+          {failedJob?.failure?.retryable === false && <p>{failedJob.failure.message}</p>}
+          {gradingError && <div className="alert alert-error" role="alert">{gradingError}</div>}
+        </div>
+      )}
       {correctionError && <div className="alert alert-error" role="alert">{correctionError}</div>}
-      {pendingRetry && <div className="alert">An unfinished re-recording is still in this batch. Use Re-record on its unclear card before starting corrections.</div>}
+      {pendingRetry && !failedJob && <div className="alert">An unfinished re-recording is still in this batch. Use Re-record on its unclear card before starting corrections.</div>}
       {deleteError && <div className="alert alert-error" role="alert">{deleteError}</div>}
 
       {items.map((it) => {
@@ -2014,7 +2071,7 @@ function Summary({
         const cls =
           it.result === "pass"
             ? "pill-good"
-            : it.result === "partial" || unclear
+            : it.result === "partial" || it.result === "pending" || unclear
               ? "pill-warn"
               : "pill-bad";
         return (
@@ -2050,7 +2107,7 @@ function Summary({
               </div>
             )}
 
-            {it.recording_id != null && graded?.session_id ? (
+            {it.result !== "pending" && it.recording_id != null && graded?.session_id ? (
               <TranscriptFeedback sessionId={graded.session_id} item={it} />
             ) : null}
 

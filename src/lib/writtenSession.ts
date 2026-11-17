@@ -66,5 +66,7 @@ export function reconcileWrittenSession(saved: WrittenSnapshot, session: Session
     return { ...saved, phase: "learn", index: pending < 0 ? session.items.length - 1 : pending };
   }
   const complete = session.status === "complete" || session.status === "complete_overtime";
-  return { ...saved, phase: complete ? "results" : "answer" };
+  const submitted = (saved.phase === "grading" || saved.phase === "results") &&
+    session.items.every(item => Boolean(saved.answers[item.sprint_item_id]?.answer.trim() || item.user_transcript_segment?.trim()));
+  return { ...saved, phase: complete || submitted ? "results" : "answer" };
 }

@@ -353,28 +353,45 @@ export default function WrittenRecall() {
     return next;
   }
 
-  async function submitAnswers(answerMap: Record<number, SavedAnswer>) {
-    if (!session) return;
-    const attempts: WrittenAttempt[] = session.items.map((item) => {
-      const answer = answerMap[item.sprint_item_id];
-      if (!answer) throw new Error("Every card in the pack needs a written answer.");
-      return { sprint_item_id: item.sprint_item_id, ...answer };
-    });
-    setPhase("grading");
+  async function submitAnswers(answerMap: Record<number, SavedAnswer>, retry = false) {
+    if (!session || launchInFlight.current) return;
+    launchInFlight.current = true;
+    setError(null);
     setBusy(true);
+    setPhase("grading");
     try {
-      const graded = await api.gradeWrittenSession(session.session_id, attempts);
+      // Freeze timing and answers before the request, including on refresh/response loss.
+      persistCurrent({ answers: answerMap, phase: "grading" });
+      const fresh = retry ? await api.getSession(session.session_id) : session;
+      let graded: Session;
+      if (fresh.status === "complete" || fresh.status === "complete_overtime") {
+        graded = fresh;
+      } else if (fresh.status === "grading") {
+        throw new Error("Your saved batch is still grading. Retry shortly to check its results.");
+      } else if (retry && fresh.items.every(item => Boolean(item.user_transcript_segment?.trim()))) {
+        graded = await api.retryWrittenGrading(session.session_id);
+      } else {
+        const attempts: WrittenAttempt[] = session.items.map(item => {
+          const answer = answerMap[item.sprint_item_id];
+          if (!answer) throw new Error("Every card in the pack needs a written answer.");
+          return { sprint_item_id: item.sprint_item_id, ...answer };
+        });
+        graded = await api.gradeWrittenSession(session.session_id, attempts);
+      }
       setSession(graded);
       setPhase("results");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-      setPhase("answer");
+      // Do not send the learner back to record/type a new response for an AI outage.
+      setPhase("results");
     } finally {
+      launchInFlight.current = false;
       setBusy(false);
     }
   }
 
   async function nextAnswer() {
+    if (launchInFlight.current) return;
     const next = saveCurrentAnswer();
     if (!next || !session) return;
     if (index < session.items.length - 1) {
@@ -522,23 +539,28 @@ export default function WrittenRecall() {
 
   if (phase === "results" && session) {
     const summary = session.summary;
+    const incomplete = session.items.some(item => !item.result || item.result === "pending");
     const misses = correctionPhraseIds(session.items);
     return (
       <section className="written-shell">
         <div className="card written-results-head stack">
-          <p className="written-kicker">Written pack complete</p>
-          <h1>{summary?.passed ?? 0}/{summary?.total ?? session.items.length} passed</h1>
+          <p className="written-kicker">{incomplete ? "Written results · grading incomplete" : "Written pack complete"}</p>
+          <h1>{incomplete ? "Your answers are saved" : `${summary?.passed ?? 0}/${summary?.total ?? session.items.length} passed`}</h1>
           <div className="written-result-stats">
             <span><strong>{summary?.passed ?? 0}</strong> pass</span>
             <span><strong>{summary?.partial ?? 0}</strong> polish</span>
             <span><strong>{summary?.failed ?? 0}</strong> retry</span>
           </div>
           <p className="muted">
-            All {session.items.length} submitted cards count toward today&apos;s reps. Every graded answer advanced shared FSRS scheduling.
+            {incomplete
+              ? "Grading could not finish. This is not a wrong answer. Retry the same saved answers without typing them again. Only completed grades count toward progress."
+              : <>All {session.items.length} submitted cards count toward today&apos;s reps. Every graded answer advanced shared FSRS scheduling.</>}
           </p>
         </div>
+        {incomplete && <button className="btn btn-primary btn-lg btn-block" type="button" disabled={busy}
+          onClick={() => void submitAnswers(savedAnswers, true)}>Retry grading</button>}
         <div className="written-result-list">
-          {misses.length > 0 && (
+          {!incomplete && misses.length > 0 && (
             <div className="card stack">
               <h2>Corrections · this batch only</h2>
               <p className="muted">Repeat only the {misses.length} card{misses.length === 1 ? "" : "s"} needing correction. No other queue cards are added; each graded correction updates FSRS.</p>
@@ -552,12 +574,12 @@ export default function WrittenRecall() {
             <article className={`card written-result result-${item.result || "pending"}`} key={item.sprint_item_id}>
               <div className="written-result-title">
                 <span>{itemIndex + 1}. {item.english}</span>
-                <span className={`pill ${item.result === "pass" ? "pill-good" : item.result === "partial" ? "pill-warn" : "pill-bad"}`}>
+                <span className={`pill ${item.result === "pass" ? "pill-good" : item.result === "partial" || item.result === "pending" ? "pill-warn" : "pill-bad"}`}>
                   {resultLabel(item.result)}
                 </span>
               </div>
               <dl>
-                <div><dt>You wrote</dt><dd lang="es">{item.user_transcript_segment || "—"}</dd></div>
+                <div><dt>You wrote</dt><dd lang="es">{item.user_transcript_segment || savedAnswers[item.sprint_item_id]?.answer || "—"}</dd></div>
                 <div><dt>Reference</dt><dd lang="es">{targetAnswer(item) || "—"}</dd></div>
               </dl>
               {item.feedback && <p className="written-feedback">{item.feedback}</p>}

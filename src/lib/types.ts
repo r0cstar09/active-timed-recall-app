@@ -163,6 +163,7 @@ export interface Session {
   affects_fsrs?: boolean;
   seconds_per_card?: number;
   resumable_session?: ResumableSessionSummary | null;
+  grading_job?: Job | null;
 }
 
 /** Returned by POST /api/sessions/:id/recording. */
@@ -196,7 +197,15 @@ export interface PipelineProgressData {
   updated_at?: string;
 }
 
+export interface GradingFailure {
+  code: string;
+  retryable: boolean;
+  retry_action: string;
+  message: string;
+}
+
 export interface Job {
+  failure?: GradingFailure | null;
   job_id: number;
   status: JobState;
   result: unknown | null;

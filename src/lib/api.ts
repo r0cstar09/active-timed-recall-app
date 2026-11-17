@@ -680,6 +680,16 @@ export const api = {
     ));
   },
 
+  async retryWrittenGrading(sessionId: number | string): Promise<Session> {
+    return hydrateSession(await requestJson<Session>(
+      `/api/sessions/${encodeURIComponent(String(sessionId))}/written-grade/retry`, "POST", {},
+    ));
+  },
+
+  retryGradingJob(jobId: number | string): Promise<{ status: string; job_id?: number | string }> {
+    return requestJson(`/api/jobs/${encodeURIComponent(String(jobId))}/retry`, "POST", {});
+  },
+
   introducePhrase(phraseId: number | string): Promise<{ id: number; introduced_at: string; learning_status: string }> {
     return requestJson<{ id: number; introduced_at: string; learning_status: string }>(
       `/api/cards/${encodeURIComponent(String(phraseId))}/introduce`,
@@ -1022,6 +1032,15 @@ export const api = {
   },
 };
 
+export class GradingJobError extends Error {
+  readonly job: Job;
+  constructor(job: Job) {
+    super(job.failure?.message || "Grading could not finish. Your saved answer is unchanged.");
+    this.name = "GradingJobError";
+    this.job = job;
+  }
+}
+
 /** Poll a grading job until it completes or fails (or times out). */
 export async function pollJob(
   jobId: number | string,
@@ -1042,7 +1061,7 @@ export async function pollJob(
     const job = await api.getJob(jobId);
     opts.onUpdate?.(job);
     if (isJobFailed(job)) {
-      throw new ApiError(job.error_message || "Grading failed.", 0);
+      throw new GradingJobError(job);
     }
     if (isJobComplete(job)) return job;
     if (Date.now() - start > timeoutMs) {
